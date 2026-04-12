@@ -2486,3 +2486,26 @@ body {
     font-size: 0.875rem;
   }
 }
+
+/* v3.0.3: FORCE PASSWORD MASKING */
+.pin-digit[type="password"] {
+  -webkit-text-security: disc !important;
+  text-security: disc !important;
+  font-family: text-security-disc !important;
+  font-size: 2rem !important;
+}
+
+/* Hide reveal button on Edge/IE */
+.pin-digit::-ms-reveal {
+  display: none !important;
+}
+
+/* Hide autofill icon */
+.pin-digit::-webkit-contacts-auto-fill-button,
+.pin-digit::-webkit-credentials-auto-fill-button {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: 0 !important;
+}
