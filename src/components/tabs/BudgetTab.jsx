@@ -50,16 +50,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
     }
   };
 
-  const saveBudget = async (categoryId, limit) => {
+  const saveBudgetToDb = async (categoryId) => {
     try {
-      const newBudgets = { ...budgets, [categoryId]: parseFloat(limit) };
+      const budgetValue = budgets[categoryId];
+      if (!budgetValue || budgetValue <= 0) {
+        console.log('⚠️ Sem valor para guardar');
+        return;
+      }
+      
       await dbService.updateUserSettings(user.id, {
-        category_budgets: newBudgets
+        category_budgets: budgets
       });
-      setBudgets(newBudgets);
+      console.log('✓ Orçamento guardado:', categoryId, budgetValue);
+      alert('✓ Guardado!');
     } catch (error) {
-      console.error('Error saving budget:', error);
-      alert('Erro ao guardar orçamento');
+      console.error('❌ Error saving budget:', error);
+      console.error('Details:', error.message);
+      // Don't show alert - just log for debugging
     }
   };
 
@@ -83,22 +90,18 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   };
 
   const handleLimitChange = (categoryId, value) => {
-    // Update local state immediately for responsive input
+    // Only update local state - no DB save
     const numValue = parseFloat(value);
     
+    let newBudgets;
     if (value === '' || value === '0' || isNaN(numValue)) {
-      // Remove budget
-      const newBudgets = { ...budgets };
+      newBudgets = { ...budgets };
       delete newBudgets[categoryId];
-      setBudgets(newBudgets);
-      dbService.updateUserSettings(user.id, { category_budgets: newBudgets });
     } else {
-      // Update budget immediately in state
-      const newBudgets = { ...budgets, [categoryId]: numValue };
-      setBudgets(newBudgets);
-      // Debounce save to database
-      saveBudget(categoryId, value);
+      newBudgets = { ...budgets, [categoryId]: numValue };
     }
+    
+    setBudgets(newBudgets);
   };
 
   const calculateProgress = () => {
@@ -271,11 +274,26 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
                   className="budget-input"
                   value={limit || ''}
                   onChange={(e) => handleLimitChange(cat.id, e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      saveBudgetToDb(cat.id);
+                      e.target.blur();
+                    }
+                  }}
                   placeholder="0"
                   step="10"
                   min="0"
                 />
                 <span className="budget-currency">€/mês</span>
+                {limit > 0 && (
+                  <button 
+                    className="budget-save-btn"
+                    onClick={() => saveBudgetToDb(cat.id)}
+                    title="Guardar orçamento"
+                  >
+                    ✓
+                  </button>
+                )}
               </div>
 
               {hasLimit && (
