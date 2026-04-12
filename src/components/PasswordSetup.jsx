@@ -7,7 +7,12 @@ const PasswordSetup = ({ user, onComplete, onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log('🔐 Setup submit! Passwords:', password.length, confirmPassword.length);
     setError('');
 
     if (password.length < 4) {
@@ -20,8 +25,16 @@ const PasswordSetup = ({ user, onComplete, onBack }) => {
       return;
     }
 
+    console.log('✅ Calling onComplete...');
     onComplete(password);
   };
+
+  const handleButtonClick = () => {
+    console.log('🖱️ Create button clicked!');
+    handleSubmit(null);
+  };
+
+  const canSubmit = password.length >= 4 && confirmPassword.length >= 4;
 
   return (
     <div className="password-setup">
@@ -74,9 +87,10 @@ const PasswordSetup = ({ user, onComplete, onBack }) => {
         {error && <div className="password-error">{error}</div>}
 
         <button 
-          type="submit" 
-          className="btn-create"
-          disabled={password.length === 0 || confirmPassword.length === 0}
+          type="submit"
+          onClick={handleButtonClick}
+          className={`btn-create ${canSubmit ? 'active' : ''}`}
+          disabled={!canSubmit}
         >
           Criar Conta
         </button>

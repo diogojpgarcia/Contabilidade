@@ -6,18 +6,28 @@ const PasswordLogin = ({ user, onSuccess, onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('📝 Form submitted! Password length:', password.length);
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log('📝 handleSubmit called! Password:', password.length);
     setError('');
     
     if (password.length < 4) {
-      console.log('❌ Password muito curta');
+      console.log('❌ Password too short');
       setError('A password deve ter pelo menos 4 caracteres');
       return;
     }
 
-    console.log('✅ Chamando onSuccess...');
+    console.log('✅ Calling onSuccess...');
     onSuccess(password);
+  };
+
+  // Mobile-friendly: Direct click handler (não depende de form submit)
+  const handleButtonClick = () => {
+    console.log('🖱️ Button clicked directly!');
+    handleSubmit(null);
   };
 
   const canSubmit = password.length >= 4;
@@ -41,6 +51,12 @@ const PasswordLogin = ({ user, onSuccess, onBack }) => {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && canSubmit) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
               placeholder="Mínimo 4 caracteres"
               autoFocus
               autoComplete="current-password"
@@ -56,14 +72,18 @@ const PasswordLogin = ({ user, onSuccess, onBack }) => {
             </button>
           </div>
           {password.length > 0 && password.length < 4 && (
-            <small style={{ color: 'orange' }}>Faltam {4 - password.length} caracteres</small>
+            <small style={{ color: 'orange', display: 'block', marginTop: '0.5rem' }}>
+              Faltam {4 - password.length} caracteres
+            </small>
           )}
         </div>
 
         {error && <div className="password-error">{error}</div>}
 
+        {/* Botão com DUPLO handler: submit E click direto */}
         <button 
-          type="submit" 
+          type="submit"
+          onClick={handleButtonClick}
           className={`btn-login ${canSubmit ? 'active' : ''}`}
           disabled={!canSubmit}
         >
