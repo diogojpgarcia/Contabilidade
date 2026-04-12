@@ -1,209 +1,187 @@
 /**
- * Financial Analysis Engine
- * Calculates metrics, trends, and provides smart suggestions
+ * Financial Analysis Utilities
  */
-
-import { getMonthKey, formatCurrency } from './data';
 
 /**
- * Calculate comprehensive financial metrics for a period
+ * Calculate monthly averages for the last N months
  */
-export const calculateFinancialMetrics = (transactions, monthKey) => {
-  const monthTransactions = transactions.filter(t => getMonthKey(t.date) === monthKey);
+export const calculateMonthlyAverages = (transactions, months = 6) => {
+  const monthlyData = {};
   
-  const income = monthTransactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+  transactions.forEach(t => {
+    const monthKey = t.date.substring(0, 7); // YYYY-MM
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { income: 0, expenses: 0 };
+    }
+    
+    if (t.type === 'income') {
+      monthlyData[monthKey].income += parseFloat(t.amount);
+    } else {
+      monthlyData[monthKey].expenses += parseFloat(t.amount);
+    }
+  });
   
-  const expenses = monthTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const balance = income - expenses;
-  const savingsRate = income > 0 ? ((balance / income) * 100) : 0;
+  const sortedMonths = Object.keys(monthlyData).sort().slice(-months);
+  const avgIncome = sortedMonths.reduce((sum, m) => sum + monthlyData[m].income, 0) / sortedMonths.length;
+  const avgExpenses = sortedMonths.reduce((sum, m) => sum + monthlyData[m].expenses, 0) / sortedMonths.length;
   
   return {
-    income,
-    expenses,
-    balance,
-    savingsRate,
-    monthKey
+    avgIncome: avgIncome || 0,
+    avgExpenses: avgExpenses || 0,
+    avgBalance: (avgIncome - avgExpenses) || 0,
+    monthsAnalyzed: sortedMonths.length
   };
 };
 
 /**
- * Calculate category breakdown for expenses
+ * Compare current month with previous month
  */
-export const calculateCategoryBreakdown = (transactions, monthKey) => {
-  const monthExpenses = transactions.filter(
-    t => getMonthKey(t.date) === monthKey && t.type === 'expense'
-  );
+export const compareWithPreviousMonth = (currentMonthTransactions, allTransactions, currentMonthKey) => {
+  // Get previous month
+  const [year, month] = currentMonthKey.split('-').map(Number);
+  const prevDate = new Date(year, month - 2, 1); // month-2 because Date month is 0-indexed
+  const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
   
-  const breakdown = {};
-  monthExpenses.forEach(t => {
-    if (!breakdown[t.category]) {
-      breakdown[t.category] = { total: 0, count: 0, transactions: [] };
-    }
-    breakdown[t.category].total += t.amount;
-    breakdown[t.category].count += 1;
-    breakdown[t.category].transactions.push(t);
-  });
+  const prevMonthTransactions = allTransactions.filter(t => t.date.startsWith(prevMonthKey));
   
-  return breakdown;
+  const currentIncome = currentMonthTransactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  const currentExpenses = currentMonthTransactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  
+  const prevIncome = prevMonthTransactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  const prevExpenses = prevMonthTransactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+  
+  const incomeChange = prevIncome > 0 ? ((currentIncome - prevIncome) / prevIncome) * 100 : 0;
+  const expensesChange = prevExpenses > 0 ? ((currentExpenses - prevExpenses) / prevExpenses) * 100 : 0;
+  
+  return {
+    currentIncome,
+    currentExpenses,
+    prevIncome,
+    prevExpenses,
+    incomeChange: isFinite(incomeChange) ? incomeChange : 0,
+    expensesChange: isFinite(expensesChange) ? expensesChange : 0,
+    prevMonthKey
+  };
 };
 
 /**
- * Calculate trends over last N months
+ * Calculate spending by category trends
  */
-export const calculateTrends = (transactions, currentMonthKey, monthsBack = 6) => {
-  const [year, month] = currentMonthKey.split('-').map(Number);
-  const trends = [];
+export const getCategoryTrends = (transactions, months = 3) => {
+  const categoryData = {};
   
-  for (let i = monthsBack - 1; i >= 0; i--) {
-    const date = new Date(year, month - 1 - i, 1);
-    const monthKey = getMonthKey(date.toISOString());
-    const metrics = calculateFinancialMetrics(transactions, monthKey);
-    trends.push(metrics);
-  }
+  transactions.forEach(t => {
+    if (t.type !== 'expense') return;
+    
+    const monthKey = t.date.substring(0, 7);
+    if (!categoryData[t.category]) {
+      categoryData[t.category] = {};
+    }
+    if (!categoryData[t.category][monthKey]) {
+      categoryData[t.category][monthKey] = 0;
+    }
+    categoryData[t.category][monthKey] += parseFloat(t.amount);
+  });
+  
+  // Calculate trends
+  const trends = {};
+  Object.keys(categoryData).forEach(category => {
+    const monthlyAmounts = Object.values(categoryData[category]).slice(-months);
+    if (monthlyAmounts.length >= 2) {
+      const recent = monthlyAmounts[monthlyAmounts.length - 1];
+      const previous = monthlyAmounts[monthlyAmounts.length - 2];
+      const change = previous > 0 ? ((recent - previous) / previous) * 100 : 0;
+      trends[category] = {
+        current: recent,
+        previous,
+        change: isFinite(change) ? change : 0
+      };
+    }
+  });
   
   return trends;
 };
 
 /**
- * Calculate average spending by category over N months
+ * Check if spending exceeds threshold
  */
-export const calculateCategoryAverages = (transactions, currentMonthKey, monthsBack = 3) => {
-  const trends = calculateTrends(transactions, currentMonthKey, monthsBack);
-  const categoryTotals = {};
+export const checkSpendingAlerts = (currentExpenses, avgExpenses, threshold = 20) => {
+  const alerts = [];
   
-  trends.forEach(trend => {
-    const breakdown = calculateCategoryBreakdown(transactions, trend.monthKey);
-    Object.entries(breakdown).forEach(([catId, data]) => {
-      if (!categoryTotals[catId]) {
-        categoryTotals[catId] = { total: 0, months: 0 };
-      }
-      categoryTotals[catId].total += data.total;
-      categoryTotals[catId].months += 1;
-    });
-  });
+  if (avgExpenses > 0) {
+    const percentageOver = ((currentExpenses - avgExpenses) / avgExpenses) * 100;
+    
+    if (percentageOver > threshold) {
+      alerts.push({
+        type: 'warning',
+        message: `Gastas ${percentageOver.toFixed(1)}% acima da média!`,
+        severity: percentageOver > 50 ? 'high' : 'medium'
+      });
+    } else if (percentageOver < -threshold) {
+      alerts.push({
+        type: 'success',
+        message: `Gastas ${Math.abs(percentageOver).toFixed(1)}% abaixo da média!`,
+        severity: 'low'
+      });
+    }
+  }
   
-  const averages = {};
-  Object.entries(categoryTotals).forEach(([catId, data]) => {
-    averages[catId] = data.total / data.months;
-  });
-  
-  return averages;
+  return alerts;
 };
 
 /**
- * Detect spending anomalies (spending significantly above average)
+ * Calculate savings goals progress
  */
-export const detectAnomalies = (transactions, currentMonthKey) => {
-  const currentBreakdown = calculateCategoryBreakdown(transactions, currentMonthKey);
-  const averages = calculateCategoryAverages(transactions, currentMonthKey, 3);
-  const anomalies = [];
+export const calculateSavingsGoal = (currentBalance, goalAmount, monthlyIncome) => {
+  if (!goalAmount || goalAmount <= 0) return null;
   
-  Object.entries(currentBreakdown).forEach(([catId, data]) => {
-    const average = averages[catId] || 0;
-    if (average > 0) {
-      const percentChange = ((data.total - average) / average) * 100;
-      if (percentChange > 25) { // 25% above average
-        anomalies.push({
-          category: catId,
-          current: data.total,
-          average: average,
-          percentChange: percentChange
-        });
-      }
+  const progress = (currentBalance / goalAmount) * 100;
+  const remaining = goalAmount - currentBalance;
+  const monthsToGoal = monthlyIncome > 0 && remaining > 0 
+    ? Math.ceil(remaining / monthlyIncome)
+    : null;
+  
+  return {
+    progress: Math.min(progress, 100),
+    remaining: Math.max(remaining, 0),
+    monthsToGoal,
+    achieved: currentBalance >= goalAmount
+  };
+};
+
+/**
+ * Get last N months data for charts
+ */
+export const getMonthlyTrends = (transactions, months = 6) => {
+  const monthlyData = {};
+  
+  transactions.forEach(t => {
+    const monthKey = t.date.substring(0, 7);
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { income: 0, expenses: 0 };
+    }
+    
+    if (t.type === 'income') {
+      monthlyData[monthKey].income += parseFloat(t.amount);
+    } else {
+      monthlyData[monthKey].expenses += parseFloat(t.amount);
     }
   });
   
-  return anomalies.sort((a, b) => b.percentChange - a.percentChange);
-};
-
-/**
- * Generate smart savings suggestions
- */
-export const generateSmartSuggestions = (transactions, currentMonthKey) => {
-  const metrics = calculateFinancialMetrics(transactions, currentMonthKey);
-  const anomalies = detectAnomalies(transactions, currentMonthKey);
-  const breakdown = calculateCategoryBreakdown(transactions, currentMonthKey);
-  const suggestions = [];
+  const sortedMonths = Object.keys(monthlyData).sort().slice(-months);
   
-  // Suggestion 1: High spending alert
-  if (anomalies.length > 0) {
-    const top = anomalies[0];
-    suggestions.push({
-      type: 'warning',
-      category: top.category,
-      title: 'Gasto Acima da Média',
-      message: `Este mês gastou ${top.percentChange.toFixed(0)}% mais em ${top.category} que a média (${formatCurrency(top.average)}).`,
-      potentialSaving: top.current - top.average
-    });
-  }
-  
-  // Suggestion 2: Low savings rate
-  if (metrics.savingsRate < 10 && metrics.income > 0) {
-    suggestions.push({
-      type: 'info',
-      title: 'Taxa de Poupança Baixa',
-      message: `Está a poupar apenas ${metrics.savingsRate.toFixed(1)}%. Recomenda-se 20% do rendimento.`,
-      potentialSaving: (metrics.income * 0.20) - metrics.balance
-    });
-  }
-  
-  // Suggestion 3: Category optimization (find biggest expense category)
-  const sortedCategories = Object.entries(breakdown)
-    .sort(([, a], [, b]) => b.total - a.total);
-  
-  if (sortedCategories.length > 0 && sortedCategories[0][1].total > metrics.expenses * 0.35) {
-    const [catId, data] = sortedCategories[0];
-    suggestions.push({
-      type: 'tip',
-      category: catId,
-      title: 'Maior Categoria de Gasto',
-      message: `${catId} representa ${((data.total / metrics.expenses) * 100).toFixed(0)}% das suas despesas. Considere otimizar aqui.`,
-      potentialSaving: data.total * 0.10 // 10% reduction
-    });
-  }
-  
-  // Suggestion 4: Positive reinforcement
-  if (metrics.savingsRate > 20) {
-    suggestions.push({
-      type: 'success',
-      title: 'Excelente Poupança!',
-      message: `Está a poupar ${metrics.savingsRate.toFixed(1)}% do rendimento. Continue assim! 🎉`,
-      potentialSaving: 0
-    });
-  }
-  
-  return suggestions.slice(0, 3); // Max 3 suggestions
-};
-
-/**
- * Calculate savings goal progress
- */
-export const calculateSavingsGoalProgress = (transactions, goalAmount, startDate) => {
-  const relevantTransactions = transactions.filter(
-    t => new Date(t.date) >= new Date(startDate)
-  );
-  
-  const totalIncome = relevantTransactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const totalExpenses = relevantTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const currentSavings = totalIncome - totalExpenses;
-  const progress = goalAmount > 0 ? (currentSavings / goalAmount) * 100 : 0;
-  
-  return {
-    goalAmount,
-    currentSavings,
-    remaining: goalAmount - currentSavings,
-    progress: Math.min(progress, 100),
-    achieved: currentSavings >= goalAmount
-  };
+  return sortedMonths.map(month => ({
+    month,
+    income: monthlyData[month].income,
+    expenses: monthlyData[month].expenses,
+    balance: monthlyData[month].income - monthlyData[month].expenses
+  }));
 };
