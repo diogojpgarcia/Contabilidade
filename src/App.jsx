@@ -12,7 +12,7 @@ import AddTab from './components/tabs/AddTab';
 import SearchTab from './components/tabs/SearchTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
-import './App-NEW.css';
+import './styles/modern.css';
 
 const categoriesProfessional = { expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME };
 
