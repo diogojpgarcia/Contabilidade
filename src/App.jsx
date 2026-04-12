@@ -9,7 +9,7 @@ import { getMonthKey } from './utils/data';
 import HomeTab from './components/tabs/HomeTab';
 import StatsTab from './components/tabs/StatsTab';
 import AddTab from './components/tabs/AddTab';
-import SearchTab from './components/tabs/SearchTab';
+import BudgetTab from './components/tabs/BudgetTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
 import './styles/modern.css';
@@ -218,18 +218,18 @@ const App = () => {
         
         {activeTab === 'add' && (
           <AddTab
-            onSubmit={handleAddTransaction}
+            user={currentUser}
             categories={categoriesProfessional}
+            onTransactionAdded={loadTransactions}
           />
         )}
         
-        {activeTab === 'search' && (
-          <SearchTab
-            transactions={filteredTransactions}
-            allTransactions={transactions}
+        {activeTab === 'budget' && (
+          <BudgetTab
+            user={currentUser}
+            transactions={transactions}
+            currentMonth={currentMonth}
             categories={categoriesProfessional}
-            onDelete={handleDeleteTransaction}
-            onEdit={handleEditTransaction}
           />
         )}
         
@@ -268,11 +268,11 @@ const App = () => {
         </button>
         
         <button
-          className={`nav-item ${activeTab === 'search' ? 'active' : ''}`}
-          onClick={() => setActiveTab('search')}
+          className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`}
+          onClick={() => setActiveTab('budget')}
         >
-          <span className="nav-icon">🔍</span>
-          <span className="nav-label">Search</span>
+          <span className="nav-icon">💰</span>
+          <span className="nav-label">Budget</span>
         </button>
         
         <button
