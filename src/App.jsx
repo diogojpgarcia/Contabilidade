@@ -220,7 +220,7 @@ const App = () => {
           <AddTab
             user={currentUser}
             categories={categoriesProfessional}
-            onTransactionAdded={loadTransactions}
+            onTransactionAdded={loadUserTransactions}
           />
         )}
         
