@@ -1,0 +1,204 @@
+.add-tab {
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.add-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.add-header h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.375rem;
+  letter-spacing: -0.03em;
+}
+
+.add-header p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+}
+
+.add-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Type Toggle */
+.type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 0.5px solid var(--separator);
+}
+
+.type-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: -0.01em;
+}
+
+.type-btn:active {
+  opacity: 0.6;
+}
+
+.type-btn.active.expense {
+  background: var(--danger);
+  color: white;
+}
+
+.type-btn.active.income {
+  background: var(--success);
+  color: white;
+}
+
+.type-icon-sf {
+  font-size: 1.25rem;
+  font-weight: 300;
+}
+
+/* Form Fields */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.amount-input {
+  position: relative;
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--separator);
+  border-radius: 16px;
+  padding: 1.25rem 1rem;
+  transition: all var(--transition-fast);
+}
+
+.amount-input:focus-within {
+  border-color: var(--primary);
+  background: var(--bg-elevated);
+}
+
+.amount-input input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: right;
+  padding-right: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.amount-input input:focus {
+  outline: none;
+}
+
+.amount-input .currency {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  pointer-events: none;
+  letter-spacing: -0.02em;
+}
+
+.category-select,
+.text-input,
+.date-input {
+  padding: 0.875rem 1rem;
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--separator);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  transition: all var(--transition-fast);
+}
+
+.category-select:focus,
+.text-input:focus,
+.date-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg-elevated);
+}
+
+.category-select {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23007AFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.category-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Submit Button */
+.btn-submit {
+  padding: 1rem;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: 0.5rem;
+  letter-spacing: -0.02em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-submit:active:not(:disabled) {
+  opacity: 0.6;
+  transform: scale(0.98);
+}
+
+.btn-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-submit.expense {
+  background: var(--danger);
+}
+
+.btn-submit.income {
+  background: var(--success);
+}

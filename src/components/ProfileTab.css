@@ -1,0 +1,306 @@
+.profile-tab {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+/* User Info */
+.user-info-section {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.user-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  font-size: 2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem auto;
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
+  letter-spacing: -0.02em;
+}
+
+.user-name {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.375rem;
+  letter-spacing: -0.03em;
+}
+
+.user-email {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+}
+
+/* Profile Section */
+.profile-section {
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--separator);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+/* Theme Selector */
+.theme-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.875rem 0.5rem;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--separator);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: -0.01em;
+}
+
+.theme-option:active {
+  opacity: 0.6;
+}
+
+.theme-option.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.theme-option .sf-icon {
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+/* Profile Options */
+.profile-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 0;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.profile-option:active {
+  opacity: 0.6;
+}
+
+.option-icon-sf {
+  font-size: 1.375rem;
+  width: 28px;
+  text-align: center;
+  color: var(--primary);
+  font-weight: 300;
+}
+
+.option-label {
+  flex: 1;
+  font-weight: 400;
+  font-size: 1.0625rem;
+  text-align: left;
+  letter-spacing: -0.02em;
+}
+
+.option-arrow-sf {
+  color: var(--text-tertiary);
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+.option-separator {
+  height: 0.5px;
+  background: var(--separator);
+  margin: 0.25rem 0;
+}
+
+/* Logout Button */
+.btn-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+.btn-logout:active {
+  opacity: 0.6;
+}
+
+.btn-logout .sf-icon {
+  font-size: 1.125rem;
+  font-weight: 400;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--separator);
+  border-radius: 20px;
+  max-width: 400px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.reset-password-modal {
+  padding: 1.5rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.modal-header h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  border: 0.5px solid var(--separator);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-close:active {
+  opacity: 0.6;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-description {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+
+.input-field {
+  padding: 0.875rem;
+  background: var(--bg-tertiary);
+  border: 0.5px solid var(--separator);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.status-message {
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.status-message.success {
+  background: rgba(52, 199, 89, 0.1);
+  color: var(--success);
+}
+
+.status-message.error {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--danger);
+}
+
+.btn-primary {
+  padding: 0.875rem 1.25rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: -0.02em;
+}
+
+.btn-primary:active {
+  opacity: 0.6;
+}
+
+.btn-primary.full-width {
+  width: 100%;
+}
