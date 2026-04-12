@@ -24,8 +24,10 @@ import {
   saveTransactions,
   loadTransactions
 } from './utils/data';
-import { categoriesProfessional } from './utils/categories-professional';
+import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from './utils/categories-professional';
 import './App.css';
+
+const categoriesProfessional = { expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME };
 
 const App = () => {
   const [authStage, setAuthStage] = useState('user-select');
