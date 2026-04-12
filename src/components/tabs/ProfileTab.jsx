@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { authService } from '../../lib/supabase';
+import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import './ProfileTab.css';
 
@@ -11,20 +11,37 @@ const ProfileTab = ({ user, userName, onLogout }) => {
   const [resetStatus, setResetStatus] = useState('');
 
   useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = localStorage.getItem('app-theme') || 'dark';
-    setTheme(savedTheme);
-    applyTheme(savedTheme);
-  }, []);
+    loadUserPreferences();
+  }, [user]);
+
+  const loadUserPreferences = async () => {
+    try {
+      const settings = await dbService.getUserSettings(user.id);
+      const savedTheme = settings?.theme || 'dark';
+      setTheme(savedTheme);
+      applyTheme(savedTheme);
+    } catch (error) {
+      console.error('Error loading preferences:', error);
+      // Fallback to dark theme
+      applyTheme('dark');
+    }
+  };
 
   const applyTheme = (newTheme) => {
     document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('app-theme', newTheme);
   };
 
-  const handleThemeChange = (newTheme) => {
+  const handleThemeChange = async (newTheme) => {
     setTheme(newTheme);
     applyTheme(newTheme);
+    
+    // Save to database
+    try {
+      await dbService.updateUserSettings(user.id, { theme: newTheme });
+      console.log('✓ Tema guardado:', newTheme);
+    } catch (error) {
+      console.error('Error saving theme:', error);
+    }
   };
 
   const handleResetPassword = async () => {

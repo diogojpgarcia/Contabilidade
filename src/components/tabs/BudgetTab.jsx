@@ -38,15 +38,25 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
 
   const loadData = async () => {
     try {
+      console.log('📊 Loading budget data for user:', user.id);
       const settings = await dbService.getUserSettings(user.id);
+      console.log('📦 Settings loaded:', settings);
+      
       if (settings?.category_budgets) {
+        console.log('💰 Budgets found:', settings.category_budgets);
         setBudgets(settings.category_budgets);
+      } else {
+        console.log('⚠️ No budgets found, starting empty');
       }
+      
       if (settings?.travel_goal) {
+        console.log('✈️ Travel goal found:', settings.travel_goal);
         setTravelGoal(settings.travel_goal);
+      } else {
+        console.log('⚠️ No travel goal found');
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
     }
   };
 
@@ -54,19 +64,28 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
     try {
       const budgetValue = budgets[categoryId];
       if (!budgetValue || budgetValue <= 0) {
-        console.log('⚠️ Sem valor para guardar');
+        console.log('⚠️ Sem valor para guardar para', categoryId);
         return;
       }
+      
+      console.log('💾 A guardar orçamento:', categoryId, '=', budgetValue);
+      console.log('💾 Todos os budgets:', budgets);
       
       await dbService.updateUserSettings(user.id, {
         category_budgets: budgets
       });
-      console.log('✓ Orçamento guardado:', categoryId, budgetValue);
+      
+      console.log('✓ Orçamento guardado com sucesso!');
+      console.log('✓ User ID:', user.id);
+      console.log('✓ Budgets guardados:', budgets);
+      
       alert('✓ Guardado!');
     } catch (error) {
       console.error('❌ Error saving budget:', error);
-      console.error('Details:', error.message);
-      // Don't show alert - just log for debugging
+      console.error('❌ Details:', error.message);
+      console.error('❌ User ID:', user.id);
+      console.error('❌ Budgets tentados:', budgets);
+      alert('✕ Erro ao guardar. Vê o console (F12)');
     }
   };
 
