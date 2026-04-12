@@ -248,7 +248,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
           onClick={() => setActiveTab('home')}
         >
-          <span className="nav-icon">🏠</span>
+          <span className="nav-icon">⌂</span>
           <span className="nav-label">Home</span>
         </button>
         
@@ -256,7 +256,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveTab('stats')}
         >
-          <span className="nav-icon">📊</span>
+          <span className="nav-icon">◧</span>
           <span className="nav-label">Stats</span>
         </button>
         
@@ -264,14 +264,14 @@ const App = () => {
           className={`nav-item nav-item-add ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => setActiveTab('add')}
         >
-          <span className="nav-icon-large">➕</span>
+          <span className="nav-icon-large">+</span>
         </button>
         
         <button
           className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`}
           onClick={() => setActiveTab('budget')}
         >
-          <span className="nav-icon">💰</span>
+          <span className="nav-icon">◈</span>
           <span className="nav-label">Budget</span>
         </button>
         
@@ -279,7 +279,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
-          <span className="nav-icon">👤</span>
+          <span className="nav-icon">◉</span>
           <span className="nav-label">Perfil</span>
         </button>
       </nav>
