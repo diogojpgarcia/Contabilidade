@@ -10,6 +10,7 @@ import FinancialOverview from './components/FinancialOverview';
 import SmartSuggestions from './components/SmartSuggestions';
 import ProfessionalDashboard from './components/ProfessionalDashboard';
 import AdvancedAnalytics from './components/AdvancedAnalytics';
+import ErrorBoundary from './components/ErrorBoundary';
 import {
   USERS,
   hasUserSetupPIN,
@@ -275,22 +276,26 @@ const App = () => {
       )}
 
       <main className="main-content">
-        <ProfessionalDashboard
-          income={monthlyIncome}
-          expenses={monthlyExpenses}
-          balance={balance}
-          transactions={filteredTransactions}
-          currentMonth={currentMonth}
-          onMonthChange={setCurrentMonth}
-          onBackToCurrentMonth={handleBackToCurrentMonth}
-          categories={safeCategories}
-        />
+        <ErrorBoundary>
+          <ProfessionalDashboard
+            income={monthlyIncome}
+            expenses={monthlyExpenses}
+            balance={balance}
+            transactions={filteredTransactions}
+            currentMonth={currentMonth}
+            onMonthChange={setCurrentMonth}
+            onBackToCurrentMonth={handleBackToCurrentMonth}
+            categories={safeCategories}
+          />
+        </ErrorBoundary>
 
-        <SmartSuggestions
-          transactions={filteredTransactions}
-          balance={balance}
-          savingsGoal={savingsGoal}
-        />
+        <ErrorBoundary>
+          <SmartSuggestions
+            transactions={filteredTransactions}
+            balance={balance}
+            savingsGoal={savingsGoal}
+          />
+        </ErrorBoundary>
 
         <FinancialOverview
           income={monthlyIncome}
