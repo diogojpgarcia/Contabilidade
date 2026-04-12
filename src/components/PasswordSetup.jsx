@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const PasswordSetup = ({ user, onComplete, onBack }) => {
+const PasswordSetup = ({ user, onComplete, onBack, onSwitchToLogin }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -94,6 +94,16 @@ const PasswordSetup = ({ user, onComplete, onBack }) => {
         >
           Criar Conta
         </button>
+
+        {onSwitchToLogin && (
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="btn-switch-mode"
+          >
+            Já tens conta? Faz login aqui
+          </button>
+        )}
 
         {onBack && (
           <button type="button" onClick={onBack} className="btn-back-link">

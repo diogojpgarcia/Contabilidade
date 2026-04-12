@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 
-const PasswordLogin = ({ user, onSuccess, onBack }) => {
+const PasswordLogin = ({ user, onSuccess, onBack, error: externalError }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Display external error (from App.jsx when password validation fails)
+  const displayError = externalError || error;
 
   const handleSubmit = (e) => {
     if (e) {
@@ -60,7 +63,7 @@ const PasswordLogin = ({ user, onSuccess, onBack }) => {
               placeholder="Mínimo 4 caracteres"
               autoFocus
               autoComplete="current-password"
-              className={error ? 'error' : ''}
+              className={displayError ? 'error' : ''}
             />
             <button
               type="button"
@@ -78,7 +81,7 @@ const PasswordLogin = ({ user, onSuccess, onBack }) => {
           )}
         </div>
 
-        {error && <div className="password-error">{error}</div>}
+        {displayError && <div className="password-error">{displayError}</div>}
 
         {/* Botão com DUPLO handler: submit E click direto */}
         <button 
