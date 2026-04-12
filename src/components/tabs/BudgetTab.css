@@ -49,6 +49,28 @@
   gap: 0.75rem;
 }
 
+.cat-icon-sf {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  flex-shrink: 0;
+  font-weight: 300;
+  color: var(--text-primary);
+}
+
+.cat-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary) !important;
+  flex: 1;
+  letter-spacing: -0.02em;
+}
+
 .cat-icon {
   font-size: 1.75rem;
   width: 44px;
@@ -436,26 +458,4 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.625rem;
   margin-top: 0.5rem;
-}
-
-.cat-icon-sf {
-  font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-tertiary);
-  border-radius: 10px;
-  flex-shrink: 0;
-  font-weight: 300;
-  color: var(--text-primary);
-}
-
-.cat-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  flex: 1;
-  letter-spacing: -0.02em;
 }
