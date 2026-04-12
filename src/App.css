@@ -2815,3 +2815,29 @@ body {
     gap: 0.5rem;
   }
 }
+
+/* v4.0: Mobile Touch Improvements */
+.btn-login,
+.btn-create {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  cursor: pointer;
+  min-height: 48px; /* iOS touch target */
+}
+
+.btn-login:active,
+.btn-create:active {
+  transform: scale(0.98);
+}
+
+/* Garantir que inputs não fazem zoom no iOS */
+input[type="password"],
+input[type="text"] {
+  font-size: 16px !important; /* Previne zoom no iOS */
+}
+
+/* Melhor feedback visual no mobile */
+button:active {
+  opacity: 0.8;
+}
