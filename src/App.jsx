@@ -26,8 +26,6 @@ import {
 } from './utils/data';
 import { categoriesProfessional } from './utils/categories-professional';
 import './App.css';
-import './styles/security-styles.css';
-import './styles/professional-styles.css';
 
 const App = () => {
   const [authStage, setAuthStage] = useState('user-select');
