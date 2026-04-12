@@ -109,6 +109,11 @@ const App = () => {
     setAuthError('');
   };
 
+  const handleSwitchToLogin = () => {
+    setAuthStage('password-login');
+    setAuthError('');
+  };
+
   const handleRecoverySetupComplete = () => {
     setShowRecoverySetup(false);
     setCurrentSession(selectedUser.id);
@@ -181,6 +186,7 @@ const App = () => {
             user={selectedUser}
             onComplete={handlePasswordSetupComplete}
             onBack={handleBackToUserSelect}
+            onSwitchToLogin={handleSwitchToLogin}
           />
         </div>
       </div>
@@ -195,13 +201,8 @@ const App = () => {
             user={selectedUser}
             onSuccess={handlePasswordLoginComplete}
             onBack={handleBackToUserSelect}
+            error={authError}
           />
-          <button 
-            onClick={() => alert('Sistema de recuperação em desenvolvimento')} 
-            className="btn-forgot-password"
-          >
-            Esqueci a password
-          </button>
         </div>
       </div>
     );
