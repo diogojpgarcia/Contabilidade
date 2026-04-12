@@ -4,7 +4,7 @@ import {
   SECURITY_QUESTIONS 
 } from '../utils/security-system';
 
-const RecoverySetup = ({ user, onComplete, onSkip }) => {
+const RecoverySetup = ({ userId, onComplete, onSkip }) => {
   const [step, setStep] = useState(1);
   const [selectedQuestion, setSelectedQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -32,11 +32,14 @@ const RecoverySetup = ({ user, onComplete, onSkip }) => {
     }
 
     try {
-      const code = await setupRecovery(user.id, selectedQuestion, answer);
+      console.log('🔐 Configurando recuperação para:', userId);
+      const code = await setupRecovery(userId, selectedQuestion, answer);
+      console.log('✅ Código de recuperação gerado:', code);
       setRecoveryCode(code);
       setStep(2);
     } catch (err) {
-      setError('Erro ao configurar recuperação');
+      console.error('❌ Erro ao configurar recuperação:', err);
+      setError('Erro ao configurar recuperação: ' + err.message);
     }
   };
 
