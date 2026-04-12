@@ -24,7 +24,7 @@ import {
   saveTransactions,
   loadTransactions
 } from './utils/data';
-import { categoriesProfessional } from './data/categories-professional';
+import { categoriesProfessional } from './utils/categories-professional';
 import './App.css';
 import './styles/security-styles.css';
 import './styles/professional-styles.css';
