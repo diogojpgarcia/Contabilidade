@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const PINInput = ({ length = 4, onComplete, onBack, error }) => {
+const PINInput = ({ length = 4, onComplete, onBack, error, masked = true }) => {
   const [digits, setDigits] = useState(Array(length).fill(''));
   const inputRefs = useRef([]);
 
@@ -34,11 +34,12 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Check if complete
-    if (index === length - 1 && value) {
-      const pin = newDigits.join('');
-      if (pin.length === length) {
-        onComplete(pin);
+    // Check if complete - FIXED: check after state update
+    if (value && index === length - 1) {
+      const pin = [...newDigits].join('');
+      if (pin.length === length && !pin.includes('')) {
+        // Small delay to ensure state is updated
+        setTimeout(() => onComplete(pin), 50);
       }
     }
   };
@@ -78,14 +79,14 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
           <input
             key={index}
             ref={el => inputRefs.current[index] = el}
-            type="tel"
+            type={masked ? "password" : "tel"}
             inputMode="numeric"
             maxLength="1"
             value={digit}
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             onPaste={handlePaste}
-            className={`pin-digit ${error ? 'error' : ''}`}
+            className={`pin-digit ${error ? 'error' : ''} ${masked ? 'masked' : ''}`}
             autoComplete="off"
           />
         ))}
