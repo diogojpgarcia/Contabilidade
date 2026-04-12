@@ -76,5 +76,43 @@ export const dbService = {
       .delete()
       .eq('id', transactionId)
     if (error) throw error
+  },
+
+  async getUserSettings(userId) {
+    const { data, error } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    
+    if (error && error.code !== 'PGRST116') throw error
+    return data
+  },
+
+  async updateUserSettings(userId, settings) {
+    const { data: existing } = await supabase
+      .from('user_settings')
+      .select('id')
+      .eq('user_id', userId)
+      .single()
+
+    if (existing) {
+      const { data, error } = await supabase
+        .from('user_settings')
+        .update(settings)
+        .eq('user_id', userId)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    } else {
+      const { data, error } = await supabase
+        .from('user_settings')
+        .insert([{ user_id: userId, ...settings }])
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    }
   }
 }
