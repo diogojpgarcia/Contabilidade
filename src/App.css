@@ -2406,3 +2406,20 @@ body {
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
+
+/* HOTFIX v3.0.1: PIN Input Masking */
+.pin-digit.masked {
+  font-size: 2rem;
+  letter-spacing: 0.1em;
+}
+
+.pin-digit.masked::-ms-reveal,
+.pin-digit.masked::-webkit-credentials-auto-fill-button {
+  display: none;
+}
+
+/* Better password dots */
+.pin-digit[type="password"] {
+  -webkit-text-security: disc;
+  text-security: disc;
+}
