@@ -230,6 +230,17 @@ const App = () => {
     .reduce((sum, t) => sum + t.amount, 0);
   const balance = monthlyIncome - monthlyExpenses;
 
+  // Safety check - ensure categories exist
+  const safeCategories = categoriesProfessional || { expense: [], income: [] };
+
+  console.log('📊 App state:', {
+    currentUser: currentUser?.name,
+    transactions: transactions?.length,
+    filteredTransactions: filteredTransactions?.length,
+    categories: !!categoriesProfessional,
+    safeCategories: !!safeCategories
+  });
+
   return (
     <div className="app" style={{ '--user-color': currentUser.color }}>
       <header className="app-header">
@@ -272,7 +283,7 @@ const App = () => {
           currentMonth={currentMonth}
           onMonthChange={setCurrentMonth}
           onBackToCurrentMonth={handleBackToCurrentMonth}
-          categories={categoriesProfessional}
+          categories={safeCategories}
         />
 
         <SmartSuggestions
@@ -292,7 +303,7 @@ const App = () => {
           transactions={filteredTransactions}
           onDelete={handleDeleteTransaction}
           onEdit={handleEditTransaction}
-          categories={categoriesProfessional}
+          categories={safeCategories}
         />
 
         <button
@@ -306,7 +317,7 @@ const App = () => {
           <EnhancedTransactionForm
             onSubmit={handleAddTransaction}
             onCancel={() => setShowTransactionForm(false)}
-            categories={categoriesProfessional}
+            categories={safeCategories}
             userColor={currentUser.color}
           />
         )}
@@ -316,7 +327,7 @@ const App = () => {
             transactions={transactions}
             currentMonth={currentMonth}
             onClose={() => setShowAdvancedAnalytics(false)}
-            categories={categoriesProfessional}
+            categories={safeCategories}
           />
         )}
       </main>
