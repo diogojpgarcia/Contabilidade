@@ -34,15 +34,31 @@ const CloudAuth = ({ onSuccess }) => {
         }
         const { user } = await authService.signUp(email, password, fullName);
         console.log('✅ Conta criada!', user);
-        // Supabase pode requerer confirmação de email
+        
         if (user) {
-          alert('Conta criada! Verifica o teu email para confirmar.');
+          // Login automático após signup
+          onSuccess(user);
+        } else {
+          // Supabase pode requerer confirmação de email
+          alert('✅ Conta criada! Verifica o teu email para confirmar e depois faz login.');
           setIsLogin(true);
+          setPassword('');
         }
       }
     } catch (err) {
       console.error('❌ Erro:', err);
-      setError(err.message || 'Erro ao autenticar');
+      
+      // Mensagens de erro mais claras
+      if (err.message.includes('Invalid login credentials')) {
+        setError('Email ou password incorretos');
+      } else if (err.message.includes('User already registered')) {
+        setError('Este email já está registado. Faz login.');
+        setIsLogin(true);
+      } else if (err.message.includes('Password should be at least')) {
+        setError('A password deve ter pelo menos 6 caracteres');
+      } else {
+        setError(err.message || 'Erro ao autenticar');
+      }
     } finally {
       setLoading(false);
     }
@@ -59,7 +75,7 @@ const CloudAuth = ({ onSuccess }) => {
     <div className="cloud-auth">
       <div className="auth-header">
         <h1>💰 Finanças Familiares</h1>
-        <p>{isLogin ? 'Acesso Multi-Dispositivo' : 'Criar Conta Cloud'}</p>
+        <p>{isLogin ? 'Bem-vindo de volta!' : 'Cria a tua conta'}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="auth-form">
@@ -88,6 +104,7 @@ const CloudAuth = ({ onSuccess }) => {
             placeholder="seu@email.com"
             autoComplete="email"
             disabled={loading}
+            autoFocus={isLogin}
           />
         </div>
 
@@ -102,6 +119,7 @@ const CloudAuth = ({ onSuccess }) => {
               placeholder="Mínimo 6 caracteres"
               autoComplete={isLogin ? 'current-password' : 'new-password'}
               disabled={loading}
+              className={error ? 'error' : ''}
             />
             <button
               type="button"
@@ -112,6 +130,11 @@ const CloudAuth = ({ onSuccess }) => {
               {showPassword ? '👁️' : '👁️‍🗨️'}
             </button>
           </div>
+          {password.length > 0 && password.length < 6 && (
+            <small style={{ color: 'orange', display: 'block', marginTop: '0.5rem' }}>
+              Faltam {6 - password.length} caracteres
+            </small>
+          )}
         </div>
 
         {error && <div className="auth-error">{error}</div>}
@@ -134,14 +157,15 @@ const CloudAuth = ({ onSuccess }) => {
           className="btn-toggle-mode"
           disabled={loading}
         >
-          {isLogin ? 'Não tens conta? Cria aqui' : 'Já tens conta? Login'}
+          {isLogin ? 'Não tens conta? Cria aqui' : 'Já tens conta? Faz login'}
         </button>
       </form>
 
       <div className="cloud-benefits">
-        <p>✅ Sincronização automática</p>
-        <p>✅ Acesso em qualquer dispositivo</p>
-        <p>✅ Backup na cloud</p>
+        <p><strong>✅ Benefícios:</strong></p>
+        <p>• Acesso em qualquer dispositivo</p>
+        <p>• Sincronização automática</p>
+        <p>• Backup seguro na cloud</p>
       </div>
     </div>
   );
