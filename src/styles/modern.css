@@ -1,5 +1,6 @@
 /* Apple-inspired Design System */
-:root {
+:root,
+[data-theme="dark"] {
   /* Colors - iOS style */
   --primary: #007AFF;
   --primary-light: #5AC8FA;
@@ -35,6 +36,102 @@
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  /* Colors - iOS Light */
+  --primary: #007AFF;
+  --primary-light: #0051D5;
+  --success: #28CD41;
+  --warning: #FF9F0A;
+  --danger: #FF3B30;
+  
+  /* Backgrounds */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F2F2F7;
+  --bg-tertiary: #E5E5EA;
+  --bg-elevated: #FFFFFF;
+  
+  /* Text */
+  --text-primary: #000000;
+  --text-secondary: #3C3C43;
+  --text-tertiary: #8E8E93;
+  
+  /* System */
+  --border: rgba(0, 0, 0, 0.1);
+  --separator: rgba(60, 60, 67, 0.29);
+  --overlay: rgba(0, 0, 0, 0.3);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Auto Theme - follows system preference */
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] {
+    /* Colors - iOS Light */
+    --primary: #007AFF;
+    --primary-light: #0051D5;
+    --success: #28CD41;
+    --warning: #FF9F0A;
+    --danger: #FF3B30;
+    
+    /* Backgrounds */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F2F2F7;
+    --bg-tertiary: #E5E5EA;
+    --bg-elevated: #FFFFFF;
+    
+    /* Text */
+    --text-primary: #000000;
+    --text-secondary: #3C3C43;
+    --text-tertiary: #8E8E93;
+    
+    /* System */
+    --border: rgba(0, 0, 0, 0.1);
+    --separator: rgba(60, 60, 67, 0.29);
+    --overlay: rgba(0, 0, 0, 0.3);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* Colors - iOS Dark */
+    --primary: #007AFF;
+    --primary-light: #5AC8FA;
+    --success: #34C759;
+    --warning: #FF9500;
+    --danger: #FF3B30;
+    
+    /* Backgrounds */
+    --bg-primary: #000000;
+    --bg-secondary: #1C1C1E;
+    --bg-tertiary: #2C2C2E;
+    --bg-elevated: #3A3A3C;
+    
+    /* Text */
+    --text-primary: #FFFFFF;
+    --text-secondary: #98989D;
+    --text-tertiary: #636366;
+    
+    /* System */
+    --border: rgba(255, 255, 255, 0.1);
+    --separator: rgba(84, 84, 88, 0.6);
+    --overlay: rgba(0, 0, 0, 0.4);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
 }
 
 * {
@@ -393,9 +490,4 @@ input::placeholder {
   .main-content-new {
     max-width: 800px;
   }
-}
-
-/* Dark mode adjustments (iOS auto dark mode support) */
-@media (prefers-color-scheme: dark) {
-  /* Already in dark mode */
 }
