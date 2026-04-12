@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
+import ProfessionalDashboard from './components/ProfessionalDashboard';
 import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
 import TransactionList from './components/TransactionList';
@@ -227,20 +228,13 @@ const App = () => {
       )}
 
       <main className="main-content">
-        <div className="simple-overview">
-          <div className="balance-card">
-            <h3>Saldo do Mês</h3>
-            <div className="balance-amount" style={{ 
-              color: balance >= 0 ? '#10b981' : '#ef4444' 
-            }}>
-              {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
-            </div>
-            <div className="balance-details">
-              <div>Receitas: <span style={{color: '#10b981'}}>+{monthlyIncome.toFixed(2)}€</span></div>
-              <div>Despesas: <span style={{color: '#ef4444'}}>-{monthlyExpenses.toFixed(2)}€</span></div>
-            </div>
-          </div>
-        </div>
+        <ProfessionalDashboard
+          income={monthlyIncome}
+          expenses={monthlyExpenses}
+          balance={balance}
+          transactions={filteredTransactions}
+          categories={safeCategories}
+        />
 
         <ErrorBoundary>
           <TransactionList
