@@ -171,12 +171,6 @@ const App = () => {
     }
   };
 
-  const handleBackToUserSelect = () => {
-    setAuthStage('user-select');
-    setSelectedUser(null);
-    setPinLength(null);
-    setPinError('');
-  };
 
   const handleBackToPinLength = () => {
     setPinLength(null);
