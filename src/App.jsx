@@ -17,11 +17,13 @@ import {
   validateUserPIN,
   getCurrentSession,
   setCurrentSession,
-  clearCurrentSession,
+  clearCurrentSession
+} from './utils/auth';
+import {
   getMonthKey,
   saveTransactions,
   loadTransactions
-} from './utils/storage';
+} from './utils/data';
 import { categoriesProfessional } from './data/categories-professional';
 import './App.css';
 import './styles/security-styles.css';
