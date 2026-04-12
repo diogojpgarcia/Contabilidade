@@ -144,8 +144,8 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
           >
             <option value="">Seleciona uma categoria</option>
             {currentCategories.map(cat => (
-              <option key={cat.id} value={cat.name}>
-                {getCategoryIcon(cat.name)} {cat.name}
+              <option key={cat.id} value={cat.label}>
+                {getCategoryIcon(cat.label)} {cat.label}
               </option>
             ))}
           </select>
