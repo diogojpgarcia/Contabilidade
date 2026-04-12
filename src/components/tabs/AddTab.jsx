@@ -12,7 +12,9 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
 
   const currentCategories = type === 'expense' ? categories.expense : categories.income;
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
     if (!amount || !category) {
       alert('Preenche o valor e categoria!');
       return;
@@ -49,10 +51,10 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
         onTransactionAdded();
       }
 
-      alert('✅ Transação adicionada!');
+      alert('✅ Transação adicionada com sucesso!');
     } catch (error) {
       console.error('Error adding transaction:', error);
-      alert('Erro ao adicionar transação: ' + error.message);
+      alert('❌ Erro ao adicionar: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -61,39 +63,39 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
   return (
     <div className="add-tab">
       <div className="add-header">
-        <h2 className="add-title">➕ Nova Transação</h2>
-        <p className="add-subtitle">Adiciona receitas ou despesas rapidamente</p>
+        <h2>➕ Nova Transação</h2>
+        <p>Adiciona receitas ou despesas</p>
       </div>
 
-      <div className="add-form">
+      <div className="add-form-container">
         {/* Type Toggle */}
         <div className="type-toggle">
           <button
-            className={`type-btn expense ${type === 'expense' ? 'active' : ''}`}
+            type="button"
+            className={`type-btn ${type === 'expense' ? 'active expense' : ''}`}
             onClick={() => {
               setType('expense');
               setCategory('');
             }}
           >
-            <span className="type-icon">💳</span>
-            <span className="type-label">Despesa</span>
+            💳 Despesa
           </button>
           <button
-            className={`type-btn income ${type === 'income' ? 'active' : ''}`}
+            type="button"
+            className={`type-btn ${type === 'income' ? 'active income' : ''}`}
             onClick={() => {
               setType('income');
               setCategory('');
             }}
           >
-            <span className="type-icon">💰</span>
-            <span className="type-label">Receita</span>
+            💰 Receita
           </button>
         </div>
 
         {/* Amount */}
-        <div className="form-group">
+        <div className="form-field">
           <label>Valor</label>
-          <div className="amount-input-group">
+          <div className="amount-input">
             <input
               type="number"
               value={amount}
@@ -103,64 +105,60 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
               min="0"
               inputMode="decimal"
             />
-            <span className="currency-symbol">€</span>
+            <span className="currency">€</span>
           </div>
         </div>
 
         {/* Category */}
-        <div className="form-group">
+        <div className="form-field">
           <label>Categoria</label>
-          <div className="category-grid">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="category-select"
+          >
+            <option value="">Seleciona uma categoria</option>
             {currentCategories.map(cat => (
-              <button
-                key={cat.id}
-                className={`category-option ${category === cat.name ? 'selected' : ''}`}
-                onClick={() => setCategory(cat.name)}
-              >
-                <span className="category-option-icon">{cat.icon}</span>
-                <span className="category-option-name">{cat.name}</span>
-              </button>
+              <option key={cat.id} value={cat.name}>
+                {cat.icon} {cat.name}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
 
         {/* Description */}
-        <div className="form-group">
+        <div className="form-field">
           <label>Descrição (opcional)</label>
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Ex: Compras Continente"
+            placeholder="Ex: Compras supermercado"
             maxLength={100}
+            className="text-input"
           />
         </div>
 
         {/* Date */}
-        <div className="form-group">
+        <div className="form-field">
           <label>Data</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             max={new Date().toISOString().split('T')[0]}
+            className="date-input"
           />
         </div>
 
         {/* Submit */}
         <button
+          type="button"
           className={`btn-submit ${type}`}
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? (
-            <span className="loading-spinner-small" />
-          ) : (
-            <>
-              <span className="submit-icon">✓</span>
-              <span className="submit-text">Adicionar Transação</span>
-            </>
-          )}
+          {loading ? '⏳ A guardar...' : '✓ Adicionar'}
         </button>
       </div>
     </div>
