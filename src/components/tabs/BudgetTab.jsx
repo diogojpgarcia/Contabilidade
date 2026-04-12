@@ -259,6 +259,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
               <div className="budget-input-container">
                 <input
                   type="number"
+                  inputMode="decimal"
                   className="budget-input"
                   value={limit || ''}
                   onChange={(e) => handleLimitChange(cat.id, e.target.value)}
