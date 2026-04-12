@@ -297,6 +297,7 @@ const App = () => {
             onComplete={handlePinSetupComplete}
             onBack={handleBackToPinLength}
             error={pinError}
+            requireConfirmation={true}
           />
         </div>
       </div>
