@@ -263,6 +263,7 @@ body {
   font-size: 1.5rem;
   transition: transform var(--transition-fast);
   line-height: 1;
+  font-weight: 300;
 }
 
 .nav-item.active .nav-icon {
@@ -292,6 +293,7 @@ body {
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
   transition: all var(--transition-fast);
+  font-weight: 300;
 }
 
 .nav-item-add:active .nav-icon-large {
