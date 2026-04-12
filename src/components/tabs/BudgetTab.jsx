@@ -83,12 +83,20 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   };
 
   const handleLimitChange = (categoryId, value) => {
-    if (value === '' || value === '0') {
+    // Update local state immediately for responsive input
+    const numValue = parseFloat(value);
+    
+    if (value === '' || value === '0' || isNaN(numValue)) {
+      // Remove budget
       const newBudgets = { ...budgets };
       delete newBudgets[categoryId];
-      dbService.updateUserSettings(user.id, { category_budgets: newBudgets });
       setBudgets(newBudgets);
+      dbService.updateUserSettings(user.id, { category_budgets: newBudgets });
     } else {
+      // Update budget immediately in state
+      const newBudgets = { ...budgets, [categoryId]: numValue };
+      setBudgets(newBudgets);
+      // Debounce save to database
       saveBudget(categoryId, value);
     }
   };

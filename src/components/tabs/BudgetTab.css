@@ -39,10 +39,6 @@
   transition: all var(--transition-fast);
 }
 
-.budget-row:active {
-  background: var(--bg-tertiary);
-}
-
 .budget-category {
   display: flex;
   align-items: center;
@@ -103,6 +99,9 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   transition: all var(--transition-fast);
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .budget-input:focus {
