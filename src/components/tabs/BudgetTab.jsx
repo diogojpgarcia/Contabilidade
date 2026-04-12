@@ -13,6 +13,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   });
   const [editingGoal, setEditingGoal] = useState(false);
 
+  // Icon mapping
+  const getCategoryIcon = (categoryName) => {
+    const iconMap = {
+      'Alimentação': '⚑',
+      'Habitação': '⌂',
+      'Transporte': '⚐',
+      'Saúde': '✚',
+      'Lazer': '◉',
+      'Educação': '⊞',
+      'Roupa': '◫',
+      'Tecnologia': '◧',
+      'Subscrições': '◉',
+      'Outros': '◌'
+    };
+    return iconMap[categoryName] || '◌';
+  };
+
   useEffect(() => {
     loadData();
   }, [user]);
@@ -233,7 +250,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
           return (
             <div key={cat.id} className="budget-row">
               <div className="budget-category">
-                <span className="cat-icon-sf">{cat.icon}</span>
+                <span className="cat-icon-sf">{getCategoryIcon(cat.name)}</span>
                 <span className="cat-name">{cat.name}</span>
               </div>
 

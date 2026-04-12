@@ -42,6 +42,10 @@
 }
 
 .type-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.75rem;
   background: transparent;
   border: none;
@@ -66,6 +70,11 @@
 .type-btn.active.income {
   background: var(--success);
   color: white;
+}
+
+.type-icon-sf {
+  font-size: 1.25rem;
+  font-weight: 300;
 }
 
 /* Form Fields */

@@ -4,6 +4,23 @@ import './StatsTab.css';
 const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories }) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
+  // Icon mapping
+  const getCategoryIcon = (categoryName) => {
+    const iconMap = {
+      'Alimentação': '⚑',
+      'Habitação': '⌂',
+      'Transporte': '⚐',
+      'Saúde': '✚',
+      'Lazer': '◉',
+      'Educação': '⊞',
+      'Roupa': '◫',
+      'Tecnologia': '◧',
+      'Subscrições': '◉',
+      'Outros': '◌'
+    };
+    return iconMap[categoryName] || '◌';
+  };
+
   // Calculate expenses by category for selected month
   const getExpensesByCategory = (month) => {
     const monthTransactions = transactions.filter(t => 
@@ -87,7 +104,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
     <div className="stats-tab">
       {/* Evolution Chart */}
       <div className="stats-section">
-        <h3 className="stats-title">📈 Evolução (6 meses)</h3>
+        <h3 className="stats-title">Evolução (6 meses)</h3>
         <div className="evolution-chart">
           {monthlyData.map((data, index) => (
             <div key={index} className="chart-month">
@@ -125,7 +142,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
       {/* Category Breakdown */}
       <div className="stats-section">
         <div className="category-header">
-          <h3 className="stats-title">📊 Gastos por Categoria</h3>
+          <h3 className="stats-title">Gastos por Categoria</h3>
           <div className="month-selector">
             <button className="month-btn" onClick={goToPreviousMonth}>←</button>
             <span className="month-label">{selectedMonth}</span>
@@ -135,7 +152,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
 
         {categoryData.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📊</div>
+            <div className="empty-icon">◌</div>
             <p>Sem despesas neste mês</p>
           </div>
         ) : (

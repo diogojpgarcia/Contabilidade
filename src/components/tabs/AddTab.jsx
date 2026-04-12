@@ -12,6 +12,27 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
 
   const currentCategories = type === 'expense' ? categories.expense : categories.income;
 
+  const getCategoryIcon = (categoryName) => {
+    const iconMap = {
+      'Alimentação': '⚑',
+      'Habitação': '⌂',
+      'Transporte': '⚐',
+      'Saúde': '✚',
+      'Lazer': '◉',
+      'Educação': '⊞',
+      'Roupa': '◫',
+      'Tecnologia': '◧',
+      'Subscrições': '◉',
+      'Outros': '◌',
+      'Salário': '◈',
+      'Freelance': '◐',
+      'Investimentos': '◭',
+      'Bonus': '◆',
+      'Outros Rendimentos': '◌'
+    };
+    return iconMap[categoryName] || '◌';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -51,10 +72,10 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
         onTransactionAdded();
       }
 
-      alert('✅ Transação adicionada com sucesso!');
+      alert('✓ Transação adicionada!');
     } catch (error) {
       console.error('Error adding transaction:', error);
-      alert('❌ Erro ao adicionar: ' + error.message);
+      alert('✕ Erro: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -63,7 +84,7 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
   return (
     <div className="add-tab">
       <div className="add-header">
-        <h2>➕ Nova Transação</h2>
+        <h2>Nova Transação</h2>
         <p>Adiciona receitas ou despesas</p>
       </div>
 
@@ -78,7 +99,8 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
               setCategory('');
             }}
           >
-            💳 Despesa
+            <span className="type-icon-sf">−</span>
+            <span>Despesa</span>
           </button>
           <button
             type="button"
@@ -88,7 +110,8 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
               setCategory('');
             }}
           >
-            💰 Receita
+            <span className="type-icon-sf">+</span>
+            <span>Receita</span>
           </button>
         </div>
 
@@ -120,7 +143,7 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
             <option value="">Seleciona uma categoria</option>
             {currentCategories.map(cat => (
               <option key={cat.id} value={cat.name}>
-                {cat.icon} {cat.name}
+                {getCategoryIcon(cat.name)} {cat.name}
               </option>
             ))}
           </select>
@@ -158,7 +181,7 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? '⏳ A guardar...' : '✓ Adicionar'}
+          {loading ? '◷ A guardar...' : '✓ Adicionar'}
         </button>
       </div>
     </div>
