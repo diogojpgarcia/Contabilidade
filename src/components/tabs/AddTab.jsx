@@ -10,6 +10,8 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
+  console.log('🎨 AddTab rendering...', { user: user?.email, categories: categories?.expense?.length });
+
   const currentCategories = type === 'expense' ? categories.expense : categories.income;
 
   const getCategoryIcon = (categoryName) => {
