@@ -6,10 +6,6 @@ import RecoverySetup from './components/RecoverySetup';
 import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
 import TransactionList from './components/TransactionList';
-import FinancialOverview from './components/FinancialOverview';
-import SmartSuggestions from './components/SmartSuggestions';
-import ProfessionalDashboard from './components/ProfessionalDashboard';
-import AdvancedAnalytics from './components/AdvancedAnalytics';
 import ErrorBoundary from './components/ErrorBoundary';
 import {
   USERS,
@@ -40,7 +36,6 @@ const App = () => {
   const [transactions, setTransactions] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
   const [showTransactionForm, setShowTransactionForm] = useState(false);
-  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
   const [savingsGoal] = useState(null);
 
   useEffect(() => {
@@ -316,12 +311,6 @@ const App = () => {
           />
         )}
 
-        {showAdvancedAnalytics && (
-          <AdvancedAnalytics
-            transactions={transactions}
-            currentMonth={currentMonth}
-            onClose={() => setShowAdvancedAnalytics(false)}
-            categories={safeCategories}
           />
         )}
       </main>
