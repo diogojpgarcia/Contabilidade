@@ -3,7 +3,6 @@ import UserCard from './components/UserCard';
 import PasswordLogin from './components/PasswordLogin';
 import PasswordSetup from './components/PasswordSetup';
 import RecoverySetup from './components/RecoverySetup';
-import PINRecovery from './components/PINRecovery';
 import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
 import TransactionList from './components/TransactionList';
@@ -48,7 +47,6 @@ const App = () => {
 
   // v3.0: Security & Recovery state
   const [showRecoverySetup, setShowRecoverySetup] = useState(false);
-  const [showPINRecovery, setShowPINRecovery] = useState(false);
   const [showBackupSettings, setShowBackupSettings] = useState(false);
 
   // App state
@@ -146,35 +144,15 @@ const App = () => {
   };
 
   // v3.0: Handle PIN recovery success
-  const handlePINRecoverySuccess = () => {
-    setShowPINRecovery(false);
     setCurrentSession(selectedUser.id);
     setCurrentUser(selectedUser);
     setAuthStage('authenticated');
     loadUserTransactions(selectedUser.id);
   };
 
-  const handlePinLoginComplete = async (pin) => {
-    try {
-      const isValid = await validateUserPIN(selectedUser.id, pin);
-      if (isValid) {
-        setCurrentSession(selectedUser.id);
-        setCurrentUser(selectedUser);
-        setAuthStage('authenticated');
-        loadUserTransactions(selectedUser.id);
-        setPinError('');
-      } else {
-        setPinError('PIN incorreto. Tente novamente.');
-      }
-    } catch (error) {
-      setPinError('Erro ao validar PIN. Tente novamente.');
-    }
-  };
 
 
-  const handleBackToPinLength = () => {
     setPinLength(null);
-    setPinError('');
   };
 
   const handleLogout = () => {
@@ -183,7 +161,6 @@ const App = () => {
     setAuthStage('user-select');
     setSelectedUser(null);
     setTransactions([]);
-    setPinError('');
   };
 
   const handleAddTransaction = (transaction) => {
@@ -283,7 +260,6 @@ const App = () => {
             onBack={handleBackToUserSelect}
           />
           <button 
-            onClick={() => setShowPINRecovery(true)} 
             className="btn-forgot-password"
           >
             Esqueci a password
@@ -458,11 +434,7 @@ const App = () => {
       )}
 
       {/* v3.0: PIN Recovery Modal */}
-      {showPINRecovery && (
-        <PINRecovery
           user={selectedUser}
-          onSuccess={handlePINRecoverySuccess}
-          onBack={() => setShowPINRecovery(false)}
         />
       )}
     </div>
