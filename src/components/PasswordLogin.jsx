@@ -3,25 +3,24 @@ import React, { useState } from 'react';
 const PasswordLogin = ({ user, onSuccess, onBack }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('📝 Form submitted! Password length:', password.length);
     setError('');
     
     if (password.length < 4) {
+      console.log('❌ Password muito curta');
       setError('A password deve ter pelo menos 4 caracteres');
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate async validation
-    setTimeout(() => {
-      onSuccess(password);
-      setIsLoading(false);
-    }, 300);
+    console.log('✅ Chamando onSuccess...');
+    onSuccess(password);
   };
+
+  const canSubmit = password.length >= 4;
 
   return (
     <div className="password-login">
@@ -36,27 +35,39 @@ const PasswordLogin = ({ user, onSuccess, onBack }) => {
       <form onSubmit={handleSubmit} className="password-form">
         <div className="form-group">
           <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoFocus
-            autoComplete="current-password"
-            className={error ? 'error' : ''}
-            disabled={isLoading}
-          />
+          <div className="password-input-wrapper">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Mínimo 4 caracteres"
+              autoFocus
+              autoComplete="current-password"
+              className={error ? 'error' : ''}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="btn-toggle-password"
+              tabIndex="-1"
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
+          </div>
+          {password.length > 0 && password.length < 4 && (
+            <small style={{ color: 'orange' }}>Faltam {4 - password.length} caracteres</small>
+          )}
         </div>
 
         {error && <div className="password-error">{error}</div>}
 
         <button 
           type="submit" 
-          className="btn-login"
-          disabled={isLoading || password.length === 0}
+          className={`btn-login ${canSubmit ? 'active' : ''}`}
+          disabled={!canSubmit}
         >
-          {isLoading ? 'A entrar...' : 'Entrar'}
+          Entrar
         </button>
 
         {onBack && (
@@ -64,7 +75,6 @@ const PasswordLogin = ({ user, onSuccess, onBack }) => {
             type="button" 
             onClick={onBack} 
             className="btn-back-link"
-            disabled={isLoading}
           >
             ← Voltar
           </button>
