@@ -7,6 +7,7 @@ import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
 import TransactionList from './components/TransactionList';
 import ErrorBoundary from './components/ErrorBoundary';
+import CloudSyncButton from './components/CloudSyncButton';
 import {
   USERS,
   hasUserSetupPIN,
@@ -250,6 +251,13 @@ const App = () => {
           </div>
         </div>
         <div className="header-actions">
+          <CloudSyncButton 
+            localTransactions={transactions}
+            onSyncComplete={(userId) => {
+              console.log('✅ Sync complete for user:', userId);
+              alert('Dados sincronizados! Agora podes aceder de qualquer dispositivo.');
+            }}
+          />
           <button
             onClick={() => setShowBackupSettings(!showBackupSettings)}
             className="btn-icon"
