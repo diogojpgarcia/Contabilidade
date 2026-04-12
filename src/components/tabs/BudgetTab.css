@@ -61,14 +61,6 @@
   flex-shrink: 0;
 }
 
-.cat-name {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  flex: 1;
-  letter-spacing: -0.02em;
-}
-
 .budget-input-container {
   position: relative;
   display: flex;
@@ -457,4 +449,13 @@
   border-radius: 10px;
   flex-shrink: 0;
   font-weight: 300;
+  color: var(--text-primary);
+}
+
+.cat-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  letter-spacing: -0.02em;
 }
