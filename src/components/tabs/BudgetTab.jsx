@@ -15,7 +15,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
 
   // Icon mapping - using SF Symbols style
   const getCategoryIcon = (category) => {
-    // Try by name first
     const iconMap = {
       'Alimentação': '⚑',
       'Habitação': '⌂',
@@ -29,10 +28,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
       'Outros': '◌'
     };
     
-    const categoryName = typeof category === 'string' ? category : category?.name;
-    console.log('Category lookup:', categoryName, 'Result:', iconMap[categoryName]);
-    
-    return iconMap[categoryName] || category?.icon || '◌';
+    const categoryLabel = typeof category === 'string' ? category : category?.label;
+    return iconMap[categoryLabel] || '◌';
   };
 
   useEffect(() => {
@@ -247,7 +244,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
       <div className="budget-list">
         {categories.expense.map(cat => {
           const limit = budgets[cat.id] || 0;
-          const spent = getCategorySpending(cat.name);
+          const spent = getCategorySpending(cat.label);
           const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
           const isOver = spent > limit && limit > 0;
           const hasLimit = limit > 0;
@@ -256,7 +253,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
             <div key={cat.id} className="budget-row">
               <div className="budget-category">
                 <span className="cat-icon-sf">{getCategoryIcon(cat)}</span>
-                <span className="cat-name">{cat.name}</span>
+                <span className="cat-name">{cat.label}</span>
               </div>
 
               <div className="budget-input-container">
