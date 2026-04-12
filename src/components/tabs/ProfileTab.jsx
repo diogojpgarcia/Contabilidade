@@ -69,11 +69,11 @@ const ProfileTab = ({ user, userName, onLogout }) => {
             <span>Claro</span>
           </button>
           <button
-            className={`theme-option ${theme === 'auto' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('auto')}
+            className={`theme-option ${theme === 'gray' ? 'active' : ''}`}
+            onClick={() => handleThemeChange('gray')}
           >
             <span className="sf-icon">◐</span>
-            <span>Auto</span>
+            <span>Cinza</span>
           </button>
           <button
             className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
