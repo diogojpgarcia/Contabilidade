@@ -276,40 +276,29 @@ const App = () => {
       )}
 
       <main className="main-content">
+        <div className="simple-overview">
+          <div className="balance-card">
+            <h3>Saldo do Mês</h3>
+            <div className="balance-amount" style={{ 
+              color: balance >= 0 ? '#10b981' : '#ef4444' 
+            }}>
+              {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
+            </div>
+            <div className="balance-details">
+              <div>Receitas: <span style={{color: '#10b981'}}>+{monthlyIncome.toFixed(2)}€</span></div>
+              <div>Despesas: <span style={{color: '#ef4444'}}>-{monthlyExpenses.toFixed(2)}€</span></div>
+            </div>
+          </div>
+        </div>
+
         <ErrorBoundary>
-          <ProfessionalDashboard
-            income={monthlyIncome}
-            expenses={monthlyExpenses}
-            balance={balance}
+          <TransactionList
             transactions={filteredTransactions}
-            currentMonth={currentMonth}
-            onMonthChange={setCurrentMonth}
-            onBackToCurrentMonth={handleBackToCurrentMonth}
+            onDelete={handleDeleteTransaction}
+            onEdit={handleEditTransaction}
             categories={safeCategories}
           />
         </ErrorBoundary>
-
-        <ErrorBoundary>
-          <SmartSuggestions
-            transactions={filteredTransactions}
-            balance={balance}
-            savingsGoal={savingsGoal}
-          />
-        </ErrorBoundary>
-
-        <FinancialOverview
-          income={monthlyIncome}
-          expenses={monthlyExpenses}
-          balance={balance}
-          onViewAnalytics={() => setShowAdvancedAnalytics(true)}
-        />
-
-        <TransactionList
-          transactions={filteredTransactions}
-          onDelete={handleDeleteTransaction}
-          onEdit={handleEditTransaction}
-          categories={safeCategories}
-        />
 
         <button
           className="btn-add-transaction"

@@ -2736,3 +2736,82 @@ body {
     padding: 1.5rem;
   }
 }
+
+/* v4.0: Better button visibility */
+.btn-login.active,
+.btn-create.active {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4) !important;
+  transform: scale(1.02);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 6px 30px rgba(16, 185, 129, 0.6); }
+}
+
+.btn-login:not(.active),
+.btn-create:not(.active) {
+  background: #374151 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+.password-input-wrapper small {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* v4.0: Simple Overview */
+.simple-overview {
+  padding: 1rem;
+}
+
+.balance-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.balance-card h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.balance-amount {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
+.balance-details {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.875rem;
+}
+
+.balance-details > div {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+  .balance-amount {
+    font-size: 2rem;
+  }
+  
+  .balance-details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
