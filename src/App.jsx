@@ -69,28 +69,40 @@ const App = () => {
   };
 
   const handlePasswordSetupComplete = async (password) => {
+    console.log('🔐 Criando nova password...');
+    setAuthError('');
+    
     try {
       await createUserPIN(selectedUser.id, password);
+      console.log('✅ Password criada com sucesso!');
       setShowRecoverySetup(true);
     } catch (error) {
-      setAuthError('Erro ao criar password. Tenta novamente.');
+      console.error('❌ Erro ao criar password:', error);
+      setAuthError('Erro ao criar password: ' + error.message);
     }
   };
 
   const handlePasswordLoginComplete = async (password) => {
+    console.log('🔑 Tentando login com password...');
+    setAuthError('');
+    
     try {
       const isValid = await validateUserPIN(selectedUser.id, password);
+      console.log('✅ Validação resultado:', isValid);
+      
       if (isValid) {
+        console.log('✅ Password correta! Fazendo login...');
         setCurrentSession(selectedUser.id);
         setCurrentUser(selectedUser);
         setAuthStage('authenticated');
         loadUserTransactions(selectedUser.id);
-        setAuthError('');
       } else {
+        console.log('❌ Password incorreta');
         setAuthError('Password incorreta. Tenta novamente.');
       }
     } catch (error) {
-      setAuthError('Erro ao validar password. Tenta novamente.');
+      console.error('❌ Erro na validação:', error);
+      setAuthError('Erro ao validar password: ' + error.message);
     }
   };
 
