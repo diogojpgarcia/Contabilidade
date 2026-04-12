@@ -6,6 +6,8 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export const authService = {
+  supabase, // Export supabase para usar resetPasswordForEmail
+  
   async signUp(email, password, fullName) {
     const { data, error } = await supabase.auth.signUp({
       email,
