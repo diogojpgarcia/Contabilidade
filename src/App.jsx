@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CloudAuth from './components/CloudAuth';
+import ResetPassword from './components/ResetPassword';
 import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
 import TransactionList from './components/TransactionList';
@@ -15,6 +16,7 @@ const categoriesProfessional = { expense: CATEGORIES_EXPENSE, income: CATEGORIES
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [showBackupSettings, setShowBackupSettings] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
@@ -23,6 +25,7 @@ const App = () => {
   // Check for existing session on mount
   useEffect(() => {
     checkUserSession();
+    checkRecoveryMode();
   }, []);
 
   // Load transactions when user changes
@@ -44,6 +47,25 @@ const App = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const checkRecoveryMode = () => {
+    // Check if URL has recovery token (from password reset email)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    
+    if (type === 'recovery') {
+      console.log('🔐 Recovery mode detected!');
+      setIsRecoveryMode(true);
+      setLoading(false);
+    }
+  };
+
+  const handleResetComplete = () => {
+    console.log('✅ Reset complete, reloading...');
+    setIsRecoveryMode(false);
+    window.location.hash = ''; // Clear hash
+    window.location.reload(); // Reload to fresh state
   };
 
   const loadUserTransactions = async () => {
@@ -131,6 +153,15 @@ const App = () => {
           <h1>💰 Finanças Familiares</h1>
           <p>A carregar...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Password recovery mode
+  if (isRecoveryMode) {
+    return (
+      <div className="app">
+        <ResetPassword onComplete={handleResetComplete} />
       </div>
     );
   }

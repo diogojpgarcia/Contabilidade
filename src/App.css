@@ -3302,3 +3302,44 @@ input.error {
 .auth-form {
   width: 100%;
 }
+
+/* Reset Password Page */
+.reset-password-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  padding: 2rem;
+}
+
+.reset-container {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.reset-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.reset-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+}
+
+.reset-header p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.reset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
