@@ -24,6 +24,10 @@
   --separator: rgba(84, 84, 88, 0.6);
   --overlay: rgba(0, 0, 0, 0.4);
   
+  /* Header */
+  --header-bg: rgba(28, 28, 30, 0.8);
+  --header-blur: blur(20px);
+  
   /* Blur */
   --blur-amount: 20px;
   
@@ -63,75 +67,49 @@
   --separator: rgba(60, 60, 67, 0.29);
   --overlay: rgba(0, 0, 0, 0.3);
   
+  /* Header - opaque for light mode */
+  --header-bg: #F2F2F7;
+  --header-blur: none;
+  
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* Auto Theme - follows system preference */
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] {
-    /* Colors - iOS Light */
-    --primary: #007AFF;
-    --primary-light: #0051D5;
-    --success: #28CD41;
-    --warning: #FF9F0A;
-    --danger: #FF3B30;
-    
-    /* Backgrounds */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F2F2F7;
-    --bg-tertiary: #E5E5EA;
-    --bg-elevated: #FFFFFF;
-    
-    /* Text */
-    --text-primary: #000000;
-    --text-secondary: #3C3C43;
-    --text-tertiary: #8E8E93;
-    
-    /* System */
-    --border: rgba(0, 0, 0, 0.1);
-    --separator: rgba(60, 60, 67, 0.29);
-    --overlay: rgba(0, 0, 0, 0.3);
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  [data-theme="auto"] {
-    /* Colors - iOS Dark */
-    --primary: #007AFF;
-    --primary-light: #5AC8FA;
-    --success: #34C759;
-    --warning: #FF9500;
-    --danger: #FF3B30;
-    
-    /* Backgrounds */
-    --bg-primary: #000000;
-    --bg-secondary: #1C1C1E;
-    --bg-tertiary: #2C2C2E;
-    --bg-elevated: #3A3A3C;
-    
-    /* Text */
-    --text-primary: #FFFFFF;
-    --text-secondary: #98989D;
-    --text-tertiary: #636366;
-    
-    /* System */
-    --border: rgba(255, 255, 255, 0.1);
-    --separator: rgba(84, 84, 88, 0.6);
-    --overlay: rgba(0, 0, 0, 0.4);
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  }
+/* Gray Theme - Intermediate */
+[data-theme="gray"] {
+  /* Colors - iOS Gray */
+  --primary: #007AFF;
+  --primary-light: #5AC8FA;
+  --success: #34C759;
+  --warning: #FF9500;
+  --danger: #FF3B30;
+  
+  /* Backgrounds - Gray tones */
+  --bg-primary: #1C1C1E;
+  --bg-secondary: #2C2C2E;
+  --bg-tertiary: #3A3A3C;
+  --bg-elevated: #48484A;
+  
+  /* Text */
+  --text-primary: #F2F2F7;
+  --text-secondary: #AEAEB2;
+  --text-tertiary: #8E8E93;
+  
+  /* System */
+  --border: rgba(255, 255, 255, 0.15);
+  --separator: rgba(84, 84, 88, 0.65);
+  --overlay: rgba(0, 0, 0, 0.5);
+  
+  /* Header */
+  --header-bg: rgba(44, 44, 46, 0.85);
+  --header-blur: blur(20px);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -197,9 +175,9 @@ body {
 
 /* Header */
 .app-header-new {
-  background: rgba(28, 28, 30, 0.8);
-  backdrop-filter: blur(var(--blur-amount));
-  -webkit-backdrop-filter: blur(var(--blur-amount));
+  background: var(--header-bg);
+  backdrop-filter: var(--header-blur);
+  -webkit-backdrop-filter: var(--header-blur);
   padding: max(env(safe-area-inset-top), 1rem) 1rem 1rem 1rem;
   border-bottom: 0.5px solid var(--separator);
   position: sticky;
