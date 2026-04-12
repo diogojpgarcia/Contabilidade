@@ -4,6 +4,7 @@ import ResetPassword from './components/ResetPassword';
 import ProfessionalDashboard from './components/ProfessionalDashboard';
 import AdvancedAnalytics from './components/AdvancedAnalytics';
 import TransactionFilters from './components/TransactionFilters';
+import CategoryManager from './components/CategoryManager';
 import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
 import TransactionList from './components/TransactionList';
@@ -22,6 +23,7 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [showBackupSettings, setShowBackupSettings] = useState(false);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
   const [showTransactionForm, setShowTransactionForm] = useState(false);
@@ -265,11 +267,28 @@ const App = () => {
           </div>
         </div>
         <div className="header-actions">
+          <button 
+            onClick={() => setShowCategoryManager(true)} 
+            className="btn-icon" 
+            title="Gerir Categorias"
+          >
+            🏷️
+          </button>
           <button onClick={handleLogout} className="btn-icon" title="Terminar sessão">
             🚪
           </button>
         </div>
       </header>
+
+      {showCategoryManager && (
+        <CategoryManager
+          userId={currentUser.id}
+          onClose={() => setShowCategoryManager(false)}
+          onUpdate={(newCategories) => {
+            console.log('Categories updated:', newCategories);
+          }}
+        />
+      )}
 
       {showBackupSettings && (
         <BackupSettings
