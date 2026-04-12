@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import ProfessionalDashboard from './components/ProfessionalDashboard';
+import AdvancedAnalytics from './components/AdvancedAnalytics';
 import TransactionFilters from './components/TransactionFilters';
 import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
@@ -284,6 +285,15 @@ const App = () => {
           balance={balance}
           transactions={filteredTransactions}
           categories={safeCategories}
+        />
+
+        <AdvancedAnalytics
+          currentMonthTransactions={filteredTransactions}
+          allTransactions={transactions}
+          currentMonthKey={currentMonth}
+          currentIncome={monthlyIncome}
+          currentExpenses={monthlyExpenses}
+          currentBalance={balance}
         />
 
         <TransactionFilters
