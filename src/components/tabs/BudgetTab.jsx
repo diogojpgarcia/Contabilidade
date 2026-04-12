@@ -13,8 +13,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   });
   const [editingGoal, setEditingGoal] = useState(false);
 
-  // Icon mapping
-  const getCategoryIcon = (categoryName) => {
+  // Icon mapping - using SF Symbols style
+  const getCategoryIcon = (category) => {
+    // Try by name first
     const iconMap = {
       'Alimentação': '⚑',
       'Habitação': '⌂',
@@ -27,7 +28,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
       'Subscrições': '◉',
       'Outros': '◌'
     };
-    return iconMap[categoryName] || '◌';
+    
+    const categoryName = typeof category === 'string' ? category : category?.name;
+    console.log('Category lookup:', categoryName, 'Result:', iconMap[categoryName]);
+    
+    return iconMap[categoryName] || category?.icon || '◌';
   };
 
   useEffect(() => {
@@ -250,7 +255,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
           return (
             <div key={cat.id} className="budget-row">
               <div className="budget-category">
-                <span className="cat-icon-sf">{getCategoryIcon(cat.name)}</span>
+                <span className="cat-icon-sf">{getCategoryIcon(cat)}</span>
                 <span className="cat-name">{cat.name}</span>
               </div>
 

@@ -64,11 +64,14 @@
 }
 
 .cat-name {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
   color: var(--text-primary) !important;
   flex: 1;
   letter-spacing: -0.02em;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .cat-icon {
