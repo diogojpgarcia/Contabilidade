@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserCard from './components/UserCard';
-import PINInput from './components/PINInput';
+import PasswordLogin from './components/PasswordLogin';
+import PasswordSetup from './components/PasswordSetup';
 import RecoverySetup from './components/RecoverySetup';
 import PINRecovery from './components/PINRecovery';
 import BackupSettings from './components/BackupSettings';
@@ -42,8 +43,7 @@ const App = () => {
   // Authentication state
   const [authStage, setAuthStage] = useState('user-select');
   const [selectedUser, setSelectedUser] = useState(null);
-  const [pinLength, setPinLength] = useState(null);
-  const [pinError, setPinError] = useState('');
+  const [authError, setAuthError] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
   // v3.0: Security & Recovery state
@@ -79,28 +79,47 @@ const App = () => {
   const handleUserSelect = (userId) => {
     const user = USERS[userId];
     setSelectedUser(user);
-    setPinError('');
+    setAuthError('');
 
     if (hasUserSetupPIN(userId)) {
-      setAuthStage('pin-login');
+      setAuthStage('password-login');
     } else {
-      setAuthStage('pin-setup');
+      setAuthStage('password-setup');
     }
   };
 
-  const handlePinLengthSelect = (length) => {
-    setPinLength(length);
-  };
-
-  const handlePinSetupComplete = async (pin) => {
+  const handlePasswordSetupComplete = async (password) => {
     try {
-      await createUserPIN(selectedUser.id, pin);
+      await createUserPIN(selectedUser.id, password);
       
-      // v3.0: Show recovery setup after PIN creation
+      // v3.0: Show recovery setup after password creation
       setShowRecoverySetup(true);
     } catch (error) {
-      setPinError('Erro ao criar PIN. Tente novamente.');
+      setAuthError('Erro ao criar password. Tenta novamente.');
     }
+  };
+
+  const handlePasswordLoginComplete = async (password) => {
+    try {
+      const isValid = await validateUserPIN(selectedUser.id, password);
+      if (isValid) {
+        setCurrentSession(selectedUser.id);
+        setCurrentUser(selectedUser);
+        setAuthStage('authenticated');
+        loadUserTransactions(selectedUser.id);
+        setAuthError('');
+      } else {
+        setAuthError('Password incorreta. Tenta novamente.');
+      }
+    } catch (error) {
+      setAuthError('Erro ao validar password. Tenta novamente.');
+    }
+  };
+
+  const handleBackToUserSelect = () => {
+    setAuthStage('user-select');
+    setSelectedUser(null);
+    setAuthError('');
   };
 
   // v3.0: Handle recovery setup completion
@@ -246,86 +265,34 @@ const App = () => {
     );
   }
 
-  if (authStage === 'pin-setup' && !pinLength) {
+  if (authStage === 'password-setup') {
     return (
       <div className="app">
         <div className="auth-container">
-          <div className="auth-header">
-            <div className="user-avatar-large" style={{ '--user-color': selectedUser.color }}>
-              {selectedUser.initials}
-            </div>
-            <h2>{selectedUser.name}</h2>
-            <p>Escolha o tamanho do seu PIN</p>
-          </div>
-          <div className="pin-length-options">
-            <button
-              onClick={() => handlePinLengthSelect(4)}
-              className="pin-length-btn"
-            >
-              <div className="pin-length-number">4</div>
-              <div>dígitos</div>
-            </button>
-            <button
-              onClick={() => handlePinLengthSelect(6)}
-              className="pin-length-btn"
-            >
-              <div className="pin-length-number">6</div>
-              <div>dígitos</div>
-            </button>
-          </div>
-          <button onClick={handleBackToUserSelect} className="btn-back">
-            ← Voltar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (authStage === 'pin-setup' && pinLength) {
-    return (
-      <div className="app">
-        <div className="auth-container">
-          <div className="auth-header">
-            <div className="user-avatar-large" style={{ '--user-color': selectedUser.color }}>
-              {selectedUser.initials}
-            </div>
-            <h2>{selectedUser.name}</h2>
-            <p>Crie o seu PIN de {pinLength} dígitos</p>
-          </div>
-          <PINInput
-            length={pinLength}
-            onComplete={handlePinSetupComplete}
-            onBack={handleBackToPinLength}
-            error={pinError}
-            requireConfirmation={true}
+          <PasswordSetup
+            user={selectedUser}
+            onComplete={handlePasswordSetupComplete}
+            onBack={handleBackToUserSelect}
           />
         </div>
       </div>
     );
   }
 
-  if (authStage === 'pin-login') {
+  if (authStage === 'password-login') {
     return (
       <div className="app">
         <div className="auth-container">
-          <div className="auth-header">
-            <div className="user-avatar-large" style={{ '--user-color': selectedUser.color }}>
-              {selectedUser.initials}
-            </div>
-            <h2>{selectedUser.name}</h2>
-            <p>Introduza o seu PIN</p>
-          </div>
-          <PINInput
-            length={4}
-            onComplete={handlePinLoginComplete}
+          <PasswordLogin
+            user={selectedUser}
+            onSuccess={handlePasswordLoginComplete}
             onBack={handleBackToUserSelect}
-            error={pinError}
           />
           <button 
             onClick={() => setShowPINRecovery(true)} 
-            className="btn-forgot-pin"
+            className="btn-forgot-password"
           >
-            Esqueci o PIN
+            Esqueci a password
           </button>
         </div>
       </div>
