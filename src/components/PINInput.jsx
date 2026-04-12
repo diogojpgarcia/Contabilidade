@@ -5,6 +5,7 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
   const [firstPIN, setFirstPIN] = useState('');
   const [digits, setDigits] = useState(Array(length).fill(''));
   const [confirmError, setConfirmError] = useState('');
+  const [isComplete, setIsComplete] = useState(false);
   const inputRefs = useRef([]);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
       setStep(1);
       setFirstPIN('');
       setConfirmError('');
+      setIsComplete(false);
     }
   }, [error, length]);
 
@@ -34,30 +36,12 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Check if complete
-    if (value && index === length - 1) {
-      const pin = newDigits.join('');
-      if (pin.length === length && !pin.includes('')) {
-        setTimeout(() => {
-          if (step === 1) {
-            // First PIN - go to confirmation
-            setFirstPIN(pin);
-            setDigits(Array(length).fill(''));
-            setStep(2);
-            setConfirmError('');
-          } else {
-            // Confirmation
-            if (pin === firstPIN) {
-              onComplete(pin);
-            } else {
-              setConfirmError('PINs diferentes. Tenta de novo.');
-              setDigits(Array(length).fill(''));
-              setStep(1);
-              setFirstPIN('');
-            }
-          }
-        }, 150);
-      }
+    // Check if all filled
+    const pin = newDigits.join('');
+    if (pin.length === length && !pin.includes('')) {
+      setIsComplete(true);
+    } else {
+      setIsComplete(false);
     }
   };
 
@@ -65,6 +49,36 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
     if (e.key === 'Backspace') {
       if (!digits[index] && index > 0) {
         inputRefs.current[index - 1]?.focus();
+      } else if (digits[index]) {
+        const newDigits = [...digits];
+        newDigits[index] = '';
+        setDigits(newDigits);
+        setIsComplete(false);
+      }
+    }
+  };
+
+  const handleContinue = () => {
+    const pin = digits.join('');
+    
+    if (step === 1) {
+      // First PIN - go to confirmation
+      setFirstPIN(pin);
+      setDigits(Array(length).fill(''));
+      setStep(2);
+      setConfirmError('');
+      setIsComplete(false);
+    } else {
+      // Confirmation
+      if (pin === firstPIN) {
+        onComplete(pin);
+      } else {
+        setConfirmError('PINs diferentes! Tenta de novo.');
+        setDigits(Array(length).fill(''));
+        setStep(1);
+        setFirstPIN('');
+        setIsComplete(false);
+        setTimeout(() => setConfirmError(''), 3000);
       }
     }
   };
@@ -80,7 +94,7 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
       </div>
       
       <div className="pin-label">
-        {step === 1 ? `Cria PIN (${length} dígitos)` : 'Confirma PIN'}
+        {step === 1 ? `Cria o teu PIN (${length} dígitos)` : 'Confirma o PIN'}
       </div>
 
       <div className="pin-inputs">
@@ -104,12 +118,23 @@ const PINInput = ({ length = 4, onComplete, onBack, error }) => {
       {(error || confirmError) && (
         <div className="pin-error">{error || confirmError}</div>
       )}
-      
-      {onBack && (
-        <button onClick={onBack} className="btn-back">
-          ← Voltar
+
+      <div className="pin-actions">
+        {onBack && (
+          <button onClick={onBack} className="btn-back" type="button">
+            ← Voltar
+          </button>
+        )}
+        
+        <button 
+          onClick={handleContinue}
+          disabled={!isComplete}
+          className={`btn-continue ${isComplete ? 'active' : ''}`}
+          type="button"
+        >
+          {step === 1 ? 'Continuar →' : 'Confirmar ✓'}
         </button>
-      )}
+      </div>
     </div>
   );
 };
