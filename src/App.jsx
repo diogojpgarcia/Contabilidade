@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import ProfessionalDashboard from './components/ProfessionalDashboard';
+import TransactionFilters from './components/TransactionFilters';
 import BackupSettings from './components/BackupSettings';
 import EnhancedTransactionForm from './components/EnhancedTransactionForm';
 import TransactionList from './components/TransactionList';
@@ -10,6 +11,7 @@ import CloudSyncButton from './components/CloudSyncButton';
 import { authService, dbService } from './lib/supabase';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from './utils/categories-professional';
 import { getMonthKey } from './utils/data';
+import { exportToExcel } from './utils/exportUtils';
 import './App.css';
 
 const categoriesProfessional = { expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME };
@@ -22,6 +24,14 @@ const App = () => {
   const [transactions, setTransactions] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
   const [showTransactionForm, setShowTransactionForm] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    category: 'all',
+    minAmount: null,
+    maxAmount: null,
+    startDate: null,
+    endDate: null
+  });
 
   // Check for existing session on mount
   useEffect(() => {
@@ -177,7 +187,37 @@ const App = () => {
   }
 
   // Logged in - show dashboard
-  const filteredTransactions = transactions.filter(t => getMonthKey(t.date) === currentMonth);
+  // Apply filters
+  let filteredTransactions = transactions.filter(t => getMonthKey(t.date) === currentMonth);
+  
+  // Apply search filter
+  if (filters.search) {
+    filteredTransactions = filteredTransactions.filter(t => 
+      (t.description || '').toLowerCase().includes(filters.search.toLowerCase())
+    );
+  }
+  
+  // Apply category filter
+  if (filters.category && filters.category !== 'all') {
+    filteredTransactions = filteredTransactions.filter(t => t.category === filters.category);
+  }
+  
+  // Apply amount filters
+  if (filters.minAmount !== null) {
+    filteredTransactions = filteredTransactions.filter(t => parseFloat(t.amount) >= filters.minAmount);
+  }
+  if (filters.maxAmount !== null) {
+    filteredTransactions = filteredTransactions.filter(t => parseFloat(t.amount) <= filters.maxAmount);
+  }
+  
+  // Apply date filters
+  if (filters.startDate) {
+    filteredTransactions = filteredTransactions.filter(t => t.date >= filters.startDate);
+  }
+  if (filters.endDate) {
+    filteredTransactions = filteredTransactions.filter(t => t.date <= filters.endDate);
+  }
+  
   const monthlyIncome = filteredTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
@@ -200,6 +240,16 @@ const App = () => {
   const userName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const userColor = '#3b82f6'; // Default blue
+
+  // Handle filter changes
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Handle export
+  const handleExport = () => {
+    exportToExcel(filteredTransactions, `transacoes_${currentMonth}`);
+  };
 
   return (
     <div className="app" style={{ '--user-color': userColor }}>
@@ -234,6 +284,12 @@ const App = () => {
           balance={balance}
           transactions={filteredTransactions}
           categories={safeCategories}
+        />
+
+        <TransactionFilters
+          onFilterChange={handleFilterChange}
+          categories={safeCategories}
+          onExport={handleExport}
         />
 
         <ErrorBoundary>
