@@ -29,30 +29,20 @@ const ResetPassword = ({ onComplete }) => {
     setLoading(true);
 
     try {
-      console.log('🔐 Atualizando password...');
       const { error } = await authService.supabase.auth.updateUser({
         password: password
       });
 
       if (error) throw error;
 
-      console.log('✅ Password atualizada!');
-      alert('✅ Password atualizada com sucesso! Vais ser redirecionado...');
-      
-      setTimeout(() => {
-        onComplete();
-      }, 1000);
+      alert('✅ Password atualizada com sucesso!');
+      setTimeout(() => onComplete(), 1000);
 
     } catch (err) {
-      console.error('❌ Erro:', err);
       setError(err.message || 'Erro ao atualizar password');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleButtonClick = () => {
-    handleSubmit(null);
   };
 
   const canSubmit = password.length >= 6 && confirmPassword.length >= 6;
@@ -75,9 +65,42 @@ const ResetPassword = ({ onComplete }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                autoComplete="new-password"
-                disabled={loading}
                 autoFocus
-                className={error ? 'error' : ''}
               />
-              <b
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="btn-toggle-password-inside"
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirmar Password</label>
+            <input
+              id="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repete a password"
+            />
+          </div>
+
+          {error && <div className="auth-error">{error}</div>}
+
+          <button
+            type="submit"
+            className={`btn-auth ${canSubmit ? 'active' : ''}`}
+            disabled={!canSubmit || loading}
+          >
+            {loading ? '⏳ Aguarda...' : '💾 Guardar Nova Password'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ResetPassword;
