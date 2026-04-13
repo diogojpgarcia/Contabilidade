@@ -53,7 +53,6 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
 
     try {
       const transaction = {
-        user_id: user.id,
         type,
         amount: amountValue,
         category,
@@ -61,7 +60,7 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
         date
       };
 
-      await dbService.addTransaction(transaction);
+      await dbService.addTransaction(user.id, transaction);
 
       // Reset form
       setAmount('');
