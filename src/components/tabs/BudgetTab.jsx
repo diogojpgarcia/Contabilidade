@@ -117,7 +117,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   const handleLimitChange = (categoryId, value) => {
     setBudgets(prev => ({
       ...prev,
-      [categoryId]: parseFloat(value) || 0
+      [categoryId]: value === '' ? '' : (parseFloat(value) || 0)
     }));
   };
 
