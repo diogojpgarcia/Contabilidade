@@ -2,12 +2,16 @@
   "name": "Finanças Familiares",
   "short_name": "Finanças",
   "description": "App de gestão de finanças familiares",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait-primary",
   "background_color": "#000000",
   "theme_color": "#000000",
-  "orientation": "portrait",
+  "categories": ["finance", "productivity"],
+  "lang": "pt-PT",
+  "dir": "ltr",
   "prefer_related_applications": false,
   "icons": [
     {
@@ -27,6 +31,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Transação",
+      "short_name": "Add",
+      "url": "/?action=add",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
     }
   ]
 }
