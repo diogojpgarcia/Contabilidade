@@ -58,14 +58,6 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
 
   return (
     <div className="home-tab">
-      {/* Month Navigation */}
-      <div className="month-navigation">
-        <button className="month-btn" onClick={goToPreviousMonth}>‹</button>
-        <div className="month-display">{formatMonth(currentMonth)}</div>
-        <button className="month-btn" onClick={goToNextMonth}>›</button>
-        <button className="today-btn" onClick={goToToday}>Hoje</button>
-      </div>
-
       {/* Balance Hero Card */}
       <div className="balance-card">
         <div className="balance-label">Saldo do Mês</div>
@@ -73,6 +65,14 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
           {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
         </div>
         <div className="balance-status">{getBalanceStatus()}</div>
+      </div>
+
+      {/* Month Navigation */}
+      <div className="month-navigation">
+        <button className="month-btn" onClick={goToPreviousMonth}>‹</button>
+        <div className="month-display">{formatMonth(currentMonth)}</div>
+        <button className="month-btn" onClick={goToNextMonth}>›</button>
+        <button className="today-btn" onClick={goToToday}>Hoje</button>
       </div>
 
       {/* Mini Cards */}
