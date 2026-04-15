@@ -1,9 +1,12 @@
 .home-tab {
   padding: 1rem;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   animation: fadeIn 0.3s ease;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Month Navigation */
@@ -301,12 +304,6 @@
 }
 
 /* Fixed Layout - Only transactions scroll */
-.home-tab {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
 
 .balance-card,
 .mini-cards,

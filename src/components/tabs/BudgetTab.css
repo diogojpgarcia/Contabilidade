@@ -1,4 +1,6 @@
 .budget-tab {
+  height: 100%;
+  overflow: hidden;
   padding: 1rem;
   animation: fadeIn 0.3s ease;
   max-width: 600px;
@@ -735,15 +737,6 @@
 }
 
 /* Fixed Layout - Only lists scroll */
-.budget-tab {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.budget-header,
-.view-toggle {
   flex-shrink: 0;
 }
 
