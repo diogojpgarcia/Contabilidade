@@ -496,3 +496,16 @@ input::placeholder {
     max-width: 800px;
   }
 }
+
+/* App Layout - Fixed Height for Tab Content */
+.main-content-new {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content-new > div {
+  flex: 1;
+  overflow: hidden;
+}
