@@ -132,23 +132,19 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
     saveGoals(updatedGoals);
   };
 
-  const handleLimitChange = (categoryId, value) => {
-    console.log('[BudgetTab] Input change:', { categoryId, value, type: typeof value });
-    
-    // Keep empty string as-is, or parse to number
-    const newValue = value === '' ? '' : (parseFloat(value) || 0);
-    
-    console.log('[BudgetTab] New value:', newValue);
-    
-    setBudgets(prev => {
-      const updated = {
-        ...prev,
-        [categoryId]: newValue
-      };
-      console.log('[BudgetTab] Updated budgets state:', updated);
-      return updated;
-    });
-  };
+ const handleLimitChange = (categoryId, value) => {
+  const numValue = parseFloat(value) || 0;
+  setBudgets(prev => ({...prev, [categoryId]: numValue}));
+};
+
+const saveBudgetToDb = async (categoryId) => {
+  try {
+    await dbService.updateUserSettings(user.id, {category_budgets: budgets});
+    alert('✓ Guardado!');
+  } catch (error) {
+    alert('Erro');
+  }
+};
 
   // Calculate spent per category
   const getSpentByCategory = (categoryId) => {
