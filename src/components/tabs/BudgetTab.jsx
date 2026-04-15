@@ -157,6 +157,40 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
       {activeView === 'budgets' && (
         <div className="budgets-section">
           <h3>Limites Mensais</h3>
+          
+          {/* Total Budget Summary */}
+          {(() => {
+            const totalBudget = Object.values(budgets).reduce((sum, val) => sum + (val || 0), 0);
+            const totalSpent = categories.expense.reduce((sum, cat) => {
+              return sum + getSpentByCategory(cat.id);
+            }, 0);
+            const totalPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+            
+            return totalBudget > 0 ? (
+              <div className="budget-total-card">
+                <div className="total-row">
+                  <span className="total-label">Orçamento Total</span>
+                  <span className="total-amount">{totalBudget.toFixed(2)}€</span>
+                </div>
+                <div className="total-row">
+                  <span className="total-label">Gasto Total</span>
+                  <span className={`total-amount ${totalSpent > totalBudget ? 'over' : ''}`}>
+                    {totalSpent.toFixed(2)}€
+                  </span>
+                </div>
+                <div className="total-progress-bar">
+                  <div 
+                    className={`total-progress-fill ${totalSpent > totalBudget ? 'over' : ''}`}
+                    style={{ width: `${Math.min(totalPercentage, 100)}%` }}
+                  />
+                </div>
+                <div className="total-percentage">
+                  {totalPercentage.toFixed(0)}% utilizado
+                </div>
+              </div>
+            ) : null;
+          })()}
+          
           <div className="categories-budgets">
             {categories.expense.map(cat => {
               const limit = budgets[cat.id] || 0;

@@ -668,3 +668,68 @@
   height: 100%;
   cursor: pointer;
 }
+
+/* Budget Total Summary Card */
+.budget-total-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.total-row:last-of-type {
+  margin-bottom: 1rem;
+}
+
+.total-label {
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.total-amount {
+  font-size: 1.25rem;
+  color: white;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.total-amount.over {
+  color: #FF6B6B;
+}
+
+.total-progress-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.total-progress-fill {
+  height: 100%;
+  background: white;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.total-progress-fill.over {
+  background: #FF6B6B;
+}
+
+.total-percentage {
+  text-align: center;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
