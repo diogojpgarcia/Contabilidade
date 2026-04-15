@@ -190,15 +190,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
                       min="0"
                     />
                     <span className="budget-currency">€/mês</span>
-                    {limit > 0 && (
-                      <button 
-                        className="budget-save-btn"
-                        onClick={() => saveBudgetToDb(cat.id)}
-                        title="Guardar orçamento"
-                      >
-                        ✓
-                      </button>
-                    )}
+                    <button 
+                      className="budget-save-btn"
+                      onClick={() => saveBudgetToDb(cat.id)}
+                      title="Guardar orçamento"
+                    >
+                      ✓
+                    </button>
                   </div>
 
                   {hasLimit && (
