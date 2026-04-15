@@ -637,3 +637,34 @@
     transform: translateY(0);
   }
 }
+
+/* Date Input with Calendar Icon */
+.date-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.date-input-wrapper .goal-input.date-input {
+  padding-right: 3rem;
+}
+
+.date-input-wrapper .calendar-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  font-weight: 300;
+}
+
+/* Hide native date picker icon */
+.date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}

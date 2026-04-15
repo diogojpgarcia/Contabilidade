@@ -303,13 +303,16 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
           <div className="log-header">
             <h3>Todas as Transações</h3>
             <div className="date-filter">
-              <input
-                type="date"
-                className="date-filter-input"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-              />
+              <div className="date-input-wrapper">
+                <input
+                  type="date"
+                  className="date-filter-input"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+                <span className="calendar-icon">◷</span>
+              </div>
               {filterDate && (
                 <button 
                   className="clear-filter-btn"

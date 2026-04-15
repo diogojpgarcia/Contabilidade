@@ -310,10 +310,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
                       <div className="input-group">
                         <input
                           type="number"
-                          value={goal.currentSavings}
+                          value={goal.currentSavings || ''}
                           onChange={(e) => handleUpdateGoalSavings(goal.id, e.target.value)}
                           step="10"
                           min="0"
+                          placeholder="0"
                         />
                         <span>€</span>
                       </div>
@@ -366,12 +367,16 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
                 value={newGoal.amount || ''}
                 onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })}
               />
-              <input
-                type="date"
-                className="goal-input"
-                value={newGoal.targetDate}
-                onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
-              />
+              <div className="date-input-wrapper">
+                <input
+                  type="date"
+                  className="goal-input date-input"
+                  value={newGoal.targetDate}
+                  onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
+                  placeholder="Data alvo"
+                />
+                <span className="calendar-icon">◷</span>
+              </div>
               <button className="btn-add-goal" onClick={() => {
                 handleAddGoal();
                 setEditingGoalId(null);
