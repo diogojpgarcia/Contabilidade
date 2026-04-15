@@ -56,13 +56,17 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   const saveBudgetToDb = async (categoryId) => {
     try {
       const budgetValue = budgets[categoryId];
-      if (!budgetValue || budgetValue <= 0) return;
       
+      // Save to DB (including empty/zero to delete)
       await dbService.updateUserSettings(user.id, {
         category_budgets: budgets
       });
       
-      alert('✓ Orçamento guardado!');
+      if (budgetValue && budgetValue > 0) {
+        alert('✓ Orçamento guardado!');
+      } else {
+        alert('✓ Orçamento removido!');
+      }
     } catch (error) {
       console.error('Error saving budget:', error);
       alert('Erro ao guardar orçamento');
@@ -115,9 +119,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   };
 
   const handleLimitChange = (categoryId, value) => {
+    // Allow empty string for deletion, or parse number
+    const numValue = value === '' ? 0 : parseFloat(value);
     setBudgets(prev => ({
       ...prev,
-      [categoryId]: value === '' ? '' : (parseFloat(value) || 0)
+      [categoryId]: numValue
     }));
   };
 
