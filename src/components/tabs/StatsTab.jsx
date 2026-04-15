@@ -6,6 +6,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
   const [deleting, setDeleting] = useState(null);
+  const [filterDate, setFilterDate] = useState(''); // Filter by specific date
 
   // Complete icon mapping for all categories
   const getCategoryIcon = (categoryName) => {
@@ -72,9 +73,16 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
 
   // Get transactions for selected month
   const getMonthTransactions = (month) => {
-    return transactions
+    let filtered = transactions
       .filter(t => t.date.startsWith(month))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Apply date filter if set
+    if (filterDate) {
+      filtered = filtered.filter(t => t.date === filterDate);
+    }
+    
+    return filtered;
   };
 
   // Get last 6 months for chart
@@ -292,11 +300,31 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
       {/* Transaction Log View */}
       {activeView === 'log' && (
         <div className="transaction-log">
-          <h3>Todas as Transações</h3>
+          <div className="log-header">
+            <h3>Todas as Transações</h3>
+            <div className="date-filter">
+              <input
+                type="date"
+                className="date-filter-input"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+              {filterDate && (
+                <button 
+                  className="clear-filter-btn"
+                  onClick={() => setFilterDate('')}
+                  title="Limpar filtro"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
           {monthTransactions.length === 0 ? (
             <div className="empty-state">
               <span className="sf-icon-large">◌</span>
-              <p>Sem transações neste mês</p>
+              <p>{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</p>
             </div>
           ) : (
             <div className="transactions-list">

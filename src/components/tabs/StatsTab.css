@@ -549,3 +549,87 @@
     width: 12px;
   }
 }
+
+/* Log Header with Date Filter */
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.log-header h3 {
+  margin: 0;
+}
+
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-filter-input {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--separator);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-filter-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.date-filter-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+}
+
+.clear-filter-btn {
+  width: 28px;
+  height: 28px;
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.clear-filter-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.clear-filter-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 480px) {
+  .log-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .date-filter {
+    justify-content: space-between;
+  }
+  
+  .date-filter-input {
+    flex: 1;
+  }
+}
