@@ -94,7 +94,7 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
           goals: updatedGoals
         });
         
-        alert(`✓ +${amountValue.toFixed(2)}€ adicionado ao objetivo!`);
+        // No alert - silent success
       } else {
         // Regular transaction
         const transaction = {
@@ -106,7 +106,7 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
         };
 
         await dbService.addTransaction(user.id, transaction);
-        alert('✓ Transação adicionada!');
+        // No alert - silent success
         
         // Notify parent
         if (onTransactionAdded) {

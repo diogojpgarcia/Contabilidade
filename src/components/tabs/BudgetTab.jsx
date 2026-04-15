@@ -60,7 +60,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
       await dbService.updateUserSettings(user.id, {
         category_budgets: budgets
       });
-      alert('✓ Guardado!');
+      // No alert - silent success
     } catch (error) {
       console.error('Error:', error);
       alert('Erro ao guardar');
