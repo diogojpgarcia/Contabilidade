@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { dbService } from '../../lib/supabase';
 import './StatsTab.css';
 
-const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories }) => {
+const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories, onTransactionDeleted }) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
   const [deleting, setDeleting] = useState(null);
@@ -147,8 +147,10 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
     try {
       await dbService.deleteTransaction(transactionId);
       
-      // Reload page to refresh transactions
-      window.location.reload();
+      // Call parent callback to refresh transactions
+      if (onTransactionDeleted) {
+        onTransactionDeleted();
+      }
     } catch (error) {
       console.error('Error deleting transaction:', error);
       alert('Erro ao apagar transação: ' + error.message);
