@@ -299,3 +299,24 @@
 .today-btn-compact:active {
   opacity: 0.5;
 }
+
+/* Fixed Layout - Only transactions scroll */
+.home-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.balance-card,
+.mini-cards,
+.month-navigation-compact {
+  flex-shrink: 0;
+}
+
+.transactions-section {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}

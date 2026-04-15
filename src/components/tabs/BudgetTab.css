@@ -733,3 +733,40 @@
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+
+/* Fixed Layout - Only lists scroll */
+.budget-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.budget-header,
+.view-toggle {
+  flex-shrink: 0;
+}
+
+.budgets-section,
+.goals-section {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+.budgets-section h3,
+.budget-total-card,
+.goals-section h3,
+.add-goal-card {
+  flex-shrink: 0;
+}
+
+.categories-budgets,
+.goals-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}

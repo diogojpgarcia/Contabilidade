@@ -663,3 +663,25 @@
   height: 100%;
   cursor: pointer;
 }
+
+/* Fixed Layout - Only content below date scrolls */
+.stats-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.stats-header,
+.view-toggle,
+.month-selector {
+  flex-shrink: 0;
+}
+
+.overview-content,
+.transaction-log {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
