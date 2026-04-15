@@ -166,7 +166,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
             }, 0);
             const totalPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
             
-            return totalBudget > 0 ? (
+            return (
               <div className="budget-total-card">
                 <div className="total-row">
                   <span className="total-label">Orçamento Total</span>
@@ -188,7 +188,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
                   {totalPercentage.toFixed(0)}% utilizado
                 </div>
               </div>
-            ) : null;
+            );
           })()}
           
           <div className="categories-budgets">

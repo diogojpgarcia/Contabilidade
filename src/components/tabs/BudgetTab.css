@@ -671,11 +671,11 @@
 
 /* Budget Total Summary Card */
 .budget-total-card {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
   border-radius: 16px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
 }
 
 .total-row {
