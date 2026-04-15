@@ -4,6 +4,10 @@ import './StatsTab.css';
 const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories }) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
+  const [deleting, setDeleting] = useState(null);
+
+  // Import dbService
+  const { dbService } = require('../../lib/supabase');
 
   // Complete icon mapping for all categories
   const getCategoryIcon = (categoryName) => {
@@ -132,6 +136,27 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
     const day = date.getDate();
     const month = date.toLocaleDateString('pt-PT', { month: 'short' });
     return `${day} ${month}`;
+  };
+
+  // Handle delete transaction
+  const handleDeleteTransaction = async (transactionId) => {
+    if (!window.confirm('Tens a certeza que queres apagar esta transação?')) {
+      return;
+    }
+
+    setDeleting(transactionId);
+
+    try {
+      await dbService.deleteTransaction(transactionId);
+      
+      // Reload page to refresh transactions
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      alert('Erro ao apagar transação: ' + error.message);
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const categoryData = getExpensesByCategory(selectedMonth);
@@ -292,10 +317,20 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                     </div>
                   </div>
                   <div className="transaction-right">
-                    <span className={`transaction-amount ${transaction.type}`}>
-                      {transaction.type === 'income' ? '+' : '-'}{parseFloat(transaction.amount).toFixed(2)}€
-                    </span>
-                    <span className="transaction-date">{formatDate(transaction.date)}</span>
+                    <div className="transaction-info">
+                      <span className={`transaction-amount ${transaction.type}`}>
+                        {transaction.type === 'income' ? '+' : '-'}{parseFloat(transaction.amount).toFixed(2)}€
+                      </span>
+                      <span className="transaction-date">{formatDate(transaction.date)}</span>
+                    </div>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeleteTransaction(transaction.id)}
+                      disabled={deleting === transaction.id}
+                      title="Apagar transação"
+                    >
+                      {deleting === transaction.id ? '⏳' : '🗑️'}
+                    </button>
                   </div>
                 </div>
               ))}
