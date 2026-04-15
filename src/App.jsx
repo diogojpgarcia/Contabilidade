@@ -213,6 +213,7 @@ const App = () => {
             currentMonthTransactions={filteredTransactions}
             currentMonth={currentMonth}
             categories={categoriesProfessional}
+            onTransactionDeleted={loadUserTransactions}
           />
         )}
         
