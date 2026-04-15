@@ -144,10 +144,19 @@ body {
   font-size: 17px;
   line-height: 1.47;
   letter-spacing: -0.022em;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  /* PWA fullscreen support */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .app-new {
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
