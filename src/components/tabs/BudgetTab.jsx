@@ -234,36 +234,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
         <div className="goals-section">
           <h3>Meus Objetivos</h3>
           
-          {/* Add New Goal */}
-          <div className="add-goal-card">
-            <h4>Novo Objetivo</h4>
-            <div className="goal-form">
-              <input
-                type="text"
-                className="goal-input"
-                placeholder="Nome do objetivo"
-                value={newGoal.name}
-                onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
-              />
-              <input
-                type="number"
-                className="goal-input"
-                placeholder="Valor (€)"
-                value={newGoal.amount || ''}
-                onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })}
-              />
-              <input
-                type="date"
-                className="goal-input"
-                value={newGoal.targetDate}
-                onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
-              />
-              <button className="btn-add-goal" onClick={handleAddGoal}>
-                + Adicionar
-              </button>
-            </div>
-          </div>
-
           {/* Goals List */}
           {goals.length === 0 ? (
             <div className="empty-state">
@@ -359,6 +329,57 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Floating Add Button (only in goals view) */}
+      {activeView === 'goals' && (
+        <button 
+          className="floating-add-btn"
+          onClick={() => setEditingGoalId('new')}
+          title="Novo objetivo"
+        >
+          +
+        </button>
+      )}
+
+      {/* Add/Edit Goal Modal */}
+      {editingGoalId && (
+        <div className="modal-overlay" onClick={() => setEditingGoalId(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>Novo Objetivo</h4>
+              <button className="modal-close" onClick={() => setEditingGoalId(null)}>×</button>
+            </div>
+            <div className="goal-form">
+              <input
+                type="text"
+                className="goal-input"
+                placeholder="Nome do objetivo"
+                value={newGoal.name}
+                onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
+              />
+              <input
+                type="number"
+                className="goal-input"
+                placeholder="Valor (€)"
+                value={newGoal.amount || ''}
+                onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })}
+              />
+              <input
+                type="date"
+                className="goal-input"
+                value={newGoal.targetDate}
+                onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
+              />
+              <button className="btn-add-goal" onClick={() => {
+                handleAddGoal();
+                setEditingGoalId(null);
+              }}>
+                Adicionar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
