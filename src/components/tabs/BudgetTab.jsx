@@ -40,9 +40,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   const loadData = async () => {
     try {
       const settings = await dbService.getUserSettings(user.id);
+      console.log('[BudgetTab] Settings loaded:', settings);
       
       if (settings?.category_budgets) {
+        console.log('[BudgetTab] Budgets from DB:', settings.category_budgets);
         setBudgets(settings.category_budgets);
+      } else {
+        console.log('[BudgetTab] No budgets in DB, starting empty');
+        setBudgets({});
       }
       
       if (settings?.goals) {
@@ -56,11 +61,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   const saveBudgetToDb = async (categoryId) => {
     try {
       const budgetValue = budgets[categoryId];
+      console.log('[BudgetTab] Saving budget:', { categoryId, budgetValue, allBudgets: budgets });
       
       // Save to DB (including empty/zero to delete)
       await dbService.updateUserSettings(user.id, {
         category_budgets: budgets
       });
+      
+      console.log('[BudgetTab] Budget saved successfully');
       
       if (budgetValue && budgetValue > 0) {
         alert('✓ Orçamento guardado!');
@@ -119,12 +127,21 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   };
 
   const handleLimitChange = (categoryId, value) => {
+    console.log('[BudgetTab] Input change:', { categoryId, value, type: typeof value });
+    
     // Allow empty string for deletion, or parse number
     const numValue = value === '' ? 0 : parseFloat(value);
-    setBudgets(prev => ({
-      ...prev,
-      [categoryId]: numValue
-    }));
+    
+    console.log('[BudgetTab] Parsed value:', numValue);
+    
+    setBudgets(prev => {
+      const updated = {
+        ...prev,
+        [categoryId]: numValue
+      };
+      console.log('[BudgetTab] Updated budgets state:', updated);
+      return updated;
+    });
   };
 
   // Calculate spent per category
