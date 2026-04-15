@@ -186,14 +186,6 @@ const App = () => {
 
   return (
     <div className="app-new">
-      {/* Header */}
-      <header className="app-header-new">
-        <div className="header-content">
-          <h1>💰 Finanças Familiares</h1>
-          <p className="header-month">{currentMonth}</p>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="main-content-new">
         {activeTab === 'home' && (
