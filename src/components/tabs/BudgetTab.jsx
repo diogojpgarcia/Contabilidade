@@ -60,17 +60,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
 
   const saveBudgetToDb = async (categoryId) => {
     try {
-      const budgetValue = budgets[categoryId];
-      console.log('[BudgetTab] Saving budget:', { categoryId, budgetValue, allBudgets: budgets });
+      // Convert empty string to 0 for DB
+      const cleanedBudgets = Object.entries(budgets).reduce((acc, [key, val]) => {
+        acc[key] = val === '' ? 0 : val;
+        return acc;
+      }, {});
       
-      // Save to DB (including empty/zero to delete)
+      console.log('[BudgetTab] Saving budget:', { categoryId, budgetValue: cleanedBudgets[categoryId], allBudgets: cleanedBudgets });
+      
+      // Save to DB
       await dbService.updateUserSettings(user.id, {
-        category_budgets: budgets
+        category_budgets: cleanedBudgets
       });
       
       console.log('[BudgetTab] Budget saved successfully');
       
-      if (budgetValue && budgetValue > 0) {
+      const finalValue = cleanedBudgets[categoryId];
+      if (finalValue && finalValue > 0) {
         alert('✓ Orçamento guardado!');
       } else {
         alert('✓ Orçamento removido!');
@@ -129,15 +135,15 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   const handleLimitChange = (categoryId, value) => {
     console.log('[BudgetTab] Input change:', { categoryId, value, type: typeof value });
     
-    // Allow empty string for deletion, or parse number
-    const numValue = value === '' ? 0 : parseFloat(value);
+    // Keep empty string as-is, or parse to number
+    const newValue = value === '' ? '' : (parseFloat(value) || 0);
     
-    console.log('[BudgetTab] Parsed value:', numValue);
+    console.log('[BudgetTab] New value:', newValue);
     
     setBudgets(prev => {
       const updated = {
         ...prev,
-        [categoryId]: numValue
+        [categoryId]: newValue
       };
       console.log('[BudgetTab] Updated budgets state:', updated);
       return updated;
