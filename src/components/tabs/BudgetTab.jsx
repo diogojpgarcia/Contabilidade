@@ -40,13 +40,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
   const loadData = async () => {
     try {
       const settings = await dbService.getUserSettings(user.id);
-      console.log('[BudgetTab] Settings loaded:', settings);
       
       if (settings?.category_budgets) {
-        console.log('[BudgetTab] Budgets from DB:', settings.category_budgets);
         setBudgets(settings.category_budgets);
       } else {
-        console.log('[BudgetTab] No budgets in DB, starting empty');
         setBudgets({});
       }
       
@@ -60,30 +57,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
 
   const saveBudgetToDb = async (categoryId) => {
     try {
-      // Convert empty string to 0 for DB
-      const cleanedBudgets = Object.entries(budgets).reduce((acc, [key, val]) => {
-        acc[key] = val === '' ? 0 : val;
-        return acc;
-      }, {});
-      
-      console.log('[BudgetTab] Saving budget:', { categoryId, budgetValue: cleanedBudgets[categoryId], allBudgets: cleanedBudgets });
-      
-      // Save to DB
       await dbService.updateUserSettings(user.id, {
-        category_budgets: cleanedBudgets
+        category_budgets: budgets
       });
-      
-      console.log('[BudgetTab] Budget saved successfully');
-      
-      const finalValue = cleanedBudgets[categoryId];
-      if (finalValue && finalValue > 0) {
-        alert('✓ Orçamento guardado!');
-      } else {
-        alert('✓ Orçamento removido!');
-      }
+      alert('✓ Guardado!');
     } catch (error) {
-      console.error('Error saving budget:', error);
-      alert('Erro ao guardar orçamento');
+      console.error('Error:', error);
+      alert('Erro ao guardar');
     }
   };
 
@@ -132,19 +112,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories }) => {
     saveGoals(updatedGoals);
   };
 
- const handleLimitChange = (categoryId, value) => {
-  const numValue = parseFloat(value) || 0;
-  setBudgets(prev => ({...prev, [categoryId]: numValue}));
-};
-
-const saveBudgetToDb = async (categoryId) => {
-  try {
-    await dbService.updateUserSettings(user.id, {category_budgets: budgets});
-    alert('✓ Guardado!');
-  } catch (error) {
-    alert('Erro');
-  }
-};
+  const handleLimitChange = (categoryId, value) => {
+    const numValue = parseFloat(value) || 0;
+    setBudgets(prev => ({
+      ...prev,
+      [categoryId]: numValue
+    }));
+  };
 
   // Calculate spent per category
   const getSpentByCategory = (categoryId) => {
