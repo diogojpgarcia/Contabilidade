@@ -17,13 +17,97 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      // Register Service Worker
+      // Hybrid Update: Notification + Auto-reload after inactivity
+      let newWorker = null;
+      let updateTimeout = null;
+      
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW registered:', reg))
-            .catch(err => console.log('SW error:', err));
+            .then(reg => {
+              console.log('[App] SW registered');
+              setInterval(() => reg.update(), 60000);
+              
+              reg.addEventListener('updatefound', () => {
+                newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    showUpdateBanner();
+                    // Auto-reload after 30min inactivity
+                    scheduleAutoUpdate();
+                  }
+                });
+              });
+            });
         });
+      }
+      
+      function showUpdateBanner() {
+        if (document.getElementById('update-banner')) return;
+        
+        const banner = document.createElement('div');
+        banner.id = 'update-banner';
+        banner.style.cssText = `
+          position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white; padding: 0.875rem 1rem; text-align: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+          animation: slideDown 0.3s ease;
+        `;
+        
+        banner.innerHTML = `
+          <style>
+            @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+          </style>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <p style="margin: 0; font-weight: 600; font-size: 0.9375rem;">✨ Nova versão disponível!</p>
+            <button id="update-now-btn" style="
+              background: white; color: #667eea; border: none;
+              padding: 0.5rem 1.25rem; border-radius: 8px;
+              font-weight: 600; font-size: 0.875rem; cursor: pointer;
+            ">Atualizar Agora</button>
+            <button id="dismiss-btn" style="
+              background: transparent; color: rgba(255,255,255,0.8);
+              border: 1px solid rgba(255,255,255,0.3);
+              padding: 0.5rem 1rem; border-radius: 8px;
+              font-weight: 500; font-size: 0.875rem; cursor: pointer;
+            ">Mais Tarde</button>
+          </div>
+        `;
+        
+        document.body.prepend(banner);
+        
+        document.getElementById('update-now-btn').onclick = () => {
+          if (newWorker) newWorker.postMessage('SKIP_WAITING');
+          setTimeout(() => window.location.reload(), 100);
+        };
+        
+        document.getElementById('dismiss-btn').onclick = () => {
+          banner.remove();
+        };
+      }
+      
+      function scheduleAutoUpdate() {
+        let lastActivity = Date.now();
+        
+        // Track user activity
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+          document.addEventListener(event, () => {
+            lastActivity = Date.now();
+          }, { passive: true });
+        });
+        
+        // Check every 5 minutes
+        setInterval(() => {
+          const inactive = Date.now() - lastActivity;
+          // 30 minutes = 1800000ms
+          if (inactive > 1800000 && newWorker) {
+            console.log('[App] 30min inactive, auto-updating...');
+            newWorker.postMessage('SKIP_WAITING');
+            setTimeout(() => window.location.reload(), 100);
+          }
+        }, 300000); // Check every 5min
       }
     </script>
   </body>
