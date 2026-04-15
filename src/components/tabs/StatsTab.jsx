@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
+import { dbService } from '../../lib/supabase';
 import './StatsTab.css';
 
 const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories }) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
   const [deleting, setDeleting] = useState(null);
-
-  // Import dbService
-  const { dbService } = require('../../lib/supabase');
 
   // Complete icon mapping for all categories
   const getCategoryIcon = (categoryName) => {
