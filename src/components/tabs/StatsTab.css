@@ -12,7 +12,7 @@
 .month-nav:disabled{opacity:0.3;cursor:not-allowed}
 .month-display{flex:1;text-align:center}
 .month-name{font-size:1.0625rem;font-weight:600;color:var(--text-primary);text-transform:capitalize;letter-spacing:-0.02em}
-.chart-section{flex-shrink:0;background:var(--bg-secondary);border-radius:16px;padding:1.25rem;margin-bottom:1rem;border:0.5px solid var(--separator)}
+.chart-section{display:none;flex-shrink:0;background:var(--bg-secondary);border-radius:16px;padding:1.25rem;margin-bottom:1rem;border:0.5px solid var(--separator)}
 .chart-section h3{font-size:1.125rem;font-weight:600;color:var(--text-primary);margin-bottom:1.25rem;letter-spacing:-0.02em}
 .chart-container{display:flex;align-items:flex-end;justify-content:space-between;height:180px;gap:0.75rem;margin-bottom:1rem;padding:0 0.5rem}
 .chart-column{display:flex;flex-direction:column;align-items:center;flex:1;gap:0.5rem}

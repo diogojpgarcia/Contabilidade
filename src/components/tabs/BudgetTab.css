@@ -6,7 +6,7 @@
 .toggle-btn{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem;background:transparent;border:none;border-radius:10px;color:var(--text-secondary);font-size:0.9375rem;font-weight:500;cursor:pointer;transition:all 0.2s ease;letter-spacing:-0.01em}
 .toggle-btn.active{background:var(--bg-primary);color:var(--text-primary);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 .toggle-btn .sf-icon{font-size:1.125rem;font-weight:300}
-.budgets-section{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:var(--bg-secondary);border-radius:16px;padding:1.25rem;padding-bottom:calc(80px + env(safe-area-inset-bottom));border:0.5px solid var(--separator)}
+.budgets-section{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;background:var(--bg-secondary);border-radius:16px;padding:1.25rem;padding-bottom:0;border:0.5px solid var(--separator)}
 .budgets-section > h3{flex-shrink:0;font-size:1.125rem;font-weight:600;color:var(--text-primary);margin-bottom:1rem;letter-spacing:-0.02em}
 .budget-total-card{flex-shrink:0;background:linear-gradient(135deg,#D97706 0%,#F59E0B 100%);border-radius:16px;padding:1.25rem;margin-bottom:1.25rem;box-shadow:0 4px 12px rgba(217,119,6,0.35)}
 .total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem}
@@ -18,7 +18,7 @@
 .total-progress-fill{height:100%;background:white;border-radius:5px;transition:width 0.3s ease}
 .total-progress-fill.over{background:#FF6B6B}
 .total-percentage{text-align:center;font-size:0.875rem;color:rgba(255,255,255,0.9);font-weight:600;letter-spacing:-0.01em}
-.categories-budgets{display:flex;flex-direction:column;gap:1.25rem;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+.categories-budgets{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:1.25rem;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
 .budget-category{display:flex;flex-direction:column;gap:0.75rem}
 .category-header{display:flex;align-items:center;gap:0.75rem}
 .category-icon{font-size:1.25rem;font-weight:300;width:24px;text-align:center}
