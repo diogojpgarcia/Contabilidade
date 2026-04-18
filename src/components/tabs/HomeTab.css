@@ -4,7 +4,6 @@
   flex-direction: column;
   gap: 0.5rem;
   animation: fadeIn 0.3s ease;
-  height: 100%;
   overflow: hidden;
 }
 
@@ -312,6 +311,7 @@
 
 .transactions-section {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;

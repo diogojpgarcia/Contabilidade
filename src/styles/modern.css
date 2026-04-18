@@ -235,14 +235,6 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Main Content */
-.main-content-new {
-  flex: 1;
-  max-width: 600px;
-  width: 100%;
-  margin: 0 auto;
-}
-
 /* Bottom Navigation */
 .bottom-nav {
   position: fixed;
@@ -509,9 +501,11 @@ input::placeholder {
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
+  min-height: 0;
 }
 
 .main-content-new > div {
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
