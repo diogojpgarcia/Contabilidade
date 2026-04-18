@@ -76,7 +76,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
   const getMonthTransactions = (month) => {
     return transactions
       .filter(t => t.date.startsWith(month))
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
+      .sort((a, b) => new Date(b.created_at || b.timestamp || 0) - new Date(a.created_at || a.timestamp || 0));
   };
 
   // Get last 6 months for chart
