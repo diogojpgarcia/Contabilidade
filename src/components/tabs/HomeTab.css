@@ -146,6 +146,7 @@
 }
 
 .section-title {
+  flex-shrink: 0;
   font-size: 1.375rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -156,8 +157,13 @@
 .transactions-list {
   background: var(--bg-secondary);
   border-radius: 12px;
-  overflow: hidden;
   border: 0.5px solid var(--separator);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 .transaction-item {
@@ -312,8 +318,7 @@
 .transactions-section {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
