@@ -134,6 +134,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 
     'Helvetica Neue', Arial, sans-serif;
@@ -146,7 +150,8 @@ body {
   letter-spacing: -0.022em;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100%;
   /* PWA fullscreen support */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -155,8 +160,8 @@ body {
 }
 
 .app-new {
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
+  height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
@@ -233,8 +238,6 @@ body {
 /* Main Content */
 .main-content-new {
   flex: 1;
-  overflow-y: auto;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
@@ -503,6 +506,9 @@ input::placeholder {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .main-content-new > div {

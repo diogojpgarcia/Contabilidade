@@ -1,6 +1,5 @@
 .home-tab {
   padding: 1rem;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -316,4 +315,5 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
