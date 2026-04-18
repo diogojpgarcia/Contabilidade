@@ -98,7 +98,7 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
           </div>
         ) : (
           <div className="transactions-list">
-            {transactions.slice(0, 5).map((transaction, index) => (
+            {transactions.map((transaction, index) => (
               <div key={index} className="transaction-item">
                 <div className="transaction-icon">
                   {getCategoryIcon(transaction.category)}
