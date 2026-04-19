@@ -23,6 +23,8 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [transactions, setTransactions] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
+  const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
+  const [homePatrimonyView, setHomePatrimonyView] = useState("total");
 
   // Check for existing session on mount
   useEffect(() => {
@@ -34,6 +36,7 @@ const App = () => {
   useEffect(() => {
     if (currentUser) {
       loadUserTransactions();
+      loadUserSettings();
     }
   }, [currentUser]);
 
@@ -80,6 +83,26 @@ const App = () => {
     } catch (error) {
       console.error('❌ Error loading transactions:', error);
     }
+  };
+
+  const loadUserSettings = async () => {
+    try {
+      const settings = await dbService.getUserSettings(currentUser.id);
+      if (settings?.patrimony) setPatrimony(settings.patrimony);
+      if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
+    } catch (error) { console.error("Error loading settings:", error); }
+  };
+
+  const handlePatrimonyChange = async (newPatrimony) => {
+    setPatrimony(newPatrimony);
+    try { await dbService.updateUserSettings(currentUser.id, { patrimony: newPatrimony }); }
+    catch (error) { console.error("Error saving patrimony:", error); }
+  };
+
+  const handlePatrimonyViewChange = async (view) => {
+    setHomePatrimonyView(view);
+    try { await dbService.updateUserSettings(currentUser.id, { homePatrimonyView: view }); }
+    catch (error) { console.error("Error saving patrimony view:", error); }
   };
 
   const handleAuthSuccess = (user) => {
@@ -196,6 +219,9 @@ const App = () => {
             transactions={filteredTransactions}
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
+            patrimony={patrimony}
+            homePatrimonyView={homePatrimonyView}
+            onPatrimonyViewChange={handlePatrimonyViewChange}
           />
         )}
         
@@ -223,6 +249,8 @@ const App = () => {
             transactions={transactions}
             currentMonth={currentMonth}
             categories={categoriesProfessional}
+            patrimony={patrimony}
+            onPatrimonyChange={handlePatrimonyChange}
           />
         )}
         
