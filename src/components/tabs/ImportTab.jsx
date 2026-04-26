@@ -1,36 +1,42 @@
 import React, { useState, useRef } from 'react';
 import { dbService } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
-import { categorizeBatch } from '../../utils/categorize.js';
+import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import './ImportTab.css';
 
-const CATEGORY_MAP = {
-  income: 'Outros Rendimentos',
-  expense: 'Outros',
-};
-
 const ImportTab = ({ user, onImportDone }) => {
-  const [preview, setPreview]     = useState([]);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState('');
-  const [fileName, setFileName]   = useState('');
-  const [saving, setSaving]       = useState(false);
-  const [saved, setSaved]         = useState(false);
+  const [preview,  setPreview]  = useState([]);
+  const [insights, setInsights] = useState(null);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
+  const [fileName, setFileName] = useState('');
+  const [saving,   setSaving]   = useState(false);
+  const [saved,    setSaved]    = useState(false);
   const inputRef = useRef();
 
   const handleFile = async (file) => {
     if (!file) return;
-    setError(''); setSaved(false); setPreview([]);
+    setError(''); setSaved(false); setPreview([]); setInsights(null);
     setFileName(file.name);
     setLoading(true);
     try {
-      const buffer = await file.arrayBuffer();
-      const ext = file.name.split('.').pop().toLowerCase();
-      const fileType = ext === 'pdf' ? 'pdf' : ['xlsx','xls','ods'].includes(ext) ? ext : 'csv';
+      const buffer   = await file.arrayBuffer();
+      const ext      = file.name.split('.').pop().toLowerCase();
+      const fileType = ext === 'pdf' ? 'pdf'
+        : ['xlsx','xls','ods'].includes(ext) ? ext
+        : 'csv';
+
       const rows = await parseBankFile(buffer, fileType);
-      const categorized = categorizeBatch(rows);
-      if (!categorized.length) setError('Nenhuma transação reconhecida no ficheiro.');
-      setPreview(categorized);
+      if (!rows.length) {
+        setError('Nenhuma transação reconhecida no ficheiro.');
+        return;
+      }
+
+      const { transactions, insights: ins } = enrichTransactions(rows);
+      console.log('[ImportTab] enriched transactions:', transactions.length, ins);
+
+      setPreview(transactions);
+      setInsights(ins);
     } catch (e) {
       setError('Erro ao processar ficheiro: ' + e.message);
     } finally {
@@ -47,20 +53,22 @@ const ImportTab = ({ user, onImportDone }) => {
   const handleConfirm = async () => {
     if (!preview.length || !user) return;
     setSaving(true);
+    const toSave = preview.filter(tx => !tx.is_duplicate);
     try {
-      for (const tx of preview) {
-        const finalCategory = tx.category || CATEGORY_MAP[tx.type] || 'Outros';
-        console.debug(`[import] ${tx.type} | ${tx.amount} | ${tx.description?.slice(0,30)} → ${finalCategory}`);
-        await dbService.addTransaction(user.id, {
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: tx.type,
-          category: finalCategory,
-        });
+      for (const tx of toSave) {
+        const payload = {
+          date:        tx.date,
+          description: tx.clean_description || tx.description,
+          amount:      tx.amount,
+          type:        tx.type,
+          category:    tx.category || (tx.type === 'income' ? 'Income' : 'Other'),
+        };
+        console.log('[ImportTab] BEFORE INSERT:', payload);
+        await dbService.addTransaction(user.id, payload);
       }
       setSaved(true);
       setPreview([]);
+      setInsights(null);
       setFileName('');
       if (onImportDone) onImportDone();
     } catch (e) {
@@ -71,12 +79,12 @@ const ImportTab = ({ user, onImportDone }) => {
   };
 
   const handleClear = () => {
-    setPreview([]); setFileName(''); setError(''); setSaved(false);
+    setPreview([]); setInsights(null); setFileName('');
+    setError(''); setSaved(false);
     if (inputRef.current) inputRef.current.value = '';
   };
 
-  const income  = preview.filter(t => t.type === 'income').reduce((s, t)  => s + t.amount, 0);
-  const expense = preview.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const nonDupe = preview.filter(t => !t.is_duplicate);
 
   return (
     <div className="import-tab">
@@ -118,26 +126,34 @@ const ImportTab = ({ user, onImportDone }) => {
       {error && <div className="import-error">{error}</div>}
 
       {saved && (
-        <div className="import-success">
-          ✓ Transações importadas com sucesso!
-        </div>
+        <div className="import-success">✓ Transações importadas com sucesso!</div>
       )}
 
-      {/* Summary bar */}
-      {preview.length > 0 && (
-        <div className="import-summary">
-          <div className="import-summary-item">
-            <span className="import-summary-count">{preview.length}</span>
-            <span className="import-summary-label">transações</span>
+      {/* Insights bar */}
+      {insights && (
+        <div className="import-insights">
+          <div className="import-insight-item">
+            <span className="import-insight-value">{nonDupe.length}</span>
+            <span className="import-insight-label">transações</span>
           </div>
-          <div className="import-summary-item income">
-            <span className="import-summary-count">+{income.toFixed(2)}€</span>
-            <span className="import-summary-label">receitas</span>
+          <div className="import-insight-item income">
+            <span className="import-insight-value">+{insights.total_income.toFixed(2)}€</span>
+            <span className="import-insight-label">receitas</span>
           </div>
-          <div className="import-summary-item expense">
-            <span className="import-summary-count">-{expense.toFixed(2)}€</span>
-            <span className="import-summary-label">despesas</span>
+          <div className="import-insight-item expense">
+            <span className="import-insight-value">-{insights.total_spent.toFixed(2)}€</span>
+            <span className="import-insight-label">despesas</span>
           </div>
+          <div className="import-insight-item category">
+            <span className="import-insight-value">{insights.top_category}</span>
+            <span className="import-insight-label">top categoria</span>
+          </div>
+          {insights.duplicate_count > 0 && (
+            <div className="import-insight-item duplicate">
+              <span className="import-insight-value">{insights.duplicate_count}</span>
+              <span className="import-insight-label">duplicados</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -150,10 +166,19 @@ const ImportTab = ({ user, onImportDone }) => {
           </div>
           <div className="import-preview-list">
             {preview.map((tx, i) => (
-              <div key={i} className={`import-row ${tx.type}`}>
+              <div
+                key={i}
+                className={`import-row ${tx.type}${tx.is_duplicate ? ' duplicate' : ''}`}
+              >
                 <div className="import-row-left">
-                  <span className="import-row-date">{tx.date} · {tx.category}</span>
-                  <span className="import-row-desc">{tx.description}</span>
+                  <span className="import-row-meta">
+                    {tx.date} · {tx.category}
+                    {tx.is_duplicate && <span className="import-dupe-badge">duplicado</span>}
+                  </span>
+                  <span className="import-row-desc">{tx.clean_description}</span>
+                  {tx.clean_description !== tx.description && (
+                    <span className="import-row-original">{tx.description}</span>
+                  )}
                 </div>
                 <span className={`import-row-amount ${tx.type}`}>
                   {tx.type === 'income' ? '+' : '-'}{tx.amount.toFixed(2)}€
@@ -168,8 +193,15 @@ const ImportTab = ({ user, onImportDone }) => {
       {preview.length > 0 && (
         <div className="import-actions">
           <button className="btn-import-clear" onClick={handleClear}>Limpar</button>
-          <button className="btn-import-confirm" onClick={handleConfirm} disabled={saving}>
-            {saving ? 'A guardar…' : `Confirmar ${preview.length} transações`}
+          <button
+            className="btn-import-confirm"
+            onClick={handleConfirm}
+            disabled={saving}
+          >
+            {saving
+              ? 'A guardar…'
+              : `Confirmar ${nonDupe.length} transações${insights?.duplicate_count > 0 ? ` (${insights.duplicate_count} duplicados excluídos)` : ''}`
+            }
           </button>
         </div>
       )}
