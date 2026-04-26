@@ -143,45 +143,45 @@ export function parseAmount(raw) {
   if (raw == null || raw === '') return null;
   const s = String(raw).trim();
 
-  // ── Step 1: detect sign BEFORE any cleaning ──────────────────────────────
+  // Step 1 — detect sign BEFORE any cleaning
   const isNegative =
-    /^\s*-/.test(s)          ||   // leading minus:    "-12.50", "- 12.50"
-    /[-]\s*$/.test(s)        ||   // trailing minus:   "12.50-"
-    /^\s*\(.*\)\s*$/.test(s) ||   // parentheses:      "(12.50)"
-    /[€$£¥]\s*-/.test(s)    ||   // symbol then minus: "€ -12,50"
-    /-\s*[€$£¥]/.test(s);        // minus then symbol: "-€12,50"
+    /^\s*-/.test(s)           ||  // "-12.50"  "- 12,50"
+    /[-]\s*$/.test(s)         ||  // "12.50-"
+    /^\s*\(.*\)\s*$/.test(s)  ||  // "(12.50)"
+    /[€$£¥]\s*-/.test(s)     ||  // "€ -12,50"
+    /-\s*[€$£¥]/.test(s);        // "-€12,50"
 
-  // ── Step 2: strip everything except digits, comma, dot ───────────────────
+  // Step 2 — strip symbols, parens, spaces, sign chars
   let clean = s
-    .replace(/[€$£¥£¥]/g, '')   // currency symbols
-    .replace(/[()]/g, '')                   // parentheses
-    .replace(/\s/g, '')                     // all whitespace
-    .replace(/ /g, '')                 // non-breaking space
-    .replace(/[+-]/g, '')                   // sign chars (sign already captured)
+    .replace(/[€$£¥£¥]/g, '')
+    .replace(/[()]/g, '')
+    .replace(/[\s ]/g, '')
+    .replace(/[+-]/g, '')
     .trim();
 
   if (!clean) return null;
 
-  // ── Step 3: normalise decimal separator ──────────────────────────────────
+  // Step 3 — normalise decimal separator
   const lastComma = clean.lastIndexOf(',');
   const lastDot   = clean.lastIndexOf('.');
 
   if (lastComma > lastDot) {
-    // European format: 1.234,56  →  1234.56
+    // European: 1.234,56
     clean = clean.replace(/\./g, '').replace(',', '.');
   } else if (lastDot > lastComma) {
-    // Anglo format: 1,234.56  →  1234.56
+    // Anglo: 1,234.56
     clean = clean.replace(/,/g, '');
   } else {
-    // Integer or ambiguous: remove both separators
-    clean = clean.replace(/[,\.]/g, '');
+    // Integer — remove separators
+    clean = clean.replace(/[,.]/g, '');
   }
 
-  // ── Step 4: parse and apply sign ─────────────────────────────────────────
+  // Step 4 — parse (n is always positive at this point)
   const n = parseFloat(clean);
-  if (isNaN(n)) return null;
+  if (isNaN(n) || n === 0 && clean !== '0') return null;
 
-  return isNegative ? -Math.abs(n) : Math.abs(n);
+  // Step 5 — apply sign; NO Math.abs here — caller decides direction
+  return isNegative ? -n : n;
 }
 
 function looksLikeAmount(s) {
@@ -261,32 +261,51 @@ function findHeaderRow(rows) {
 }
 
 // ── Row-level amount resolution ───────────────────────────────────────────────
+// ── Row-level amount resolution ───────────────────────────────────────────────
+// Rules:
+//   debit col only  → negative (expense)
+//   credit col only → positive (income)
+//   both cols populated → whichever is non-zero (credit wins only if debit is 0)
+//   single signed amount col → keep sign as-is from parseAmount
 function resolveAmount(obj, cols) {
-  // Prefer explicit debit/credit columns — avoids misreading balance columns as amounts
   const hasDebitCredit = (cols.debitScore >= 5 || cols.creditScore >= 5);
 
   if (hasDebitCredit) {
-    const debit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
-    const credit = cols.credit ? parseAmount(obj[cols.credit]) : null;
-    const debitAbs  = debit  !== null ? Math.abs(debit)  : 0;
-    const creditAbs = credit !== null ? Math.abs(credit) : 0;
-    if (creditAbs > 0 && creditAbs >= debitAbs) return  creditAbs;
-    if (debitAbs  > 0)                           return -debitAbs;
+    const rawDebit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
+    const rawCredit = cols.credit ? parseAmount(obj[cols.credit]) : null;
+    // Take absolute values for magnitude comparison — sign comes from column semantics
+    const debitAbs  = rawDebit  !== null ? Math.abs(rawDebit)  : 0;
+    const creditAbs = rawCredit !== null ? Math.abs(rawCredit) : 0;
+
+    // Only credit populated → income (positive)
+    if (creditAbs > 0 && debitAbs === 0) return  creditAbs;
+    // Only debit populated → expense (negative)
+    if (debitAbs  > 0 && creditAbs === 0) return -debitAbs;
+    // Both populated → net (uncommon, but handle gracefully)
+    if (creditAbs > 0 && debitAbs > 0) return creditAbs - debitAbs;
   }
 
-  // Single signed amount column
-  if (cols.amt && obj[cols.amt]) {
+  // Single signed amount column — sign already preserved by parseAmount
+  if (cols.amt && obj[cols.amt] !== undefined && obj[cols.amt] !== '') {
     const a = parseAmount(obj[cols.amt]);
-    if (a !== null) return a;
+    if (a !== null) {
+      if (import.meta.env?.DEV)
+        console.debug('[parseBankFile] amt col raw:', obj[cols.amt], '→', a);
+      return a;
+    }
   }
 
-  // Low-score debit/credit fallback
+  // Low-confidence debit/credit fallback
   if (cols.debit || cols.credit) {
-    const debit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
-    const credit = cols.credit ? parseAmount(obj[cols.credit]) : null;
-    if (credit !== null && Math.abs(credit) > 0) return  Math.abs(credit);
-    if (debit  !== null && Math.abs(debit)  > 0) return -Math.abs(debit);
+    const rawDebit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
+    const rawCredit = cols.credit ? parseAmount(obj[cols.credit]) : null;
+    const debitAbs  = rawDebit  !== null ? Math.abs(rawDebit)  : 0;
+    const creditAbs = rawCredit !== null ? Math.abs(rawCredit) : 0;
+    if (creditAbs > 0 && debitAbs === 0) return  creditAbs;
+    if (debitAbs  > 0 && creditAbs === 0) return -debitAbs;
+    if (creditAbs > 0 && debitAbs > 0)   return creditAbs - debitAbs;
   }
+
   return null;
 }
 
@@ -351,6 +370,7 @@ export function parseCSV(text) {
         .map(h => obj[h]);
 
       const description = cleanDescription(cols.desc ? obj[cols.desc] : null, fallbackCells);
+      if (import.meta.env?.DEV) console.debug(`[parseBankFile] row ${i}: rawAmount=${amount} type=${amount < 0 ? "expense" : "income"} desc="${description?.slice(0,25)}"`);
       const type  = amount < 0 ? 'expense' : 'income';
       const entry = { date, description, amount: Math.abs(amount), type };
       const key   = dedupKey(entry);
