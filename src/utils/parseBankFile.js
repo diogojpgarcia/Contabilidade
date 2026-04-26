@@ -141,25 +141,47 @@ function looksLikeDate(s) {
 // ── Amount parsing ────────────────────────────────────────────────────────────
 export function parseAmount(raw) {
   if (raw == null || raw === '') return null;
-  let s = String(raw).replace(/[€$£¥\u00a3\s\u00a0]/g, '').replace(/\+/g, '').trim();
-  if (!s || s === '-') return null;
-  const negative = s.startsWith('-');
-  s = s.replace(/^-/, '');
-  const lastComma = s.lastIndexOf(',');
-  const lastDot   = s.lastIndexOf('.');
+  const s = String(raw).trim();
+
+  // ── Step 1: detect sign BEFORE any cleaning ──────────────────────────────
+  const isNegative =
+    /^\s*-/.test(s)          ||   // leading minus:    "-12.50", "- 12.50"
+    /[-]\s*$/.test(s)        ||   // trailing minus:   "12.50-"
+    /^\s*\(.*\)\s*$/.test(s) ||   // parentheses:      "(12.50)"
+    /[€$£¥]\s*-/.test(s)    ||   // symbol then minus: "€ -12,50"
+    /-\s*[€$£¥]/.test(s);        // minus then symbol: "-€12,50"
+
+  // ── Step 2: strip everything except digits, comma, dot ───────────────────
+  let clean = s
+    .replace(/[€$£¥£¥]/g, '')   // currency symbols
+    .replace(/[()]/g, '')                   // parentheses
+    .replace(/\s/g, '')                     // all whitespace
+    .replace(/ /g, '')                 // non-breaking space
+    .replace(/[+-]/g, '')                   // sign chars (sign already captured)
+    .trim();
+
+  if (!clean) return null;
+
+  // ── Step 3: normalise decimal separator ──────────────────────────────────
+  const lastComma = clean.lastIndexOf(',');
+  const lastDot   = clean.lastIndexOf('.');
+
   if (lastComma > lastDot) {
-    // European: 1.234,56
-    s = s.replace(/\./g, '').replace(',', '.');
+    // European format: 1.234,56  →  1234.56
+    clean = clean.replace(/\./g, '').replace(',', '.');
   } else if (lastDot > lastComma) {
-    // Anglo: 1,234.56
-    s = s.replace(/,/g, '');
+    // Anglo format: 1,234.56  →  1234.56
+    clean = clean.replace(/,/g, '');
   } else {
-    // No separator: might be integer
-    s = s.replace(/,/g, '').replace(/\./g, '');
+    // Integer or ambiguous: remove both separators
+    clean = clean.replace(/[,\.]/g, '');
   }
-  const n = parseFloat(s);
+
+  // ── Step 4: parse and apply sign ─────────────────────────────────────────
+  const n = parseFloat(clean);
   if (isNaN(n)) return null;
-  return negative ? -n : n;
+
+  return isNegative ? -Math.abs(n) : Math.abs(n);
 }
 
 function looksLikeAmount(s) {
