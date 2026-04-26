@@ -10,6 +10,7 @@ import HomeTab from './components/tabs/HomeTab';
 import StatsTab from './components/tabs/StatsTab';
 import AddTab from './components/tabs/AddTab';
 import BudgetTab from './components/tabs/BudgetTab';
+import ImportTab from './components/tabs/ImportTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
 import './styles/modern.css';
@@ -254,53 +255,68 @@ const App = () => {
           />
         )}
         
+        {activeTab === 'import' && (
+          <ImportTab
+            user={currentUser}
+            onImportDone={loadUserTransactions}
+          />
+        )}
+
         {activeTab === 'profile' && (
           <ProfileTab
             user={currentUser}
+            onNavigateToImport={() => setActiveTab('import')}
             userName={userName}
             onLogout={handleLogout}
           />
         )}
       </main>
-
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
         <button
           className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
           onClick={() => setActiveTab('home')}
         >
-          <span className="nav-icon">⌂</span>
+          <span className="nav-icon">&#8962;</span>
           <span className="nav-label">Home</span>
         </button>
-        
+
         <button
           className={`nav-item ${activeTab === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveTab('stats')}
         >
-          <span className="nav-icon">◧</span>
+          <span className="nav-icon">&#9671;</span>
           <span className="nav-label">Stats</span>
         </button>
-        
+
         <button
           className={`nav-item nav-item-add ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => setActiveTab('add')}
         >
           <span className="nav-icon-large">+</span>
         </button>
-        
+
         <button
           className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`}
           onClick={() => setActiveTab('budget')}
         >
-          <span className="nav-icon">◈</span>
+          <span className="nav-icon">&#9672;</span>
           <span className="nav-label">Budget</span>
         </button>
-        
+
+        <button
+          className={`nav-item ${activeTab === 'import' ? 'active' : ''}`}
+          onClick={() => setActiveTab('import')}
+        >
+          <span className="nav-icon">&#11014;</span>
+          <span className="nav-label">Import</span>
+        </button>
+
         <button
           className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
-          <span className="nav-icon">◉</span>
+          <span className="nav-icon">&#9689;</span>
           <span className="nav-label">Perfil</span>
         </button>
       </nav>

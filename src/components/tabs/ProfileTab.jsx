@@ -3,7 +3,7 @@ import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [theme, setTheme] = useState('dark');
@@ -113,6 +113,17 @@ const ProfileTab = ({ user, userName, onLogout }) => {
           <span className="option-icon-sf">☷</span>
           <span className="option-label">Gerir Categorias</span>
           <span className="option-arrow-sf">›</span>
+        </button>
+
+        <div className="option-separator" />
+
+        <button
+          className="profile-option"
+          onClick={() => onNavigateToImport && onNavigateToImport()}
+        >
+          <span className="option-icon-sf">&#11014;</span>
+          <span className="option-label">Importar Extracto Bancário</span>
+          <span className="option-arrow-sf">&#8250;</span>
         </button>
 
         <div className="option-separator" />
