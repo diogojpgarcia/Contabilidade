@@ -15,28 +15,57 @@ const SCORE_DESC = [
   'text','label','transaction','hist','descr','bezeichnung','betreff','subject',
   'particulars','remark','remarks','note','notes','transaction details',
   'payment details','beneficiary','creditor name','naam','tegenrekening naam',
-  'comunicacao','comunicação',
+  'comunicacao','comunicacao',
 ];
 const SCORE_AMT = [
   'amount','valor','betrag','bedrag','importe','montant','montante','quantia',
   'total','net amount','transaction amount','movimento',
 ];
 const SCORE_DEBIT = [
-  'debit','debito','af','uitgaven','ausgabe','withdrawal','charge','debet',
-  'kosten','saidas','saída',
+  'debit','debito','debito','db','deb','af','uitgaven','ausgabe',
+  'withdrawal','charge','debet','kosten','saidas','saida',
 ];
 const SCORE_CREDIT = [
-  'credit','credito','bij','inkomsten','einnahme','deposit','payment','entradas',
-  'entrada','receita',
+  'credit','credito','credito','cr','cred','bij','inkomsten','einnahme',
+  'deposit','payment','entradas','entrada','receita',
 ];
+
+// ── Encoding-aware buffer decoder ─────────────────────────────────────────────
+// Portuguese bank CSVs (Millennium BCP, CGD, etc.) are often Windows-1252.
+// TextDecoder defaults to UTF-8; 0xE9 (é) decoded as UTF-8 → U+FFFD garbage,
+// which breaks column name matching for Débito/Crédito.
+function decodeBuffer(buffer) {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+
+  // BOM detection
+  if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF)
+    return new TextDecoder('utf-8').decode(bytes);           // UTF-8 BOM
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE)
+    return new TextDecoder('utf-16le').decode(bytes);        // UTF-16 LE BOM
+  if (bytes[0] === 0xFE && bytes[1] === 0xFF)
+    return new TextDecoder('utf-16be').decode(bytes);        // UTF-16 BE BOM
+
+  // Try UTF-8 — if too many replacement chars, assume Windows-1252
+  const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+  const replacements = (utf8.match(/�/g) || []).length;
+  if (replacements > 0) {
+    console.log('[parseBankFile] encoding: UTF-8 produced', replacements,
+      'replacement chars — retrying as windows-1252');
+    return new TextDecoder('windows-1252').decode(bytes);
+  }
+
+  return utf8;
+}
 
 // ── Normalisation helpers ─────────────────────────────────────────────────────
 function norm(s) {
   return String(s)
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')  // strip combining diacritics
+    .replace(/�/g, '')           // strip UTF-8 replacement chars
     .replace(/[_\-\.]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -44,10 +73,10 @@ function scoreHeader(header, keywords) {
   const h = norm(header);
   let best = 0;
   for (const kw of keywords) {
-    if (h === kw)                         { best = Math.max(best, 10); break; }
-    if (h.startsWith(kw + ' ') || h.endsWith(' ' + kw)) { best = Math.max(best, 7); }
-    if (h.includes(kw))                   { best = Math.max(best, 5); }
-    if (kw.includes(h) && h.length >= 3)  { best = Math.max(best, 3); }
+    if (h === kw)                                            { best = Math.max(best, 10); break; }
+    if (h.startsWith(kw + ' ') || h.endsWith(' ' + kw))    { best = Math.max(best, 7); }
+    if (h.includes(kw))                                      { best = Math.max(best, 5); }
+    if (kw.includes(h) && h.length >= 3)                     { best = Math.max(best, 3); }
   }
   return best;
 }
@@ -55,19 +84,10 @@ function scoreHeader(header, keywords) {
 // ── Delimiter detection ───────────────────────────────────────────────────────
 function detectDelimiter(sample) {
   const candidates = [';', ',', '\t', '|'];
-  const counts = {};
-  for (const d of candidates) counts[d] = 0;
-  let inQuote = false;
-  for (const ch of sample) {
-    if (ch === '"') { inQuote = !inQuote; continue; }
-    if (!inQuote && ch in counts) counts[ch]++;
-  }
-  // Prefer the delimiter that appears most consistently across first few rows
   const lines = sample.split(/\r?\n/).filter(l => l.trim()).slice(0, 5);
   let bestDelim = ',';
   let bestConsistency = -1;
   for (const d of candidates) {
-    if (counts[d] === 0) continue;
     const lineCounts = lines.map(l => {
       let n = 0, iq = false;
       for (const c of l) {
@@ -85,7 +105,7 @@ function detectDelimiter(sample) {
   return bestDelim;
 }
 
-// ── CSV tokeniser (handles quoted fields, CRLF, LF) ──────────────────────────
+// ── CSV tokeniser ─────────────────────────────────────────────────────────────
 function tokenizeCSV(text, delimiter) {
   const rows = [];
   let row = [], cell = '', inQuote = false;
@@ -117,26 +137,20 @@ export function parseDate(raw) {
   if (!raw) return null;
   const s = String(raw).trim();
   let m;
-  // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
   if ((m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/)))
     return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-  // YYYY-MM-DD or YYYY/MM/DD
   if ((m = s.match(/^(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})$/)))
     return `${m[1]}-${m[2]}-${m[3]}`;
-  // DD/MM/YY
   if ((m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2})$/))) {
     const yr = parseInt(m[3]) < 50 ? '20' + m[3] : '19' + m[3];
     return `${yr}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
   }
-  // ISO or any parseable date string
   const d = new Date(s);
   if (!isNaN(d.getTime()) && s.length >= 8) return d.toISOString().slice(0, 10);
   return null;
 }
 
-function looksLikeDate(s) {
-  return parseDate(s) !== null;
-}
+function looksLikeDate(s) { return parseDate(s) !== null; }
 
 // ── Amount parsing ────────────────────────────────────────────────────────────
 export function parseAmount(raw) {
@@ -153,9 +167,9 @@ export function parseAmount(raw) {
 
   // Step 2 — strip symbols, parens, spaces, sign chars
   let clean = s
-    .replace(/[€$£¥£¥]/g, '')
+    .replace(/[€$£¥]/g, '')
     .replace(/[()]/g, '')
-    .replace(/[\s ]/g, '')
+    .replace(/[\s ]/g, '')
     .replace(/[+-]/g, '')
     .trim();
 
@@ -166,27 +180,22 @@ export function parseAmount(raw) {
   const lastDot   = clean.lastIndexOf('.');
 
   if (lastComma > lastDot) {
-    // European: 1.234,56
-    clean = clean.replace(/\./g, '').replace(',', '.');
+    clean = clean.replace(/\./g, '').replace(',', '.');  // European: 1.234,56
   } else if (lastDot > lastComma) {
-    // Anglo: 1,234.56
-    clean = clean.replace(/,/g, '');
+    clean = clean.replace(/,/g, '');                      // Anglo: 1,234.56
   } else {
-    // Integer — remove separators
-    clean = clean.replace(/[,.]/g, '');
+    clean = clean.replace(/[,.]/g, '');                   // Integer
   }
 
-  // Step 4 — parse (n is always positive at this point)
+  // Step 4 — parse; n is always positive here
   const n = parseFloat(clean);
-  if (isNaN(n) || n === 0 && clean !== '0') return null;
+  if (isNaN(n)) return null;
 
-  // Step 5 — apply sign; NO Math.abs here — caller decides direction
+  // Step 5 — apply sign; NO Math.abs — caller applies Math.abs before DB insert
   return isNegative ? -n : n;
 }
 
-function looksLikeAmount(s) {
-  return parseAmount(s) !== null;
-}
+function looksLikeAmount(s) { return parseAmount(s) !== null; }
 
 // ── Description cleaning ─────────────────────────────────────────────────────
 export function cleanDescription(raw, fallbacks) {
@@ -202,12 +211,12 @@ export function cleanDescription(raw, fallbacks) {
   return 'unknown transaction';
 }
 
-// ── Duplicate key ─────────────────────────────────────────────────────────────
+// ── Dedup key ─────────────────────────────────────────────────────────────────
 function dedupKey(r) {
   return `${r.date}|${r.amount}|${(r.description || '').slice(0, 30)}`;
 }
 
-// ── Header-based column detection ─────────────────────────────────────────────
+// ── Column detection ─────────────────────────────────────────────────────────
 function detectColumns(headers) {
   const cols = {
     date: null,   dateScore: 0,
@@ -217,34 +226,26 @@ function detectColumns(headers) {
     credit: null, creditScore: 0,
   };
   for (const h of headers) {
-    const hn = norm(h);
-    if (!hn) continue;
-
-    const ds = scoreHeader(h, SCORE_DATE);
-    if (ds > cols.dateScore) { cols.dateScore = ds; cols.date = h; }
-
+    if (!norm(h)) continue;
+    const ds  = scoreHeader(h, SCORE_DATE);
+    if (ds  > cols.dateScore)  { cols.dateScore  = ds;  cols.date   = h; }
     const dss = scoreHeader(h, SCORE_DESC);
-    if (dss > cols.descScore) { cols.descScore = dss; cols.desc = h; }
-
-    const as = scoreHeader(h, SCORE_AMT);
-    if (as > cols.amtScore) { cols.amtScore = as; cols.amt = h; }
-
+    if (dss > cols.descScore)  { cols.descScore  = dss; cols.desc   = h; }
+    const as  = scoreHeader(h, SCORE_AMT);
+    if (as  > cols.amtScore)   { cols.amtScore   = as;  cols.amt    = h; }
     const dbs = scoreHeader(h, SCORE_DEBIT);
-    if (dbs > cols.debitScore) { cols.debitScore = dbs; cols.debit = h; }
-
+    if (dbs > cols.debitScore) { cols.debitScore  = dbs; cols.debit  = h; }
     const crs = scoreHeader(h, SCORE_CREDIT);
-    if (crs > cols.creditScore) { cols.creditScore = crs; cols.credit = h; }
+    if (crs > cols.creditScore){ cols.creditScore = crs; cols.credit = h; }
   }
 
-  if (import.meta.env?.DEV) {
-    console.debug('[parseBankFile] column scores:', {
-      date:  `${cols.date} (${cols.dateScore})`,
-      desc:  `${cols.desc} (${cols.descScore})`,
-      amt:   `${cols.amt} (${cols.amtScore})`,
-      debit: `${cols.debit} (${cols.debitScore})`,
-      credit:`${cols.credit} (${cols.creditScore})`,
-    });
-  }
+  console.log('[parseBankFile] COLUMN DETECTION:', {
+    date:   `"${cols.date}" (score ${cols.dateScore})`,
+    desc:   `"${cols.desc}" (score ${cols.descScore})`,
+    amt:    `"${cols.amt}" (score ${cols.amtScore})`,
+    debit:  `"${cols.debit}" (score ${cols.debitScore})`,
+    credit: `"${cols.credit}" (score ${cols.creditScore})`,
+  });
 
   return cols;
 }
@@ -257,59 +258,59 @@ function findHeaderRow(rows) {
     const hits = rowNorm.filter(h => allKeys.some(k => h === k || h.includes(k)));
     if (hits.length >= 2) return i;
   }
-  return 0; // Default to first row
+  return 0;
 }
 
 // ── Row-level amount resolution ───────────────────────────────────────────────
-// ── Row-level amount resolution ───────────────────────────────────────────────
-// Rules:
-//   debit col only  → negative (expense)
-//   credit col only → positive (income)
-//   both cols populated → whichever is non-zero (credit wins only if debit is 0)
-//   single signed amount col → keep sign as-is from parseAmount
+// Debit col value  → negative (expense)
+// Credit col value → positive (income)
+// Single signed amt col → pass through as-is
 function resolveAmount(obj, cols) {
   const hasDebitCredit = (cols.debitScore >= 5 || cols.creditScore >= 5);
 
   if (hasDebitCredit) {
-    const rawDebit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
-    const rawCredit = cols.credit ? parseAmount(obj[cols.credit]) : null;
-    // Take absolute values for magnitude comparison — sign comes from column semantics
-    const debitAbs  = rawDebit  !== null ? Math.abs(rawDebit)  : 0;
-    const creditAbs = rawCredit !== null ? Math.abs(rawCredit) : 0;
+    const rawDebit  = cols.debit  ? obj[cols.debit]  : '';
+    const rawCredit = cols.credit ? obj[cols.credit] : '';
 
-    // Only credit populated → income (positive)
-    if (creditAbs > 0 && debitAbs === 0) return  creditAbs;
-    // Only debit populated → expense (negative)
-    if (debitAbs  > 0 && creditAbs === 0) return -debitAbs;
-    // Both populated → net (uncommon, but handle gracefully)
-    if (creditAbs > 0 && debitAbs > 0) return creditAbs - debitAbs;
+    console.log('[parseBankFile] DEBIT/CREDIT RAW:',
+      { debitCol: cols.debit, raw: rawDebit, creditCol: cols.credit, rawCredit });
+
+    const debitVal  = rawDebit  ? parseAmount(rawDebit)  : null;
+    const creditVal = rawCredit ? parseAmount(rawCredit) : null;
+    const debitAbs  = debitVal  !== null ? Math.abs(debitVal)  : 0;
+    const creditAbs = creditVal !== null ? Math.abs(creditVal) : 0;
+
+    console.log('[parseBankFile] DEBIT/CREDIT PARSED:',
+      { debitAbs, creditAbs });
+
+    if (creditAbs > 0 && debitAbs === 0) return  creditAbs;   // income
+    if (debitAbs  > 0 && creditAbs === 0) return -debitAbs;   // expense
+    if (creditAbs > 0 && debitAbs  > 0)  return  creditAbs - debitAbs; // net
   }
 
-  // Single signed amount column — sign already preserved by parseAmount
+  // Single signed amount column
   if (cols.amt && obj[cols.amt] !== undefined && obj[cols.amt] !== '') {
-    const a = parseAmount(obj[cols.amt]);
-    if (a !== null) {
-      if (import.meta.env?.DEV)
-        console.debug('[parseBankFile] amt col raw:', obj[cols.amt], '→', a);
-      return a;
-    }
+    const raw = obj[cols.amt];
+    const a   = parseAmount(raw);
+    console.log('[parseBankFile] AMT COL RAW:', raw, '→ parsed:', a);
+    if (a !== null) return a;
   }
 
   // Low-confidence debit/credit fallback
   if (cols.debit || cols.credit) {
-    const rawDebit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
-    const rawCredit = cols.credit ? parseAmount(obj[cols.credit]) : null;
-    const debitAbs  = rawDebit  !== null ? Math.abs(rawDebit)  : 0;
-    const creditAbs = rawCredit !== null ? Math.abs(rawCredit) : 0;
+    const debitVal  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
+    const creditVal = cols.credit ? parseAmount(obj[cols.credit]) : null;
+    const debitAbs  = debitVal  !== null ? Math.abs(debitVal)  : 0;
+    const creditAbs = creditVal !== null ? Math.abs(creditVal) : 0;
     if (creditAbs > 0 && debitAbs === 0) return  creditAbs;
     if (debitAbs  > 0 && creditAbs === 0) return -debitAbs;
-    if (creditAbs > 0 && debitAbs > 0)   return creditAbs - debitAbs;
+    if (creditAbs > 0 && debitAbs  > 0)  return  creditAbs - debitAbs;
   }
 
   return null;
 }
 
-// ── FALLBACK: row-based detection (no header) ─────────────────────────────────
+// ── FALLBACK: row-based detection ─────────────────────────────────────────────
 function parseRowFallback(row) {
   let date = null, amount = null, descCandidates = [];
   for (const cell of row) {
@@ -332,25 +333,23 @@ function parseRowFallback(row) {
 
 // ── Main CSV parser ───────────────────────────────────────────────────────────
 export function parseCSV(text) {
-  // Strip BOM
   const raw = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
   const delimiter = detectDelimiter(raw.slice(0, 4096));
-
-  if (import.meta.env?.DEV) {
-    console.debug('[parseBankFile] delimiter:', JSON.stringify(delimiter));
-  }
+  console.log('[parseBankFile] delimiter:', JSON.stringify(delimiter));
 
   const rows = tokenizeCSV(raw, delimiter);
   if (rows.length < 1) return [];
 
   const headerIdx = findHeaderRow(rows);
   const headers   = rows[headerIdx].map(h => h.trim());
-  const cols      = detectColumns(headers);
+  console.log('[parseBankFile] HEADERS (raw):', headers);
+  console.log('[parseBankFile] HEADERS (normed):', headers.map(norm));
+
+  const cols = detectColumns(headers);
 
   const result = [];
   const seen   = new Set();
 
-  // ── Header-mode parsing ────────────────────────────────────────────────────
   if (cols.dateScore >= 3) {
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const rawRow = rows[i];
@@ -370,24 +369,28 @@ export function parseCSV(text) {
         .map(h => obj[h]);
 
       const description = cleanDescription(cols.desc ? obj[cols.desc] : null, fallbackCells);
-      if (import.meta.env?.DEV) console.debug(`[parseBankFile] row ${i}: rawAmount=${amount} type=${amount < 0 ? "expense" : "income"} desc="${description?.slice(0,25)}"`);
+
+      // FINAL MAPPING — type determined by sign, amount stored as absolute value
       const type  = amount < 0 ? 'expense' : 'income';
       const entry = { date, description, amount: Math.abs(amount), type };
-      const key   = dedupKey(entry);
+
+      console.log('[parseBankFile] ROW', i, '| rawAmount:', amount,
+        '| type:', type, '| amount:', entry.amount, '| desc:', description.slice(0, 30));
+
+      const key = dedupKey(entry);
       if (seen.has(key)) continue;
       seen.add(key);
       result.push(entry);
     }
 
     if (result.length > 0) {
-      if (import.meta.env?.DEV) console.debug('[parseBankFile] header-mode rows:', result.length);
+      console.log('[parseBankFile] header-mode: parsed', result.length, 'rows');
       return result;
     }
   }
 
-  // ── Fallback: row-based detection ─────────────────────────────────────────
-  if (import.meta.env?.DEV) console.debug('[parseBankFile] switching to fallback row mode');
-
+  // Fallback: row-based heuristic
+  console.log('[parseBankFile] switching to fallback row-heuristic mode');
   for (let i = 0; i < rows.length; i++) {
     const parsed = parseRowFallback(rows[i]);
     if (!parsed) continue;
@@ -400,7 +403,7 @@ export function parseCSV(text) {
     result.push(entry);
   }
 
-  if (import.meta.env?.DEV) console.debug('[parseBankFile] fallback-mode rows:', result.length);
+  console.log('[parseBankFile] fallback-mode: parsed', result.length, 'rows');
   return result;
 }
 
@@ -420,25 +423,19 @@ const DATE_RE = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{2}[\/\-\
 const AMT_RE  = /([+-]?\s*\d{1,3}(?:[.,\s]\d{3})*[.,]\d{2})/;
 
 function extractTransactionsFromText(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines  = text.split('\n').map(l => l.trim()).filter(Boolean);
   const seen   = new Set();
   const result = [];
-
   for (const line of lines) {
     const dateMatch = line.match(DATE_RE);
     const amtMatch  = line.match(AMT_RE);
     if (!dateMatch || !amtMatch) continue;
-
-    const date = parseDate(dateMatch[1]);
+    const date   = parseDate(dateMatch[1]);
     if (!date) continue;
     const amount = parseAmount(amtMatch[1].replace(/\s/g, ''));
     if (amount === null) continue;
-
-    const descRaw = line
-      .replace(dateMatch[0], '')
-      .replace(amtMatch[0], '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const descRaw = line.replace(dateMatch[0], '').replace(amtMatch[0], '')
+      .replace(/\s+/g, ' ').trim();
     const description = descRaw || 'unknown transaction';
     const type  = amount < 0 ? 'expense' : 'income';
     const entry = { date, description, amount: Math.abs(amount), type };
@@ -474,10 +471,8 @@ export async function parseBankFile(buffer, fileType) {
       const data = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
       return await parsePDF(data);
     }
-    const text = buffer instanceof ArrayBuffer
-      ? new TextDecoder().decode(buffer)
-      : typeof buffer === 'string' ? buffer
-      : new TextDecoder().decode(buffer);
+    const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
+    const text  = typeof buffer === 'string' ? buffer : decodeBuffer(bytes);
     return parseCSV(text);
   } catch (err) {
     console.error('[parseBankFile] unexpected error:', err);
