@@ -26,7 +26,7 @@ const ImportTab = ({ user, onImportDone }) => {
     try {
       const buffer = await file.arrayBuffer();
       const ext = file.name.split('.').pop().toLowerCase();
-      const fileType = ext === 'pdf' ? 'pdf' : 'csv';
+      const fileType = ext === 'pdf' ? 'pdf' : ['xlsx','xls','ods'].includes(ext) ? ext : 'csv';
       const rows = await parseBankFile(buffer, fileType);
       const categorized = categorizeBatch(rows);
       if (!categorized.length) setError('Nenhuma transação reconhecida no ficheiro.');
@@ -82,7 +82,7 @@ const ImportTab = ({ user, onImportDone }) => {
     <div className="import-tab">
       <div className="import-header">
         <h2>Importar Extracto</h2>
-        <p>CSV ou PDF de qualquer banco</p>
+        <p>CSV, XLSX ou PDF de qualquer banco</p>
       </div>
 
       {/* Drop zone */}
@@ -95,7 +95,7 @@ const ImportTab = ({ user, onImportDone }) => {
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,.pdf,text/csv,application/pdf"
+          accept=".csv,.pdf,.xlsx,.xls,.ods,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
           style={{ display: 'none' }}
           onChange={(e) => handleFile(e.target.files[0])}
         />
@@ -110,7 +110,7 @@ const ImportTab = ({ user, onImportDone }) => {
             <span className="import-dz-label">
               {fileName || 'Toca para escolher ficheiro'}
             </span>
-            <span className="import-dz-hint">CSV ou PDF · arrasta ou toca</span>
+            <span className="import-dz-hint">CSV, XLSX ou PDF · arrasta ou toca</span>
           </>
         )}
       </div>
