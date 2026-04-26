@@ -64,3 +64,10 @@
 
 /* ── Original description (shown below clean) ──────────────────────────────── */
 .import-row-original{font-size:0.6875rem;color:var(--text-tertiary);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;opacity:0.7}
+
+/* ── Duplicate toggle (clickable insight badge) ────────────────────────────── */
+.import-insight-item.duplicate{cursor:pointer;transition:all 0.18s ease;user-select:none}
+.import-insight-item.duplicate:active{transform:scale(0.95)}
+.import-insight-item.duplicate.active{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.5)}
+.import-insight-item.duplicate.active .import-insight-value{color:#F59E0B}
+.import-insight-item.duplicate.active .import-insight-label{color:#F59E0B}

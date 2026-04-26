@@ -149,9 +149,15 @@ const ImportTab = ({ user, onImportDone }) => {
             <span className="import-insight-label">top categoria</span>
           </div>
           {insights.duplicate_count > 0 && (
-            <div className="import-insight-item duplicate">
+            <div
+              className={`import-insight-item duplicate${keepDupes ? ' active' : ''}`}
+              onClick={() => setKeepDupes(v => !v)}
+              title={keepDupes ? 'Clica para excluir duplicados' : 'Clica para manter duplicados'}
+            >
               <span className="import-insight-value">{insights.duplicate_count}</span>
-              <span className="import-insight-label">duplicados</span>
+              <span className="import-insight-label">
+                {keepDupes ? 'manter dupl.' : 'duplicados'}
+              </span>
             </div>
           )}
         </div>
@@ -200,7 +206,7 @@ const ImportTab = ({ user, onImportDone }) => {
           >
             {saving
               ? 'A guardar…'
-              : `Confirmar ${nonDupe.length} transações${insights?.duplicate_count > 0 ? ` (${insights.duplicate_count} duplicados excluídos)` : ''}`
+              : `Confirmar ${nonDupe.length} transações${!keepDupes && insights?.duplicate_count > 0 ? ` (${insights.duplicate_count} duplicados excluídos)` : ''}`
             }
           </button>
         </div>
