@@ -86,13 +86,14 @@ function normDesc(s) {
 
 export function categorizeTransaction(description, type) {
   const d = normDesc(description);
+  // Match by keyword first — category is about WHAT the transaction is,
+  // type (income/expense) is about direction. Keywords override type.
   for (const rule of RULES) {
-    if (type === 'income' && !['salario','freelance'].includes(rule.key)) continue;
-    if (type === 'expense' && ['salario','freelance'].includes(rule.key)) continue;
     if (rule.keywords.some(kw => d.includes(normDesc(kw)))) {
       return { key: rule.key, label: rule.label };
     }
   }
+  // No keyword match — fall back by type direction
   if (type === 'income') return { key: 'outros_rendimentos', label: 'Outros Rendimentos' };
   return FALLBACK;
 }

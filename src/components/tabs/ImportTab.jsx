@@ -49,12 +49,14 @@ const ImportTab = ({ user, onImportDone }) => {
     setSaving(true);
     try {
       for (const tx of preview) {
+        const finalCategory = tx.category || CATEGORY_MAP[tx.type] || 'Outros';
+        console.debug(`[import] ${tx.type} | ${tx.amount} | ${tx.description?.slice(0,30)} → ${finalCategory}`);
         await dbService.addTransaction(user.id, {
           date: tx.date,
           description: tx.description,
           amount: tx.amount,
           type: tx.type,
-          category: tx.category || CATEGORY_MAP[tx.type],
+          category: finalCategory,
         });
       }
       setSaved(true);

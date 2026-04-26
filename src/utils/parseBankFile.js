@@ -19,7 +19,7 @@ const SCORE_DESC = [
 ];
 const SCORE_AMT = [
   'amount','valor','betrag','bedrag','importe','montant','montante','quantia',
-  'total','saldo','balance','net amount','transaction amount',
+  'total','net amount','transaction amount','movimento',
 ];
 const SCORE_DEBIT = [
   'debit','debito','af','uitgaven','ausgabe','withdrawal','charge','debet',
@@ -240,10 +240,25 @@ function findHeaderRow(rows) {
 
 // ── Row-level amount resolution ───────────────────────────────────────────────
 function resolveAmount(obj, cols) {
+  // Prefer explicit debit/credit columns — avoids misreading balance columns as amounts
+  const hasDebitCredit = (cols.debitScore >= 5 || cols.creditScore >= 5);
+
+  if (hasDebitCredit) {
+    const debit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
+    const credit = cols.credit ? parseAmount(obj[cols.credit]) : null;
+    const debitAbs  = debit  !== null ? Math.abs(debit)  : 0;
+    const creditAbs = credit !== null ? Math.abs(credit) : 0;
+    if (creditAbs > 0 && creditAbs >= debitAbs) return  creditAbs;
+    if (debitAbs  > 0)                           return -debitAbs;
+  }
+
+  // Single signed amount column
   if (cols.amt && obj[cols.amt]) {
     const a = parseAmount(obj[cols.amt]);
     if (a !== null) return a;
   }
+
+  // Low-score debit/credit fallback
   if (cols.debit || cols.credit) {
     const debit  = cols.debit  ? parseAmount(obj[cols.debit])  : null;
     const credit = cols.credit ? parseAmount(obj[cols.credit]) : null;
