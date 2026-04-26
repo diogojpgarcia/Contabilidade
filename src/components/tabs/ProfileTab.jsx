@@ -5,6 +5,10 @@ import './ProfileTab.css';
 
 const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [showDeleteHistory, setShowDeleteHistory]     = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText]     = useState('');
+  const [deleteStatus, setDeleteStatus]               = useState('');
+  const [deleting, setDeleting]                       = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [resetEmail, setResetEmail] = useState('');
@@ -128,12 +132,23 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
 
         <div className="option-separator" />
 
-        <button 
+        <button
           className="profile-option"
           onClick={() => setShowResetPassword(true)}
         >
           <span className="option-icon-sf">⚿</span>
           <span className="option-label">Alterar Password</span>
+          <span className="option-arrow-sf">›</span>
+        </button>
+
+        <div className="option-separator" />
+
+        <button
+          className="profile-option danger"
+          onClick={() => { setShowDeleteHistory(true); setDeleteConfirmText(''); setDeleteStatus(''); }}
+        >
+          <span className="option-icon-sf">🗑</span>
+          <span className="option-label">Apagar Histórico de Transações</span>
           <span className="option-arrow-sf">›</span>
         </button>
       </div>
@@ -157,6 +172,64 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
                 console.log('Categories updated:', newCategories);
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete History Modal */}
+      {showDeleteHistory && (
+        <div className="modal-overlay" onClick={() => setShowDeleteHistory(false)}>
+          <div className="modal-content delete-history-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Apagar Histórico</h3>
+              <button className="btn-close" onClick={() => setShowDeleteHistory(false)}>
+                <span className="sf-icon">✕</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="delete-warning-icon">🗑</div>
+              <p className="modal-description delete-warning-text">
+                Esta ação é <strong>irreversível</strong>. Todas as transações serão apagadas permanentemente.
+              </p>
+              <p className="delete-confirm-label">
+                Escreve <strong>APAGAR</strong> para confirmar
+              </p>
+              <input
+                type="text"
+                placeholder="APAGAR"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="input-field"
+                autoCapitalize="characters"
+              />
+              {deleteStatus && (
+                <p className={`status-message ${deleteStatus.includes('✓') ? 'success' : 'error'}`}>
+                  {deleteStatus}
+                </p>
+              )}
+              <button
+                className="btn-danger full-width"
+                disabled={deleteConfirmText.trim().toUpperCase() !== 'APAGAR' || deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await dbService.deleteAllTransactions(user.id);
+                    setDeleteStatus('✓ Histórico apagado com sucesso.');
+                    setTimeout(() => {
+                      setShowDeleteHistory(false);
+                      setDeleteConfirmText('');
+                      setDeleteStatus('');
+                    }, 1800);
+                  } catch (err) {
+                    setDeleteStatus('Erro: ' + err.message);
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                {deleting ? 'A apagar…' : 'Apagar tudo'}
+              </button>
+            </div>
           </div>
         </div>
       )}

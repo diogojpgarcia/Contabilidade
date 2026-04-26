@@ -79,6 +79,14 @@ export const dbService = {
     if (error) throw error
   },
 
+  async deleteAllTransactions(userId) {
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('user_id', userId)
+    if (error) throw error
+  },
+
   async getUserSettings(userId) {
     const { data, error } = await supabase
       .from('user_settings')
