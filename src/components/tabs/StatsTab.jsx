@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { dbService } from '../../lib/supabase';
+import InsightsPanel from '../InsightsPanel.jsx';
 import './StatsTab.css';
 
 const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories, onTransactionDeleted }) => {
@@ -187,7 +188,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
       </div>
 
       {/* View Toggle */}
-      <div className="view-toggle">
+      <div className="view-toggle view-toggle-3">
         <button
           className={`toggle-btn ${activeView === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveView('overview')}
@@ -201,6 +202,13 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
         >
           <span className="sf-icon">◫</span>
           <span>Histórico</span>
+        </button>
+        <button
+          className={`toggle-btn ${activeView === 'insights' ? 'active' : ''}`}
+          onClick={() => setActiveView('insights')}
+        >
+          <span className="sf-icon">◐</span>
+          <span>Insights</span>
         </button>
       </div>
 
@@ -412,6 +420,13 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
             </div>
           )}
         </div>
+      )}
+
+      {activeView === 'insights' && (
+        <InsightsPanel
+          transactions={transactions}
+          currentMonth={selectedMonth}
+        />
       )}
     </div>
   );

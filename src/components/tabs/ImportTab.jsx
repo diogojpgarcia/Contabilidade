@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { dbService } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
+import { categorizeBatch } from '../../utils/categorize.js';
 import './ImportTab.css';
 
 const CATEGORY_MAP = {
@@ -27,8 +28,9 @@ const ImportTab = ({ user, onImportDone }) => {
       const ext = file.name.split('.').pop().toLowerCase();
       const fileType = ext === 'pdf' ? 'pdf' : 'csv';
       const rows = await parseBankFile(buffer, fileType);
-      if (!rows.length) setError('Nenhuma transação reconhecida no ficheiro.');
-      setPreview(rows);
+      const categorized = categorizeBatch(rows);
+      if (!categorized.length) setError('Nenhuma transação reconhecida no ficheiro.');
+      setPreview(categorized);
     } catch (e) {
       setError('Erro ao processar ficheiro: ' + e.message);
     } finally {
@@ -52,7 +54,7 @@ const ImportTab = ({ user, onImportDone }) => {
           description: tx.description,
           amount: tx.amount,
           type: tx.type,
-          category: CATEGORY_MAP[tx.type],
+          category: tx.category || CATEGORY_MAP[tx.type],
           timestamp: Date.now(),
         });
       }
@@ -149,7 +151,7 @@ const ImportTab = ({ user, onImportDone }) => {
             {preview.map((tx, i) => (
               <div key={i} className={`import-row ${tx.type}`}>
                 <div className="import-row-left">
-                  <span className="import-row-date">{tx.date}</span>
+                  <span className="import-row-date">{tx.date} · {tx.category}</span>
                   <span className="import-row-desc">{tx.description}</span>
                 </div>
                 <span className={`import-row-amount ${tx.type}`}>
