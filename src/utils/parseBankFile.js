@@ -261,6 +261,61 @@ function findHeaderRow(rows) {
   return 0;
 }
 
+// ── Data-driven: find column with explicitly signed values ────────────────────
+// Scans the first 30 data rows. Returns the header whose cells most often
+// contain an explicit +/- sign. This catches cases where the column name is
+// unrecognised ("Montante", "Valor Mov.", "Importe") but the data itself has
+// signed numbers like "-4,00" or "+1.500,00".
+function findSignedAmountColumn(headers, dataRows) {
+  const counts = {};
+  headers.forEach(h => { counts[h] = 0; });
+
+  for (const row of dataRows.slice(0, 30)) {
+    headers.forEach((h, i) => {
+      const v = (row[i] || '').trim();
+      if (!v) return;
+      // Explicit sign: starts with +/-, ends with -, or wrapped in parens
+      const hasSig = /^\s*[+\-]\s*[\d]/.test(v)
+                  || /[\d]\s*[-]\s*$/.test(v)
+                  || /^\s*\([\d]/.test(v);
+      if (hasSig && parseAmount(v) !== null) counts[h]++;
+    });
+  }
+
+  const best = Object.entries(counts)
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  if (!best.length) return null;
+  console.log('[parseBankFile] signed-value column scan:', best.slice(0, 3));
+  return best[0][0];
+}
+
+// ── Data-driven: find D/C direction column ────────────────────────────────────
+// Some banks export unsigned amounts with a separate column that says "D"/"C"
+// or "Débito"/"Crédito" to indicate direction. Detects this pattern.
+const DIR_DEBIT  = new Set(['d','db','deb','debito','dr','debit','saida','saidas','out','withdrawal','charge']);
+const DIR_CREDIT = new Set(['c','cr','cred','credito','credit','entrada','entradas','in','deposit','payment','abono']);
+
+function findDirectionColumn(headers, dataRows) {
+  for (const h of headers) {
+    let matches = 0, total = 0;
+    for (const row of dataRows.slice(0, 30)) {
+      const obj = {};
+      headers.forEach((hh, i) => { obj[hh] = (row[i] || '').trim(); });
+      const v = norm(obj[h] || '');
+      if (!v || v.length > 12) continue;
+      total++;
+      if (DIR_DEBIT.has(v) || DIR_CREDIT.has(v)) matches++;
+    }
+    if (total >= 3 && matches / total >= 0.6) {
+      console.log('[parseBankFile] direction column detected:', h);
+      return h;
+    }
+  }
+  return null;
+}
+
 // ── Row-level amount resolution ───────────────────────────────────────────────
 // Debit col value  → negative (expense)
 // Credit col value → positive (income)
@@ -347,6 +402,25 @@ export function parseCSV(text) {
 
   const cols = detectColumns(headers);
 
+  // ── Data-driven override: signed values & direction column ────────────────
+  const dataRows = rows.slice(headerIdx + 1);
+
+  // 1. Find column that actually contains +/- signed values in the data.
+  //    This overrides header-name detection when the column name is opaque.
+  const signedCol = findSignedAmountColumn(headers, dataRows);
+  if (signedCol) {
+    console.log('[parseBankFile] overriding amt col with signed-value col:', signedCol);
+    cols.amt        = signedCol;
+    cols.amtScore   = 20; // highest priority
+    cols.debit      = null;
+    cols.debitScore = 0;
+    cols.credit     = null;
+    cols.creditScore= 0;
+  }
+
+  // 2. Find a D/C direction column (only useful when no signed column found).
+  const dirCol = signedCol ? null : findDirectionColumn(headers, dataRows);
+
   const result = [];
   const seen   = new Set();
 
@@ -361,7 +435,16 @@ export function parseCSV(text) {
       const date = parseDate(obj[cols.date]);
       if (!date) continue;
 
-      const amount = resolveAmount(obj, cols);
+      let amount = resolveAmount(obj, cols);
+
+      // Apply direction column if present and amount came out unsigned
+      if (amount !== null && dirCol && obj[dirCol]) {
+        const dir = norm(obj[dirCol]);
+        if (DIR_DEBIT.has(dir) && amount > 0)  amount = -amount;
+        if (DIR_CREDIT.has(dir) && amount < 0) amount = -amount;
+        console.log('[parseBankFile] direction col', dirCol, '=', dir, '→ amount', amount);
+      }
+
       if (amount === null) continue;
 
       const fallbackCells = headers
