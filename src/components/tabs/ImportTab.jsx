@@ -12,6 +12,7 @@ const ImportTab = ({ user, onImportDone }) => {
   const [fileName, setFileName] = useState('');
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
+  const [keepDupes, setKeepDupes] = useState(false);
   const inputRef = useRef();
 
   const handleFile = async (file) => {
