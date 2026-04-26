@@ -52,9 +52,10 @@ export const dbService = {
   },
 
   async addTransaction(userId, transaction) {
+    const { date, description, amount, type, category, subcategory } = transaction;
     const { data, error } = await supabase
       .from('transactions')
-      .insert([{ user_id: userId, ...transaction }])
+      .insert([{ user_id: userId, date, description, amount, type, category, subcategory }])
       .select()
     if (error) throw error
     return data[0]

@@ -25,7 +25,6 @@ const TransactionForm = ({ onAdd, onCancel }) => {
       category,
       description: description.trim(),
       date,
-      timestamp: Date.now()
     };
 
     onAdd(transaction);

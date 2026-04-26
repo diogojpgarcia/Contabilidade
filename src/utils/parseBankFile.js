@@ -1,5 +1,11 @@
 const DATE_KEYS   = ['date','data','datum','fecha','valuta','buchungstag','booking date','transaction date','posting date','value date'];
-const DESC_KEYS   = ['description','descricao','details','detail','info','omschrijving','verwendungszweck','memo','narration','reference','text','label'];
+const DESC_KEYS   = [
+  'description','descricao','descricao','historico','historico','movimento',
+  'details','detail','info','omschrijving','verwendungszweck','memo',
+  'narration','reference','text','label','transaction','hist','descr',
+  'bezeichnung','betreff','subject','particulars','remark','remarks','note','notes',
+  'transaction details','payment details','beneficiary','creditor name'
+];
 const AMT_KEYS    = ['amount','valor','betrag','bedrag','importe','montant'];
 const DEBIT_KEYS  = ['debit','debito','af','ausgabe','withdrawal','charge','debet'];
 const CREDIT_KEYS = ['credit','credito','bij','einnahme','deposit','payment'];
@@ -17,11 +23,23 @@ function detectDelimiter(text) {
 
 function findColumn(headers, candidates) {
   const normed = headers.map(norm);
-  for (const c of candidates) {
-    const i = normed.findIndex(h => h === c || h.includes(c));
-    if (i !== -1) return headers[i];
+  // Score each header: exact match = 3, startsWith = 2, includes = 1
+  let bestHeader = null;
+  let bestScore = 0;
+  for (let i = 0; i < normed.length; i++) {
+    const h = normed[i];
+    for (const c of candidates) {
+      let score = 0;
+      if (h === c) score = 3;
+      else if (h.startsWith(c) || c.startsWith(h)) score = 2;
+      else if (h.includes(c) || c.includes(h)) score = 1;
+      if (score > bestScore) {
+        bestScore = score;
+        bestHeader = headers[i];
+      }
+    }
   }
-  return null;
+  return bestScore > 0 ? bestHeader : null;
 }
 
 export function parseDate(raw) {
@@ -52,9 +70,21 @@ export function parseAmount(raw) {
   return isNaN(n) ? null : n;
 }
 
-export function cleanDescription(raw) {
-  if (!raw) return 'unknown';
-  return String(raw).replace(/\s+/g, ' ').trim() || 'unknown';
+export function cleanDescription(raw, fallbackValues) {
+  if (raw && String(raw).trim()) {
+    const cleaned = String(raw).replace(/\s+/g, ' ').trim();
+    if (cleaned) return cleaned;
+  }
+  // Try fallback values (other row cells) in order
+  if (Array.isArray(fallbackValues)) {
+    for (const val of fallbackValues) {
+      if (val && String(val).trim()) {
+        const cleaned = String(val).replace(/\s+/g, ' ').trim();
+        if (cleaned) return cleaned;
+      }
+    }
+  }
+  return 'no description';
 }
 
 function generateRowKey(r) {
@@ -106,6 +136,11 @@ export function parseCSV(text) {
   const debitCol  = findColumn(headers, DEBIT_KEYS);
   const creditCol = findColumn(headers, CREDIT_KEYS);
 
+  if (import.meta.env?.DEV) {
+    console.debug('[parseBankFile] headers:', headers);
+    console.debug('[parseBankFile] detected:', { dateCol, descCol, amtCol, debitCol, creditCol });
+  }
+
   if (!dateCol) return [];
 
   const seen = new Set();
@@ -120,7 +155,13 @@ export function parseCSV(text) {
     const date = parseDate(obj[dateCol]);
     if (!date) continue;
 
-    const description = cleanDescription(obj[descCol]);
+    // Build fallback list: all non-key cells for description fallback
+    const nonKeyValues = headers
+      .filter(h => h !== dateCol && h !== amtCol && h !== debitCol && h !== creditCol)
+      .map(h => obj[h])
+      .filter(v => v && v.trim());
+
+    const description = cleanDescription(descCol ? obj[descCol] : null, nonKeyValues);
 
     let amount = null;
     if (amtCol && obj[amtCol]) {
@@ -170,9 +211,8 @@ function extractTransactionsFromText(text) {
     if (!date) continue;
     const amount = parseAmount(amtMatch[1]);
     if (amount == null) continue;
-    const description = cleanDescription(
-      line.replace(dateMatch[0], '').replace(amtMatch[0], '').replace(/\s+/g, ' ').trim()
-    );
+    const descRaw = line.replace(dateMatch[0], '').replace(amtMatch[0], '').replace(/\s+/g, ' ').trim();
+    const description = descRaw || 'no description';
     const type = amount < 0 ? 'expense' : 'income';
     const entry = { date, description, amount: Math.abs(amount), type };
     const key = generateRowKey(entry);

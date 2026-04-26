@@ -55,7 +55,6 @@ const ImportTab = ({ user, onImportDone }) => {
           amount: tx.amount,
           type: tx.type,
           category: tx.category || CATEGORY_MAP[tx.type],
-          timestamp: Date.now(),
         });
       }
       setSaved(true);

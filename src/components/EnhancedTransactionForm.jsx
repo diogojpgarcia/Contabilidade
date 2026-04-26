@@ -33,7 +33,6 @@ const EnhancedTransactionForm = ({ onAdd, onCancel }) => {
       subcategory: subcategory || null,
       description: description.trim(),
       date,
-      timestamp: Date.now()
     };
 
     onAdd(transaction);
