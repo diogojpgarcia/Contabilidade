@@ -231,9 +231,11 @@ const App = () => {
         {activeTab === 'stats' && (
           <StatsTab
             transactions={transactions}
+            filteredTransactions={filteredTransactions}
             currentMonth={currentMonth}
+            onMonthChange={setCurrentMonth}
             categories={categoriesProfessional}
-            onTransactionDeleted={loadUserTransactions}
+            onTransactionDeleted={handleDeleteTransaction}
           />
         )}
         

@@ -1,13 +1,8 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
-import { dbService } from '../../lib/supabase';
+﻿import React, { useState, useMemo } from 'react';
 import InsightsPanel from '../InsightsPanel.jsx';
 import './StatsTab.css';
 
-const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted }) => {
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-
-  // Sync month when parent currentMonth changes (e.g. after data reset)
-  useEffect(() => { setSelectedMonth(currentMonth); }, [currentMonth]);
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted }) => {
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
   const [deleting, setDeleting] = useState(null);
@@ -54,19 +49,13 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
     return iconMap[categoryName] || '◌';
   };
 
-  // Calculate expenses by category for selected month
-  const getExpensesByCategory = (month) => {
-    const monthTransactions = transactions.filter(t =>
-      t.date && t.date.slice(0, 7) === month && t.type === 'expense'
-    );
-
+  // Compute expenses by category from already-filtered transactions
+  const computeExpensesByCategory = (txns) => {
     const byCategory = {};
-    monthTransactions.forEach(t => {
+    txns.filter(t => t.type === 'expense').forEach(t => {
       byCategory[t.category] = (byCategory[t.category] || 0) + parseFloat(t.amount);
     });
-
     const total = Object.values(byCategory).reduce((sum, val) => sum + val, 0);
-    
     return Object.entries(byCategory)
       .map(([category, amount]) => ({
         category,
@@ -76,18 +65,15 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
       .sort((a, b) => b.amount - a.amount);
   };
 
-  // Get transactions for selected month
-  const getMonthTransactions = (month) => {
-    let filtered = transactions
-      .filter(t => t.date && t.date.slice(0, 7) === month)
-      .sort((a, b) => new Date(b.created_at || b.timestamp || 0) - new Date(a.created_at || a.timestamp || 0));
-    
-    // Apply date filter if set
+  // Get sorted (and optionally date-filtered) transactions from already-filtered list
+  const computeMonthTransactions = (txns) => {
+    let sorted = [...txns].sort(
+      (a, b) => new Date(b.created_at || b.timestamp || 0) - new Date(a.created_at || a.timestamp || 0)
+    );
     if (filterDate) {
-      filtered = filtered.filter(t => t.date === filterDate);
+      sorted = sorted.filter(t => t.date === filterDate);
     }
-    
-    return filtered;
+    return sorted;
   };
 
   // Get last 6 months for chart
@@ -126,19 +112,19 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
     });
   };
 
-  // Navigate months
+  // Navigate months — delegates to App so currentMonth is the single source of truth
   const goToPreviousMonth = () => {
-    const [year, month] = selectedMonth.split('-').map(Number);
+    const [year, month] = currentMonth.split('-').map(Number);
     const prevDate = new Date(year, month - 2, 1);
     const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-    setSelectedMonth(prevMonth);
+    onMonthChange(prevMonth);
   };
 
   const goToNextMonth = () => {
-    const [year, month] = selectedMonth.split('-').map(Number);
+    const [year, month] = currentMonth.split('-').map(Number);
     const nextDate = new Date(year, month, 1);
     const nextMonth = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
-    setSelectedMonth(nextMonth);
+    onMonthChange(nextMonth);
   };
 
   // Format date
@@ -149,7 +135,7 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
     return `${day} ${month}`;
   };
 
-  // Handle delete transaction
+  // Handle delete transaction — App.jsx owns the DB call and state update
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Tens a certeza que queres apagar esta transação?')) {
       return;
@@ -158,11 +144,8 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
     setDeleting(transactionId);
 
     try {
-      await dbService.deleteTransaction(transactionId);
-      
-      // Call parent callback to refresh transactions
       if (onTransactionDeleted) {
-        onTransactionDeleted();
+        await onTransactionDeleted(transactionId);
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
@@ -172,20 +155,21 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
     }
   };
 
-  // Derived purely from transactions prop — no local cache, recomputes whenever transactions or month changes
-  const categoryData     = useMemo(() => getExpensesByCategory(selectedMonth),   [transactions, selectedMonth]);
-  const monthTransactions = useMemo(() => getMonthTransactions(selectedMonth),   [transactions, selectedMonth, filterDate]);
-  const monthlyData       = useMemo(() => getMonthlyData(),                      [transactions, currentMonth]);
+  // Derived from filteredTransactions (already filtered by currentMonth in App)
+  const categoryData      = useMemo(() => computeExpensesByCategory(filteredTransactions),  [filteredTransactions]);
+  const monthTransactions = useMemo(() => computeMonthTransactions(filteredTransactions),   [filteredTransactions, filterDate]);
+  // 6-month chart still needs all transactions so it can look at past months
+  const monthlyData       = useMemo(() => getMonthlyData(),                                 [transactions, currentMonth]);
   const maxAmount         = useMemo(
     () => Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses))) || 1,
     [monthlyData]
   );
 
-  // Get month name
-  const [year, month] = selectedMonth.split('-');
-  const monthName = new Date(year, parseInt(month) - 1, 1).toLocaleDateString('pt-PT', { 
-    month: 'long', 
-    year: 'numeric' 
+  // Get month name from the global currentMonth
+  const [year, month] = currentMonth.split('-');
+  const monthName = new Date(year, parseInt(month) - 1, 1).toLocaleDateString('pt-PT', {
+    month: 'long',
+    year: 'numeric'
   });
 
   return (
@@ -231,7 +215,7 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
         <button 
           className="month-nav" 
           onClick={goToNextMonth}
-          disabled={selectedMonth === currentMonth}
+          disabled={currentMonth === new Date().toISOString().slice(0, 7)}
         >
           <span className="sf-icon">›</span>
         </button>
@@ -433,7 +417,7 @@ const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted
       {activeView === 'insights' && (
         <InsightsPanel
           transactions={transactions}
-          currentMonth={selectedMonth}
+          currentMonth={currentMonth}
         />
       )}
     </div>

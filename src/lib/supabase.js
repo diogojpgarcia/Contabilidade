@@ -79,22 +79,14 @@ export const dbService = {
     if (error) throw error
   },
 
-  // deleteAllUserData — removes every record that belongs to this user.
-  // Tables are deleted in FK-safe order (leaf tables first).
-  // Any single failure throws immediately — no silent partial deletes.
+  // deleteAllUserData — removes financial transaction data and user settings.
+  // Budget goals, categories, rules etc. are intentionally kept so the user
+  // doesn't have to reconfigure the app after a data reset.
   async deleteAllUserData(userId) {
     if (!userId) throw new Error('userId is required');
 
-    // Leaf tables first so FK constraints are never violated.
-    // Add new tables here as the schema grows.
     const tables = [
       'transactions',
-      'budget_goals',
-      'budgets',
-      'categories',
-      'rules',
-      'subscriptions',
-      'insights',
       'user_settings',
     ];
 

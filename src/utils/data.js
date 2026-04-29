@@ -71,19 +71,6 @@ export const getCategoryById = (categoryId, type = 'expense') => {
   return categories.find(cat => cat.id === categoryId) || categories[categories.length - 1];
 };
 
-// Load transactions from localStorage
-export const loadTransactions = (userId) => {
-  const key = `transactions_${userId}`;
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
-};
-
-// Save transactions to localStorage
-export const saveTransactions = (userId, transactions) => {
-  const key = `transactions_${userId}`;
-  localStorage.setItem(key, JSON.stringify(transactions));
-};
-
 // Calculate monthly totals
 export const calculateMonthlyTotals = (transactions, monthKey) => {
   const monthTransactions = transactions.filter(t => getMonthKey(t.date) === monthKey);
