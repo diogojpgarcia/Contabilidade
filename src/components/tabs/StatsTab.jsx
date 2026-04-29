@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
 import InsightsPanel from '../InsightsPanel.jsx';
 import './StatsTab.css';
 
 const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories, onTransactionDeleted }) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+  // Sync selectedMonth when currentMonth prop changes (e.g. after data reset)
+  useEffect(() => {
+    setSelectedMonth(currentMonth);
+  }, [currentMonth]);
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
   const [deleting, setDeleting] = useState(null);
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
@@ -13,41 +18,41 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
   const getCategoryIcon = (categoryName) => {
     const iconMap = {
       // Despesas
-      'Habitação': '⌂',
-      'Alimentação': '⚑',
-      'Transporte': '⚐',
-      'Saúde': '✚',
-      'Educação': '⊞',
-      'Comunicações': '◎',
-      'Utilities': '⚡',
-      'Roupa & Calçado': '◫',
-      'Tecnologia': '◧',
-      'Subscrições': '◉',
-      'Lazer & Entretenimento': '◐',
-      'Viagens & Férias': '✈︎',
-      'Presentes & Doações': '◆',
-      'Serviços Financeiros': '◈',
-      'Animais de Estimação': '◧',
-      'Crianças & Família': '◎',
-      'Cuidados Pessoais': '◐',
-      'Casa & Jardim': '⌂',
-      'Impostos & Taxas': '◫',
-      'Emergências': '⚠',
-      'Outros': '◌',
+      'HabitaÃ§Ã£o': 'âŒ‚',
+      'AlimentaÃ§Ã£o': 'âš‘',
+      'Transporte': 'âš',
+      'SaÃºde': 'âœš',
+      'EducaÃ§Ã£o': 'âŠž',
+      'ComunicaÃ§Ãµes': 'â—Ž',
+      'Utilities': 'âš¡',
+      'Roupa & CalÃ§ado': 'â—«',
+      'Tecnologia': 'â—§',
+      'SubscriÃ§Ãµes': 'â—‰',
+      'Lazer & Entretenimento': 'â—',
+      'Viagens & FÃ©rias': 'âœˆï¸Ž',
+      'Presentes & DoaÃ§Ãµes': 'â—†',
+      'ServiÃ§os Financeiros': 'â—ˆ',
+      'Animais de EstimaÃ§Ã£o': 'â—§',
+      'CrianÃ§as & FamÃ­lia': 'â—Ž',
+      'Cuidados Pessoais': 'â—',
+      'Casa & Jardim': 'âŒ‚',
+      'Impostos & Taxas': 'â—«',
+      'EmergÃªncias': 'âš ',
+      'Outros': 'â—Œ',
       
       // Receitas
-      'Salário Principal': '◈',
-      'Subsídios': '◐',
-      'Trabalho Extra / Freelance': '◧',
-      'Investimentos': '◭',
-      'Rendas Recebidas': '⌂',
-      'Reembolsos': '◎',
-      'Vendas': '◫',
-      'Prémios & Sorteios': '◆',
-      'Prendas & Doações Recebidas': '◆',
-      'Outros Rendimentos': '◌'
+      'SalÃ¡rio Principal': 'â—ˆ',
+      'SubsÃ­dios': 'â—',
+      'Trabalho Extra / Freelance': 'â—§',
+      'Investimentos': 'â—­',
+      'Rendas Recebidas': 'âŒ‚',
+      'Reembolsos': 'â—Ž',
+      'Vendas': 'â—«',
+      'PrÃ©mios & Sorteios': 'â—†',
+      'Prendas & DoaÃ§Ãµes Recebidas': 'â—†',
+      'Outros Rendimentos': 'â—Œ'
     };
-    return iconMap[categoryName] || '◌';
+    return iconMap[categoryName] || 'â—Œ';
   };
 
   // Calculate expenses by category for selected month
@@ -147,7 +152,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
 
   // Handle delete transaction
   const handleDeleteTransaction = async (transactionId) => {
-    if (!window.confirm('Tens a certeza que queres apagar esta transação?')) {
+    if (!window.confirm('Tens a certeza que queres apagar esta transaÃ§Ã£o?')) {
       return;
     }
 
@@ -162,7 +167,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      alert('Erro ao apagar transação: ' + error.message);
+      alert('Erro ao apagar transaÃ§Ã£o: ' + error.message);
     } finally {
       setDeleting(null);
     }
@@ -183,8 +188,8 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
   return (
     <div className="stats-tab">
       <div className="stats-header">
-        <h2>Estatísticas</h2>
-        <p>Visão geral das finanças</p>
+        <h2>EstatÃ­sticas</h2>
+        <p>VisÃ£o geral das finanÃ§as</p>
       </div>
 
       {/* View Toggle */}
@@ -193,21 +198,21 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
           className={`toggle-btn ${activeView === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveView('overview')}
         >
-          <span className="sf-icon">◧</span>
+          <span className="sf-icon">â—§</span>
           <span>Resumo</span>
         </button>
         <button
           className={`toggle-btn ${activeView === 'log' ? 'active' : ''}`}
           onClick={() => setActiveView('log')}
         >
-          <span className="sf-icon">◫</span>
-          <span>Histórico</span>
+          <span className="sf-icon">â—«</span>
+          <span>HistÃ³rico</span>
         </button>
         <button
           className={`toggle-btn ${activeView === 'insights' ? 'active' : ''}`}
           onClick={() => setActiveView('insights')}
         >
-          <span className="sf-icon">◐</span>
+          <span className="sf-icon">â—</span>
           <span>Insights</span>
         </button>
       </div>
@@ -215,7 +220,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
       {/* Month Selector */}
       <div className="month-selector">
         <button className="month-nav" onClick={goToPreviousMonth}>
-          <span className="sf-icon">‹</span>
+          <span className="sf-icon">â€¹</span>
         </button>
         <div className="month-display">
           <span className="month-name">{monthName}</span>
@@ -225,7 +230,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
           onClick={goToNextMonth}
           disabled={selectedMonth === currentMonth}
         >
-          <span className="sf-icon">›</span>
+          <span className="sf-icon">â€º</span>
         </button>
       </div>
 
@@ -234,7 +239,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
         <>
           {/* Evolution Chart */}
           <div className="chart-section">
-            <h3>Evolução (6 meses)</h3>
+            <h3>EvoluÃ§Ã£o (6 meses)</h3>
             <div className="chart-container">
               {monthlyData.map((data, index) => {
                 const incomeHeight = (data.income / maxAmount) * 100;
@@ -246,12 +251,12 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                       <div 
                         className="bar income-bar" 
                         style={{ height: `${incomeHeight}%` }}
-                        title={`Receitas: ${data.income.toFixed(0)}€`}
+                        title={`Receitas: ${data.income.toFixed(0)}â‚¬`}
                       />
                       <div 
                         className="bar expense-bar" 
                         style={{ height: `${expensesHeight}%` }}
-                        title={`Despesas: ${data.expenses.toFixed(0)}€`}
+                        title={`Despesas: ${data.expenses.toFixed(0)}â‚¬`}
                       />
                     </div>
                     <span className="month-label">{data.month}</span>
@@ -276,8 +281,8 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
             <h3>Despesas por Categoria</h3>
             {categoryData.length === 0 ? (
               <div className="empty-state">
-                <span className="sf-icon-large">◌</span>
-                <p>Sem despesas neste mês</p>
+                <span className="sf-icon-large">â—Œ</span>
+                <p>Sem despesas neste mÃªs</p>
               </div>
             ) : (
               <div className="categories-list">
@@ -288,7 +293,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                       <span className="category-name">{item.category}</span>
                     </div>
                     <div className="category-stats">
-                      <span className="category-amount">{item.amount.toFixed(2)}€</span>
+                      <span className="category-amount">{item.amount.toFixed(2)}â‚¬</span>
                       <div className="category-bar-container">
                         <div 
                           className="category-bar-fill" 
@@ -309,7 +314,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
       {activeView === 'log' && (
         <div className="transaction-log">
           <div className="log-header">
-            <h3>Todas as Transações</h3>
+            <h3>Todas as TransaÃ§Ãµes</h3>
             <div className="date-filter">
               <div className="date-input-wrapper">
                 <input
@@ -319,7 +324,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                   onChange={(e) => setFilterDate(e.target.value)}
                   max={new Date().toISOString().split('T')[0]}
                 />
-                <span className="calendar-icon">◷</span>
+                <span className="calendar-icon">â—·</span>
               </div>
               {filterDate && (
                 <button 
@@ -327,15 +332,15 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                   onClick={() => setFilterDate('')}
                   title="Limpar filtro"
                 >
-                  ×
+                  Ã—
                 </button>
               )}
             </div>
           </div>
           {monthTransactions.length === 0 ? (
             <div className="empty-state">
-              <span className="sf-icon-large">◌</span>
-              <p>{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</p>
+              <span className="sf-icon-large">â—Œ</span>
+              <p>{filterDate ? 'Sem transaÃ§Ãµes neste dia' : 'Sem transaÃ§Ãµes neste mÃªs'}</p>
             </div>
           ) : (
             <div className="transactions-list">
@@ -358,7 +363,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                   <div className="transaction-right">
                     <div className="transaction-info">
                       <span className={`transaction-amount ${transaction.type}`}>
-                        {transaction.type === 'income' ? '+' : '-'}{parseFloat(transaction.amount).toFixed(2)}€
+                        {transaction.type === 'income' ? '+' : '-'}{parseFloat(transaction.amount).toFixed(2)}â‚¬
                       </span>
                       <span className="transaction-date">{formatDate(transaction.date)}</span>
                     </div>
@@ -366,9 +371,9 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                       className="delete-btn"
                       onClick={() => handleDeleteTransaction(transaction.id)}
                       disabled={deleting === transaction.id}
-                      title="Apagar transação"
+                      title="Apagar transaÃ§Ã£o"
                     >
-                      {deleting === transaction.id ? '⏳' : '🗑️'}
+                      {deleting === transaction.id ? 'â³' : 'ðŸ—‘ï¸'}
                     </button>
                   </div>
                 </div>
@@ -385,7 +390,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                   +{monthTransactions
                     .filter(t => t.type === 'income')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0)
-                    .toFixed(2)}€
+                    .toFixed(2)}â‚¬
                 </span>
               </div>
               <div className="summary-row">
@@ -394,7 +399,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                   -{monthTransactions
                     .filter(t => t.type === 'expense')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0)
-                    .toFixed(2)}€
+                    .toFixed(2)}â‚¬
                 </span>
               </div>
               <div className="summary-row total">
@@ -414,7 +419,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0) -
                   monthTransactions
                     .filter(t => t.type === 'expense')
-                    .reduce((sum, t) => sum + parseFloat(t.amount), 0)).toFixed(2)}€
+                    .reduce((sum, t) => sum + parseFloat(t.amount), 0)).toFixed(2)}â‚¬
                 </span>
               </div>
             </div>
@@ -433,3 +438,4 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
 };
 
 export default StatsTab;
+

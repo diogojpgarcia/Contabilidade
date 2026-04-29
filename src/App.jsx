@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import { authService, dbService } from './lib/supabase';
@@ -46,7 +46,7 @@ const App = () => {
     try {
       const user = await authService.getCurrentUser();
       if (user) {
-        console.log('✅ User session found:', user.email);
+        console.log('âœ… User session found:', user.email);
         setCurrentUser(user);
       }
     } catch (error) {
@@ -61,14 +61,14 @@ const App = () => {
     const type = hashParams.get('type');
     
     if (type === 'recovery') {
-      console.log('🔐 Recovery mode detected!');
+      console.log('ðŸ” Recovery mode detected!');
       setIsRecoveryMode(true);
       setLoading(false);
     }
   };
 
   const handleResetComplete = () => {
-    console.log('✅ Reset complete, reloading...');
+    console.log('âœ… Reset complete, reloading...');
     setIsRecoveryMode(false);
     window.location.hash = '';
     window.location.reload();
@@ -78,12 +78,12 @@ const App = () => {
     if (!currentUser) return;
     
     try {
-      console.log('📥 Loading transactions for:', currentUser.id);
+      console.log('ðŸ“¥ Loading transactions for:', currentUser.id);
       const data = await dbService.getTransactions(currentUser.id);
-      console.log('✅ Loaded', data.length, 'transactions');
+      console.log('âœ… Loaded', data.length, 'transactions');
       setTransactions(data);
     } catch (error) {
-      console.error('❌ Error loading transactions:', error);
+      console.error('âŒ Error loading transactions:', error);
     }
   };
 
@@ -108,7 +108,7 @@ const App = () => {
   };
 
   const handleAuthSuccess = (user) => {
-    console.log('🎉 Auth success!', user.email);
+    console.log('ðŸŽ‰ Auth success!', user.email);
     setCurrentUser(user);
   };
 
@@ -117,40 +117,40 @@ const App = () => {
       await authService.signOut();
       setCurrentUser(null);
       setTransactions([]);
-      console.log('👋 Logged out');
+      console.log('ðŸ‘‹ Logged out');
     } catch (error) {
-      console.error('❌ Logout error:', error);
+      console.error('âŒ Logout error:', error);
     }
   };
 
   const handleAddTransaction = async (transaction) => {
     try {
-      console.log('➕ Adding transaction...');
+      console.log('âž• Adding transaction...');
       const newTransaction = await dbService.addTransaction(currentUser.id, transaction);
       setTransactions([newTransaction, ...transactions]);
       setActiveTab('home');
-      console.log('✅ Transaction added!');
+      console.log('âœ… Transaction added!');
     } catch (error) {
-      console.error('❌ Error adding transaction:', error);
-      alert('Erro ao adicionar transação: ' + error.message);
+      console.error('âŒ Error adding transaction:', error);
+      alert('Erro ao adicionar transaÃ§Ã£o: ' + error.message);
     }
   };
 
   const handleDeleteTransaction = async (id) => {
     try {
-      console.log('🗑️ Deleting transaction:', id);
+      console.log('ðŸ—‘ï¸ Deleting transaction:', id);
       await dbService.deleteTransaction(id);
       setTransactions(transactions.filter(t => t.id !== id));
-      console.log('✅ Transaction deleted!');
+      console.log('âœ… Transaction deleted!');
     } catch (error) {
-      console.error('❌ Error deleting transaction:', error);
-      alert('Erro ao apagar transação: ' + error.message);
+      console.error('âŒ Error deleting transaction:', error);
+      alert('Erro ao apagar transaÃ§Ã£o: ' + error.message);
     }
   };
 
   const handleEditTransaction = async (updatedTransaction) => {
     try {
-      console.log('✏️ Updating transaction:', updatedTransaction.id);
+      console.log('âœï¸ Updating transaction:', updatedTransaction.id);
       const updated = await dbService.updateTransaction(updatedTransaction.id, {
         amount: updatedTransaction.amount,
         type: updatedTransaction.type,
@@ -160,10 +160,10 @@ const App = () => {
         date: updatedTransaction.date
       });
       setTransactions(transactions.map(t => t.id === updated.id ? updated : t));
-      console.log('✅ Transaction updated!');
+      console.log('âœ… Transaction updated!');
     } catch (error) {
-      console.error('❌ Error updating transaction:', error);
-      alert('Erro ao editar transação: ' + error.message);
+      console.error('âŒ Error updating transaction:', error);
+      alert('Erro ao editar transaÃ§Ã£o: ' + error.message);
     }
   };
 
@@ -172,7 +172,7 @@ const App = () => {
     return (
       <div className="app-new loading-screen">
         <div className="loading-content">
-          <h1>💰 Finanças Familiares</h1>
+          <h1>ðŸ’° FinanÃ§as Familiares</h1>
           <div className="loading-spinner"></div>
         </div>
       </div>
@@ -230,6 +230,7 @@ const App = () => {
         
         {activeTab === 'stats' && (
           <StatsTab
+            key={dataVersion}
             transactions={transactions}
             currentMonthTransactions={filteredTransactions}
             currentMonth={currentMonth}
@@ -273,7 +274,7 @@ const App = () => {
             onLogout={handleLogout}
             onDataDeleted={() => {
               // Clear every piece of state that can show stale data.
-              // Do NOT call loadUserTransactions — DB is empty and an async
+              // Do NOT call loadUserTransactions â€” DB is empty and an async
               // fetch racing against setTransactions([]) can reintroduce stale data.
               setTransactions([]);
               setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
@@ -337,3 +338,4 @@ const App = () => {
 };
 
 export default App;
+
