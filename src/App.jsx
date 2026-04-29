@@ -269,7 +269,10 @@ const App = () => {
             userName={userName}
             onLogout={handleLogout}
             onDataDeleted={() => {
+              // Flush ALL local state immediately — do not wait for DB re-fetch.
               setTransactions([]);
+              setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
+              // Re-fetch to confirm DB is empty (returns [] after deletion).
               loadUserTransactions();
             }}
           />

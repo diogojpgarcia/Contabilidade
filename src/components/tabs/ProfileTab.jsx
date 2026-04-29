@@ -5,6 +5,7 @@ import './ProfileTab.css';
 
 const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory]     = useState(false);
   const [deleteConfirmText, setDeleteConfirmText]     = useState('');
   const [deleteStatus, setDeleteStatus]               = useState('');
@@ -145,7 +146,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
 
         <button
           className="profile-option danger"
-          onClick={() => { setShowDeleteHistory(true); setDeleteConfirmText(''); setDeleteStatus(''); }}
+          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); setDeleteConfirmText(''); setDeleteStatus(''); }}
         >
           <span className="option-icon-sf">🗑</span>
           <span className="option-label">Apagar Todos os Dados</span>
@@ -178,11 +179,23 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
 
       {/* Delete History Modal */}
       {showDeleteHistory && (
-        <div className="modal-overlay" onClick={() => setShowDeleteHistory(false)}>
+        <div className="modal-overlay" onClick={() => {
+          setShowDeleteHistory(false);
+          if (deleteSucceededRef.current && onDataDeleted) {
+            deleteSucceededRef.current = false;
+            onDataDeleted();
+          }
+        }}>
           <div className="modal-content delete-history-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Apagar Todos os Dados</h3>
-              <button className="btn-close" onClick={() => setShowDeleteHistory(false)}>
+              <button className="btn-close" onClick={() => {
+                setShowDeleteHistory(false);
+                if (deleteSucceededRef.current && onDataDeleted) {
+                  deleteSucceededRef.current = false;
+                  onDataDeleted();
+                }
+              }}>
                 <span className="sf-icon">✕</span>
               </button>
             </div>
@@ -214,13 +227,16 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
                   setDeleting(true);
                   try {
                     await dbService.deleteAllUserData(user.id);
+                    deleteSucceededRef.current = true;
+                    // Flush parent state immediately so UI is clean before modal closes.
+                    if (onDataDeleted) onDataDeleted();
                     setDeleteStatus('✓ Todos os dados apagados.');
                     setTimeout(() => {
+                      deleteSucceededRef.current = false;
                       setShowDeleteHistory(false);
                       setDeleteConfirmText('');
                       setDeleteStatus('');
-                      if (onDataDeleted) onDataDeleted();
-                    }, 1200);
+                    }, 1400);
                   } catch (err) {
                     setDeleteStatus('Erro: ' + err.message);
                   } finally {

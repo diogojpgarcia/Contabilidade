@@ -109,6 +109,14 @@ export const dbService = {
         throw new Error(Erro ao apagar : );
       }
     }
+
+    // Also wipe any localStorage keys written by legacy code (e.g. security-system.js).
+    // Safe to run even if the keys do not exist.
+    try {
+      localStorage.removeItem(	ransactions_);
+      localStorage.removeItem(ecovery_);
+      localStorage.removeItem(user_data_);
+    } catch (_) { /* localStorage not available (SSR/test env) */ }
   },
 
   async getUserSettings(userId) {
