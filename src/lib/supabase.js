@@ -106,16 +106,16 @@ export const dbService = {
 
       // code 42P01 = table does not exist, safe to skip (forward-compat)
       if (error && error.code !== '42P01') {
-        throw new Error(Erro ao apagar : );
+        throw new Error(`Erro ao apagar ${table}: ${error.message}`);
       }
     }
 
     // Also wipe any localStorage keys written by legacy code (e.g. security-system.js).
     // Safe to run even if the keys do not exist.
     try {
-      localStorage.removeItem(	ransactions_);
-      localStorage.removeItem(ecovery_);
-      localStorage.removeItem(user_data_);
+      localStorage.removeItem(`transactions_${userId}`);
+      localStorage.removeItem(`recovery_${userId}`);
+      localStorage.removeItem(`user_data_${userId}`);
     } catch (_) { /* localStorage not available (SSR/test env) */ }
   },
 

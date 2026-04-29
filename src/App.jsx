@@ -26,6 +26,7 @@ const App = () => {
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
+  const [dataVersion, setDataVersion] = useState(0);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -246,6 +247,7 @@ const App = () => {
         
         {activeTab === 'budget' && (
           <BudgetTab
+            key={dataVersion}
             user={currentUser}
             transactions={transactions}
             currentMonth={currentMonth}
@@ -274,6 +276,7 @@ const App = () => {
               setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
               // Re-fetch to confirm DB is empty (returns [] after deletion).
               loadUserTransactions();
+              setDataVersion(v => v + 1);
             }}
           />
         )}
