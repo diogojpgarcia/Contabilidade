@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { dbService } from '../../lib/supabase';
 import InsightsPanel from '../InsightsPanel.jsx';
 import './StatsTab.css';
@@ -56,8 +56,8 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
 
   // Calculate expenses by category for selected month
   const getExpensesByCategory = (month) => {
-    const monthTransactions = transactions.filter(t => 
-      t.date.startsWith(month) && t.type === 'expense'
+    const monthTransactions = transactions.filter(t =>
+      t.date && t.date.slice(0, 7) === month && t.type === 'expense'
     );
 
     const byCategory = {};
@@ -79,7 +79,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
   // Get transactions for selected month
   const getMonthTransactions = (month) => {
     let filtered = transactions
-      .filter(t => t.date.startsWith(month))
+      .filter(t => t.date && t.date.slice(0, 7) === month)
       .sort((a, b) => new Date(b.created_at || b.timestamp || 0) - new Date(a.created_at || a.timestamp || 0));
     
     // Apply date filter if set
@@ -109,7 +109,7 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
     const months = getLast6Months();
     
     return months.map(month => {
-      const monthTransactions = transactions.filter(t => t.date.startsWith(month));
+      const monthTransactions = transactions.filter(t => t.date && t.date.slice(0, 7) === month);
       const income = monthTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + parseFloat(t.amount), 0);
@@ -172,10 +172,14 @@ const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, catego
     }
   };
 
-  const categoryData = getExpensesByCategory(selectedMonth);
-  const monthTransactions = getMonthTransactions(selectedMonth);
-  const monthlyData = getMonthlyData();
-  const maxAmount = Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses))) || 1;
+  // Derived purely from transactions prop — no local cache, recomputes whenever transactions or month changes
+  const categoryData     = useMemo(() => getExpensesByCategory(selectedMonth),   [transactions, selectedMonth]);
+  const monthTransactions = useMemo(() => getMonthTransactions(selectedMonth),   [transactions, selectedMonth, filterDate]);
+  const monthlyData       = useMemo(() => getMonthlyData(),                      [transactions, currentMonth]);
+  const maxAmount         = useMemo(
+    () => Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses))) || 1,
+    [monthlyData]
+  );
 
   // Get month name
   const [year, month] = selectedMonth.split('-');
