@@ -79,12 +79,36 @@ export const dbService = {
     if (error) throw error
   },
 
-  async deleteAllTransactions(userId) {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('user_id', userId)
-    if (error) throw error
+  // deleteAllUserData — removes every record that belongs to this user.
+  // Tables are deleted in FK-safe order (leaf tables first).
+  // Any single failure throws immediately — no silent partial deletes.
+  async deleteAllUserData(userId) {
+    if (!userId) throw new Error('userId is required');
+
+    // Leaf tables first so FK constraints are never violated.
+    // Add new tables here as the schema grows.
+    const tables = [
+      'transactions',
+      'budget_goals',
+      'budgets',
+      'categories',
+      'rules',
+      'subscriptions',
+      'insights',
+      'user_settings',
+    ];
+
+    for (const table of tables) {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('user_id', userId);
+
+      // code 42P01 = table does not exist, safe to skip (forward-compat)
+      if (error && error.code !== '42P01') {
+        throw new Error(Erro ao apagar : );
+      }
+    }
   },
 
   async getUserSettings(userId) {

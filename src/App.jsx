@@ -268,6 +268,10 @@ const App = () => {
             onNavigateToImport={() => setActiveTab('import')}
             userName={userName}
             onLogout={handleLogout}
+            onDataDeleted={() => {
+              setTransactions([]);
+              loadUserTransactions();
+            }}
           />
         )}
       </main>

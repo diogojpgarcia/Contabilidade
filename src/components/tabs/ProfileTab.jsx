@@ -3,7 +3,7 @@ import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showDeleteHistory, setShowDeleteHistory]     = useState(false);
   const [deleteConfirmText, setDeleteConfirmText]     = useState('');
@@ -148,7 +148,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
           onClick={() => { setShowDeleteHistory(true); setDeleteConfirmText(''); setDeleteStatus(''); }}
         >
           <span className="option-icon-sf">🗑</span>
-          <span className="option-label">Apagar Histórico de Transações</span>
+          <span className="option-label">Apagar Todos os Dados</span>
           <span className="option-arrow-sf">›</span>
         </button>
       </div>
@@ -181,7 +181,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
         <div className="modal-overlay" onClick={() => setShowDeleteHistory(false)}>
           <div className="modal-content delete-history-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Apagar Histórico</h3>
+              <h3>Apagar Todos os Dados</h3>
               <button className="btn-close" onClick={() => setShowDeleteHistory(false)}>
                 <span className="sf-icon">✕</span>
               </button>
@@ -189,7 +189,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
             <div className="modal-body">
               <div className="delete-warning-icon">🗑</div>
               <p className="modal-description delete-warning-text">
-                Esta ação é <strong>irreversível</strong>. Todas as transações serão apagadas permanentemente.
+                Esta ação é <strong>irreversível</strong>. Todas as transações, categorias, orçamentos e configurações serão apagados permanentemente.
               </p>
               <p className="delete-confirm-label">
                 Escreve <strong>APAGAR</strong> para confirmar
@@ -213,13 +213,14 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport }) => {
                 onClick={async () => {
                   setDeleting(true);
                   try {
-                    await dbService.deleteAllTransactions(user.id);
-                    setDeleteStatus('✓ Histórico apagado com sucesso.');
+                    await dbService.deleteAllUserData(user.id);
+                    setDeleteStatus('✓ Todos os dados apagados.');
                     setTimeout(() => {
                       setShowDeleteHistory(false);
                       setDeleteConfirmText('');
                       setDeleteStatus('');
-                    }, 1800);
+                      if (onDataDeleted) onDataDeleted();
+                    }, 1200);
                   } catch (err) {
                     setDeleteStatus('Erro: ' + err.message);
                   } finally {
