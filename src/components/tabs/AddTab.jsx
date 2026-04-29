@@ -96,7 +96,7 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
         
         // No alert - silent success
       } else {
-        // Regular transaction
+        // Regular transaction — let App.jsx handle the DB call and state update
         const transaction = {
           type,
           amount: amountValue,
@@ -105,12 +105,8 @@ const AddTab = ({ user, categories, onTransactionAdded }) => {
           date
         };
 
-        await dbService.addTransaction(user.id, transaction);
-        // No alert - silent success
-        
-        // Notify parent
         if (onTransactionAdded) {
-          onTransactionAdded();
+          await onTransactionAdded(transaction);
         }
       }
 

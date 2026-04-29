@@ -40,6 +40,12 @@ export const authService = {
   }
 }
 
+// Normalise a raw Supabase row so amount is always a Number.
+// Apply this to every row that comes back from the transactions table.
+function mapTransaction(raw) {
+  return { ...raw, amount: Number(raw.amount) };
+}
+
 export const dbService = {
   async getTransactions(userId) {
     const { data, error } = await supabase
@@ -48,7 +54,7 @@ export const dbService = {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     if (error) throw error
-    return data || []
+    return (data || []).map(mapTransaction)
   },
 
   async addTransaction(userId, transaction) {
@@ -58,7 +64,7 @@ export const dbService = {
       .insert([{ user_id: userId, date, description, amount, type, category }])
       .select()
     if (error) throw error
-    return data[0]
+    return mapTransaction(data[0])
   },
 
   async updateTransaction(transactionId, updates) {
@@ -68,7 +74,7 @@ export const dbService = {
       .eq('id', transactionId)
       .select()
     if (error) throw error
-    return data[0]
+    return mapTransaction(data[0])
   },
 
   async deleteTransaction(transactionId) {

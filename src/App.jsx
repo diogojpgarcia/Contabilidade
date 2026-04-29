@@ -243,7 +243,7 @@ const App = () => {
           <AddTab
             user={currentUser}
             categories={categoriesProfessional}
-            onTransactionAdded={loadUserTransactions}
+            onTransactionAdded={handleAddTransaction}
           />
         )}
         
