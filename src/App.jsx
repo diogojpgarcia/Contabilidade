@@ -27,6 +27,7 @@ const App = () => {
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
   const [dataVersion, setDataVersion] = useState(0);
+  const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
   // Check for existing session on mount
   useEffect(() => {
@@ -76,10 +77,11 @@ const App = () => {
 
   const loadUserTransactions = async () => {
     if (!currentUser) return;
-    
+    const requestId = ++loadRequestId.current;
     try {
       console.log('📥 Loading transactions for:', currentUser.id);
       const data = await dbService.getTransactions(currentUser.id);
+      if (requestId !== loadRequestId.current) return; // superseded by delete or newer load
       console.log('✅ Loaded', data.length, 'transactions');
       setTransactions(data);
     } catch (error) {
@@ -273,9 +275,9 @@ const App = () => {
             userName={userName}
             onLogout={handleLogout}
             onDataDeleted={() => {
-              // Clear every piece of state that can show stale data.
-              // Do NOT call loadUserTransactions — DB is empty and an async
-              // fetch racing against setTransactions([]) can reintroduce stale data.
+              // Kill any in-flight loadUserTransactions so a stale fetch
+              // cannot overwrite this clear after it resolves.
+              loadRequestId.current++;
               setTransactions([]);
               setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
               setDataVersion(v => v + 1);  // remounts BudgetTab so its local state resets
