@@ -26,7 +26,6 @@ const App = () => {
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
-  const [dataVersion, setDataVersion] = useState(0);
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
   // Check for existing session on mount
@@ -217,7 +216,6 @@ const App = () => {
       <main className="main-content-new">
         {activeTab === 'home' && (
           <HomeTab
-            key={dataVersion}
             balance={balance}
             income={monthlyIncome}
             expenses={monthlyExpenses}
@@ -232,9 +230,7 @@ const App = () => {
         
         {activeTab === 'stats' && (
           <StatsTab
-            key={dataVersion}
             transactions={transactions}
-            currentMonthTransactions={filteredTransactions}
             currentMonth={currentMonth}
             categories={categoriesProfessional}
             onTransactionDeleted={loadUserTransactions}
@@ -251,7 +247,6 @@ const App = () => {
         
         {activeTab === 'budget' && (
           <BudgetTab
-            key={dataVersion}
             user={currentUser}
             transactions={transactions}
             currentMonth={currentMonth}
@@ -280,7 +275,6 @@ const App = () => {
               loadRequestId.current++;
               setTransactions([]);
               setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
-              setDataVersion(v => v + 1);  // remounts BudgetTab so its local state resets
               setActiveTab("home");         // navigate to Home so empty state is visible immediately
             }}
           />

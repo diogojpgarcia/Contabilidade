@@ -3,7 +3,7 @@ import { dbService } from '../../lib/supabase';
 import InsightsPanel from '../InsightsPanel.jsx';
 import './StatsTab.css';
 
-const StatsTab = ({ transactions, currentMonthTransactions, currentMonth, categories, onTransactionDeleted }) => {
+const StatsTab = ({ transactions, currentMonth, categories, onTransactionDeleted }) => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   // Sync month when parent currentMonth changes (e.g. after data reset)
