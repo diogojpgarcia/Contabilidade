@@ -215,6 +215,7 @@ const App = () => {
       <main className="main-content-new">
         {activeTab === 'home' && (
           <HomeTab
+            key={dataVersion}
             balance={balance}
             income={monthlyIncome}
             expenses={monthlyExpenses}
@@ -271,12 +272,13 @@ const App = () => {
             userName={userName}
             onLogout={handleLogout}
             onDataDeleted={() => {
-              // Flush ALL local state immediately — do not wait for DB re-fetch.
+              // Clear every piece of state that can show stale data.
+              // Do NOT call loadUserTransactions — DB is empty and an async
+              // fetch racing against setTransactions([]) can reintroduce stale data.
               setTransactions([]);
               setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
-              // Re-fetch to confirm DB is empty (returns [] after deletion).
-              loadUserTransactions();
-              setDataVersion(v => v + 1);
+              setDataVersion(v => v + 1);  // remounts BudgetTab so its local state resets
+              setActiveTab("home");         // navigate to Home so empty state is visible immediately
             }}
           />
         )}
