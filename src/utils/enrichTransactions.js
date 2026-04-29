@@ -234,3 +234,85 @@ export function enrichTransactions(rawTransactions) {
 
   return { transactions: withDupes, insights };
 }
+// ---------------------------------------------------------------------------
+// mapToUserCategories
+// Maps transactions to user-supplied budget categories.
+// Input:  { budget_categories: [{id, name}], transactions: [{id, description, amount}] }
+// Output: [{transaction_id, category_id, confidence: "high"|"medium"|"low"}]
+// ---------------------------------------------------------------------------
+
+// Semantic bridges: our internal category labels -> words likely in user category names
+const SEMANTIC = {
+  Alimentacao:    ['aliment','food','comida','restaur','supermercado','padaria','cafe','mercado','refeicao','despesa'],
+  Transportes:    ['transport','viagem','mobilidade','combustivel','gasolina','uber','taxi','deslocacao'],
+  Compras:        ['compras','shopping','loja','roupa','moda','bens','consumo'],
+  Entretenimento: ['entret','lazer','diversao','streaming','cinema','musica','jogos','subscricao','hobby'],
+  Contas:         ['contas','casa','habitacao','utilities','eletricidade','agua','internet','renda','despesa fixa'],
+  Financas:       ['financ','bancario','banco','transferencia','comissao','taxa'],
+  Rendimentos:    ['rendimento','salario','receita','income','ordenado','vencimento','entrada'],
+  Poupanca:       ['poupanca','investimento','reserva','saving','aforro','futuro'],
+  Saude:          ['saude','health','medico','farmacia','clinica','bem estar'],
+  Outros:         ['outro','geral','miscel','diverso','variado'],
+};
+
+// Words that signal an income-type category
+const INCOME_SIGNALS = ['rendimento','salario','receita','income','ordenado','vencimento','entrada','ganho'];
+
+function scoreCategoryForTx(catNorm, description, amount, internalCat) {
+  let score = 0;
+  const d = norm(description);
+
+  // 1. Direct word overlap: category name words appear in description
+  for (const cw of catNorm.split(' ')) {
+    if (cw.length > 2 && d.includes(cw)) score += 3;
+  }
+  // 2. Description words appear in category name
+  for (const dw of d.split(' ')) {
+    if (dw.length > 2 && catNorm.includes(dw)) score += 2;
+  }
+  // 3. Semantic bridge via internal category
+  if (internalCat && SEMANTIC[internalCat]) {
+    for (const kw of SEMANTIC[internalCat]) {
+      if (catNorm.includes(norm(kw))) score += 5;
+    }
+  }
+  // 4. Income preference
+  const isIncomeCat = INCOME_SIGNALS.some(w => catNorm.includes(w));
+  if (amount > 0 &&  isIncomeCat) score += 10;
+  if (amount < 0 &&  isIncomeCat) score -= 5;
+
+  return score;
+}
+
+export function mapToUserCategories({ budget_categories, transactions }) {
+  if (!budget_categories?.length || !transactions?.length) return [];
+
+  // Pre-normalise category names once
+  const cats = budget_categories.map(c => ({ id: c.id, normName: norm(c.name) }));
+
+  // Merchant cache: same merchant key -> same result (same merchant = same category)
+  const cache = {};
+
+  function resolve(clean, amount, internalCat) {
+    let best = cats[0];
+    let bestScore = -Infinity;
+
+    for (const cat of cats) {
+      const s = scoreCategoryForTx(cat.normName, clean, amount, internalCat);
+      if (s > bestScore) { bestScore = s; best = cat; }
+    }
+
+    const confidence = bestScore >= 8 ? 'high' : bestScore >= 3 ? 'medium' : 'low';
+    return { category_id: best.id, confidence };
+  }
+
+  return transactions.map(tx => {
+    const clean      = cleanDescription(tx.description);
+    const mKey       = clean.split(' ').slice(0, 2).join(' ');
+    const { category: internalCat } = categorize(tx.description, tx.amount);
+
+    if (!cache[mKey]) cache[mKey] = resolve(clean, tx.amount, internalCat);
+
+    return { transaction_id: tx.id, ...cache[mKey] };
+  });
+}
