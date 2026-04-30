@@ -82,20 +82,33 @@ function applyLocalRules(description) {
 }
 
 /**
- * categorizeWithClaude(transactions)
+ * categorizeWithClaude(transactions, learnedRules?)
  *
- * @param {Array} transactions  Enriched transactions from enrichTransactions()
- *                              Each has: { description, clean_description, amount,
- *                                          category (internal), ... }
- * @returns {Promise<Array>}    Same array with `category` set to professional label
+ * @param {Array}  transactions  Enriched transactions from enrichTransactions()
+ *                               Each has: { description, clean_description, amount,
+ *                                           category (internal), ... }
+ * @param {Array}  learnedRules  User-saved rules [{ pattern, category }]
+ *                               Applied before all other stages.
+ * @returns {Promise<Array>}     Same array with `category` set to professional label
  */
-export async function categorizeWithClaude(transactions) {
+export async function categorizeWithClaude(transactions, learnedRules = []) {
   if (!transactions.length) return transactions;
 
   const matched   = [];
   const unmatched = [];
 
   for (const tx of transactions) {
+    const desc = (tx.clean_description || tx.description || '').toLowerCase();
+
+    // 0. User learned rules — highest priority (personalised corrections)
+    if (learnedRules.length) {
+      const userRule = learnedRules.find(r => r.pattern && desc.includes(r.pattern));
+      if (userRule) {
+        matched.push({ ...tx, category: userRule.category });
+        continue;
+      }
+    }
+
     // 1. Try internal→professional bridge first (covers enrichTransactions hits)
     const bridged = INTERNAL_TO_PRO[tx.category];
     if (bridged) {

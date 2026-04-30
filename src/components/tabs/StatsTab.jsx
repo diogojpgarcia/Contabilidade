@@ -1,8 +1,10 @@
 ﻿import React, { useState, useMemo } from 'react';
 import InsightsPanel from '../InsightsPanel.jsx';
+import CategoryPicker from '../CategoryPicker.jsx';
 import './StatsTab.css';
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted, onCategoryChange }) => {
+  const [pickerTx, setPickerTx] = useState(null);
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
   const [deleting, setDeleting] = useState(null);
@@ -133,6 +135,17 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     const day = date.getDate();
     const month = date.toLocaleDateString('pt-PT', { month: 'short' });
     return `${day} ${month}`;
+  };
+
+  const handleCategoryClick = (tx) => {
+    if (onCategoryChange) setPickerTx(tx);
+  };
+
+  const handlePickerSelect = (newCategory) => {
+    if (pickerTx && onCategoryChange) {
+      onCategoryChange(pickerTx.id, newCategory, pickerTx.description);
+    }
+    setPickerTx(null);
   };
 
   // Handle delete transaction — App.jsx owns the DB call and state update
@@ -341,7 +354,14 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       {getCategoryIcon(transaction.category)}
                     </span>
                     <div className="transaction-details">
-                      <span className="transaction-category">{transaction.category}</span>
+                      <span
+                        className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
+                        onClick={() => handleCategoryClick(transaction)}
+                        title={onCategoryChange ? 'Toca para alterar categoria' : undefined}
+                      >
+                        {transaction.category}
+                        {onCategoryChange && <span className="category-edit-hint">&#8250;</span>}
+                      </span>
                       {transaction.description && (
                         <span className="transaction-description">{transaction.description}</span>
                       )}
@@ -418,6 +438,15 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         <InsightsPanel
           transactions={transactions}
           currentMonth={currentMonth}
+        />
+      )}
+
+      {/* Category Picker */}
+      {pickerTx && (
+        <CategoryPicker
+          transaction={pickerTx}
+          onSelect={handlePickerSelect}
+          onClose={() => setPickerTx(null)}
         />
       )}
     </div>

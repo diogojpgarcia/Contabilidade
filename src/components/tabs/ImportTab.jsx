@@ -5,7 +5,7 @@ import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import { categorizeWithClaude } from '../../utils/categorizeWithClaude.js';
 import './ImportTab.css';
 
-const ImportTab = ({ user, onImportDone }) => {
+const ImportTab = ({ user, onImportDone, learnedRules = [] }) => {
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);
@@ -40,7 +40,7 @@ const ImportTab = ({ user, onImportDone }) => {
 
       // Categorize with local rules + one Claude batch call
       setCategorizing(true);
-      const categorized = await categorizeWithClaude(transactions);
+      const categorized = await categorizeWithClaude(transactions, learnedRules);
       setCategorizing(false);
 
       setPreview(categorized);

@@ -26,6 +26,7 @@ const App = () => {
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
+  const [learnedRules, setLearnedRules] = useState([]); // [{ pattern, category }]
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
   // Check for existing session on mount
@@ -93,7 +94,45 @@ const App = () => {
       const settings = await dbService.getUserSettings(currentUser.id);
       if (settings?.patrimony) setPatrimony(settings.patrimony);
       if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
+      if (settings?.learned_rules) setLearnedRules(settings.learned_rules);
     } catch (error) { console.error("Error loading settings:", error); }
+  };
+
+  // Extract the first meaningful word from a description for rule storage.
+  const extractPattern = (description) => {
+    if (!description) return null;
+    const words = description
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length >= 3);
+    return words[0] || null;
+  };
+
+  // Called when the user manually picks a category in Home or Stats.
+  // 1. Optimistic state update  2. DB write  3. Save learned rule
+  const handleCategoryChange = async (transactionId, newCategory, description) => {
+    const original = transactions.find(t => t.id === transactionId);
+    // Optimistic update
+    setTransactions(prev => prev.map(t =>
+      t.id === transactionId ? { ...t, category: newCategory } : t
+    ));
+    try {
+      await dbService.updateTransaction(transactionId, { category: newCategory });
+      // Save rule so future imports reuse this choice
+      const pattern = extractPattern(description);
+      if (pattern) {
+        const updated = [
+          { pattern, category: newCategory },
+          ...learnedRules.filter(r => r.pattern !== pattern),
+        ];
+        setLearnedRules(updated);
+        dbService.updateUserSettings(currentUser.id, { learned_rules: updated }).catch(console.error);
+      }
+    } catch (err) {
+      console.error('Error updating category:', err);
+      if (original) setTransactions(prev => prev.map(t => t.id === transactionId ? original : t));
+    }
   };
 
   const handlePatrimonyChange = async (newPatrimony) => {
@@ -225,6 +264,7 @@ const App = () => {
             patrimony={patrimony}
             homePatrimonyView={homePatrimonyView}
             onPatrimonyViewChange={handlePatrimonyViewChange}
+            onCategoryChange={handleCategoryChange}
           />
         )}
         
@@ -236,6 +276,7 @@ const App = () => {
             onMonthChange={setCurrentMonth}
             categories={categoriesProfessional}
             onTransactionDeleted={handleDeleteTransaction}
+            onCategoryChange={handleCategoryChange}
           />
         )}
         
@@ -262,6 +303,7 @@ const App = () => {
           <ImportTab
             user={currentUser}
             onImportDone={loadUserTransactions}
+            learnedRules={learnedRules}
           />
         )}
 

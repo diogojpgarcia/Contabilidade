@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
+import CategoryPicker from '../CategoryPicker';
 import './HomeTab.css';
 
 const VIEW_LABELS = { total: 'Total', accounts: 'Contas', investments: 'Investimentos', realestate: 'Imóveis' };
 
-const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMonthChange, patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange }) => {
+const HomeTab = ({
+  balance, income, expenses, transactions,
+  currentMonth, onMonthChange,
+  patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
+  onCategoryChange,
+}) => {
+  const [pickerTx, setPickerTx] = useState(null); // transaction whose category is being edited
+
   const goToPreviousMonth = () => {
     const [year, month] = currentMonth.split('-').map(Number);
     const prevDate = new Date(year, month - 2, 1);
@@ -37,7 +45,11 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
       'Alimentação': '⚑', 'Habitação': '⌂', 'Transporte': '⚐', 'Saúde': '✚',
       'Lazer': '◉', 'Educação': '⊞', 'Roupa': '◫', 'Tecnologia': '◧',
       'Subscrições': '◉', 'Outros': '◌', 'Salário': '◈', 'Freelance': '◐',
-      'Investimentos': '◭', 'Bonus': '◆', 'Outros Rendimentos': '◌'
+      'Investimentos': '◭', 'Bonus': '◆', 'Outros Rendimentos': '◌',
+      'Lazer & Entretenimento': '◐', 'Roupa & Calçado': '◫',
+      'Serviços Financeiros': '◈', 'Comunicações': '◎', 'Utilities': '⚡',
+      'Salário Principal': '◈', 'Trabalho Extra / Freelance': '◐',
+      'Viagens & Férias': '✈', 'Presentes & Doações': '◆',
     };
     return iconMap[categoryName] || '◌';
   };
@@ -59,6 +71,17 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
   };
 
   const patrimonyValue = patrimonyTotals[homePatrimonyView] || 0;
+
+  const handleCategoryClick = (tx) => {
+    if (onCategoryChange) setPickerTx(tx);
+  };
+
+  const handlePickerSelect = (newCategory) => {
+    if (pickerTx && onCategoryChange) {
+      onCategoryChange(pickerTx.id, newCategory, pickerTx.description);
+    }
+    setPickerTx(null);
+  };
 
   return (
     <div className="home-tab">
@@ -106,7 +129,7 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
         </div>
       </div>
 
-      {/* Month Navigation - Compact */}
+      {/* Month Navigation */}
       <div className="month-navigation-compact">
         <button className="month-btn-compact" onClick={goToPreviousMonth}>&#8249;</button>
         <div className="month-display-compact">{formatMonth(currentMonth)}</div>
@@ -125,10 +148,18 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
         ) : (
           <div className="transactions-list">
             {transactions.map((transaction, index) => (
-              <div key={index} className="transaction-item">
+              <div key={transaction.id || index} className="transaction-item">
                 <div className="transaction-icon">{getCategoryIcon(transaction.category)}</div>
                 <div className="transaction-details">
-                  <div className="transaction-category">{transaction.category}</div>
+                  {/* Tap category to change it */}
+                  <div
+                    className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
+                    onClick={() => handleCategoryClick(transaction)}
+                    title={onCategoryChange ? 'Toca para alterar categoria' : undefined}
+                  >
+                    {transaction.category}
+                    {onCategoryChange && <span className="category-edit-hint">&#8250;</span>}
+                  </div>
                   {transaction.description && (
                     <div className="transaction-description">{transaction.description}</div>
                   )}
@@ -141,6 +172,15 @@ const HomeTab = ({ balance, income, expenses, transactions, currentMonth, onMont
           </div>
         )}
       </div>
+
+      {/* Category Picker */}
+      {pickerTx && (
+        <CategoryPicker
+          transaction={pickerTx}
+          onSelect={handlePickerSelect}
+          onClose={() => setPickerTx(null)}
+        />
+      )}
     </div>
   );
 };

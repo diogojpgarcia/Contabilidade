@@ -513,3 +513,23 @@ input::placeholder {
   min-height: 0;
   overflow: hidden;
 }
+
+/* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */
+.transaction-category--editable {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 5px;
+  padding: 1px 4px;
+  margin: -1px -4px;
+  transition: background 0.12s;
+}
+.transaction-category--editable:active {
+  background: var(--border-color, #3a3a3c);
+}
+.category-edit-hint {
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #888);
+  opacity: 0.55;
+}
