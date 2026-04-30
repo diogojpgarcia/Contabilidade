@@ -502,8 +502,107 @@ async function loadPdfJs() {
   return pdfjsLib;
 }
 
+// Groups PDF text items into visual lines by y-coordinate (3pt tolerance).
+// PDF y=0 is at the bottom, so we sort descending to get top-to-bottom order.
+function reconstructPdfLines(items) {
+  const buckets = new Map();
+  for (const item of items) {
+    if (!item.str.trim()) continue;
+    const y = Math.round(item.transform[5] / 3) * 3;
+    if (!buckets.has(y)) buckets.set(y, []);
+    buckets.get(y).push(item);
+  }
+  return [...buckets.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([, lineItems]) =>
+      lineItems
+        .sort((a, b) => a.transform[4] - b.transform[4])
+        .map(i => i.str)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    )
+    .filter(Boolean);
+}
+
+// Millennium BCP PDFs often split a transaction across two lines:
+//   "15/01 Pagamento MBway Lda"   ← date + description
+//   "45,80"                        ← amount on its own line
+// This function merges those broken lines before parsing.
+function extractTransactionsFromLines(rawLines) {
+  const MONEY_END_RE  = /[-+]?\d{1,3}(?:[.\s]\d{3})*[.,]\d{2}\s*[€]?\s*$/;
+  const DATE_START_RE = /^\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?/;
+  // Captures: (date)(description)(amount) — amount must end with dd decimal
+  const TX_RE = /^(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\s*(.*?)\s*([-+]?\d{1,3}(?:[.\s]\d{3})*[.,]\d{2})\s*$/;
+
+  // Keywords in normalised (no-diacritics, lowercase) form
+  const INCOME_KW  = ['salario','vencimento','transferencia recebida','credito','abono',
+    'reembolso','juros','dividendo','subsidio','remuneracao','ordenado','bonus'];
+  const EXPENSE_KW = ['compra','pagamento','mbway','mb way','debito','levantamento',
+    'transferencia enviada','comissao','taxa','mensalidade','anuidade','multibanco'];
+
+  // Step 1 — merge broken lines
+  const merged = [];
+  let buffer = '';
+  for (const line of rawLines) {
+    if (DATE_START_RE.test(line)) {
+      if (buffer) merged.push(buffer.trim());
+      buffer = line;
+    } else if (MONEY_END_RE.test(line)) {
+      buffer = buffer ? buffer + ' ' + line : line;
+      merged.push(buffer.trim());
+      buffer = '';
+    } else {
+      buffer = buffer ? buffer + ' ' + line : line;
+    }
+  }
+  if (buffer) merged.push(buffer.trim());
+
+  // Step 2 — parse valid transaction lines
+  const seen   = new Set();
+  const result = [];
+
+  for (const line of merged) {
+    const match = line.match(TX_RE);
+    if (!match) continue;
+
+    const date = parseDate(match[1]);
+    if (!date) continue;
+
+    const rawAmt = match[3];
+    const amount = parseAmount(rawAmt.replace(/\s/g, ''));
+    if (amount === null) continue;
+
+    const description = match[2].replace(/\s+/g, ' ').trim() || 'unknown transaction';
+
+    // Classify: keywords first, then explicit sign, then default to expense
+    const lower = norm(line);
+    let type;
+    if (INCOME_KW.some(kw => lower.includes(kw))) {
+      type = 'income';
+    } else if (EXPENSE_KW.some(kw => lower.includes(kw))) {
+      type = 'expense';
+    } else if (/^\s*[-]/.test(rawAmt) || /[-]\s*$/.test(rawAmt)) {
+      type = 'expense';
+    } else if (/^\s*[+]/.test(rawAmt)) {
+      type = 'income';
+    } else {
+      type = 'expense';
+    }
+
+    const entry = { date, description, amount: Math.abs(amount), type };
+    const key   = dedupKey(entry);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(entry);
+  }
+
+  console.log('[parseBankFile] PDF line-merge: parsed', result.length, 'transactions from', merged.length, 'merged lines');
+  return result;
+}
+
+// Fallback: flat single-line extraction (used when line-merge yields 0).
 const DATE_RE   = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2})/;
-// Global variant used in matchAll — lets us find ALL numeric tokens per line.
 const AMT_RE_G  = /([+-]?\s*\d{1,3}(?:[.,\s]\d{3})*[.,]\d{2})/g;
 
 function extractTransactionsFromText(text) {
@@ -513,19 +612,13 @@ function extractTransactionsFromText(text) {
   for (const line of lines) {
     const dateMatch = line.match(DATE_RE);
     if (!dateMatch) continue;
-
-    // Collect every numeric token in the line, keep only those with ≤ 10 digits
-    // (account numbers, IBANs, and long reference codes are filtered out).
-    // Use the LAST surviving token — in bank statement PDFs the transaction
-    // amount always appears after the date and description.
-    const allAmt = [...line.matchAll(AMT_RE_G)];
+    const allAmt   = [...line.matchAll(AMT_RE_G)];
     const validAmt = allAmt.filter(m => {
       const digits = m[1].replace(/[^0-9]/g, '');
       return digits.length >= 1 && digits.length <= 10;
     });
     if (!validAmt.length) continue;
-    const amtMatch = validAmt[validAmt.length - 1]; // take LAST valid token
-
+    const amtMatch = validAmt[validAmt.length - 1];
     const date   = parseDate(dateMatch[1]);
     if (!date) continue;
     const amount = parseAmount(amtMatch[1].replace(/\s/g, ''));
@@ -547,12 +640,23 @@ export async function parsePDF(buffer) {
   try {
     const pdfjsLib = await loadPdfJs();
     const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-    let fullText = '';
+
+    const allLines = [];
+    let fullText   = '';
+
     for (let p = 1; p <= pdf.numPages; p++) {
       const page    = await pdf.getPage(p);
       const content = await page.getTextContent();
-      fullText += content.items.map(item => item.str).join(' ') + '\n';
+      allLines.push(...reconstructPdfLines(content.items));
+      fullText += content.items.map(i => i.str).join(' ') + '\n';
     }
+
+    // Try the line-merge approach first (handles BCP broken lines)
+    const result = extractTransactionsFromLines(allLines);
+    if (result.length > 0) return result;
+
+    // Fallback to flat single-line mode
+    console.log('[parseBankFile] PDF line-merge yielded 0 — falling back to flat-text mode');
     return extractTransactionsFromText(fullText);
   } catch (err) {
     console.error('[parseBankFile] PDF parse error:', err);
