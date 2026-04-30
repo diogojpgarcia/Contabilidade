@@ -38,6 +38,10 @@ const App = () => {
     checkRecoveryMode();
   }, []);
 
+  useEffect(() => {
+    console.log("APP THEME:", theme);
+  }, [theme]);
+
   // Load transactions when user changes
   useEffect(() => {
     if (currentUser) {

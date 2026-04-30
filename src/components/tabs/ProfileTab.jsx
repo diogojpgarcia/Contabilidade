@@ -53,6 +53,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   };
 
   const handleThemeChange = async (newTheme) => {
+    console.log("CLICK THEME:", newTheme);
     setTheme(newTheme);        // instant — directly updates App state → re-render
     try {
       await dbService.updateUserSettings(user.id, { theme: newTheme });
