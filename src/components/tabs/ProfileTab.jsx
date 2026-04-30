@@ -106,9 +106,12 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           </button>
         </div>
 
-        {/* UI Layout */}
-        <p className="preference-label">Interface</p>
-        <div className="theme-selector">
+      </div>
+
+      {/* Theme */}
+      <div className="profile-section">
+        <h3 className="section-title">Theme</h3>
+        <div className="theme-selector theme-selector-2">
           <button
             className={`theme-option ${uiTheme === 'default' ? 'active' : ''}`}
             onClick={() => onUiThemeChange && onUiThemeChange('default')}
