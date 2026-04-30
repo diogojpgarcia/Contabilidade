@@ -1,21 +1,80 @@
 import React, { useState } from 'react';
 import CategoryPicker from './CategoryPicker';
 
-const ICON_MAP = {
-  'Alimentação': '⚑', 'Habitação': '⌂', 'Transporte': '⚐', 'Saúde': '✚',
-  'Lazer': '◉', 'Educação': '⊞', 'Roupa': '◫', 'Tecnologia': '◧',
-  'Subscrições': '◉', 'Outros': '◌', 'Salário': '◈', 'Freelance': '◐',
-  'Investimentos': '◭', 'Bonus': '◆', 'Outros Rendimentos': '◌',
-  'Lazer & Entretenimento': '◐', 'Roupa & Calçado': '◫',
-  'Serviços Financeiros': '◈', 'Comunicações': '◎', 'Utilities': '⚡',
-  'Salário Principal': '◈', 'Trabalho Extra / Freelance': '◐',
-  'Viagens & Férias': '✈', 'Presentes & Doações': '◆',
+/* ── Category icon + colour map ── */
+const CAT_ICON = {
+  'Alimentação':              { e: '🛒', bg: 'rgba(249,115,22,0.13)', c: '#ea580c' },
+  'Habitação':                { e: '🏠', bg: 'rgba(59,130,246,0.13)',  c: '#2563eb' },
+  'Transporte':               { e: '🚗', bg: 'rgba(234,179,8,0.13)',   c: '#ca8a04' },
+  'Saúde':                    { e: '❤️', bg: 'rgba(239,68,68,0.13)',   c: '#dc2626' },
+  'Lazer':                    { e: '🎉', bg: 'rgba(168,85,247,0.13)',  c: '#9333ea' },
+  'Lazer & Entretenimento':   { e: '🎬', bg: 'rgba(168,85,247,0.13)',  c: '#9333ea' },
+  'Educação':                 { e: '📚', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
+  'Roupa':                    { e: '👕', bg: 'rgba(236,72,153,0.13)',  c: '#db2777' },
+  'Roupa & Calçado':          { e: '👟', bg: 'rgba(236,72,153,0.13)',  c: '#db2777' },
+  'Tecnologia':               { e: '💻', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
+  'Subscrições':              { e: '📱', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
+  'Comunicações':             { e: '📡', bg: 'rgba(14,165,233,0.13)',  c: '#0284c7' },
+  'Utilities':                { e: '⚡', bg: 'rgba(234,179,8,0.13)',   c: '#ca8a04' },
+  'Serviços Financeiros':     { e: '🏦', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
+  'Viagens & Férias':         { e: '✈️', bg: 'rgba(14,165,233,0.13)',  c: '#0284c7' },
+  'Presentes & Doações':      { e: '🎁', bg: 'rgba(236,72,153,0.13)',  c: '#db2777' },
+  'Salário':                  { e: '💰', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Salário Principal':        { e: '💰', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Freelance':                { e: '💼', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Trabalho Extra / Freelance':{ e: '💼', bg: 'rgba(34,197,94,0.13)', c: '#16a34a' },
+  'Investimentos':            { e: '📈', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Bonus':                    { e: '🎁', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Outros Rendimentos':       { e: '💵', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Outros':                   { e: '💳', bg: 'rgba(156,163,175,0.13)', c: '#6b7280' },
 };
-const icon = (cat) => ICON_MAP[cat] || '◌';
 
+const getIcon = (cat, type) =>
+  CAT_ICON[cat] ||
+  (type === 'income'
+    ? { e: '💰', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' }
+    : { e: '💳', bg: 'rgba(156,163,175,0.13)', c: '#6b7280' });
+
+/* ── Date grouping helpers ── */
+const today     = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const yesterday = () => { const d = today(); d.setDate(d.getDate()-1); return d; };
+
+const dateLabel = (dateStr) => {
+  // support both YYYY-MM-DD and ISO strings
+  const d = new Date(dateStr.length === 10 ? dateStr + 'T00:00:00' : dateStr);
+  d.setHours(0,0,0,0);
+  const t = today().getTime();
+  const y = yesterday().getTime();
+  if (d.getTime() === t) return 'Hoje';
+  if (d.getTime() === y) return 'Ontem';
+  const day   = d.getDate();
+  const month = d.toLocaleDateString('pt-PT', { month: 'long' });
+  const year  = d.getFullYear();
+  return year === new Date().getFullYear()
+    ? `${day} de ${month}`
+    : `${day} de ${month} de ${year}`;
+};
+
+const groupByDate = (txs) => {
+  const groups = [];
+  const idx    = new Map();
+  for (const tx of txs) {
+    const key   = (tx.date || '').slice(0, 10);
+    const label = dateLabel(tx.date || new Date().toISOString());
+    if (!idx.has(key)) {
+      idx.set(key, groups.length);
+      groups.push({ key, label, items: [tx] });
+    } else {
+      groups[idx.get(key)].items.push(tx);
+    }
+  }
+  return groups;
+};
+
+/* ── Component ── */
 const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDeleted }) => {
   const [expandedId, setExpandedId] = useState(null);
-  const [pickerTx, setPickerTx]     = useState(null);
+  const [pickerTx,   setPickerTx]   = useState(null);
 
   const handlePickerSelect = (newCategory) => {
     if (pickerTx && onCategoryChange) {
@@ -32,89 +91,55 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
     );
   }
 
+  const groups = groupByDate(transactions);
+
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {transactions.map((tx) => {
-          const isExpanded = expandedId === tx.id;
-          const isIncome   = tx.type === 'income';
+      {groups.map(({ key, label, items }) => (
+        <div key={key} className="ft-group">
+          <div className="ft-group-label">{label}</div>
 
-          return (
-            <div
-              key={tx.id}
-              onClick={() => setExpandedId(isExpanded ? null : tx.id)}
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '0.5px solid var(--separator)',
-                borderRadius: 16,
-                overflow: 'hidden',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-                boxShadow: isExpanded ? 'var(--shadow-md)' : 'none',
-                transition: 'box-shadow 0.15s ease',
-              }}
-            >
-              {/* ── Collapsed row ── */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px' }}>
-                {/* Icon circle */}
-                <div style={{
-                  width: 40, height: 40, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.125rem', flexShrink: 0,
-                  background: isIncome ? 'rgba(52,211,153,0.12)' : 'rgba(239,68,68,0.12)',
-                  color: isIncome ? '#34D399' : '#EF4444',
-                }}>
-                  {icon(tx.category)}
-                </div>
+          {items.map((tx) => {
+            const isExpanded = expandedId === tx.id;
+            const isIncome   = tx.type === 'income';
+            const icon       = getIcon(tx.category, tx.type);
 
-                {/* Description + category */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{
-                    fontSize: '0.9375rem', fontWeight: 600,
-                    color: 'var(--text-primary)', letterSpacing: '-0.01em',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                  }}>
-                    {tx.description || tx.category}
-                  </span>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-                    {tx.category}
-                  </span>
-                </div>
-
-                {/* Amount */}
-                <div style={{
-                  fontSize: '0.9375rem', fontWeight: 700,
-                  letterSpacing: '-0.02em', flexShrink: 0,
-                  color: isIncome ? '#34D399' : '#F87171',
-                }}>
-                  {isIncome ? '+' : '-'}{parseFloat(tx.amount).toFixed(2)}€
-                </div>
-              </div>
-
-              {/* ── Expanded row ── */}
-              {isExpanded && (
+            return (
+              <div key={tx.id}>
+                {/* ── Main row ── */}
                 <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '10px 14px 12px',
-                    borderTop: '0.5px solid var(--separator)',
-                  }}
+                  className="ft-row"
+                  onClick={() => setExpandedId(isExpanded ? null : tx.id)}
                 >
-                  <span style={{ flex: 1, fontSize: '0.8rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-                    {tx.date}
+                  <div className="ft-icon" style={{ background: icon.bg, color: icon.c }}>
+                    {icon.e}
+                  </div>
+
+                  <div className="ft-center">
+                    <span className="ft-title">{tx.description || tx.category}</span>
+                    <span className="ft-sub">{tx.category}</span>
+                  </div>
+
+                  <span className={`ft-amount ${isIncome ? 'income' : 'expense'}`}>
+                    {isIncome ? '+' : '−'}{parseFloat(tx.amount).toFixed(2)}€
+                  </span>
+                </div>
+
+                {/* ── Expandable detail (always in DOM, toggled via CSS) ── */}
+                <div
+                  className={`ft-detail${isExpanded ? ' open' : ''}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="ft-detail-date">
+                    {new Date(
+                      tx.date.length === 10 ? tx.date + 'T00:00:00' : tx.date
+                    ).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
 
                   {onCategoryChange && (
                     <button
+                      className="ft-detail-btn"
                       onClick={() => { setPickerTx(tx); setExpandedId(null); }}
-                      style={{
-                        background: 'var(--bg-tertiary)', border: 'none',
-                        borderRadius: 8, padding: '6px 12px',
-                        fontSize: '0.8125rem', fontWeight: 600,
-                        color: 'var(--primary)', cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                      }}
                     >
                       ✎ Categoria
                     </button>
@@ -122,27 +147,22 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
 
                   {onTransactionDeleted && (
                     <button
+                      className="ft-detail-del"
                       onClick={async () => {
                         if (window.confirm('Apagar esta transação?')) {
                           await onTransactionDeleted(tx.id);
                         }
-                      }}
-                      style={{
-                        background: 'transparent', border: 'none',
-                        borderRadius: 8, width: 34, height: 34,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1rem', cursor: 'pointer', opacity: 0.55,
                       }}
                     >
                       🗑
                     </button>
                   )}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
 
       {pickerTx && (
         <CategoryPicker

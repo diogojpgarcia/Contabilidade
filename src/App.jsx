@@ -15,6 +15,7 @@ import ImportTab from './components/tabs/ImportTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
 import './styles/modern.css';
+import './styles/fintech.css';
 
 const categoriesProfessional = { expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME };
 
