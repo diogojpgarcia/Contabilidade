@@ -18,7 +18,7 @@ const PATRIMONY_TYPES = [
 
 const EMPTY_PATRIMONY = { accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] };
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: externalPatrimony, onPatrimonyChange }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
   const [budgets, setBudgets] = useState({});
   const [activeView, setActiveView] = useState('budgets');
   const [goals, setGoals] = useState([]);
@@ -178,6 +178,216 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
     }
   };
 
+  /* ── shared modals (same for both branches) ─────────────────────────── */
+  const Modals = () => (
+    <>
+      {editingGoalId && (
+        <div className="modal-overlay" onClick={() => setEditingGoalId(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>Novo Objetivo</h4>
+              <button className="modal-close" onClick={() => setEditingGoalId(null)}>×</button>
+            </div>
+            <div className="goal-form">
+              <input type="text" className="goal-input" placeholder="Nome do objetivo" value={newGoal.name} onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })} />
+              <input type="number" className="goal-input" placeholder="Valor (€)" value={newGoal.amount || ''} onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })} />
+              <div className="date-input-wrapper">
+                <input type="date" className="goal-input date-input" value={newGoal.targetDate} onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })} />
+                <span className="calendar-icon">◷</span>
+              </div>
+              <button className="btn-add-goal" onClick={() => { handleAddGoal(); setEditingGoalId(null); }}>Adicionar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPatrimonyModal && (
+        <div className="modal-overlay" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); setPatrimonyForm({}); }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>{patrimonyFormType ? PATRIMONY_TYPES.find(t => t.key === patrimonyFormType)?.label : 'Adicionar Activo'}</h4>
+              <button className="modal-close" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); setPatrimonyForm({}); }}>×</button>
+            </div>
+            {!patrimonyFormType ? (
+              <div className="patrimony-type-selector">
+                {PATRIMONY_TYPES.map(({ key, label, icon, color }) => (
+                  <button key={key} className="patrimony-type-btn" onClick={() => setPatrimonyFormType(key)}>
+                    <span style={{ color, fontSize: '1.5rem' }}>{icon}</span>
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="patrimony-form">
+                {renderPatrimonyForm()}
+                <div className="patrimony-form-actions">
+                  <button className="btn-patrimony-back" onClick={() => { setPatrimonyFormType(null); setPatrimonyForm({}); }}>← Voltar</button>
+                  <button className="btn-add-patrimony" onClick={handlePatrimonyAdd}>Adicionar</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
+  if (theme === 'modern') {
+    const totalBudget = Object.values(budgets).reduce((s, v) => s + (v || 0), 0);
+    const totalSpent  = categories.expense.reduce((s, cat) => s + getSpentByCategory(cat.id), 0);
+    const isTotalOver = totalBudget > 0 && totalSpent > totalBudget;
+
+    return (
+      <div className="m-budget-page">
+        {/* View toggle */}
+        <div className="m-toggle">
+          <button className={`m-toggle-btn ${activeView === 'budgets'   ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamentos</button>
+          <button className={`m-toggle-btn ${activeView === 'goals'     ? 'active' : ''}`} onClick={() => setActiveView('goals')}>Objetivos</button>
+          <button className={`m-toggle-btn ${activeView === 'patrimony' ? 'active' : ''}`} onClick={() => setActiveView('patrimony')}>Património</button>
+        </div>
+
+        {/* ── BUDGETS ── */}
+        {activeView === 'budgets' && (
+          <>
+            {/* Summary chips */}
+            <div className="m-budget-summary">
+              <div className="m-chip" style={{ flex: 1 }}>
+                <span className="m-chip-label">Orçamento</span>
+                <span className="m-chip-amount">{totalBudget.toFixed(0)}€</span>
+              </div>
+              <div className="m-chip" style={{ flex: 1 }}>
+                <span className="m-chip-label">Gasto</span>
+                <span className="m-chip-amount" style={{ color: isTotalOver ? '#dc2626' : undefined }}>{totalSpent.toFixed(0)}€</span>
+              </div>
+            </div>
+
+            <div className="m-list">
+              {categories.expense.map(cat => {
+                const limit   = budgets[cat.id] || 0;
+                const spent   = getSpentByCategory(cat.id);
+                const pct     = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+                const isOver  = limit > 0 && spent > limit;
+                return (
+                  <div key={cat.id} className="m-budget-row">
+                    <div className="m-budget-top">
+                      <span className="m-budget-cat">{cat.label}</span>
+                      <span className={`m-budget-spent ${isOver ? 'over' : ''}`}>
+                        {spent.toFixed(0)} / {limit > 0 ? limit.toFixed(0) : '—'}€
+                      </span>
+                    </div>
+                    {limit > 0 && (
+                      <div className="m-budget-bar-bg">
+                        <div className={`m-budget-bar-fill ${isOver ? 'over' : ''}`} style={{ width: `${pct}%` }} />
+                      </div>
+                    )}
+                    <div className="m-budget-input-row">
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        className="m-budget-limit-input"
+                        value={limit || ''}
+                        onChange={(e) => handleLimitChange(cat.id, e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { saveBudgetToDb(); e.target.blur(); }}}
+                        placeholder="Limite"
+                      />
+                      <span className="m-budget-unit">€/mês</span>
+                      <button className="m-budget-save" onClick={saveBudgetToDb}>✓</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* ── GOALS ── */}
+        {activeView === 'goals' && (
+          <div className="m-list">
+            {goals.length === 0 ? (
+              <div className="m-empty">Sem objetivos criados</div>
+            ) : (
+              goals.map(goal => {
+                const progress  = goal.amount > 0 ? Math.min((goal.currentSavings / goal.amount) * 100, 100) : 0;
+                const remaining = goal.amount - (goal.currentSavings || 0);
+                return (
+                  <div key={goal.id} className="m-goal-row">
+                    <div className="m-goal-top">
+                      <span className="m-goal-name">{goal.name}</span>
+                      <button className="m-goal-del" onClick={() => handleDeleteGoal(goal.id)}>🗑</button>
+                    </div>
+                    <div className="m-goal-bar-bg">
+                      <div className="m-goal-bar-fill" style={{ width: `${progress}%` }} />
+                    </div>
+                    <div className="m-goal-meta">
+                      <span><strong>{(goal.currentSavings || 0).toFixed(0)}€</strong> / {goal.amount.toFixed(0)}€</span>
+                      <span>{progress.toFixed(0)}%{remaining > 0 ? ` · faltam ${remaining.toFixed(0)}€` : ' ✓'}</span>
+                    </div>
+                    <div className="m-goal-input-row">
+                      <span className="m-goal-input-label">Poupado</span>
+                      <input
+                        type="number"
+                        className="m-goal-savings-input"
+                        value={goal.currentSavings || ''}
+                        onChange={(e) => handleUpdateGoalSavings(goal.id, e.target.value)}
+                        step="10" min="0" placeholder="0"
+                      />
+                      <span className="m-budget-unit">€</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* ── PATRIMONY ── */}
+        {activeView === 'patrimony' && (
+          <>
+            <div className="m-patrimony-total">
+              <span className="m-patrimony-total-label">Património Total</span>
+              <span className="m-patrimony-total-val">
+                {totalPatrimony.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+              </span>
+            </div>
+            {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
+              const items     = patrimony[key] || [];
+              const typeTotal = getPatrimonyTypeValue(key);
+              return (
+                <div key={key} className="m-asset-type">
+                  <div className="m-asset-type-header">
+                    <span className="m-asset-type-icon" style={{ color }}>{icon}</span>
+                    <span className="m-asset-type-name">{label}</span>
+                    <span className="m-asset-type-val">{typeTotal.toFixed(0)}€</span>
+                  </div>
+                  {items.map(item => (
+                    <div key={item.id} className="m-asset-item">
+                      <span className="m-asset-item-name">{renderPatrimonyItemLabel(key, item)}</span>
+                      <span className="m-asset-item-val">{renderPatrimonyItemValue(key, item)}</span>
+                      <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
+                    </div>
+                  ))}
+                  {items.length === 0 && <div className="m-asset-empty">Sem registos</div>}
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {/* FAB */}
+        {(activeView === 'goals' || activeView === 'patrimony') && (
+          <button
+            className="m-fab"
+            onClick={() => { if (activeView === 'goals') setEditingGoalId('new'); else setShowPatrimonyModal(true); }}
+          >+</button>
+        )}
+
+        <Modals />
+      </div>
+    );
+  }
+
+  /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
     <div className="budget-tab">
       <div className="budget-header">
@@ -348,54 +558,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
         </button>
       )}
 
-      {editingGoalId && (
-        <div className="modal-overlay" onClick={() => setEditingGoalId(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h4>Novo Objetivo</h4>
-              <button className="modal-close" onClick={() => setEditingGoalId(null)}>×</button>
-            </div>
-            <div className="goal-form">
-              <input type="text" className="goal-input" placeholder="Nome do objetivo" value={newGoal.name} onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })} />
-              <input type="number" className="goal-input" placeholder="Valor (€)" value={newGoal.amount || ''} onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })} />
-              <div className="date-input-wrapper">
-                <input type="date" className="goal-input date-input" value={newGoal.targetDate} onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })} />
-                <span className="calendar-icon">◷</span>
-              </div>
-              <button className="btn-add-goal" onClick={() => { handleAddGoal(); setEditingGoalId(null); }}>Adicionar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPatrimonyModal && (
-        <div className="modal-overlay" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); setPatrimonyForm({}); }}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h4>{patrimonyFormType ? PATRIMONY_TYPES.find(t => t.key === patrimonyFormType)?.label : 'Adicionar Activo'}</h4>
-              <button className="modal-close" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); setPatrimonyForm({}); }}>×</button>
-            </div>
-            {!patrimonyFormType ? (
-              <div className="patrimony-type-selector">
-                {PATRIMONY_TYPES.map(({ key, label, icon, color }) => (
-                  <button key={key} className="patrimony-type-btn" onClick={() => setPatrimonyFormType(key)}>
-                    <span style={{ color, fontSize: '1.5rem' }}>{icon}</span>
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="patrimony-form">
-                {renderPatrimonyForm()}
-                <div className="patrimony-form-actions">
-                  <button className="btn-patrimony-back" onClick={() => { setPatrimonyFormType(null); setPatrimonyForm({}); }}>← Voltar</button>
-                  <button className="btn-add-patrimony" onClick={handlePatrimonyAdd}>Adicionar</button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <Modals />
     </div>
   );
 };

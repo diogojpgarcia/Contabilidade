@@ -353,6 +353,7 @@ const App = () => {
             user={currentUser}
             categories={categoriesProfessional}
             onTransactionAdded={handleAddTransaction}
+            theme={theme}
           />
         )}
         
@@ -364,6 +365,7 @@ const App = () => {
             categories={categoriesProfessional}
             patrimony={patrimony}
             onPatrimonyChange={handlePatrimonyChange}
+            theme={theme}
           />
         )}
         

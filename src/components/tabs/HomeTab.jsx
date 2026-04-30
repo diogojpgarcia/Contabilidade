@@ -56,9 +56,70 @@ const HomeTab = ({
     investments: sumStocks + sumBonds + sumCrypto,
     realestate:  sumRealestate + sumVehicles,
   };
-
   const patrimonyValue = patrimonyTotals[homePatrimonyView] || 0;
 
+  /* ── MODERN BRANCH ───────────────────────────────────────────────────── */
+  if (theme === 'modern') {
+    return (
+      <div className="m-home">
+        {/* Month navigation */}
+        <div className="m-month-bar">
+          <button className="m-month-btn" onClick={goToPreviousMonth}>‹</button>
+          <span className="m-month-name">{formatMonth(currentMonth)}</span>
+          <button className="m-month-btn" onClick={goToNextMonth}>›</button>
+          <button className="m-today-btn" onClick={goToToday}>Hoje</button>
+        </div>
+
+        {/* Balance */}
+        <div className="m-balance-section">
+          <div className={`m-balance-amount ${balance >= 0 ? 'positive' : 'negative'}`}>
+            {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
+          </div>
+          <div className="m-balance-label">Saldo do mês</div>
+        </div>
+
+        {/* Income / Expense chips */}
+        <div className="m-chips">
+          <div className="m-chip income">
+            <span className="m-chip-label">Receitas</span>
+            <span className="m-chip-amount">+{income.toFixed(2)}€</span>
+          </div>
+          <div className="m-chip expense">
+            <span className="m-chip-label">Despesas</span>
+            <span className="m-chip-amount">−{expenses.toFixed(2)}€</span>
+          </div>
+        </div>
+
+        {/* Patrimony compact row */}
+        <div className="m-patrimony-row">
+          <span className="m-patrimony-label">Património</span>
+          <select
+            className="m-patrimony-select"
+            value={homePatrimonyView}
+            onChange={(e) => onPatrimonyViewChange && onPatrimonyViewChange(e.target.value)}
+          >
+            {Object.entries(VIEW_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </select>
+          <span className="m-patrimony-value">
+            {patrimonyValue.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+          </span>
+        </div>
+
+        {/* Transaction list */}
+        <div className="m-txs">
+          <ModernTransactionList
+            transactions={transactions}
+            onCategoryChange={onCategoryChange}
+            onTransactionDeleted={onTransactionDeleted}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
     <div className="home-tab">
       {/* Hero Cards Row */}
@@ -109,22 +170,13 @@ const HomeTab = ({
         <button className="today-btn-compact" onClick={goToToday}>Hoje</button>
       </div>
 
-      {/* Transaction list — switches component based on theme */}
+      {/* Transaction list */}
       <div className="transactions-section">
         <h3 className="section-title">Recentes</h3>
-
-        {theme === 'modern' ? (
-          <ModernTransactionList
-            transactions={transactions}
-            onCategoryChange={onCategoryChange}
-            onTransactionDeleted={onTransactionDeleted}
-          />
-        ) : (
-          <DefaultTransactionList
-            transactions={transactions}
-            onCategoryChange={onCategoryChange}
-          />
-        )}
+        <DefaultTransactionList
+          transactions={transactions}
+          onCategoryChange={onCategoryChange}
+        />
       </div>
     </div>
   );

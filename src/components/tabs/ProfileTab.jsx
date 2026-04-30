@@ -61,6 +61,154 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
     }
   };
 
+  /* ── shared modals ────────────────────────────────────────────────────── */
+  const ProfileModals = () => (
+    <>
+      {showCategoryManager && (
+        <div className="modal-overlay" onClick={() => setShowCategoryManager(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <CategoryManager userId={user.id} onClose={() => setShowCategoryManager(false)} onUpdate={(c) => console.log('Categories updated:', c)} />
+          </div>
+        </div>
+      )}
+
+      {showDeleteHistory && (
+        <div className="modal-overlay" onClick={() => { setShowDeleteHistory(false); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
+          <div className="modal-content delete-history-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Apagar Todos os Dados</h3>
+              <button className="btn-close" onClick={() => { setShowDeleteHistory(false); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
+                <span className="sf-icon">✕</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="delete-warning-icon">🗑</div>
+              <p className="modal-description delete-warning-text">Esta ação é <strong>irreversível</strong>. Todas as transações, categorias, orçamentos e configurações serão apagados permanentemente.</p>
+              <p className="delete-confirm-label">Escreve <strong>APAGAR</strong> para confirmar</p>
+              <input type="text" placeholder="APAGAR" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} className="input-field" autoCapitalize="characters" />
+              {deleteStatus && <p className={`status-message ${deleteStatus.includes('✓') ? 'success' : 'error'}`}>{deleteStatus}</p>}
+              <button className="btn-danger full-width" disabled={deleteConfirmText.trim().toUpperCase() !== 'APAGAR' || deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await dbService.deleteAllUserData(user.id);
+                    deleteSucceededRef.current = true;
+                    if (onDataDeleted) onDataDeleted();
+                    setDeleteStatus('✓ Todos os dados apagados.');
+                    setTimeout(() => { deleteSucceededRef.current = false; setShowDeleteHistory(false); setDeleteConfirmText(''); setDeleteStatus(''); }, 1400);
+                  } catch (err) { setDeleteStatus('Erro: ' + err.message); } finally { setDeleting(false); }
+                }}
+              >{deleting ? 'A apagar…' : 'Apagar tudo'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showResetPassword && (
+        <div className="modal-overlay" onClick={() => setShowResetPassword(false)}>
+          <div className="modal-content reset-password-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Alterar Password</h3>
+              <button className="btn-close" onClick={() => setShowResetPassword(false)}><span className="sf-icon">✕</span></button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description">Vamos enviar um link de recuperação para o teu email</p>
+              <input type="email" placeholder="Email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} className="input-field" />
+              {resetStatus && <p className={`status-message ${resetStatus.includes('✓') ? 'success' : 'error'}`}>{resetStatus}</p>}
+              <button className="btn-primary full-width" onClick={handleResetPassword}>Enviar Link</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
+  if (theme === 'modern') {
+    return (
+      <div className="m-profile-page">
+        {/* User info */}
+        <div className="m-user-section">
+          <div className="m-avatar">
+            {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+          </div>
+          <div className="m-user-name">{userName}</div>
+          <div className="m-user-email">{user.email}</div>
+        </div>
+
+        {/* Aparência */}
+        <div className="m-menu-section">
+          <div className="m-menu-section-label">Aparência</div>
+          <div className="m-menu-group">
+            <div className="m-seg-wrap">
+              <div className="m-seg-control">
+                <button className={`m-seg-btn ${colorTheme === 'light' ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
+                  <span className="m-seg-icon">☀︎</span><span>Claro</span>
+                </button>
+                <button className={`m-seg-btn ${colorTheme === 'gray'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
+                  <span className="m-seg-icon">◐</span><span>Cinza</span>
+                </button>
+                <button className={`m-seg-btn ${colorTheme === 'dark'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
+                  <span className="m-seg-icon">☾</span><span>Escuro</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Layout */}
+        <div className="m-menu-section">
+          <div className="m-menu-section-label">Layout</div>
+          <div className="m-menu-group">
+            <div className="m-seg-wrap">
+              <div className="m-seg-control">
+                <button className={`m-seg-btn ${theme === 'default' ? 'active' : ''}`} onClick={() => handleThemeChange('default')}>
+                  <span>Default</span>
+                </button>
+                <button className={`m-seg-btn ${theme === 'modern'  ? 'active' : ''}`} onClick={() => handleThemeChange('modern')}>
+                  <span>Modern</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Conta */}
+        <div className="m-menu-section">
+          <div className="m-menu-section-label">Conta</div>
+          <div className="m-menu-group">
+            <button className="m-menu-item" onClick={() => setShowCategoryManager(true)}>
+              <span className="m-menu-icon">☷</span>
+              <span className="m-menu-text">Gerir Categorias</span>
+              <span className="m-menu-arrow">›</span>
+            </button>
+            <button className="m-menu-item" onClick={() => onNavigateToImport && onNavigateToImport()}>
+              <span className="m-menu-icon">⬆</span>
+              <span className="m-menu-text">Importar Extracto Bancário</span>
+              <span className="m-menu-arrow">›</span>
+            </button>
+            <button className="m-menu-item" onClick={() => setShowResetPassword(true)}>
+              <span className="m-menu-icon">⚿</span>
+              <span className="m-menu-text">Alterar Password</span>
+              <span className="m-menu-arrow">›</span>
+            </button>
+            <button className="m-menu-item danger" onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); setDeleteConfirmText(''); setDeleteStatus(''); }}>
+              <span className="m-menu-icon">🗑</span>
+              <span className="m-menu-text">Apagar Todos os Dados</span>
+              <span className="m-menu-arrow">›</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
+
+        <ProfileModals />
+      </div>
+    );
+  }
+
+  /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
     <div className="profile-tab">
       {/* User Info */}
@@ -177,128 +325,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         </button>
       </div>
 
-      {/* Category Manager Modal */}
-      {showCategoryManager && (
-        <div className="modal-overlay" onClick={() => setShowCategoryManager(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <CategoryManager
-              userId={user.id}
-              onClose={() => setShowCategoryManager(false)}
-              onUpdate={(newCategories) => {
-                console.log('Categories updated:', newCategories);
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Delete History Modal */}
-      {showDeleteHistory && (
-        <div className="modal-overlay" onClick={() => {
-          setShowDeleteHistory(false);
-          if (deleteSucceededRef.current && onDataDeleted) {
-            deleteSucceededRef.current = false;
-            onDataDeleted();
-          }
-        }}>
-          <div className="modal-content delete-history-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Apagar Todos os Dados</h3>
-              <button className="btn-close" onClick={() => {
-                setShowDeleteHistory(false);
-                if (deleteSucceededRef.current && onDataDeleted) {
-                  deleteSucceededRef.current = false;
-                  onDataDeleted();
-                }
-              }}>
-                <span className="sf-icon">✕</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="delete-warning-icon">🗑</div>
-              <p className="modal-description delete-warning-text">
-                Esta ação é <strong>irreversível</strong>. Todas as transações, categorias, orçamentos e configurações serão apagados permanentemente.
-              </p>
-              <p className="delete-confirm-label">
-                Escreve <strong>APAGAR</strong> para confirmar
-              </p>
-              <input
-                type="text"
-                placeholder="APAGAR"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="input-field"
-                autoCapitalize="characters"
-              />
-              {deleteStatus && (
-                <p className={`status-message ${deleteStatus.includes('✓') ? 'success' : 'error'}`}>
-                  {deleteStatus}
-                </p>
-              )}
-              <button
-                className="btn-danger full-width"
-                disabled={deleteConfirmText.trim().toUpperCase() !== 'APAGAR' || deleting}
-                onClick={async () => {
-                  setDeleting(true);
-                  try {
-                    await dbService.deleteAllUserData(user.id);
-                    deleteSucceededRef.current = true;
-                    // Flush parent state immediately so UI is clean before modal closes.
-                    if (onDataDeleted) onDataDeleted();
-                    setDeleteStatus('✓ Todos os dados apagados.');
-                    setTimeout(() => {
-                      deleteSucceededRef.current = false;
-                      setShowDeleteHistory(false);
-                      setDeleteConfirmText('');
-                      setDeleteStatus('');
-                    }, 1400);
-                  } catch (err) {
-                    setDeleteStatus('Erro: ' + err.message);
-                  } finally {
-                    setDeleting(false);
-                  }
-                }}
-              >
-                {deleting ? 'A apagar…' : 'Apagar tudo'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Password Modal */}
-      {showResetPassword && (
-        <div className="modal-overlay" onClick={() => setShowResetPassword(false)}>
-          <div className="modal-content reset-password-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Alterar Password</h3>
-              <button className="btn-close" onClick={() => setShowResetPassword(false)}>
-                <span className="sf-icon">✕</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="modal-description">
-                Vamos enviar um link de recuperação para o teu email
-              </p>
-              <input
-                type="email"
-                placeholder="Email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                className="input-field"
-              />
-              {resetStatus && (
-                <p className={`status-message ${resetStatus.includes('✓') ? 'success' : 'error'}`}>
-                  {resetStatus}
-                </p>
-              )}
-              <button className="btn-primary full-width" onClick={handleResetPassword}>
-                Enviar Link
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProfileModals />
     </div>
   );
 };

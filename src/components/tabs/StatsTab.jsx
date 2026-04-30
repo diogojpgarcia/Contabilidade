@@ -1,6 +1,7 @@
 ﻿import React, { useState, useMemo } from 'react';
 import InsightsPanel from '../InsightsPanel.jsx';
 import CategoryPicker from '../CategoryPicker.jsx';
+import ModernTransactionList from '../ModernTransactionList';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -187,6 +188,156 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     year: 'numeric'
   });
 
+  // ── derived totals for chips ──
+  const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
+  const monthExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+
+  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
+  if (theme === 'modern') {
+    return (
+      <div className="m-page">
+        {/* Header */}
+        <div className="m-stats-header">
+          <span className="m-stats-title">Estatísticas</span>
+        </div>
+
+        {/* View toggle */}
+        <div className="m-toggle">
+          <button className={`m-toggle-btn ${activeView === 'overview'  ? 'active' : ''}`} onClick={() => setActiveView('overview')}>Resumo</button>
+          <button className={`m-toggle-btn ${activeView === 'log'       ? 'active' : ''}`} onClick={() => setActiveView('log')}>Histórico</button>
+          <button className={`m-toggle-btn ${activeView === 'insights'  ? 'active' : ''}`} onClick={() => setActiveView('insights')}>Insights</button>
+        </div>
+
+        {/* Month nav */}
+        <div className="m-month-nav">
+          <button className="m-month-nav-btn" onClick={goToPreviousMonth}>‹</button>
+          <span className="m-month-nav-name">{monthName}</span>
+          <button className="m-month-nav-btn" onClick={goToNextMonth} disabled={currentMonth === new Date().toISOString().slice(0, 7)}>›</button>
+        </div>
+
+        {/* ── OVERVIEW ── */}
+        {activeView === 'overview' && (
+          <>
+            {/* Income / Expense chips */}
+            <div className="m-chips" style={{ marginBottom: 12 }}>
+              <div className="m-chip income">
+                <span className="m-chip-label">Receitas</span>
+                <span className="m-chip-amount">+{monthIncome.toFixed(2)}€</span>
+              </div>
+              <div className="m-chip expense">
+                <span className="m-chip-label">Despesas</span>
+                <span className="m-chip-amount">−{monthExpenses.toFixed(2)}€</span>
+              </div>
+            </div>
+
+            {/* 6-month mini bar chart */}
+            <div className="m-chart">
+              <div className="m-chart-label">Evolução 6 meses</div>
+              <div className="m-chart-grid">
+                {monthlyData.map((data, i) => (
+                  <div key={i} className="m-chart-col">
+                    <div className="m-bars">
+                      <div className="m-bar income"  style={{ height: `${maxAmount > 0 ? (data.income   / maxAmount) * 60 : 2}px` }} />
+                      <div className="m-bar expense" style={{ height: `${maxAmount > 0 ? (data.expenses / maxAmount) * 60 : 2}px` }} />
+                    </div>
+                    <span className="m-chart-mo">{data.month}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Category breakdown */}
+            <div className="m-section">
+              <div className="m-section-label" style={{ marginBottom: 6 }}>Despesas por categoria</div>
+              {categoryData.length === 0 ? (
+                <div className="m-empty">Sem despesas neste mês</div>
+              ) : (
+                categoryData.map((item, i) => (
+                  <div key={i} className="m-cat-row">
+                    <span className="m-cat-name">{item.category}</span>
+                    <div className="m-cat-bar-bg">
+                      <div className="m-cat-bar-fill" style={{ width: `${item.percentage}%` }} />
+                    </div>
+                    <span className="m-cat-amt">{item.amount.toFixed(0)}€</span>
+                    <span className="m-cat-pct">{item.percentage.toFixed(0)}%</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── LOG ── */}
+        {activeView === 'log' && (
+          <>
+            <div className="m-date-filter">
+              <input
+                type="date"
+                className="m-date-input"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+              {filterDate && (
+                <button className="m-clear-btn" onClick={() => setFilterDate('')}>×</button>
+              )}
+            </div>
+
+            <div className="m-tx-list">
+              {monthTransactions.length === 0 ? (
+                <div className="m-empty">{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</div>
+              ) : (
+                <ModernTransactionList
+                  transactions={monthTransactions}
+                  onCategoryChange={onCategoryChange}
+                  onTransactionDeleted={onTransactionDeleted}
+                />
+              )}
+            </div>
+
+            {monthTransactions.length > 0 && (() => {
+              const logIncome   = monthTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
+              const logExpenses = monthTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+              const logBalance  = logIncome - logExpenses;
+              return (
+                <div className="m-log-summary">
+                  <div className="m-summary-row">
+                    <span className="m-summary-label">Receitas</span>
+                    <span className="m-summary-val income">+{logIncome.toFixed(2)}€</span>
+                  </div>
+                  <div className="m-summary-sep" />
+                  <div className="m-summary-row">
+                    <span className="m-summary-label">Despesas</span>
+                    <span className="m-summary-val expense">−{logExpenses.toFixed(2)}€</span>
+                  </div>
+                  <div className="m-summary-sep" />
+                  <div className="m-summary-row">
+                    <span className="m-summary-label">Saldo</span>
+                    <span className={`m-summary-val ${logBalance >= 0 ? 'income' : 'expense'}`}>{logBalance >= 0 ? '+' : ''}{logBalance.toFixed(2)}€</span>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
+        )}
+
+        {/* ── INSIGHTS ── */}
+        {activeView === 'insights' && (
+          <InsightsPanel transactions={transactions} currentMonth={currentMonth} />
+        )}
+
+        {pickerTx && (
+          <CategoryPicker
+            transaction={pickerTx}
+            onSelect={handlePickerSelect}
+            onClose={() => setPickerTx(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
     <div className="stats-tab">
       <div className="stats-header">
