@@ -1,0 +1,192 @@
+/* ── Modern UI theme — transaction cards ─────────────────────────────────
+   Scoped under .ui-modern so the default theme is untouched.
+   Works with all data-theme values (dark / light / gray).
+   ────────────────────────────────────────────────────────────────────── */
+
+.ui-modern .modern-tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Card base ─────────────────────────────────────────────────────────── */
+.ui-modern .modern-tx-card {
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--separator);
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-modern .modern-tx-card:active {
+  background: var(--bg-tertiary);
+}
+
+.ui-modern .modern-tx-card.expanded {
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Collapsed row ─────────────────────────────────────────────────────── */
+.ui-modern .modern-tx-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+/* Category icon — coloured circle */
+.ui-modern .modern-tx-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.ui-modern .modern-tx-icon.expense {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+}
+
+.ui-modern .modern-tx-icon.income {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34D399;
+}
+
+/* Description + category */
+.ui-modern .modern-tx-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ui-modern .modern-tx-desc {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.ui-modern .modern-tx-cat {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Amount */
+.ui-modern .modern-tx-amount {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.ui-modern .modern-tx-amount.income {
+  color: #34D399;
+}
+
+.ui-modern .modern-tx-amount.expense {
+  color: #F87171;
+}
+
+/* ── Expanded details row ──────────────────────────────────────────────── */
+.ui-modern .modern-tx-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 12px;
+  border-top: 0.5px solid var(--separator);
+  padding-top: 10px;
+  animation: modernExpand 0.15s ease;
+}
+
+@keyframes modernExpand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ui-modern .modern-tx-date {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+
+/* Edit category button */
+.ui-modern .modern-tx-edit-cat {
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+
+.ui-modern .modern-tx-edit-cat:active {
+  background: var(--bg-elevated);
+}
+
+/* Delete button */
+.ui-modern .modern-tx-delete {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.12s, background 0.12s;
+  flex-shrink: 0;
+}
+
+.ui-modern .modern-tx-delete:hover {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.ui-modern .modern-tx-delete:active {
+  transform: scale(0.92);
+}
+
+.ui-modern .modern-tx-delete:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Light-mode overrides ──────────────────────────────────────────────── */
+[data-theme="light"] .ui-modern .modern-tx-icon.expense {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+[data-theme="light"] .ui-modern .modern-tx-icon.income {
+  background: rgba(52, 211, 153, 0.1);
+}
+
+[data-theme="light"] .ui-modern .modern-tx-card {
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .ui-modern .modern-tx-card.expanded {
+  box-shadow: var(--shadow-md);
+}

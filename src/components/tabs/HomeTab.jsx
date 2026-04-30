@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CategoryPicker from '../CategoryPicker';
 import './HomeTab.css';
+import './HomeTab.modern.css';
 
 const VIEW_LABELS = { total: 'Total', accounts: 'Contas', investments: 'Investimentos', realestate: 'Imóveis' };
 
@@ -9,8 +10,11 @@ const HomeTab = ({
   currentMonth, onMonthChange,
   patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
   onCategoryChange,
+  onTransactionDeleted,
+  uiTheme = 'default',
 }) => {
   const [pickerTx, setPickerTx] = useState(null); // transaction whose category is being edited
+  const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card id
 
   const goToPreviousMonth = () => {
     const [year, month] = currentMonth.split('-').map(Number);
@@ -145,13 +149,65 @@ const HomeTab = ({
             <div className="empty-icon">◌</div>
             <p className="empty-text">Sem transações este mês</p>
           </div>
+        ) : uiTheme === 'modern' ? (
+          /* ── Modern expandable cards ── */
+          <div className="modern-tx-list">
+            {transactions.map((tx) => {
+              const isExpanded = expandedId === tx.id;
+              return (
+                <div
+                  key={tx.id}
+                  className={`modern-tx-card ${tx.type}${isExpanded ? ' expanded' : ''}`}
+                  onClick={() => setExpandedId(isExpanded ? null : tx.id)}
+                >
+                  {/* Collapsed row */}
+                  <div className="modern-tx-row">
+                    <div className={`modern-tx-icon ${tx.type}`}>{getCategoryIcon(tx.category)}</div>
+                    <div className="modern-tx-main">
+                      <span className="modern-tx-desc">{tx.description || tx.category}</span>
+                      <span className="modern-tx-cat">{tx.category}</span>
+                    </div>
+                    <div className={`modern-tx-amount ${tx.type}`}>
+                      {tx.type === 'income' ? '+' : '-'}{parseFloat(tx.amount).toFixed(2)}€
+                    </div>
+                  </div>
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="modern-tx-details" onClick={(e) => e.stopPropagation()}>
+                      <span className="modern-tx-date">{tx.date}</span>
+                      {onCategoryChange && (
+                        <button
+                          className="modern-tx-edit-cat"
+                          onClick={() => { handleCategoryClick(tx); setExpandedId(null); }}
+                        >
+                          ✎ Categoria
+                        </button>
+                      )}
+                      {onTransactionDeleted && (
+                        <button
+                          className="modern-tx-delete"
+                          onClick={async () => {
+                            if (window.confirm('Apagar esta transação?')) {
+                              await onTransactionDeleted(tx.id);
+                            }
+                          }}
+                        >
+                          🗑
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          /* ── Default list ── */
           <div className="transactions-list">
             {transactions.map((transaction, index) => (
               <div key={transaction.id || index} className="transaction-item">
                 <div className="transaction-icon">{getCategoryIcon(transaction.category)}</div>
                 <div className="transaction-details">
-                  {/* Tap category to change it */}
                   <div
                     className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
                     onClick={() => handleCategoryClick(transaction)}

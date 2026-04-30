@@ -3,7 +3,7 @@ import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, uiTheme = 'default', onUiThemeChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory]     = useState(false);
@@ -103,6 +103,25 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           >
             <span className="sf-icon">☾</span>
             <span>Escuro</span>
+          </button>
+        </div>
+
+        {/* UI Layout */}
+        <p className="preference-label">Interface</p>
+        <div className="theme-selector">
+          <button
+            className={`theme-option ${uiTheme === 'default' ? 'active' : ''}`}
+            onClick={() => onUiThemeChange && onUiThemeChange('default')}
+          >
+            <span className="sf-icon">◫</span>
+            <span>Default</span>
+          </button>
+          <button
+            className={`theme-option ${uiTheme === 'modern' ? 'active' : ''}`}
+            onClick={() => onUiThemeChange && onUiThemeChange('modern')}
+          >
+            <span className="sf-icon">◧</span>
+            <span>Modern</span>
           </button>
         </div>
       </div>

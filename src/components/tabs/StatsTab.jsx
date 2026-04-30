@@ -2,13 +2,15 @@
 import InsightsPanel from '../InsightsPanel.jsx';
 import CategoryPicker from '../CategoryPicker.jsx';
 import './StatsTab.css';
+import './HomeTab.modern.css';
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted, onCategoryChange }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted, onCategoryChange, uiTheme = 'default' }) => {
   const [pickerTx, setPickerTx] = useState(null);
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
   const [deleting, setDeleting] = useState(null);
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
+  const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
 
   // Complete icon mapping for all categories
   const getCategoryIcon = (categoryName) => {
@@ -342,11 +344,57 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               <span className="sf-icon-large">◌</span>
               <p>{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</p>
             </div>
+          ) : uiTheme === 'modern' ? (
+            /* ── Modern expandable cards ── */
+            <div className="modern-tx-list">
+              {monthTransactions.map((tx) => {
+                const isExpanded = expandedId === tx.id;
+                return (
+                  <div
+                    key={tx.id}
+                    className={`modern-tx-card ${tx.type}${isExpanded ? ' expanded' : ''}`}
+                    onClick={() => setExpandedId(isExpanded ? null : tx.id)}
+                  >
+                    <div className="modern-tx-row">
+                      <div className={`modern-tx-icon ${tx.type}`}>{getCategoryIcon(tx.category)}</div>
+                      <div className="modern-tx-main">
+                        <span className="modern-tx-desc">{tx.description || tx.category}</span>
+                        <span className="modern-tx-cat">{tx.category}</span>
+                      </div>
+                      <div className={`modern-tx-amount ${tx.type}`}>
+                        {tx.type === 'income' ? '+' : '-'}{parseFloat(tx.amount).toFixed(2)}€
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="modern-tx-details" onClick={(e) => e.stopPropagation()}>
+                        <span className="modern-tx-date">{formatDate(tx.date)}</span>
+                        {onCategoryChange && (
+                          <button
+                            className="modern-tx-edit-cat"
+                            onClick={() => { handleCategoryClick(tx); setExpandedId(null); }}
+                          >
+                            ✎ Categoria
+                          </button>
+                        )}
+                        <button
+                          className="modern-tx-delete"
+                          onClick={() => handleDeleteTransaction(tx.id)}
+                          disabled={deleting === tx.id}
+                        >
+                          {deleting === tx.id ? '⏳' : '🗑'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           ) : (
+            /* ── Default list ── */
             <div className="transactions-list">
               {monthTransactions.map((transaction, index) => (
-                <div 
-                  key={transaction.id || index} 
+                <div
+                  key={transaction.id || index}
                   className={`transaction-item ${transaction.type}`}
                 >
                   <div className="transaction-left">
