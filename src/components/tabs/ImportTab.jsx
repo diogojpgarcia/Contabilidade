@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { dbService } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
+import { categorizeWithClaude } from '../../utils/categorizeWithClaude.js';
 import './ImportTab.css';
 
 const ImportTab = ({ user, onImportDone }) => {
@@ -10,9 +11,10 @@ const ImportTab = ({ user, onImportDone }) => {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
   const [fileName, setFileName] = useState('');
-  const [saving,   setSaving]   = useState(false);
-  const [saved,    setSaved]    = useState(false);
-  const [keepDupes, setKeepDupes] = useState(false);
+  const [saving,      setSaving]      = useState(false);
+  const [saved,       setSaved]       = useState(false);
+  const [keepDupes,   setKeepDupes]   = useState(false);
+  const [categorizing, setCategorizing] = useState(false);
   const inputRef = useRef();
 
   const handleFile = async (file) => {
@@ -36,10 +38,16 @@ const ImportTab = ({ user, onImportDone }) => {
       const { transactions, insights: ins } = enrichTransactions(rows);
       console.log('[ImportTab] enriched transactions:', transactions.length, ins);
 
-      setPreview(transactions);
+      // Categorize with local rules + one Claude batch call
+      setCategorizing(true);
+      const categorized = await categorizeWithClaude(transactions);
+      setCategorizing(false);
+
+      setPreview(categorized);
       setInsights(ins);
     } catch (e) {
       setError('Erro ao processar ficheiro: ' + e.message);
+      setCategorizing(false);
     } finally {
       setLoading(false);
     }
@@ -108,10 +116,10 @@ const ImportTab = ({ user, onImportDone }) => {
           style={{ display: 'none' }}
           onChange={(e) => handleFile(e.target.files[0])}
         />
-        {loading ? (
+        {(loading || categorizing) ? (
           <div className="import-spinner-wrap">
             <div className="import-spinner" />
-            <span>A processar…</span>
+            <span>{categorizing ? 'A categorizar com IA…' : 'A processar…'}</span>
           </div>
         ) : (
           <>
