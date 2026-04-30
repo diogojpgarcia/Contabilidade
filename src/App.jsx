@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
+import BulkUpdateModal from './components/BulkUpdateModal';
 import { authService, dbService } from './lib/supabase';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from './utils/categories-professional';
 import { getMonthKey } from './utils/data';
@@ -27,6 +28,7 @@ const App = () => {
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
   const [learnedRules, setLearnedRules] = useState([]); // [{ pattern, category }]
+  const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
   // Check for existing session on mount
@@ -98,41 +100,98 @@ const App = () => {
     } catch (error) { console.error("Error loading settings:", error); }
   };
 
-  // Extract the first meaningful word from a description for rule storage.
+  // Generic words that should never become a matching pattern.
+  const NOISE_WORDS = new Set([
+    'payment','compra','ref','mbway','transfer','debito','credito',
+    'debit','credit','via','para','from','por','com','the','and',
+    'pagamento','direta','direto','sepa','trf','pos','atm',
+  ]);
+
+  // Extract the first meaningful word from a description.
+  // Removes numbers, symbols, noise words, and short tokens (<3 chars).
   const extractPattern = (description) => {
     if (!description) return null;
     const words = description
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/[^a-z\s]/g, ' ')   // strip numbers and symbols
       .split(/\s+/)
-      .filter(w => w.length >= 3);
-    return words[0] || null;
+      .filter(w => w.length >= 3 && !NOISE_WORDS.has(w));
+    return words[0] || null;        // first meaningful word
   };
 
-  // Called when the user manually picks a category in Home or Stats.
-  // 1. Optimistic state update  2. DB write  3. Save learned rule
+  // Persist a learned rule (upsert by pattern).
+  const saveLearnedRule = (pattern, category) => {
+    const updated = [
+      { pattern, category },
+      ...learnedRules.filter(r => r.pattern !== pattern),
+    ];
+    setLearnedRules(updated);
+    dbService.updateUserSettings(currentUser.id, { learned_rules: updated }).catch(console.error);
+  };
+
+  // Called when user picks a category in HomeTab or StatsTab.
+  // Updates the single transaction immediately, then shows the bulk-update
+  // modal if other transactions share the same description pattern.
   const handleCategoryChange = async (transactionId, newCategory, description) => {
     const original = transactions.find(t => t.id === transactionId);
-    // Optimistic update
+
+    // 1. Optimistic update for this transaction
     setTransactions(prev => prev.map(t =>
       t.id === transactionId ? { ...t, category: newCategory } : t
     ));
+
     try {
+      // 2. DB write for this transaction
       await dbService.updateTransaction(transactionId, { category: newCategory });
-      // Save rule so future imports reuse this choice
+
+      // 3. Look for similar uncorrected transactions
       const pattern = extractPattern(description);
       if (pattern) {
-        const updated = [
-          { pattern, category: newCategory },
-          ...learnedRules.filter(r => r.pattern !== pattern),
-        ];
-        setLearnedRules(updated);
-        dbService.updateUserSettings(currentUser.id, { learned_rules: updated }).catch(console.error);
+        const similar = transactions.filter(t =>
+          t.id !== transactionId &&
+          t.category !== newCategory &&
+          (t.description || '').toLowerCase().includes(pattern)
+        );
+
+        if (similar.length > 0) {
+          // Let user decide whether to update all
+          setBulkPending({ transactionId, newCategory, description, pattern, similar });
+        } else {
+          // Nothing similar — save rule immediately
+          saveLearnedRule(pattern, newCategory);
+        }
       }
     } catch (err) {
       console.error('Error updating category:', err);
       if (original) setTransactions(prev => prev.map(t => t.id === transactionId ? original : t));
     }
+  };
+
+  // User confirmed "update all similar".
+  const handleBulkConfirm = async () => {
+    if (!bulkPending) return;
+    const { newCategory, pattern, similar } = bulkPending;
+
+    // 1. Optimistic bulk state update (skip the already-updated tx)
+    setTransactions(prev => prev.map(t =>
+      similar.some(s => s.id === t.id) ? { ...t, category: newCategory } : t
+    ));
+
+    // 2. Persist each in the background (fire-and-forget — no reload)
+    for (const tx of similar) {
+      dbService.updateTransaction(tx.id, { category: newCategory }).catch(console.error);
+    }
+
+    // 3. Save learned rule
+    saveLearnedRule(pattern, newCategory);
+
+    setBulkPending(null);
+  };
+
+  // User chose "only this one".
+  const handleBulkDismiss = () => {
+    if (bulkPending) saveLearnedRule(bulkPending.pattern, bulkPending.newCategory);
+    setBulkPending(null);
   };
 
   const handlePatrimonyChange = async (newPatrimony) => {
@@ -373,6 +432,15 @@ const App = () => {
           <span className="nav-label">Perfil</span>
         </button>
       </nav>
+
+      {/* Bulk category update — rendered at App level so it overlays everything */}
+      {bulkPending && (
+        <BulkUpdateModal
+          bulkPending={bulkPending}
+          onConfirm={handleBulkConfirm}
+          onDismiss={handleBulkDismiss}
+        />
+      )}
     </div>
   );
 };
