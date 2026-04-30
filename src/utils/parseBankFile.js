@@ -527,80 +527,79 @@ function reconstructPdfLines(items) {
     .filter(Boolean);
 }
 
-// Millennium BCP PDFs often split a transaction across two lines:
-//   "15/01 Pagamento MBway Lda"   ← date + description
-//   "45,80"                        ← amount on its own line
-// This function merges those broken lines before parsing.
+// Extracts transactions from reconstructed PDF lines.
+// Date is matched anywhere on the line (BCP does not always lead with it) and
+// carried forward to subsequent lines that have an amount but no explicit date.
+// Lines that are clearly metadata (saldo, IBAN, etc.) are skipped.
 function extractTransactionsFromLines(rawLines) {
-  // \d+ instead of \d{1,3} — catches amounts like 1234,56 (4 digits, no thousands separator)
-  const MONEY_END_RE  = /[-+]?\d+(?:[.\s]\d{3})*[.,]\d{2}\s*[€]?\s*$/;
-  const DATE_START_RE = /^\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?/;
-  // Captures: (date)(description)(amount) — amount must end with dd decimal
-  const TX_RE = /^(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\s*(.*?)\s*([-+]?\d+(?:[.\s]\d{3})*[.,]\d{2})\s*$/;
+  // Matches any monetary amount: handles 45,80 / 1.234,56 / 1 234,56 / 1234,56
+  const MONEY_RE  = /[-+]?\d+(?:[.\s]\d{3})*[.,]\d{2}/g;
+  // Date anywhere on the line — no start-of-line anchor
+  const DATE_RE   = /\b(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\b/;
+  // Metadata lines to skip (case-insensitive; Portuguese + generic)
+  const NOISE_RE  = /\b(nib|iban|saldo|extrato|extracto|p[aá]gina|titular|bic|swift|balan[cç]o)\b/i;
 
-  // Keywords in normalised (no-diacritics, lowercase) form
   const INCOME_KW  = ['salario','vencimento','transferencia recebida','credito','abono',
     'reembolso','juros','dividendo','subsidio','remuneracao','ordenado','bonus'];
   const EXPENSE_KW = ['compra','pagamento','mbway','mb way','debito','levantamento',
     'transferencia enviada','comissao','taxa','mensalidade','anuidade','multibanco'];
 
-  // Step 1 — merge broken lines
-  const merged = [];
-  let buffer = '';
+  const seen     = new Set();
+  const result   = [];
+  let   lastDate = null;
+
   for (const line of rawLines) {
-    if (DATE_START_RE.test(line)) {
-      if (buffer) merged.push(buffer.trim());
-      buffer = line;
-    } else if (MONEY_END_RE.test(line)) {
-      buffer = buffer ? buffer + ' ' + line : line;
-      merged.push(buffer.trim());
-      buffer = '';
-    } else {
-      buffer = buffer ? buffer + ' ' + line : line;
+    // Always track dates — a date-only line (no amount) still updates carry-forward
+    const dateMatch = line.match(DATE_RE);
+    if (dateMatch) {
+      const d = parseDate(dateMatch[1]);
+      if (d) lastDate = d;
     }
-  }
-  if (buffer) merged.push(buffer.trim());
 
-  // Step 2 — parse valid transaction lines
-  const seen   = new Set();
-  const result = [];
+    // Skip metadata / header / footer lines
+    if (NOISE_RE.test(line)) continue;
 
-  for (const line of merged) {
-    const match = line.match(TX_RE);
-    if (!match) continue;
+    // Skip lines with no monetary amount
+    const amtMatches = [...line.matchAll(MONEY_RE)];
+    if (!amtMatches.length) continue;
 
-    const date = parseDate(match[1]);
-    if (!date) continue;
+    // Need a date from this line or a prior one
+    if (!lastDate) continue;
 
-    const rawAmt = match[3];
-    const amount = parseAmount(rawAmt.replace(/\s/g, ''));
-    if (amount === null) continue;
+    // Take the LAST amount token — for BCP the transaction value precedes any balance
+    const rawAmt = amtMatches[amtMatches.length - 1][0];
+    const amount  = parseAmount(rawAmt.replace(/\s/g, ''));
+    if (!amount) continue;   // null or 0
 
-    const description = match[2].replace(/\s+/g, ' ').trim() || 'unknown transaction';
+    // Description: strip date and amount tokens, collapse whitespace
+    let description = line;
+    if (dateMatch) description = description.replace(dateMatch[0], '');
+    description = description.replace(rawAmt, '').replace(/\s+/g, ' ').trim()
+      || 'unknown transaction';
 
-    // Classify: keywords first, then explicit sign, then default to expense
+    // Classify: keywords first, then explicit sign on the raw amount, then expense
     const lower = norm(line);
     let type;
     if (INCOME_KW.some(kw => lower.includes(kw))) {
       type = 'income';
     } else if (EXPENSE_KW.some(kw => lower.includes(kw))) {
       type = 'expense';
-    } else if (/^\s*[-]/.test(rawAmt) || /[-]\s*$/.test(rawAmt)) {
+    } else if (/^\s*-/.test(rawAmt) || /-\s*$/.test(rawAmt)) {
       type = 'expense';
-    } else if (/^\s*[+]/.test(rawAmt)) {
+    } else if (/^\s*\+/.test(rawAmt)) {
       type = 'income';
     } else {
       type = 'expense';
     }
 
-    const entry = { date, description, amount: Math.abs(amount), type };
+    const entry = { date: lastDate, description, amount: Math.abs(amount), type };
     const key   = dedupKey(entry);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(entry);
   }
 
-  console.log('[parseBankFile] PDF line-merge: parsed', result.length, 'transactions from', merged.length, 'merged lines');
+  console.log('[parseBankFile] PDF line-parse: found', result.length, 'transactions from', rawLines.length, 'lines');
   return result;
 }
 
