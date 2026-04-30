@@ -38,10 +38,6 @@ const App = () => {
     checkRecoveryMode();
   }, []);
 
-  useEffect(() => {
-    console.log("APP THEME:", theme);
-  }, [theme]);
-
   // Load transactions when user changes
   useEffect(() => {
     if (currentUser) {
@@ -317,10 +313,7 @@ const App = () => {
   const userName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
   return (
-    <div
-      className={`app-new ${theme}-ui`}
-      style={{ background: theme === 'modern' ? 'red' : 'blue' }}
-    >
+    <div className={`app-new ${theme}-ui`}>
       {/* Main Content */}
       <main className="main-content-new">
         {activeTab === 'home' && (

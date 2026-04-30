@@ -22,7 +22,6 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const loadUserPreferences = async () => {
     try {
       const settings = await dbService.getUserSettings(user.id);
-      console.log('[ProfileTab] user_settings:', settings);
       const saved = settings?.color_theme || 'dark';
       setColorTheme(saved);
       document.documentElement.setAttribute('data-theme', saved);
@@ -39,7 +38,6 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
 
   // Plain function — synchronous state update, fire-and-forget DB save
   const handleThemeChange = (newTheme) => {
-    console.log("CLICK:", newTheme);
     setTheme(newTheme);
     dbService.updateUserSettings(user.id, { theme: newTheme }).catch(console.error);
   };

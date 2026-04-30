@@ -13,8 +13,6 @@ const HomeTab = ({
   onTransactionDeleted,
   theme = 'default',
 }) => {
-  console.log("HOMETAB THEME:", theme);
-
   const goToPreviousMonth = () => {
     const [year, month] = currentMonth.split('-').map(Number);
     const d = new Date(year, month - 2, 1);
