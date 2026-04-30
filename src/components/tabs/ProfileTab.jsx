@@ -29,9 +29,11 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       setColorTheme(saved);
       applyTheme(saved);
 
-      // Layout theme (default / modern) — sync App state
+      // Layout theme — only sync if a valid value is stored; never reset to 'default'
       const t = settings?.theme;
-      if (setTheme) setTheme(t === 'default' || t === 'modern' ? t : 'default');
+      if ((t === 'default' || t === 'modern') && typeof setTheme === 'function') {
+        setTheme(t);
+      }
     } catch (error) {
       console.error('[ProfileTab] Error loading preferences:', error);
       applyTheme('dark');
@@ -52,14 +54,16 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
     }
   };
 
-  const handleThemeChange = async (newTheme) => {
-    console.log("CLICK THEME:", newTheme);
-    setTheme(newTheme);        // instant — directly updates App state → re-render
-    try {
-      await dbService.updateUserSettings(user.id, { theme: newTheme });
-    } catch (error) {
-      console.error('[ProfileTab] Error saving theme:', error);
+  // Synchronous so React flushes the state update in the same event tick.
+  // DB save is fire-and-forget — does not block the UI update.
+  const handleThemeChange = (newTheme) => {
+    console.log("CLICK:", newTheme, "| setTheme is:", typeof setTheme);
+    if (typeof setTheme !== 'function') {
+      console.error("setTheme is not a function — prop not received from App");
+      return;
     }
+    setTheme(newTheme);
+    dbService.updateUserSettings(user.id, { theme: newTheme }).catch(console.error);
   };
 
   const handleResetPassword = async () => {
