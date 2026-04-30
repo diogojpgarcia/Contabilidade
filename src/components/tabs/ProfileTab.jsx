@@ -22,12 +22,26 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const loadUserPreferences = async () => {
     try {
       const settings = await dbService.getUserSettings(user.id);
+
+      // ── Diagnostic: confirm what is stored in Supabase ──────────────────
+      console.log('[ProfileTab] user_settings loaded:', settings);
+
+      // ── Colour theme (light / gray / dark) ──────────────────────────────
       const savedTheme = settings?.theme || 'dark';
       setTheme(savedTheme);
       applyTheme(savedTheme);
+
+      // ── UI layout theme (default / modern) ──────────────────────────────
+      // App.jsx also reads ui_theme in loadUserSettings, but ProfileTab's
+      // fetch may resolve first or last — sync unconditionally so the
+      // Theme selector always reflects what is actually stored.
+      const savedUiTheme = settings?.ui_theme || 'default';
+      console.log('[ProfileTab] ui_theme from settings:', savedUiTheme, '| prop:', uiTheme);
+      if (onUiThemeChange && savedUiTheme !== uiTheme) {
+        onUiThemeChange(savedUiTheme);
+      }
     } catch (error) {
-      console.error('Error loading preferences:', error);
-      // Fallback to dark theme
+      console.error('[ProfileTab] Error loading preferences:', error);
       applyTheme('dark');
     }
   };
@@ -39,13 +53,23 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const handleThemeChange = async (newTheme) => {
     setTheme(newTheme);
     applyTheme(newTheme);
-    
-    // Save to database
     try {
       await dbService.updateUserSettings(user.id, { theme: newTheme });
-      console.log('✓ Tema guardado:', newTheme);
+      console.log('[ProfileTab] colour theme saved:', newTheme);
     } catch (error) {
-      console.error('Error saving theme:', error);
+      console.error('[ProfileTab] Error saving colour theme:', error);
+    }
+  };
+
+  const handleUiThemeChange = async (newUiTheme) => {
+    // 1. Propagate to App immediately → root class changes → re-render
+    if (onUiThemeChange) onUiThemeChange(newUiTheme);
+    // 2. Persist
+    try {
+      await dbService.updateUserSettings(user.id, { ui_theme: newUiTheme });
+      console.log('[ProfileTab] ui_theme saved:', newUiTheme);
+    } catch (error) {
+      console.error('[ProfileTab] Error saving ui_theme:', error);
     }
   };
 
@@ -114,14 +138,14 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         <div className="theme-selector theme-selector-2">
           <button
             className={`theme-option ${uiTheme === 'default' ? 'active' : ''}`}
-            onClick={() => onUiThemeChange && onUiThemeChange('default')}
+            onClick={() => handleUiThemeChange('default')}
           >
             <span className="sf-icon">◫</span>
             <span>Default</span>
           </button>
           <button
             className={`theme-option ${uiTheme === 'modern' ? 'active' : ''}`}
-            onClick={() => onUiThemeChange && onUiThemeChange('modern')}
+            onClick={() => handleUiThemeChange('modern')}
           >
             <span className="sf-icon">◧</span>
             <span>Modern</span>
