@@ -502,8 +502,9 @@ async function loadPdfJs() {
   return pdfjsLib;
 }
 
-const DATE_RE = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2})/;
-const AMT_RE  = /([+-]?\s*\d{1,3}(?:[.,\s]\d{3})*[.,]\d{2})/;
+const DATE_RE   = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2})/;
+// Global variant used in matchAll — lets us find ALL numeric tokens per line.
+const AMT_RE_G  = /([+-]?\s*\d{1,3}(?:[.,\s]\d{3})*[.,]\d{2})/g;
 
 function extractTransactionsFromText(text) {
   const lines  = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -511,8 +512,20 @@ function extractTransactionsFromText(text) {
   const result = [];
   for (const line of lines) {
     const dateMatch = line.match(DATE_RE);
-    const amtMatch  = line.match(AMT_RE);
-    if (!dateMatch || !amtMatch) continue;
+    if (!dateMatch) continue;
+
+    // Collect every numeric token in the line, keep only those with ≤ 10 digits
+    // (account numbers, IBANs, and long reference codes are filtered out).
+    // Use the LAST surviving token — in bank statement PDFs the transaction
+    // amount always appears after the date and description.
+    const allAmt = [...line.matchAll(AMT_RE_G)];
+    const validAmt = allAmt.filter(m => {
+      const digits = m[1].replace(/[^0-9]/g, '');
+      return digits.length >= 1 && digits.length <= 10;
+    });
+    if (!validAmt.length) continue;
+    const amtMatch = validAmt[validAmt.length - 1]; // take LAST valid token
+
     const date   = parseDate(dateMatch[1]);
     if (!date) continue;
     const amount = parseAmount(amtMatch[1].replace(/\s/g, ''));

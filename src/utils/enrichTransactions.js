@@ -130,7 +130,7 @@ function detectSubscriptions(transactions) {
     for (let j = i + 1; j < transactions.length; j++) {
       const a = transactions[i];
       const b = transactions[j];
-      if (a.amount >= 0 || b.amount >= 0) continue;
+      if (a.type !== 'expense' || b.type !== 'expense') continue;
       if (merchantKey(a.clean_description) !== merchantKey(b.clean_description)) continue;
       const amtA = Math.abs(a.amount);
       const amtB = Math.abs(b.amount);
@@ -175,14 +175,17 @@ function computeInsights(transactions) {
   for (const tx of transactions) {
     if (tx.is_duplicate) { duplicate_count++; continue; }
     if (tx.is_subscription) subscriptions_count++;
-    if (tx.amount < 0) {
+    // Use type field (always present after enrichment); fall back to sign for
+    // any legacy callers that still pass signed amounts without a type field.
+    const isExpense = tx.type === 'expense' || (tx.type == null && tx.amount < 0);
+    if (isExpense) {
       const abs = Math.abs(tx.amount);
       total_spent += abs;
       catTotals[tx.category] = (catTotals[tx.category] || 0) + abs;
       if (tx.category === 'Compras') shopping_spent += abs;
     } else {
-      total_income += tx.amount;
-      if (tx.category === 'Poupanca') savings_amount += tx.amount;
+      total_income += Math.abs(tx.amount);
+      if (tx.category === 'Poupanca') savings_amount += Math.abs(tx.amount);
     }
   }
 
@@ -216,11 +219,15 @@ export function enrichTransactions(rawTransactions) {
   const enriched = rawTransactions.map(tx => {
     const clean = cleanDescription(tx.description);
     const { category, subcategory } = categorize(tx.description, tx.amount);
+    // Preserve type coming from parseBankFile; fall back to sign-based detection
+    // for backwards-compat with any callers that pass signed amounts directly.
+    const type = tx.type || (tx.amount < 0 ? 'expense' : 'income');
     return {
       date:              tx.date,
       description:       tx.description,
       clean_description: clean,
       amount:            tx.amount,
+      type,
       category,
       subcategory,
       is_subscription:   false,

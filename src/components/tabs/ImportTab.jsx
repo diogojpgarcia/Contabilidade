@@ -62,7 +62,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [] }) => {
   const handleConfirm = async () => {
     if (!preview.length || !user) return;
     setSaving(true);
-    const toSave = preview.filter(tx => !tx.is_duplicate);
+    const toSave = keepDupes ? preview : preview.filter(tx => !tx.is_duplicate);
     try {
       for (const tx of toSave) {
         const payload = {
