@@ -98,7 +98,9 @@ const App = () => {
       if (settings?.patrimony) setPatrimony(settings.patrimony);
       if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
       if (settings?.learned_rules) setLearnedRules(settings.learned_rules);
-      if (settings?.ui_theme) setTheme(settings.ui_theme);
+      // Load layout theme — guard against old colour values ('dark','light','gray')
+      const t = settings?.theme;
+      if (t === 'default' || t === 'modern') setTheme(t);
     } catch (error) { console.error("Error loading settings:", error); }
   };
 
@@ -328,7 +330,7 @@ const App = () => {
             onCategoryChange={handleCategoryChange}
             onTransactionDeleted={handleDeleteTransaction}
             onTransactionEdited={handleEditTransaction}
-            uiTheme={theme}
+            theme={theme}
           />
         )}
 
@@ -341,7 +343,7 @@ const App = () => {
             categories={categoriesProfessional}
             onTransactionDeleted={handleDeleteTransaction}
             onCategoryChange={handleCategoryChange}
-            uiTheme={theme}
+            theme={theme}
           />
         )}
         

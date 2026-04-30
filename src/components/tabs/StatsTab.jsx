@@ -4,7 +4,7 @@ import CategoryPicker from '../CategoryPicker.jsx';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted, onCategoryChange, uiTheme = 'default' }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted, onCategoryChange, theme = 'default' }) => {
   const [pickerTx, setPickerTx] = useState(null);
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
@@ -344,7 +344,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               <span className="sf-icon-large">◌</span>
               <p>{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</p>
             </div>
-          ) : uiTheme === 'modern' ? (
+          ) : theme === 'modern' ? (
             /* ── Modern expandable cards ── */
             <div className="modern-tx-list">
               {monthTransactions.map((tx) => {

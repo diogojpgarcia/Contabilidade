@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import CategoryPicker from '../CategoryPicker';
+import React from 'react';
+import ModernTransactionList  from '../ModernTransactionList';
+import DefaultTransactionList from '../DefaultTransactionList';
 import './HomeTab.css';
-import './HomeTab.modern.css';
 
 const VIEW_LABELS = { total: 'Total', accounts: 'Contas', investments: 'Investimentos', realestate: 'Imóveis' };
 
@@ -11,26 +11,23 @@ const HomeTab = ({
   patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
   onCategoryChange,
   onTransactionDeleted,
-  uiTheme = 'default',
+  theme = 'default',
 }) => {
-  const [pickerTx, setPickerTx] = useState(null); // transaction whose category is being edited
-  const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card id
-
   const goToPreviousMonth = () => {
     const [year, month] = currentMonth.split('-').map(Number);
-    const prevDate = new Date(year, month - 2, 1);
-    onMonthChange(`${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`);
+    const d = new Date(year, month - 2, 1);
+    onMonthChange(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   };
 
   const goToNextMonth = () => {
     const [year, month] = currentMonth.split('-').map(Number);
-    const nextDate = new Date(year, month, 1);
-    onMonthChange(`${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`);
+    const d = new Date(year, month, 1);
+    onMonthChange(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   };
 
   const goToToday = () => {
-    const today = new Date();
-    onMonthChange(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`);
+    const t = new Date();
+    onMonthChange(`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`);
   };
 
   const formatMonth = (monthStr) => {
@@ -44,28 +41,14 @@ const HomeTab = ({
     return 'Equilibrado este mês';
   };
 
-  const getCategoryIcon = (categoryName) => {
-    const iconMap = {
-      'Alimentação': '⚑', 'Habitação': '⌂', 'Transporte': '⚐', 'Saúde': '✚',
-      'Lazer': '◉', 'Educação': '⊞', 'Roupa': '◫', 'Tecnologia': '◧',
-      'Subscrições': '◉', 'Outros': '◌', 'Salário': '◈', 'Freelance': '◐',
-      'Investimentos': '◭', 'Bonus': '◆', 'Outros Rendimentos': '◌',
-      'Lazer & Entretenimento': '◐', 'Roupa & Calçado': '◫',
-      'Serviços Financeiros': '◈', 'Comunicações': '◎', 'Utilities': '⚡',
-      'Salário Principal': '◈', 'Trabalho Extra / Freelance': '◐',
-      'Viagens & Férias': '✈', 'Presentes & Doações': '◆',
-    };
-    return iconMap[categoryName] || '◌';
-  };
-
   // Patrimony totals
   const p = patrimony;
-  const sumAccounts   = (p.accounts   || []).reduce((s, x) => s + (parseFloat(x.balance) || 0), 0);
-  const sumStocks     = (p.stocks     || []).reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.avgPrice) || 0), 0);
-  const sumBonds      = (p.bonds      || []).reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-  const sumRealestate = (p.realestate || []).reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-  const sumVehicles   = (p.vehicles   || []).reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-  const sumCrypto     = (p.crypto     || []).reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.price) || 0), 0);
+  const sumAccounts   = (p.accounts   || []).reduce((s, x) => s + (parseFloat(x.balance)  || 0), 0);
+  const sumStocks     = (p.stocks     || []).reduce((s, x) => s + (parseFloat(x.qty)      || 0) * (parseFloat(x.avgPrice) || 0), 0);
+  const sumBonds      = (p.bonds      || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
+  const sumRealestate = (p.realestate || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
+  const sumVehicles   = (p.vehicles   || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
+  const sumCrypto     = (p.crypto     || []).reduce((s, x) => s + (parseFloat(x.qty)      || 0) * (parseFloat(x.price) || 0), 0);
 
   const patrimonyTotals = {
     total:       sumAccounts + sumStocks + sumBonds + sumRealestate + sumVehicles + sumCrypto,
@@ -76,31 +59,16 @@ const HomeTab = ({
 
   const patrimonyValue = patrimonyTotals[homePatrimonyView] || 0;
 
-  const handleCategoryClick = (tx) => {
-    if (onCategoryChange) setPickerTx(tx);
-  };
-
-  const handlePickerSelect = (newCategory) => {
-    if (pickerTx && onCategoryChange) {
-      onCategoryChange(pickerTx.id, newCategory, pickerTx.description);
-    }
-    setPickerTx(null);
-  };
-
   return (
     <div className="home-tab">
       {/* Hero Cards Row */}
       <div className="hero-cards">
-        {/* Left — Saldo do Mês */}
         <div className="hero-card hero-card-balance">
           <div className="hero-label">Saldo do Mês</div>
-          <div className="hero-amount">
-            {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
-          </div>
+          <div className="hero-amount">{balance >= 0 ? '+' : ''}{balance.toFixed(2)}€</div>
           <div className="hero-status">{getBalanceStatus()}</div>
         </div>
 
-        {/* Right — Património */}
         <div className="hero-card hero-card-patrimony">
           <div className="hero-card-top">
             <div className="hero-label">Património</div>
@@ -141,102 +109,23 @@ const HomeTab = ({
         <button className="today-btn-compact" onClick={goToToday}>Hoje</button>
       </div>
 
-      {/* Recent Transactions */}
+      {/* Transaction list — switches component based on theme */}
       <div className="transactions-section">
         <h3 className="section-title">Recentes</h3>
-        {transactions.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">◌</div>
-            <p className="empty-text">Sem transações este mês</p>
-          </div>
-        ) : uiTheme === 'modern' ? (
-          /* ── Modern expandable cards ── */
-          <div className="modern-tx-list">
-            {transactions.map((tx) => {
-              const isExpanded = expandedId === tx.id;
-              return (
-                <div
-                  key={tx.id}
-                  className={`modern-tx-card ${tx.type}${isExpanded ? ' expanded' : ''}`}
-                  onClick={() => setExpandedId(isExpanded ? null : tx.id)}
-                >
-                  {/* Collapsed row */}
-                  <div className="modern-tx-row">
-                    <div className={`modern-tx-icon ${tx.type}`}>{getCategoryIcon(tx.category)}</div>
-                    <div className="modern-tx-main">
-                      <span className="modern-tx-desc">{tx.description || tx.category}</span>
-                      <span className="modern-tx-cat">{tx.category}</span>
-                    </div>
-                    <div className={`modern-tx-amount ${tx.type}`}>
-                      {tx.type === 'income' ? '+' : '-'}{parseFloat(tx.amount).toFixed(2)}€
-                    </div>
-                  </div>
-                  {/* Expanded details */}
-                  {isExpanded && (
-                    <div className="modern-tx-details" onClick={(e) => e.stopPropagation()}>
-                      <span className="modern-tx-date">{tx.date}</span>
-                      {onCategoryChange && (
-                        <button
-                          className="modern-tx-edit-cat"
-                          onClick={() => { handleCategoryClick(tx); setExpandedId(null); }}
-                        >
-                          ✎ Categoria
-                        </button>
-                      )}
-                      {onTransactionDeleted && (
-                        <button
-                          className="modern-tx-delete"
-                          onClick={async () => {
-                            if (window.confirm('Apagar esta transação?')) {
-                              await onTransactionDeleted(tx.id);
-                            }
-                          }}
-                        >
-                          🗑
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+
+        {theme === 'modern' ? (
+          <ModernTransactionList
+            transactions={transactions}
+            onCategoryChange={onCategoryChange}
+            onTransactionDeleted={onTransactionDeleted}
+          />
         ) : (
-          /* ── Default list ── */
-          <div className="transactions-list">
-            {transactions.map((transaction, index) => (
-              <div key={transaction.id || index} className="transaction-item">
-                <div className="transaction-icon">{getCategoryIcon(transaction.category)}</div>
-                <div className="transaction-details">
-                  <div
-                    className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
-                    onClick={() => handleCategoryClick(transaction)}
-                    title={onCategoryChange ? 'Toca para alterar categoria' : undefined}
-                  >
-                    {transaction.category}
-                    {onCategoryChange && <span className="category-edit-hint">&#8250;</span>}
-                  </div>
-                  {transaction.description && (
-                    <div className="transaction-description">{transaction.description}</div>
-                  )}
-                </div>
-                <div className={`transaction-amount ${transaction.type}`}>
-                  {transaction.type === 'income' ? '+' : '-'}{parseFloat(transaction.amount).toFixed(2)}€
-                </div>
-              </div>
-            ))}
-          </div>
+          <DefaultTransactionList
+            transactions={transactions}
+            onCategoryChange={onCategoryChange}
+          />
         )}
       </div>
-
-      {/* Category Picker */}
-      {pickerTx && (
-        <CategoryPicker
-          transaction={pickerTx}
-          onSelect={handlePickerSelect}
-          onClose={() => setPickerTx(null)}
-        />
-      )}
     </div>
   );
 };

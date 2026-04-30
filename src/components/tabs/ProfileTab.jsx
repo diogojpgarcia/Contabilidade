@@ -30,8 +30,8 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       applyTheme(saved);
 
       // Layout theme (default / modern) — sync App state
-      const savedLayout = settings?.ui_theme || 'default';
-      if (setTheme) setTheme(savedLayout);
+      const t = settings?.theme;
+      if (setTheme) setTheme(t === 'default' || t === 'modern' ? t : 'default');
     } catch (error) {
       console.error('[ProfileTab] Error loading preferences:', error);
       applyTheme('dark');
@@ -53,11 +53,11 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   };
 
   const handleThemeChange = async (newTheme) => {
-    setTheme(newTheme);        // instant — directly updates App state
+    setTheme(newTheme);        // instant — directly updates App state → re-render
     try {
-      await dbService.updateUserSettings(user.id, { ui_theme: newTheme });
+      await dbService.updateUserSettings(user.id, { theme: newTheme });
     } catch (error) {
-      console.error('[ProfileTab] Error saving ui_theme:', error);
+      console.error('[ProfileTab] Error saving theme:', error);
     }
   };
 
