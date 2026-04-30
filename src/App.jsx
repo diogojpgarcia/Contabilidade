@@ -317,7 +317,10 @@ const App = () => {
   const userName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
   return (
-    <div className={`app-new ${theme}-ui`}>
+    <div
+      className={`app-new ${theme}-ui`}
+      style={{ background: theme === 'modern' ? 'red' : 'blue' }}
+    >
       {/* Main Content */}
       <main className="main-content-new">
         {activeTab === 'home' && (

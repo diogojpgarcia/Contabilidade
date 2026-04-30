@@ -3,7 +3,7 @@ import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme = 'default', setTheme }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory]     = useState(false);
@@ -23,45 +23,23 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
     try {
       const settings = await dbService.getUserSettings(user.id);
       console.log('[ProfileTab] user_settings:', settings);
-
-      // Colour theme (light / gray / dark)
       const saved = settings?.color_theme || 'dark';
       setColorTheme(saved);
-      applyTheme(saved);
-
-      // Layout theme — only sync if a valid value is stored; never reset to 'default'
-      const t = settings?.theme;
-      if ((t === 'default' || t === 'modern') && typeof setTheme === 'function') {
-        setTheme(t);
-      }
+      document.documentElement.setAttribute('data-theme', saved);
     } catch (error) {
       console.error('[ProfileTab] Error loading preferences:', error);
-      applyTheme('dark');
     }
-  };
-
-  const applyTheme = (newTheme) => {
-    document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   const handleColorThemeChange = async (newColor) => {
-    setColorTheme(newColor);   // instant
-    applyTheme(newColor);
-    try {
-      await dbService.updateUserSettings(user.id, { color_theme: newColor });
-    } catch (error) {
-      console.error('[ProfileTab] Error saving color_theme:', error);
-    }
+    setColorTheme(newColor);
+    document.documentElement.setAttribute('data-theme', newColor);
+    dbService.updateUserSettings(user.id, { color_theme: newColor }).catch(console.error);
   };
 
-  // Synchronous so React flushes the state update in the same event tick.
-  // DB save is fire-and-forget — does not block the UI update.
+  // Plain function — synchronous state update, fire-and-forget DB save
   const handleThemeChange = (newTheme) => {
-    console.log("CLICK:", newTheme, "| setTheme is:", typeof setTheme);
-    if (typeof setTheme !== 'function') {
-      console.error("setTheme is not a function — prop not received from App");
-      return;
-    }
+    console.log("CLICK:", newTheme);
     setTheme(newTheme);
     dbService.updateUserSettings(user.id, { theme: newTheme }).catch(console.error);
   };
