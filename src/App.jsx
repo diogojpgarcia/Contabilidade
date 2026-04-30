@@ -28,7 +28,7 @@ const App = () => {
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
   const [learnedRules, setLearnedRules] = useState([]); // [{ pattern, category }]
-  const [uiTheme, setUiTheme] = useState('default'); // 'default' | 'modern'
+  const [theme, setTheme] = useState('default'); // 'default' | 'modern'
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
@@ -98,7 +98,7 @@ const App = () => {
       if (settings?.patrimony) setPatrimony(settings.patrimony);
       if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
       if (settings?.learned_rules) setLearnedRules(settings.learned_rules);
-      if (settings?.ui_theme) setUiTheme(settings.ui_theme);
+      if (settings?.ui_theme) setTheme(settings.ui_theme);
     } catch (error) { console.error("Error loading settings:", error); }
   };
 
@@ -200,12 +200,6 @@ const App = () => {
     setPatrimony(newPatrimony);
     try { await dbService.updateUserSettings(currentUser.id, { patrimony: newPatrimony }); }
     catch (error) { console.error("Error saving patrimony:", error); }
-  };
-
-  const handleUiThemeChange = async (newUiTheme) => {
-    setUiTheme(newUiTheme);
-    try { await dbService.updateUserSettings(currentUser.id, { ui_theme: newUiTheme }); }
-    catch (error) { console.error("Error saving ui_theme:", error); }
   };
 
   const handlePatrimonyViewChange = async (view) => {
@@ -317,7 +311,7 @@ const App = () => {
   const userName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
   return (
-    <div className={`app-new ${uiTheme}-ui`}>
+    <div className={`app-new ${theme}-ui`}>
       {/* Main Content */}
       <main className="main-content-new">
         {activeTab === 'home' && (
@@ -334,7 +328,7 @@ const App = () => {
             onCategoryChange={handleCategoryChange}
             onTransactionDeleted={handleDeleteTransaction}
             onTransactionEdited={handleEditTransaction}
-            uiTheme={uiTheme}
+            uiTheme={theme}
           />
         )}
 
@@ -347,7 +341,7 @@ const App = () => {
             categories={categoriesProfessional}
             onTransactionDeleted={handleDeleteTransaction}
             onCategoryChange={handleCategoryChange}
-            uiTheme={uiTheme}
+            uiTheme={theme}
           />
         )}
         
@@ -384,8 +378,8 @@ const App = () => {
             onNavigateToImport={() => setActiveTab('import')}
             userName={userName}
             onLogout={handleLogout}
-            uiTheme={uiTheme}
-            onUiThemeChange={handleUiThemeChange}
+            theme={theme}
+            setTheme={setTheme}
             onDataDeleted={() => {
               // Kill any in-flight loadUserTransactions so a stale fetch
               // cannot overwrite this clear after it resolves.

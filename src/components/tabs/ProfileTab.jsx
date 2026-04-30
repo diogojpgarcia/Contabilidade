@@ -3,7 +3,7 @@ import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, uiTheme = 'default', onUiThemeChange }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme = 'default', setTheme }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory]     = useState(false);
@@ -11,7 +11,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const [deleteStatus, setDeleteStatus]               = useState('');
   const [deleting, setDeleting]                       = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const [colorTheme, setColorTheme] = useState('dark');
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState('');
 
@@ -22,24 +22,16 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const loadUserPreferences = async () => {
     try {
       const settings = await dbService.getUserSettings(user.id);
+      console.log('[ProfileTab] user_settings:', settings);
 
-      // ── Diagnostic: confirm what is stored in Supabase ──────────────────
-      console.log('[ProfileTab] user_settings loaded:', settings);
+      // Colour theme (light / gray / dark)
+      const saved = settings?.color_theme || 'dark';
+      setColorTheme(saved);
+      applyTheme(saved);
 
-      // ── Colour theme (light / gray / dark) ──────────────────────────────
-      const savedTheme = settings?.theme || 'dark';
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-
-      // ── UI layout theme (default / modern) ──────────────────────────────
-      // App.jsx also reads ui_theme in loadUserSettings, but ProfileTab's
-      // fetch may resolve first or last — sync unconditionally so the
-      // Theme selector always reflects what is actually stored.
-      const savedUiTheme = settings?.ui_theme || 'default';
-      console.log('[ProfileTab] ui_theme from settings:', savedUiTheme, '| prop:', uiTheme);
-      if (onUiThemeChange && savedUiTheme !== uiTheme) {
-        onUiThemeChange(savedUiTheme);
-      }
+      // Layout theme (default / modern) — sync App state
+      const savedLayout = settings?.ui_theme || 'default';
+      if (setTheme) setTheme(savedLayout);
     } catch (error) {
       console.error('[ProfileTab] Error loading preferences:', error);
       applyTheme('dark');
@@ -50,24 +42,20 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
-  const handleThemeChange = async (newTheme) => {
-    setTheme(newTheme);
-    applyTheme(newTheme);
+  const handleColorThemeChange = async (newColor) => {
+    setColorTheme(newColor);   // instant
+    applyTheme(newColor);
     try {
-      await dbService.updateUserSettings(user.id, { theme: newTheme });
-      console.log('[ProfileTab] colour theme saved:', newTheme);
+      await dbService.updateUserSettings(user.id, { color_theme: newColor });
     } catch (error) {
-      console.error('[ProfileTab] Error saving colour theme:', error);
+      console.error('[ProfileTab] Error saving color_theme:', error);
     }
   };
 
-  const handleUiThemeChange = async (newUiTheme) => {
-    // 1. Propagate to App immediately → root class changes → re-render
-    if (onUiThemeChange) onUiThemeChange(newUiTheme);
-    // 2. Persist
+  const handleThemeChange = async (newTheme) => {
+    setTheme(newTheme);        // instant — directly updates App state
     try {
-      await dbService.updateUserSettings(user.id, { ui_theme: newUiTheme });
-      console.log('[ProfileTab] ui_theme saved:', newUiTheme);
+      await dbService.updateUserSettings(user.id, { ui_theme: newTheme });
     } catch (error) {
       console.error('[ProfileTab] Error saving ui_theme:', error);
     }
@@ -108,22 +96,22 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         <h3 className="section-title">Aparência</h3>
         <div className="theme-selector">
           <button
-            className={`theme-option ${theme === 'light' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('light')}
+            className={`theme-option ${colorTheme === 'light' ? 'active' : ''}`}
+            onClick={() => handleColorThemeChange('light')}
           >
             <span className="sf-icon">☀︎</span>
             <span>Claro</span>
           </button>
           <button
-            className={`theme-option ${theme === 'gray' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('gray')}
+            className={`theme-option ${colorTheme === 'gray' ? 'active' : ''}`}
+            onClick={() => handleColorThemeChange('gray')}
           >
             <span className="sf-icon">◐</span>
             <span>Cinza</span>
           </button>
           <button
-            className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('dark')}
+            className={`theme-option ${colorTheme === 'dark' ? 'active' : ''}`}
+            onClick={() => handleColorThemeChange('dark')}
           >
             <span className="sf-icon">☾</span>
             <span>Escuro</span>
@@ -137,15 +125,15 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         <h3 className="section-title">Theme</h3>
         <div className="theme-selector theme-selector-2">
           <button
-            className={`theme-option ${uiTheme === 'default' ? 'active' : ''}`}
-            onClick={() => handleUiThemeChange('default')}
+            className={`theme-option ${theme === 'default' ? 'active' : ''}`}
+            onClick={() => handleThemeChange('default')}
           >
             <span className="sf-icon">◫</span>
             <span>Default</span>
           </button>
           <button
-            className={`theme-option ${uiTheme === 'modern' ? 'active' : ''}`}
-            onClick={() => handleUiThemeChange('modern')}
+            className={`theme-option ${theme === 'modern' ? 'active' : ''}`}
+            onClick={() => handleThemeChange('modern')}
           >
             <span className="sf-icon">◧</span>
             <span>Modern</span>
