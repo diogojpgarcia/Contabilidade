@@ -601,6 +601,29 @@ function extractTransactionsFromLines(rawLines) {
   return result;
 }
 
+// Handles flat/flattened PDFs where all text items share the same y-coordinate
+// so reconstructPdfLines collapses everything into one blob. Forces a newline
+// before every date token, then delegates to extractTransactionsFromLines.
+function extractTransactionsFromNormalized(text) {
+  const normalized = text
+    .replace(/\s+/g, ' ')
+    // Inject newline before DD/MM or DD-MM patterns (with optional year).
+    // Negative lookbehind avoids splitting mid-number (e.g. "001501" won't inject
+    // before "15/01"). We match optional year so TX_RE still anchors correctly.
+    .replace(/(?<!\d)(\d{2}[\/\-]\d{2}(?:[\/\-]\d{2,4})?)/g, '\n$1')
+    .trim();
+
+  const lines = normalized
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  console.log('[parseBankFile] date-injection: produced', lines.length, 'candidate lines');
+
+  // Re-use the same merge + parse + classify logic
+  return extractTransactionsFromLines(lines);
+}
+
 // Fallback: flat single-line extraction (used when line-merge yields 0).
 const DATE_RE   = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2})/;
 const AMT_RE_G  = /([+-]?\s*\d{1,3}(?:[.,\s]\d{3})*[.,]\d{2})/g;
@@ -651,12 +674,21 @@ export async function parsePDF(buffer) {
       fullText += content.items.map(i => i.str).join(' ') + '\n';
     }
 
-    // Try the line-merge approach first (handles BCP broken lines)
-    const result = extractTransactionsFromLines(allLines);
-    if (result.length > 0) return result;
+    // Primary: y-coordinate line reconstruction + broken-line merge
+    const lineResult = extractTransactionsFromLines(allLines);
 
-    // Fallback to flat single-line mode
-    console.log('[parseBankFile] PDF line-merge yielded 0 — falling back to flat-text mode');
+    // Secondary: date-injection normalization — rescues flat PDFs where all text
+    // items share the same y-coordinate so reconstructPdfLines can't split them.
+    // Only run when primary yielded suspiciously few results.
+    const normResult = lineResult.length < 10
+      ? extractTransactionsFromNormalized(fullText)
+      : [];
+
+    const best = normResult.length > lineResult.length ? normResult : lineResult;
+    if (best.length > 0) return best;
+
+    // Last resort: flat single-line mode (original approach)
+    console.log('[parseBankFile] PDF all structured modes yielded 0 — falling back to flat-text mode');
     return extractTransactionsFromText(fullText);
   } catch (err) {
     console.error('[parseBankFile] PDF parse error:', err);
