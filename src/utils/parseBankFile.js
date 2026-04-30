@@ -502,13 +502,15 @@ async function loadPdfJs() {
   return pdfjsLib;
 }
 
-// Groups PDF text items into visual lines by y-coordinate (3pt tolerance).
+// Groups PDF text items into visual lines by y-coordinate (1pt precision).
 // PDF y=0 is at the bottom, so we sort descending to get top-to-bottom order.
+// 1pt precision (Math.round) keeps BCP's tightly-spaced adjacent lines separate;
+// the old 3pt bucket (/ 3 * 3) was wide enough to merge two distinct lines.
 function reconstructPdfLines(items) {
   const buckets = new Map();
   for (const item of items) {
     if (!item.str.trim()) continue;
-    const y = Math.round(item.transform[5] / 3) * 3;
+    const y = Math.round(item.transform[5]); // 1pt precision
     if (!buckets.has(y)) buckets.set(y, []);
     buckets.get(y).push(item);
   }
@@ -530,10 +532,11 @@ function reconstructPdfLines(items) {
 //   "45,80"                        ← amount on its own line
 // This function merges those broken lines before parsing.
 function extractTransactionsFromLines(rawLines) {
-  const MONEY_END_RE  = /[-+]?\d{1,3}(?:[.\s]\d{3})*[.,]\d{2}\s*[€]?\s*$/;
+  // \d+ instead of \d{1,3} — catches amounts like 1234,56 (4 digits, no thousands separator)
+  const MONEY_END_RE  = /[-+]?\d+(?:[.\s]\d{3})*[.,]\d{2}\s*[€]?\s*$/;
   const DATE_START_RE = /^\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?/;
   // Captures: (date)(description)(amount) — amount must end with dd decimal
-  const TX_RE = /^(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\s*(.*?)\s*([-+]?\d{1,3}(?:[.\s]\d{3})*[.,]\d{2})\s*$/;
+  const TX_RE = /^(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\s*(.*?)\s*([-+]?\d+(?:[.\s]\d{3})*[.,]\d{2})\s*$/;
 
   // Keywords in normalised (no-diacritics, lowercase) form
   const INCOME_KW  = ['salario','vencimento','transferencia recebida','credito','abono',
