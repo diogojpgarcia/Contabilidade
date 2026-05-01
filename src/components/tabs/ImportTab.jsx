@@ -64,6 +64,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [] }) => {
     setSaving(true);
     const toSave = keepDupes ? preview : preview.filter(tx => !tx.is_duplicate);
     try {
+      const saved = [];
       for (const tx of toSave) {
         const payload = {
           date:        tx.date,
@@ -73,13 +74,14 @@ const ImportTab = ({ user, onImportDone, learnedRules = [] }) => {
           category:    tx.category || (tx.type === 'income' ? 'Income' : 'Other'),
         };
         console.log('[ImportTab] BEFORE INSERT:', payload);
-        await dbService.addTransaction(user.id, payload);
+        const newTx = await dbService.addTransaction(user.id, payload);
+        if (newTx) saved.push(newTx);
       }
       setSaved(true);
       setPreview([]);
       setInsights(null);
       setFileName('');
-      if (onImportDone) onImportDone();
+      if (onImportDone) onImportDone(saved);
     } catch (e) {
       setError('Erro ao guardar: ' + e.message);
     } finally {

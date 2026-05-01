@@ -86,8 +86,9 @@ const App = () => {
       console.log('📥 Loading transactions for:', currentUser.id);
       const data = await dbService.getTransactions(currentUser.id);
       if (requestId !== loadRequestId.current) return; // superseded by delete or newer load
-      console.log('✅ Loaded', data.length, 'transactions');
-      setTransactions(data);
+      const rows = data || [];
+      console.log('✅ Loaded', rows.length, 'transactions');
+      setTransactions(rows);
     } catch (error) {
       console.error('❌ Error loading transactions:', error);
     }
@@ -252,6 +253,16 @@ const App = () => {
     }
   };
 
+  // Called by ImportTab after saving to DB — prepends the new rows immediately
+  // so Home and Stats update without waiting for a full reload.
+  const handleImport = (savedTransactions) => {
+    if (savedTransactions?.length) {
+      setTransactions(prev => [...savedTransactions, ...prev]);
+    } else {
+      loadUserTransactions(); // fallback if caller passes nothing
+    }
+  };
+
   const handleEditTransaction = async (updatedTransaction) => {
     try {
       console.log('✏️ Updating transaction:', updatedTransaction.id);
@@ -372,7 +383,7 @@ const App = () => {
         {activeTab === 'import' && (
           <ImportTab
             user={currentUser}
-            onImportDone={loadUserTransactions}
+            onImportDone={handleImport}
             learnedRules={learnedRules}
           />
         )}
