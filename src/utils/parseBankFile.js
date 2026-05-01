@@ -537,7 +537,9 @@ function extractTransactionsFromLines(rawLines) {
   // Date anywhere on the line — no start-of-line anchor
   const DATE_RE   = /\b(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\b/;
   // Metadata lines to skip (case-insensitive; Portuguese + generic)
-  const NOISE_RE  = /\b(nib|iban|saldo|extrato|extracto|p[aá]gina|titular|bic|swift|balan[cç]o)\b/i;
+  const NOISE_RE  = /\b(nib|iban|saldo|extrato|extracto|p[aá]gina|titular|bic|swift|balan[cç]o|capital social|data emiss[aã]o|referencia|referência|entidade|total)\b/i;
+  // Lines that are only a date with no description or amount
+  const DATE_ONLY_RE = /^\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?$/;
 
   const INCOME_KW  = ['salario','vencimento','transferencia recebida','credito','abono',
     'reembolso','juros','dividendo','subsidio','remuneracao','ordenado','bonus'];
@@ -559,6 +561,12 @@ function extractTransactionsFromLines(rawLines) {
     // Skip metadata / header / footer lines
     if (NOISE_RE.test(line)) continue;
 
+    // Skip date-only lines — they updated carry-forward above, nothing else to do
+    if (DATE_ONLY_RE.test(line)) continue;
+
+    // Skip lines with 8+ consecutive digits (IBAN, account numbers, long refs)
+    if (/\d{8,}/.test(line)) continue;
+
     // Skip lines with no monetary amount
     const amtMatches = [...line.matchAll(MONEY_RE)];
     if (!amtMatches.length) continue;
@@ -569,13 +577,16 @@ function extractTransactionsFromLines(rawLines) {
     // Take the LAST amount token — for BCP the transaction value precedes any balance
     const rawAmt = amtMatches[amtMatches.length - 1][0];
     const amount  = parseAmount(rawAmt.replace(/\s/g, ''));
-    if (!amount) continue;   // null or 0
+    if (!amount || Math.abs(amount) < 0.01) continue;  // null, 0, or rounding noise
 
     // Description: strip date and amount tokens, collapse whitespace
     let description = line;
     if (dateMatch) description = description.replace(dateMatch[0], '');
     description = description.replace(rawAmt, '').replace(/\s+/g, ' ').trim()
       || 'unknown transaction';
+
+    // Skip entries with no meaningful description (single letters, stray punctuation)
+    if (description.length <= 3) continue;
 
     // Classify: keywords first, then explicit sign on the raw amount, then expense
     const lower = norm(line);
