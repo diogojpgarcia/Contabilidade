@@ -121,7 +121,9 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
                     <span className="ft-sub">
                       {isTransfer
                         ? <span style={{ fontSize: '0.7rem', background: 'var(--accent, #6366f1)', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>↕ Transferência</span>
-                        : tx.category}
+                        : tx.type === 'adjustment'
+                          ? <span style={{ fontSize: '0.7rem', background: '#f97316', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>⚖ Ajuste</span>
+                          : tx.category}
                     </span>
                   </div>
 
