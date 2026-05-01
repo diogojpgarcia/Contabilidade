@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
 import './AddTab.css';
 
-const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => {
+const AddTab = ({ user, categories, onTransactionAdded, onTransfer, theme = 'default' }) => {
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -11,6 +11,8 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
   const [loading, setLoading] = useState(false);
   const [goals, setGoals] = useState([]);
   const [selectedGoal, setSelectedGoal] = useState('');
+  const [transferFrom, setTransferFrom] = useState('');
+  const [transferTo, setTransferTo]     = useState('');
 
   useEffect(() => { loadGoals(); }, [user]);
 
@@ -39,14 +41,19 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
 
     if (!amount) { alert('Preenche o valor!'); return; }
     if (type === 'goal' && !selectedGoal) { alert('Seleciona um objetivo!'); return; }
-    if (type !== 'goal' && !category) { alert('Seleciona uma categoria!'); return; }
+    if (type !== 'goal' && type !== 'transfer' && !category) { alert('Seleciona uma categoria!'); return; }
+    if (type === 'transfer' && (!transferFrom.trim() || !transferTo.trim())) { alert('Preenche origem e destino!'); return; }
 
     const amountValue = parseFloat(amount);
     if (isNaN(amountValue) || amountValue <= 0) { alert('Valor inválido!'); return; }
 
     setLoading(true);
     try {
-      if (type === 'goal') {
+      if (type === 'transfer') {
+        if (onTransfer) await onTransfer(transferFrom.trim(), transferTo.trim(), amountValue);
+        setAmount(''); setTransferFrom(''); setTransferTo('');
+        setDate(new Date().toISOString().split('T')[0]);
+      } else if (type === 'goal') {
         const updatedGoals = goals.map(g =>
           g.id === selectedGoal ? { ...g, currentSavings: (g.currentSavings || 0) + amountValue } : g
         );
@@ -55,9 +62,11 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
         const transaction = { type, amount: amountValue, category, description: description.trim() || null, date };
         if (onTransactionAdded) await onTransactionAdded(transaction);
       }
-      setAmount(''); setCategory(''); setSelectedGoal(''); setDescription('');
-      setDate(new Date().toISOString().split('T')[0]);
-      loadGoals();
+      if (type !== 'transfer') {
+        setAmount(''); setCategory(''); setSelectedGoal(''); setDescription('');
+        setDate(new Date().toISOString().split('T')[0]);
+        loadGoals();
+      }
     } catch (error) {
       console.error('Error:', error);
       alert('✕ Erro: ' + error.message);
@@ -66,7 +75,7 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
     }
   };
 
-  const switchType = (newType) => { setType(newType); setCategory(''); setSelectedGoal(''); };
+  const switchType = (newType) => { setType(newType); setCategory(''); setSelectedGoal(''); setTransferFrom(''); setTransferTo(''); };
 
   /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
   if (theme === 'modern') {
@@ -84,6 +93,9 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
             </button>
             <button className={`m-toggle-btn ${type === 'income' ? 'active' : ''}`} onClick={() => switchType('income')}>
               + Receita
+            </button>
+            <button className={`m-toggle-btn ${type === 'transfer' ? 'active' : ''}`} onClick={() => switchType('transfer')}>
+              ↕ Transferência
             </button>
             <button className={`m-toggle-btn ${type === 'goal' ? 'active' : ''}`} onClick={() => switchType('goal')}>
               ◆ Objetivo
@@ -105,8 +117,22 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
             <span className="m-currency">€</span>
           </div>
 
-          {/* Category or Goal */}
-          {type === 'goal' ? (
+          {/* Transfer fields */}
+          {type === 'transfer' && (
+            <>
+              <div className="m-field-card">
+                <span className="m-field-label">Conta de origem</span>
+                <input type="text" className="m-field-input" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} placeholder="Ex: Conta Corrente" maxLength={50} />
+              </div>
+              <div className="m-field-card">
+                <span className="m-field-label">Conta de destino</span>
+                <input type="text" className="m-field-input" value={transferTo} onChange={(e) => setTransferTo(e.target.value)} placeholder="Ex: Poupança" maxLength={50} />
+              </div>
+            </>
+          )}
+
+          {/* Category or Goal (hidden for transfers) */}
+          {type !== 'transfer' && (type === 'goal' ? (
             <div className="m-field-card">
               <span className="m-field-label">Objetivo</span>
               <select
@@ -141,7 +167,7 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
                 ))}
               </select>
             </div>
-          )}
+          ))}
 
           {/* Description */}
           <div className="m-field-card">
@@ -198,10 +224,26 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
           <button type="button" className={`type-btn ${type === 'income' ? 'active income' : ''}`} onClick={() => switchType('income')}>
             <span className="type-icon-sf">+</span><span>Receita</span>
           </button>
+          <button type="button" className={`type-btn ${type === 'transfer' ? 'active transfer' : ''}`} onClick={() => switchType('transfer')}>
+            <span className="type-icon-sf">↕</span><span>Transferência</span>
+          </button>
           <button type="button" className={`type-btn ${type === 'goal' ? 'active goal' : ''}`} onClick={() => switchType('goal')}>
             <span className="type-icon-sf">◆</span><span>Objetivos</span>
           </button>
         </div>
+
+        {type === 'transfer' && (
+          <>
+            <div className="form-field">
+              <label>Conta de origem</label>
+              <input type="text" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} placeholder="Ex: Conta Corrente" maxLength={50} className="text-input" />
+            </div>
+            <div className="form-field">
+              <label>Conta de destino</label>
+              <input type="text" value={transferTo} onChange={(e) => setTransferTo(e.target.value)} placeholder="Ex: Poupança" maxLength={50} className="text-input" />
+            </div>
+          </>
+        )}
 
         <div className="form-field">
           <label>Valor</label>
@@ -211,7 +253,7 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
           </div>
         </div>
 
-        {type === 'goal' ? (
+        {type !== 'transfer' && (type === 'goal' ? (
           <div className="form-field">
             <label>Objetivo</label>
             <select value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)} className="category-select">
@@ -232,7 +274,7 @@ const AddTab = ({ user, categories, onTransactionAdded, theme = 'default' }) => 
               ))}
             </select>
           </div>
-        )}
+        ))}
 
         <div className="form-field">
           <label>Descrição (opcional)</label>

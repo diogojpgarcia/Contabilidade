@@ -86,7 +86,8 @@ const App = () => {
       console.log('📥 Loading transactions for:', currentUser.id);
       const data = await dbService.getTransactions(currentUser.id);
       if (requestId !== loadRequestId.current) return; // superseded by delete or newer load
-      const rows = data || [];
+      // Normalize type — old rows without a type field default to 'expense'
+      const rows = (data || []).map(t => ({ ...t, type: t.type || 'expense' }));
       console.log('✅ Loaded', rows.length, 'transactions');
       setTransactions(rows);
     } catch (error) {
@@ -253,6 +254,35 @@ const App = () => {
     }
   };
 
+  // Creates a matched pair of transfer transactions (out + in) and prepends both.
+  const handleTransfer = async (from, to, amount) => {
+    const value = parseFloat(amount);
+    if (!value || value <= 0) return;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const outTx = await dbService.addTransaction(currentUser.id, {
+        description: `Transferência para ${to}`,
+        amount: value,
+        type: 'transfer',
+        category: from,
+        date: today,
+      });
+      const inTx = await dbService.addTransaction(currentUser.id, {
+        description: `Transferência de ${from}`,
+        amount: value,
+        type: 'transfer',
+        category: to,
+        date: today,
+      });
+      const both = [outTx, inTx].filter(Boolean);
+      if (both.length) setTransactions(prev => [...both, ...prev]);
+      setActiveTab('home');
+    } catch (err) {
+      console.error('❌ Transfer error:', err);
+      alert('Erro ao criar transferência: ' + err.message);
+    }
+  };
+
   // Called by ImportTab after saving to DB — prepends the new rows immediately
   // so Home and Stats update without waiting for a full reload.
   const handleImport = (savedTransactions) => {
@@ -364,6 +394,7 @@ const App = () => {
             user={currentUser}
             categories={categoriesProfessional}
             onTransactionAdded={handleAddTransaction}
+            onTransfer={handleTransfer}
             theme={theme}
           />
         )}

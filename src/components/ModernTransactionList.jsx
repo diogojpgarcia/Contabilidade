@@ -100,9 +100,10 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
           <div className="ft-group-label">{label}</div>
 
           {items.map((tx) => {
-            const isExpanded = expandedId === tx.id;
-            const isIncome   = tx.type === 'income';
-            const icon       = getIcon(tx.category, tx.type);
+            const isExpanded   = expandedId === tx.id;
+            const isTransfer   = tx.type === 'transfer';
+            const isIncome     = tx.type === 'income';
+            const icon         = getIcon(tx.category, tx.type);
 
             return (
               <div key={tx.id}>
@@ -117,11 +118,16 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
 
                   <div className="ft-center">
                     <span className="ft-title">{tx.description || tx.category}</span>
-                    <span className="ft-sub">{tx.category}</span>
+                    <span className="ft-sub">
+                      {isTransfer
+                        ? <span style={{ fontSize: '0.7rem', background: 'var(--accent, #6366f1)', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>↕ Transferência</span>
+                        : tx.category}
+                    </span>
                   </div>
 
-                  <span className={`ft-amount ${isIncome ? 'income' : 'expense'}`}>
-                    {isIncome ? '+' : '−'}{parseFloat(tx.amount).toFixed(2)}€
+                  <span className={`ft-amount ${isTransfer ? 'transfer' : (isIncome ? 'income' : 'expense')}`}
+                        style={isTransfer ? { color: 'var(--accent, #6366f1)' } : undefined}>
+                    {isTransfer ? '↕ ' : (isIncome ? '+' : '−')}{parseFloat(tx.amount).toFixed(2)}€
                   </span>
                 </div>
 
