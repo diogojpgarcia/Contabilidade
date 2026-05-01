@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
+import { useForm } from '../../hooks/useForm';
 import './ProfileTab.css';
 
 const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
-  const [showDeleteHistory, setShowDeleteHistory]     = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText]     = useState('');
-  const [deleteStatus, setDeleteStatus]               = useState('');
-  const [deleting, setDeleting]                       = useState(false);
+  const [showDeleteHistory, setShowDeleteHistory] = useState(false);
+  const [deleteStatus, setDeleteStatus]           = useState('');
+  const [deleting, setDeleting]                   = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [colorTheme, setColorTheme] = useState('dark');
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetStatus, setResetStatus] = useState('');
+  const [colorTheme, setColorTheme]               = useState('dark');
+  const [resetStatus, setResetStatus]             = useState('');
+
+  // Modal form drafts — onChange → local only; DB/auth called on submit
+  const { draft: deleteDraft, setField: setDeleteField, reset: resetDeleteDraft } = useForm({ confirmText: '' });
+  const { draft: resetDraft,  setField: setResetField,  reset: resetResetDraft  } = useForm({ email: '' });
 
   useEffect(() => {
     loadUserPreferences();
@@ -43,18 +46,17 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   };
 
   const handleResetPassword = async () => {
-    if (!resetEmail) {
+    if (!resetDraft.email) {
       setResetStatus('Por favor insere o teu email');
       return;
     }
-
     try {
-      await authService.resetPassword(resetEmail);
+      await authService.resetPassword(resetDraft.email);
       setResetStatus('✓ Email de recuperação enviado! Verifica a tua caixa de entrada.');
       setTimeout(() => {
         setShowResetPassword(false);
         setResetStatus('');
-        setResetEmail('');
+        resetResetDraft({ email: '' });
       }, 3000);
     } catch (error) {
       setResetStatus('Erro ao enviar email: ' + error.message);
@@ -73,11 +75,11 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       )}
 
       {showDeleteHistory && (
-        <div className="modal-overlay" onClick={() => { setShowDeleteHistory(false); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
+        <div className="modal-overlay" onClick={() => { setShowDeleteHistory(false); resetDeleteDraft({ confirmText: '' }); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
           <div className="modal-content delete-history-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Apagar Todos os Dados</h3>
-              <button className="btn-close" onClick={() => { setShowDeleteHistory(false); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
+              <button className="btn-close" onClick={() => { setShowDeleteHistory(false); resetDeleteDraft({ confirmText: '' }); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
                 <span className="sf-icon">✕</span>
               </button>
             </div>
@@ -85,9 +87,18 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
               <div className="delete-warning-icon">🗑</div>
               <p className="modal-description delete-warning-text">Esta ação é <strong>irreversível</strong>. Todas as transações, categorias, orçamentos e configurações serão apagados permanentemente.</p>
               <p className="delete-confirm-label">Escreve <strong>APAGAR</strong> para confirmar</p>
-              <input type="text" placeholder="APAGAR" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} className="input-field" autoCapitalize="characters" />
+              <input
+                type="text"
+                placeholder="APAGAR"
+                value={deleteDraft.confirmText}
+                onChange={(e) => setDeleteField('confirmText', e.target.value)}
+                className="input-field"
+                autoCapitalize="characters"
+              />
               {deleteStatus && <p className={`status-message ${deleteStatus.includes('✓') ? 'success' : 'error'}`}>{deleteStatus}</p>}
-              <button className="btn-danger full-width" disabled={deleteConfirmText.trim().toUpperCase() !== 'APAGAR' || deleting}
+              <button
+                className="btn-danger full-width"
+                disabled={deleteDraft.confirmText.trim().toUpperCase() !== 'APAGAR' || deleting}
                 onClick={async () => {
                   setDeleting(true);
                   try {
@@ -95,8 +106,17 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
                     deleteSucceededRef.current = true;
                     if (onDataDeleted) onDataDeleted();
                     setDeleteStatus('✓ Todos os dados apagados.');
-                    setTimeout(() => { deleteSucceededRef.current = false; setShowDeleteHistory(false); setDeleteConfirmText(''); setDeleteStatus(''); }, 1400);
-                  } catch (err) { setDeleteStatus('Erro: ' + err.message); } finally { setDeleting(false); }
+                    setTimeout(() => {
+                      deleteSucceededRef.current = false;
+                      setShowDeleteHistory(false);
+                      resetDeleteDraft({ confirmText: '' });
+                      setDeleteStatus('');
+                    }, 1400);
+                  } catch (err) {
+                    setDeleteStatus('Erro: ' + err.message);
+                  } finally {
+                    setDeleting(false);
+                  }
                 }}
               >{deleting ? 'A apagar…' : 'Apagar tudo'}</button>
             </div>
@@ -105,15 +125,23 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       )}
 
       {showResetPassword && (
-        <div className="modal-overlay" onClick={() => setShowResetPassword(false)}>
+        <div className="modal-overlay" onClick={() => { setShowResetPassword(false); resetResetDraft({ email: '' }); setResetStatus(''); }}>
           <div className="modal-content reset-password-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Alterar Password</h3>
-              <button className="btn-close" onClick={() => setShowResetPassword(false)}><span className="sf-icon">✕</span></button>
+              <button className="btn-close" onClick={() => { setShowResetPassword(false); resetResetDraft({ email: '' }); setResetStatus(''); }}>
+                <span className="sf-icon">✕</span>
+              </button>
             </div>
             <div className="modal-body">
               <p className="modal-description">Vamos enviar um link de recuperação para o teu email</p>
-              <input type="email" placeholder="Email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} className="input-field" />
+              <input
+                type="email"
+                placeholder="Email"
+                value={resetDraft.email}
+                onChange={(e) => setResetField('email', e.target.value)}
+                className="input-field"
+              />
               {resetStatus && <p className={`status-message ${resetStatus.includes('✓') ? 'success' : 'error'}`}>{resetStatus}</p>}
               <button className="btn-primary full-width" onClick={handleResetPassword}>Enviar Link</button>
             </div>
@@ -192,7 +220,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
               <span className="m-menu-text">Alterar Password</span>
               <span className="m-menu-arrow">›</span>
             </button>
-            <button className="m-menu-item danger" onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); setDeleteConfirmText(''); setDeleteStatus(''); }}>
+            <button className="m-menu-item danger" onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}>
               <span className="m-menu-icon">🗑</span>
               <span className="m-menu-text">Apagar Todos os Dados</span>
               <span className="m-menu-arrow">›</span>
@@ -309,7 +337,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
 
         <button
           className="profile-option danger"
-          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); setDeleteConfirmText(''); setDeleteStatus(''); }}
+          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
         >
           <span className="option-icon-sf">🗑</span>
           <span className="option-label">Apagar Todos os Dados</span>

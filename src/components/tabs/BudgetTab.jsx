@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
+import { useForm } from '../../hooks/useForm';
 import './BudgetTab.css';
 
 const CATEGORY_ICONS = {
@@ -17,16 +18,39 @@ const PATRIMONY_TYPES = [
 ];
 
 const EMPTY_PATRIMONY = { accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] };
+const EMPTY_GOAL      = { name: '', amount: '', targetDate: '', currentSavings: '' };
+
+/**
+ * Isolated input so the goal-savings field has its own draft.
+ * onChange → local draft only.  onBlur → parent save (touches DB).
+ */
+const GoalSavingsInput = ({ goal, onSave, className }) => {
+  const { draft, setField } = useForm({ currentSavings: goal.currentSavings ?? 0 });
+  return (
+    <input
+      type="number"
+      className={className}
+      value={draft.currentSavings || ''}
+      onChange={(e) => setField('currentSavings', e.target.value)}
+      onBlur={() => onSave(goal.id, parseFloat(draft.currentSavings) || 0)}
+      step="10"
+      min="0"
+      placeholder="0"
+    />
+  );
+};
 
 const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
-  const [budgets, setBudgets] = useState({});
-  const [activeView, setActiveView] = useState('budgets');
-  const [goals, setGoals] = useState([]);
-  const [editingGoalId, setEditingGoalId] = useState(null);
-  const [newGoal, setNewGoal] = useState({ name: '', amount: 0, targetDate: '', currentSavings: 0 });
+  // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
+  const { draft: budgets,      setField: setBudgetField,    reset: resetBudgets,     save: saveBudgetsForm } = useForm({});
+  const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
+  const { draft: patrimonyForm, setField: setPatrimonyField, reset: resetPatrimonyForm                     } = useForm({});
+
+  const [activeView,        setActiveView]        = useState('budgets');
+  const [goals,             setGoals]             = useState([]);
+  const [editingGoalId,     setEditingGoalId]     = useState(null);
   const [showPatrimonyModal, setShowPatrimonyModal] = useState(false);
   const [patrimonyFormType, setPatrimonyFormType] = useState(null);
-  const [patrimonyForm, setPatrimonyForm] = useState({});
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
@@ -40,15 +64,16 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const loadData = async () => {
     try {
       const settings = await dbService.getUserSettings(user.id);
-      if (settings?.category_budgets) setBudgets(settings.category_budgets);
+      if (settings?.category_budgets) resetBudgets(settings.category_budgets);
       if (settings?.goals) setGoals(settings.goals);
     } catch (error) { console.error('Error loading data:', error); }
   };
 
-  const saveBudgetToDb = async () => {
-    try {
-      await dbService.updateUserSettings(user.id, { category_budgets: budgets });
-    } catch (error) { console.error('Error:', error); alert('Erro ao guardar'); }
+  const saveBudgetToDb = () => {
+    saveBudgetsForm((current) => {
+      dbService.updateUserSettings(user.id, { category_budgets: current })
+        .catch(err => { console.error('Error saving budgets:', err); alert('Erro ao guardar'); });
+    });
   };
 
   const saveGoals = async (updatedGoals) => {
@@ -60,12 +85,18 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
 
   const handleAddGoal = () => {
     if (!newGoal.name || !newGoal.amount) { alert('Preenche nome e valor'); return; }
-    const goal = { id: Date.now().toString(), ...newGoal, amount: parseFloat(newGoal.amount), currentSavings: parseFloat(newGoal.currentSavings) || 0 };
+    const goal = {
+      id: Date.now().toString(),
+      ...newGoal,
+      amount: parseFloat(newGoal.amount),
+      currentSavings: parseFloat(newGoal.currentSavings) || 0,
+    };
     saveGoals([...goals, goal]);
-    setNewGoal({ name: '', amount: 0, targetDate: '', currentSavings: 0 });
+    resetGoal(EMPTY_GOAL);
   };
 
-  const handleUpdateGoalSavings = async (goalId, value) => {
+  // Called only from GoalSavingsInput.onBlur — never from onChange.
+  const handleUpdateGoalSavings = (goalId, value) => {
     saveGoals(goals.map(g => g.id === goalId ? { ...g, currentSavings: parseFloat(value) || 0 } : g));
   };
 
@@ -74,8 +105,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
     saveGoals(goals.filter(g => g.id !== goalId));
   };
 
+  // onChange → local draft only.  DB save happens via saveBudgetToDb button / Enter.
   const handleLimitChange = (categoryId, value) => {
-    setBudgets(prev => ({ ...prev, [categoryId]: parseFloat(value) || 0 }));
+    setBudgetField(categoryId, parseFloat(value) || 0);
   };
 
   const getSpentByCategory = (categoryId) => {
@@ -110,7 +142,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
     const item = { id, ...patrimonyForm };
     const updated = { ...patrimony, [patrimonyFormType]: [...(patrimony[patrimonyFormType] || []), item] };
     onPatrimonyChange && onPatrimonyChange(updated);
-    setPatrimonyForm({});
+    resetPatrimonyForm({});
     setPatrimonyFormType(null);
     setShowPatrimonyModal(false);
   };
@@ -136,26 +168,26 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   };
 
   const renderPatrimonyForm = () => {
-    const f = patrimonyForm;
-    const set = (k, v) => setPatrimonyForm(prev => ({ ...prev, [k]: v }));
+    const f   = patrimonyForm;                           // draft from useForm
+    const set = (k, v) => setPatrimonyField(k, v);      // onChange → local draft only
     const cls = 'patrimony-input';
     switch (patrimonyFormType) {
       case 'accounts':
         return (<>
-          <input className={cls} placeholder="Nome da conta" value={f.name || ''} onChange={e => set('name', e.target.value)} />
-          <input className={cls} placeholder="Banco (opcional)" value={f.bank || ''} onChange={e => set('bank', e.target.value)} />
+          <input className={cls} placeholder="Nome da conta"    value={f.name    || ''} onChange={e => set('name',    e.target.value)} />
+          <input className={cls} placeholder="Banco (opcional)" value={f.bank    || ''} onChange={e => set('bank',    e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Saldo (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
         </>);
       case 'stocks':
         return (<>
-          <input className={cls} placeholder="Ticker (ex: AAPL)" value={f.ticker || ''} onChange={e => set('ticker', e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade" value={f.qty || ''} onChange={e => set('qty', e.target.value)} />
+          <input className={cls} placeholder="Ticker (ex: AAPL)"  value={f.ticker   || ''} onChange={e => set('ticker',   e.target.value)} />
+          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"     value={f.qty      || ''} onChange={e => set('qty',      e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Preço médio (€)" value={f.avgPrice || ''} onChange={e => set('avgPrice', e.target.value)} />
         </>);
       case 'bonds':
         return (<>
-          <input className={cls} placeholder="Série (ex: E)" value={f.series || ''} onChange={e => set('series', e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Valor actual (€)" value={f.value || ''} onChange={e => set('value', e.target.value)} />
+          <input className={cls} placeholder="Série (ex: E)"       value={f.series || ''} onChange={e => set('series', e.target.value)} />
+          <input className={cls} type="number" inputMode="decimal" placeholder="Valor actual (€)" value={f.value  || ''} onChange={e => set('value',  e.target.value)} />
           <input className={cls} type="date" value={f.date || ''} onChange={e => set('date', e.target.value)} />
         </>);
       case 'realestate':
@@ -170,8 +202,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
         </>);
       case 'crypto':
         return (<>
-          <input className={cls} placeholder="Moeda (ex: BTC)" value={f.coin || ''} onChange={e => set('coin', e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade" value={f.qty || ''} onChange={e => set('qty', e.target.value)} />
+          <input className={cls} placeholder="Moeda (ex: BTC)" value={f.coin  || ''} onChange={e => set('coin',  e.target.value)} />
+          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"       value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Preço unitário (€)" value={f.price || ''} onChange={e => set('price', e.target.value)} />
         </>);
       default: return null;
@@ -182,17 +214,20 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const Modals = () => (
     <>
       {editingGoalId && (
-        <div className="modal-overlay" onClick={() => setEditingGoalId(null)}>
+        <div className="modal-overlay" onClick={() => { setEditingGoalId(null); resetGoal(EMPTY_GOAL); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>Novo Objetivo</h4>
-              <button className="modal-close" onClick={() => setEditingGoalId(null)}>×</button>
+              <button className="modal-close" onClick={() => { setEditingGoalId(null); resetGoal(EMPTY_GOAL); }}>×</button>
             </div>
             <div className="goal-form">
-              <input type="text" className="goal-input" placeholder="Nome do objetivo" value={newGoal.name} onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })} />
-              <input type="number" className="goal-input" placeholder="Valor (€)" value={newGoal.amount || ''} onChange={(e) => setNewGoal({ ...newGoal, amount: e.target.value })} />
+              <input type="text"   className="goal-input" placeholder="Nome do objetivo"
+                value={newGoal.name}       onChange={(e) => setGoalField('name',       e.target.value)} />
+              <input type="number" className="goal-input" placeholder="Valor (€)"
+                value={newGoal.amount || ''} onChange={(e) => setGoalField('amount',     e.target.value)} />
               <div className="date-input-wrapper">
-                <input type="date" className="goal-input date-input" value={newGoal.targetDate} onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })} />
+                <input type="date" className="goal-input date-input"
+                  value={newGoal.targetDate} onChange={(e) => setGoalField('targetDate', e.target.value)} />
                 <span className="calendar-icon">◷</span>
               </div>
               <button className="btn-add-goal" onClick={() => { handleAddGoal(); setEditingGoalId(null); }}>Adicionar</button>
@@ -202,16 +237,16 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
       )}
 
       {showPatrimonyModal && (
-        <div className="modal-overlay" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); setPatrimonyForm({}); }}>
+        <div className="modal-overlay" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>{patrimonyFormType ? PATRIMONY_TYPES.find(t => t.key === patrimonyFormType)?.label : 'Adicionar Activo'}</h4>
-              <button className="modal-close" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); setPatrimonyForm({}); }}>×</button>
+              <button className="modal-close" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); }}>×</button>
             </div>
             {!patrimonyFormType ? (
               <div className="patrimony-type-selector">
                 {PATRIMONY_TYPES.map(({ key, label, icon, color }) => (
-                  <button key={key} className="patrimony-type-btn" onClick={() => setPatrimonyFormType(key)}>
+                  <button key={key} className="patrimony-type-btn" onClick={() => { setPatrimonyFormType(key); resetPatrimonyForm({}); }}>
                     <span style={{ color, fontSize: '1.5rem' }}>{icon}</span>
                     <span>{label}</span>
                   </button>
@@ -221,7 +256,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
               <div className="patrimony-form">
                 {renderPatrimonyForm()}
                 <div className="patrimony-form-actions">
-                  <button className="btn-patrimony-back" onClick={() => { setPatrimonyFormType(null); setPatrimonyForm({}); }}>← Voltar</button>
+                  <button className="btn-patrimony-back" onClick={() => { setPatrimonyFormType(null); resetPatrimonyForm({}); }}>← Voltar</button>
                   <button className="btn-add-patrimony" onClick={handlePatrimonyAdd}>Adicionar</button>
                 </div>
               </div>
@@ -325,12 +360,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                     </div>
                     <div className="m-goal-input-row">
                       <span className="m-goal-input-label">Poupado</span>
-                      <input
-                        type="number"
+                      <GoalSavingsInput
+                        key={goal.id}
+                        goal={goal}
+                        onSave={handleUpdateGoalSavings}
                         className="m-goal-savings-input"
-                        value={goal.currentSavings || ''}
-                        onChange={(e) => handleUpdateGoalSavings(goal.id, e.target.value)}
-                        step="10" min="0" placeholder="0"
                       />
                       <span className="m-budget-unit">€</span>
                     </div>
@@ -495,7 +529,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                     <div className="savings-input-row">
                       <label>Poupado</label>
                       <div className="input-group">
-                        <input type="number" value={goal.currentSavings || ''} onChange={(e) => handleUpdateGoalSavings(goal.id, e.target.value)} step="10" min="0" placeholder="0" />
+                        <GoalSavingsInput
+                          key={goal.id}
+                          goal={goal}
+                          onSave={handleUpdateGoalSavings}
+                        />
                         <span>€</span>
                       </div>
                     </div>
