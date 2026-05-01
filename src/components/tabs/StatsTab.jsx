@@ -12,6 +12,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [deleting, setDeleting] = useState(null);
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
+  const [historyView, setHistoryView] = useState('daily'); // 'daily' | 'patrimony'
 
   // Complete icon mapping for all categories
   const getCategoryIcon = (categoryName) => {
@@ -174,6 +175,15 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   // Derived from filteredTransactions (already filtered by currentMonth in App)
   const categoryData      = useMemo(() => computeExpensesByCategory(filteredTransactions),  [filteredTransactions]);
   const monthTransactions = useMemo(() => computeMonthTransactions(filteredTransactions),   [filteredTransactions, filterDate]);
+  // Further filter the log list by historyView (daily = expense+income, patrimony = transfer+adjustment)
+  const visibleTransactions = useMemo(() =>
+    monthTransactions.filter(t =>
+      historyView === 'daily'
+        ? (t.type === 'expense' || t.type === 'income' || !t.type)
+        : (t.type === 'transfer' || t.type === 'adjustment')
+    ),
+    [monthTransactions, historyView]
+  );
   // 6-month chart still needs all transactions so it can look at past months
   const monthlyData       = useMemo(() => getMonthlyData(),                                 [transactions, currentMonth]);
   const maxAmount         = useMemo(
@@ -281,23 +291,49 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               {filterDate && (
                 <button className="m-clear-btn" onClick={() => setFilterDate('')}>×</button>
               )}
+              <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
+                <button
+                  onClick={() => setHistoryView('daily')}
+                  style={{
+                    padding: '4px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                    fontSize: '0.75rem', fontWeight: 600,
+                    background: historyView === 'daily' ? 'var(--accent, #6366f1)' : 'var(--surface-2, #f0f0f5)',
+                    color:      historyView === 'daily' ? '#fff' : 'var(--text-secondary, #666)',
+                  }}
+                  title="Transações diárias"
+                >💳 Diário</button>
+                <button
+                  onClick={() => setHistoryView('patrimony')}
+                  style={{
+                    padding: '4px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                    fontSize: '0.75rem', fontWeight: 600,
+                    background: historyView === 'patrimony' ? 'var(--accent, #6366f1)' : 'var(--surface-2, #f0f0f5)',
+                    color:      historyView === 'patrimony' ? '#fff' : 'var(--text-secondary, #666)',
+                  }}
+                  title="Transferências e ajustes"
+                >🔁 Património</button>
+              </div>
             </div>
 
             <div className="m-tx-list">
-              {monthTransactions.length === 0 ? (
-                <div className="m-empty">{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</div>
+              {visibleTransactions.length === 0 ? (
+                <div className="m-empty">
+                  {filterDate
+                    ? 'Sem transações neste dia'
+                    : historyView === 'patrimony' ? 'Sem transferências este mês' : 'Sem transações neste mês'}
+                </div>
               ) : (
                 <ModernTransactionList
-                  transactions={monthTransactions}
+                  transactions={visibleTransactions}
                   onCategoryChange={onCategoryChange}
                   onTransactionDeleted={onTransactionDeleted}
                 />
               )}
             </div>
 
-            {monthTransactions.length > 0 && (() => {
-              const logIncome   = monthTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
-              const logExpenses = monthTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+            {visibleTransactions.length > 0 && (() => {
+              const logIncome   = visibleTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
+              const logExpenses = visibleTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
               const logBalance  = logIncome - logExpenses;
               return (
                 <div className="m-log-summary">
@@ -480,17 +516,27 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 <span className="calendar-icon">◷</span>
               </div>
               {filterDate && (
-                <button 
+                <button
                   className="clear-filter-btn"
                   onClick={() => setFilterDate('')}
                   title="Limpar filtro"
-                >
-                  ×
-                </button>
+                >×</button>
               )}
+              <button
+                onClick={() => setHistoryView('daily')}
+                className={`today-btn-compact${historyView === 'daily' ? ' active' : ''}`}
+                title="Transações diárias"
+                style={{ marginLeft: '6px', background: historyView === 'daily' ? '#6366f1' : undefined, color: historyView === 'daily' ? '#fff' : undefined }}
+              >💳</button>
+              <button
+                onClick={() => setHistoryView('patrimony')}
+                className={`today-btn-compact${historyView === 'patrimony' ? ' active' : ''}`}
+                title="Transferências e ajustes"
+                style={{ background: historyView === 'patrimony' ? '#6366f1' : undefined, color: historyView === 'patrimony' ? '#fff' : undefined }}
+              >🔁</button>
             </div>
           </div>
-          {monthTransactions.length === 0 ? (
+          {visibleTransactions.length === 0 ? (
             <div className="empty-state">
               <span className="sf-icon-large">◌</span>
               <p>{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</p>
@@ -498,7 +544,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           ) : theme === 'modern' ? (
             /* ── Modern expandable cards ── */
             <div className="modern-tx-list">
-              {monthTransactions.map((tx) => {
+              {visibleTransactions.map((tx) => {
                 const isExpanded = expandedId === tx.id;
                 return (
                   <div
@@ -543,7 +589,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           ) : (
             /* ── Default list ── */
             <div className="transactions-list">
-              {monthTransactions.map((transaction, index) => (
+              {visibleTransactions.map((transaction, index) => (
                 <div
                   key={transaction.id || index}
                   className={`transaction-item ${transaction.type}`}
@@ -588,12 +634,12 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           )}
           
           {/* Summary at bottom */}
-          {monthTransactions.length > 0 && (
+          {visibleTransactions.length > 0 && (
             <div className="log-summary">
               <div className="summary-row">
                 <span className="summary-label">Total Receitas</span>
                 <span className="summary-value income">
-                  +{monthTransactions
+                  +{visibleTransactions
                     .filter(t => t.type === 'income')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0)
                     .toFixed(2)}€
@@ -602,7 +648,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               <div className="summary-row">
                 <span className="summary-label">Total Despesas</span>
                 <span className="summary-value expense">
-                  -{monthTransactions
+                  -{visibleTransactions
                     .filter(t => t.type === 'expense')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0)
                     .toFixed(2)}€
@@ -611,19 +657,19 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               <div className="summary-row total">
                 <span className="summary-label">Saldo</span>
                 <span className={`summary-value ${
-                  monthTransactions
+                  visibleTransactions
                     .filter(t => t.type === 'income')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0) -
-                  monthTransactions
+                  visibleTransactions
                     .filter(t => t.type === 'expense')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0) >= 0
                     ? 'income'
                     : 'expense'
                 }`}>
-                  {(monthTransactions
+                  {(visibleTransactions
                     .filter(t => t.type === 'income')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0) -
-                  monthTransactions
+                  visibleTransactions
                     .filter(t => t.type === 'expense')
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0)).toFixed(2)}€
                 </span>
