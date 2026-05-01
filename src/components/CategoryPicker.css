@@ -50,8 +50,8 @@
   background: var(--border-color, #3a3a3c);
   border: none;
   color: var(--text-secondary, #aaa);
-  width: 28px;
-  height: 28px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   font-size: 1rem;
   line-height: 1;
@@ -59,6 +59,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 10px;
+  flex-shrink: 0;
 }
 
 .cp-search {
@@ -87,6 +89,7 @@
   display: flex;
   align-items: center;
   width: 100%;
+  min-height: 44px;
   padding: 11px 12px;
   background: transparent;
   border: none;

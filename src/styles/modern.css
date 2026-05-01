@@ -145,13 +145,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 17px;
+  font-size: clamp(14px, 2.5vw, 16px);
   line-height: 1.47;
   letter-spacing: -0.022em;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  height: 100%;
+  overflow-x: hidden;
+  min-height: 100%;
+  min-height: 100dvh;
   /* PWA fullscreen support */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -165,10 +166,13 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
   background: var(--bg-primary);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Loading Screen */
@@ -367,6 +371,7 @@ body {
 
 /* Buttons - iOS style */
 .btn {
+  min-height: 44px;
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
   font-size: 1.0625rem;
@@ -496,10 +501,12 @@ input::placeholder {
   }
 }
 
-/* App Layout - Fixed Height for Tab Content */
+/* App Layout - Scrollable Tab Content */
 .main-content-new {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   max-width: 600px;
@@ -511,7 +518,7 @@ input::placeholder {
 .main-content-new > div {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */

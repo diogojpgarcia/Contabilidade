@@ -106,6 +106,7 @@
 
 .bum-btn {
   flex: 1;
+  min-height: 44px;
   padding: 13px 16px;
   border: none;
   border-radius: 12px;
