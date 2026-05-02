@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
 import './AddTab.css';
 
-const AddTab = ({ user, categories, onTransactionAdded, onTransfer, theme = 'default' }) => {
+const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, theme = 'default' }) => {
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -13,6 +13,8 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, theme = 'def
   const [selectedGoal, setSelectedGoal] = useState('');
   const [transferFrom, setTransferFrom] = useState('');
   const [transferTo, setTransferTo]     = useState('');
+
+  const accounts = (patrimony?.accounts || []);
 
   useEffect(() => { loadGoals(); }, [user]);
 
@@ -42,15 +44,23 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, theme = 'def
     if (!amount) { alert('Preenche o valor!'); return; }
     if (type === 'goal' && !selectedGoal) { alert('Seleciona um objetivo!'); return; }
     if (type !== 'goal' && type !== 'transfer' && !category) { alert('Seleciona uma categoria!'); return; }
-    if (type === 'transfer' && (!transferFrom.trim() || !transferTo.trim())) { alert('Preenche origem e destino!'); return; }
+    if (type === 'transfer' && (!transferFrom || !transferTo)) { alert('Seleciona origem e destino!'); return; }
 
     const amountValue = parseFloat(amount);
     if (isNaN(amountValue) || amountValue <= 0) { alert('Valor inválido!'); return; }
 
+    if (type === 'transfer') {
+      const fromAcc = accounts.find(a => a.id === transferFrom);
+      if (fromAcc && amountValue > (parseFloat(fromAcc.balance) || 0)) {
+        alert(`Saldo insuficiente. Disponível: ${(parseFloat(fromAcc.balance) || 0).toFixed(2)}€`);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       if (type === 'transfer') {
-        if (onTransfer) await onTransfer(transferFrom.trim(), transferTo.trim(), amountValue);
+        if (onTransfer) await onTransfer(transferFrom, transferTo, amountValue);
         setAmount(''); setTransferFrom(''); setTransferTo('');
         setDate(new Date().toISOString().split('T')[0]);
       } else if (type === 'goal') {
@@ -122,11 +132,31 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, theme = 'def
             <>
               <div className="m-field-card">
                 <span className="m-field-label">Conta de origem</span>
-                <input type="text" className="m-field-input" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} placeholder="Ex: Conta Corrente" maxLength={50} />
+                {accounts.length === 0 ? (
+                  <span className="m-helper">Sem contas. Adiciona uma em Budget → Património.</span>
+                ) : (
+                  <select className="m-field-select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
+                    <option value="">Seleciona conta de origem</option>
+                    {accounts.map(a => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="m-field-card">
                 <span className="m-field-label">Conta de destino</span>
-                <input type="text" className="m-field-input" value={transferTo} onChange={(e) => setTransferTo(e.target.value)} placeholder="Ex: Poupança" maxLength={50} />
+                {accounts.length === 0 ? null : (
+                  <select className="m-field-select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
+                    <option value="">Seleciona conta de destino</option>
+                    {accounts.filter(a => a.id !== transferFrom).map(a => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}{a.bank ? ` · ${a.bank}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </>
           )}
@@ -236,11 +266,31 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, theme = 'def
           <>
             <div className="form-field">
               <label>Conta de origem</label>
-              <input type="text" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} placeholder="Ex: Conta Corrente" maxLength={50} className="text-input" />
+              {accounts.length === 0 ? (
+                <p className="helper-text">Sem contas. Adiciona uma em Budget → Património.</p>
+              ) : (
+                <select value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} className="category-select">
+                  <option value="">Seleciona conta de origem</option>
+                  {accounts.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="form-field">
               <label>Conta de destino</label>
-              <input type="text" value={transferTo} onChange={(e) => setTransferTo(e.target.value)} placeholder="Ex: Poupança" maxLength={50} className="text-input" />
+              {accounts.length === 0 ? null : (
+                <select value={transferTo} onChange={(e) => setTransferTo(e.target.value)} className="category-select">
+                  <option value="">Seleciona conta de destino</option>
+                  {accounts.filter(a => a.id !== transferFrom).map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}{a.bank ? ` · ${a.bank}` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </>
         )}

@@ -254,28 +254,47 @@ const App = () => {
     }
   };
 
-  // Creates a matched pair of transfer transactions (out + in) and prepends both.
-  const handleTransfer = async (from, to, amount) => {
+  // Creates a matched pair of transfer transactions (out + in), prepends both,
+  // and updates patrimony account balances so the patrimony view stays in sync.
+  const handleTransfer = async (fromId, toId, amount) => {
     const value = parseFloat(amount);
     if (!value || value <= 0) return;
     const today = new Date().toISOString().split('T')[0];
+    // Resolve IDs → names for human-readable descriptions
+    const accs     = patrimony.accounts || [];
+    const fromAcc  = accs.find(a => a.id === fromId);
+    const toAcc    = accs.find(a => a.id === toId);
+    const fromName = fromAcc?.name || fromId;
+    const toName   = toAcc?.name   || toId;
     try {
       const outTx = await dbService.addTransaction(currentUser.id, {
-        description: `Transferência para ${to}`,
+        description: `Transferência para ${toName}`,
         amount: value,
         type: 'transfer',
-        category: from,
+        category: fromName,
         date: today,
       });
       const inTx = await dbService.addTransaction(currentUser.id, {
-        description: `Transferência de ${from}`,
+        description: `Transferência de ${fromName}`,
         amount: value,
         type: 'transfer',
-        category: to,
+        category: toName,
         date: today,
       });
       const both = [outTx, inTx].filter(Boolean);
       if (both.length) setTransactions(prev => [...both, ...prev]);
+      // Update patrimony account balances
+      if (fromAcc || toAcc) {
+        const updatedPatrimony = {
+          ...patrimony,
+          accounts: accs.map(a => {
+            if (a.id === fromId) return { ...a, balance: String(((parseFloat(a.balance) || 0) - value).toFixed(2)) };
+            if (a.id === toId)   return { ...a, balance: String(((parseFloat(a.balance) || 0) + value).toFixed(2)) };
+            return a;
+          }),
+        };
+        handlePatrimonyChange(updatedPatrimony);
+      }
       setActiveTab('home');
     } catch (err) {
       console.error('❌ Transfer error:', err);
@@ -395,6 +414,7 @@ const App = () => {
             categories={categoriesProfessional}
             onTransactionAdded={handleAddTransaction}
             onTransfer={handleTransfer}
+            patrimony={patrimony}
             theme={theme}
           />
         )}

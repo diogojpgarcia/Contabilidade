@@ -52,11 +52,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const [editingGoalId,       setEditingGoalId]       = useState(null);
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
-  const [showTransferModal,   setShowTransferModal]   = useState(false);
-  const [transferFrom,        setTransferFrom]        = useState('');
-  const [transferTo,          setTransferTo]          = useState('');
-  const [transferAmount,      setTransferAmount]      = useState('');
-  const [transferStatus,      setTransferStatus]      = useState('');
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
@@ -153,36 +148,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
     setShowPatrimonyModal(false);
   };
 
-  // ── Transfer between bank accounts ────────────────────────────────────────
-  const openTransferModal = () => {
-    const accs = patrimony.accounts || [];
-    setTransferFrom(accs[0]?.id || '');
-    setTransferTo(accs[1]?.id || '');
-    setTransferAmount('');
-    setTransferStatus('');
-    setShowTransferModal(true);
-  };
-
-  const handleTransfer = () => {
-    const accs = patrimony.accounts || [];
-    const amt  = parseFloat(transferAmount);
-    const updated = {
-      ...patrimony,
-      accounts: accs.map(a => {
-        if (a.id === transferFrom) return { ...a, balance: String(((parseFloat(a.balance) || 0) - amt).toFixed(2)) };
-        if (a.id === transferTo)   return { ...a, balance: String(((parseFloat(a.balance) || 0) + amt).toFixed(2)) };
-        return a;
-      }),
-    };
-    onPatrimonyChange && onPatrimonyChange(updated);
-    setTransferStatus('✓ Transferência realizada');
-    setTimeout(() => {
-      setShowTransferModal(false);
-      setTransferAmount('');
-      setTransferStatus('');
-    }, 1400);
-  };
-
   const renderPatrimonyItemValue = (typeKey, item) => {
     if (typeKey === 'accounts')   return `${parseFloat(item.balance || 0).toFixed(2)}€`;
     if (typeKey === 'stocks')     return `${item.qty}×${parseFloat(item.avgPrice || 0).toFixed(2)}€ = ${(parseFloat(item.qty || 0) * parseFloat(item.avgPrice || 0)).toFixed(2)}€`;
@@ -250,15 +215,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
      Defining a component inside a component gives it a new type every render
      → React unmounts+remounts the subtree → inputs lose focus.            */
   const renderModals = () => {
-    // Transfer validation — computed once per render, used inside the modal
-    const trAccs      = patrimony.accounts || [];
-    const trFromAcc   = trAccs.find(a => a.id === transferFrom);
-    const trFromBal   = parseFloat(trFromAcc?.balance) || 0;
-    const trAmt       = parseFloat(transferAmount) || 0;
-    const trValid     = trAmt > 0.01 && trAmt <= trFromBal
-                     && transferFrom && transferTo && transferFrom !== transferTo;
-    const closeTransfer = () => { setShowTransferModal(false); setTransferAmount(''); setTransferStatus(''); };
-
     return (
     <>
       {editingGoalId && (
@@ -313,85 +269,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
         </Overlay>
       )}
 
-      {showTransferModal && (
-        <Overlay onClose={closeTransfer}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h4>Transferir</h4>
-              <button className="modal-close" onClick={closeTransfer}>×</button>
-            </div>
-
-            {trAccs.length < 2 ? (
-              <p className="tr-empty">Adiciona pelo menos 2 contas bancárias para transferir.</p>
-            ) : (<>
-              {/* FROM */}
-              <span className="tr-label">De</span>
-              <div className="tr-cards">
-                {trAccs.map(acc => (
-                  <button
-                    key={acc.id}
-                    className={`tr-card ${transferFrom === acc.id ? 'tr-card--sel' : ''}`}
-                    onClick={() => setTransferFrom(acc.id)}
-                  >
-                    <span className="tr-card-name">{acc.name}{acc.bank ? ` · ${acc.bank}` : ''}</span>
-                    <span className="tr-card-bal">{parseFloat(acc.balance || 0).toFixed(2)}€</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* SWAP */}
-              <div className="tr-swap-row">
-                <button
-                  className="tr-swap-btn"
-                  onClick={() => { const t = transferFrom; setTransferFrom(transferTo); setTransferTo(t); }}
-                >🔄</button>
-              </div>
-
-              {/* TO */}
-              <span className="tr-label">Para</span>
-              <div className="tr-cards">
-                {trAccs.map(acc => (
-                  <button
-                    key={acc.id}
-                    className={`tr-card ${transferTo === acc.id ? 'tr-card--sel' : ''}`}
-                    onClick={() => setTransferTo(acc.id)}
-                  >
-                    <span className="tr-card-name">{acc.name}{acc.bank ? ` · ${acc.bank}` : ''}</span>
-                    <span className="tr-card-bal">{parseFloat(acc.balance || 0).toFixed(2)}€</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* AMOUNT */}
-              <div className="tr-amount-wrap">
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  className="tr-amount-input"
-                  placeholder="0,00"
-                  value={transferAmount}
-                  onChange={e => setTransferAmount(e.target.value)}
-                  autoFocus
-                />
-                <span className="tr-amount-eur">€</span>
-              </div>
-
-              {/* AVAILABLE + STATUS + ACTION */}
-              {transferFrom && (
-                <p className="tr-available">
-                  Disponível: <strong>{trFromBal.toFixed(2)}€</strong>
-                </p>
-              )}
-              {transferStatus && <p className="tr-status">{transferStatus}</p>}
-              <button
-                className="btn-transfer"
-                disabled={!trValid}
-                onClick={handleTransfer}
-              >Transferir</button>
-            </>)}
-          </div>
-        </Overlay>
-      )}
     </>
     );
   };
@@ -513,9 +390,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                 {totalPatrimony.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
               </span>
             </div>
-            <button className="m-transfer-btn" onClick={openTransferModal}>
-              ⇄ Transferir entre contas
-            </button>
             {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
               const items     = patrimony[key] || [];
               const typeTotal = getPatrimonyTypeValue(key);
@@ -684,9 +558,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
             <div className="patrimony-total-label">Património Total</div>
             <div className="patrimony-total-amount">{totalPatrimony.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
           </div>
-          <button className="btn-transfer-open" onClick={openTransferModal}>
-            ⇄ Transferir entre contas
-          </button>
           <div className="patrimony-types-list">
             {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
               const items = patrimony[key] || [];
