@@ -63,8 +63,10 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
     }
   };
 
-  /* ── shared modals ────────────────────────────────────────────────────── */
-  const ProfileModals = () => (
+  /* ── shared modals — called as {renderProfileModals()}, NOT as <ProfileModals />.
+     Inline component definitions create a new React type every render
+     → subtree unmounts → focused inputs lose the keyboard.                */
+  const renderProfileModals = () => (
     <>
       {showCategoryManager && (
         <div className="modal-overlay" onClick={() => setShowCategoryManager(false)}>
@@ -231,7 +233,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         {/* Logout */}
         <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
 
-        <ProfileModals />
+        {renderProfileModals()}
       </div>
     );
   }
@@ -353,7 +355,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         </button>
       </div>
 
-      <ProfileModals />
+      {renderProfileModals()}
     </div>
   );
 };

@@ -210,8 +210,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
     }
   };
 
-  /* ── shared modals (same for both branches) ─────────────────────────── */
-  const Modals = () => (
+  /* ── shared modals — called as {renderModals()}, NOT as <Modals />.
+     Defining a component inside a component gives it a new type every render
+     → React unmounts+remounts the subtree → inputs lose focus.            */
+  const renderModals = () => (
     <>
       {editingGoalId && (
         <div className="modal-overlay" onClick={() => { setEditingGoalId(null); resetGoal(EMPTY_GOAL); }}>
@@ -416,7 +418,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
           >+</button>
         )}
 
-        <Modals />
+        {renderModals()}
       </div>
     );
   }
@@ -596,7 +598,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
         </button>
       )}
 
-      <Modals />
+      {renderModals()}
     </div>
   );
 };
