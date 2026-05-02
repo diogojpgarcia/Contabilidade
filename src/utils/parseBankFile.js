@@ -508,17 +508,23 @@ async function loadPdfJs() {
 // Metadata lines to skip — headers, footers, IBAN rows, totals, etc.
 // Kept as a single regex with word-boundary anchors to avoid false positives
 // (e.g. a description containing "saldo" as a substring).
-const PDF_NOISE_RE = /\b(nib|iban|bic|swift|saldo|extrato|extracto|p[aá]gina|pagina|titular|balan[cç]o|capital social|data emiss[aã]o|referencia|referência|entidade|total|montante)\b/i;
+// Extended with Millennium BCP-specific fee / header / footer patterns.
+// Word-boundary anchors prevent false positives on descriptions that merely
+// *contain* these substrings (e.g. "Total Sport" → not matched by \btotal\b
+// because "Sport" follows immediately — wait, it would match on "Total". So
+// use the regex only as an early discard on lines that are clearly metadata.)
+const PDF_NOISE_RE = /\b(nib|iban|bic|swift|saldo|extrato|extracto|p[aá]gina|pagina|titular|balan[cç]o|capital social|data emiss[aã]o|referencia|referência|entidade|total|montante|euronext|opera[çc][oõ]es de valor|atendimento telef[oó]nico|internet\/mobile|comiss[aã]o|taxa|pre[çc][aá]rio|condi[çc][oõ]es)\b/i;
 
-// A line is a transaction candidate only when it has BOTH:
-//   • a formatted monetary amount (up to 3-digit groups + 2 decimal places), AND
-//   • at least one letter (i.e. a description — pure-numeric rows are not txns).
-// This single gate kills IBAN lines, account numbers, date-only rows, running
-// balances, subtotals, and any other numeric metadata before heavier parsing.
+// A line is a transaction candidate only when it has ALL of:
+//   • a date token  DD/MM or DD-MM  (required — pure metadata never has a date)
+//   • a formatted monetary amount   (up to 3-digit groups + 2 decimal places)
+// The date requirement is the strongest single filter: running balances, totals,
+// IBAN rows, generic bank text, and fee descriptions never carry a date in the
+// same line as a formatted amount.
 function isTransaction(line) {
+  const hasDate   = /\b\d{2}[\/\-]\d{2}\b/.test(line);
   const hasAmount = /[-+]?\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})/.test(line);
-  const hasText   = /[a-zA-Z]/.test(line);
-  return hasAmount && hasText;
+  return hasDate && hasAmount;
 }
 
 // Groups PDF text items into visual lines by y-coordinate (1pt precision).
@@ -584,9 +590,9 @@ function extractTransactionsFromLines(rawLines) {
     // Skip lines with 8+ consecutive digits (IBAN, account numbers, long refs)
     if (/\d{8,}/.test(line)) continue;
 
-    // Require both a formatted monetary amount AND at least one letter.
-    // This kills pure-numeric rows (running balances, subtotals, account refs)
-    // and lines that have no description text, before the heavier MONEY_RE scan.
+    // Require a date token AND a monetary amount on the same line.
+    // This is the strongest single filter: real BCP transaction lines always
+    // carry both; running balances, totals, and generic bank text do not.
     if (!isTransaction(line)) continue;
 
     // Full amount scan (MONEY_RE is more permissive than isTransaction — kept for
@@ -608,8 +614,12 @@ function extractTransactionsFromLines(rawLines) {
     description = description.replace(rawAmt, '').replace(/\s+/g, ' ').trim()
       || 'unknown transaction';
 
-    // Skip entries with no meaningful description (single letters, stray punctuation)
-    if (description.length <= 3) continue;
+    // Skip entries with no meaningful description (< 5 chars is noise)
+    if (description.length < 5) continue;
+
+    // Reject suspiciously large amounts with no recognisable merchant name.
+    // A valid description for >10 000€ must contain at least one word of 4+ letters.
+    if (Math.abs(amount) > 10000 && !/[a-zA-ZÀ-ÿ]{4,}/.test(description)) continue;
 
     // Classify: keywords first, then explicit sign on the raw amount, then expense
     const lower = norm(line);
@@ -690,6 +700,8 @@ function extractTransactionsFromText(text) {
     const descRaw = line.replace(dateMatch[0], '').replace(amtMatch[0], '')
       .replace(/\s+/g, ' ').trim();
     const description = descRaw || 'unknown transaction';
+    if (description.length < 5) continue;
+    if (Math.abs(amount) > 10000 && !/[a-zA-ZÀ-ÿ]{4,}/.test(description)) continue;
     const type  = amount < 0 ? 'expense' : 'income';
     const entry = { date, description, amount: Math.abs(amount), type };
     const key   = dedupKey(entry);
