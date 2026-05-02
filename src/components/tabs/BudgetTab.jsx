@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
+import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import './BudgetTab.css';
 
@@ -216,7 +217,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const renderModals = () => (
     <>
       {editingGoalId && (
-        <div className="modal-overlay" onClick={() => { setEditingGoalId(null); resetGoal(EMPTY_GOAL); }}>
+        <Overlay onClose={() => { setEditingGoalId(null); resetGoal(EMPTY_GOAL); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>Novo Objetivo</h4>
@@ -235,11 +236,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
               <button className="btn-add-goal" onClick={() => { handleAddGoal(); setEditingGoalId(null); }}>Adicionar</button>
             </div>
           </div>
-        </div>
+        </Overlay>
       )}
 
       {showPatrimonyModal && (
-        <div className="modal-overlay" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); }}>
+        <Overlay onClose={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>{patrimonyFormType ? PATRIMONY_TYPES.find(t => t.key === patrimonyFormType)?.label : 'Adicionar Activo'}</h4>
@@ -264,7 +265,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
               </div>
             )}
           </div>
-        </div>
+        </Overlay>
       )}
     </>
   );

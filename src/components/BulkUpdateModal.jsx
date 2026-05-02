@@ -1,4 +1,5 @@
 import React from 'react';
+import Overlay from './Overlay';
 import './BulkUpdateModal.css';
 
 /**
@@ -16,9 +17,8 @@ const BulkUpdateModal = ({ bulkPending, onConfirm, onDismiss }) => {
   const extra   = similar.length - preview.length;
 
   return (
-    <>
-      <div className="bum-overlay" onClick={onDismiss} />
-      <div className="bum-sheet">
+    <Overlay onClose={onDismiss}>
+      <div className="bum-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="bum-handle" />
 
         <div className="bum-header">
@@ -52,7 +52,7 @@ const BulkUpdateModal = ({ bulkPending, onConfirm, onDismiss }) => {
           </button>
         </div>
       </div>
-    </>
+    </Overlay>
   );
 };
 

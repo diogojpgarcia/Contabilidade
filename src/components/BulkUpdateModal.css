@@ -1,19 +1,8 @@
 /* ── BulkUpdateModal — bottom sheet confirmation ───────────────────────── */
-
-.bum-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: 300;
-  animation: bum-fade 0.15s ease;
-}
+/* Overlay.jsx handles backdrop + portal. Sheet is pure visual styling.     */
 
 .bum-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 301;
+  width: 100%;
   background: var(--card-bg, #1c1c1e);
   border-radius: 18px 18px 0 0;
   padding: 8px 0 env(safe-area-inset-bottom, 20px);
@@ -128,5 +117,4 @@
   color: #fff;
 }
 
-@keyframes bum-fade  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes bum-slide { from { transform: translateY(100%); } to { transform: translateY(0); } }

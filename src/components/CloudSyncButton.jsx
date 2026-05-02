@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { authService, dbService } from '../lib/supabase';
+import Overlay from './Overlay';
 
 const CloudSyncButton = ({ localTransactions, onSyncComplete }) => {
   const [showModal, setShowModal] = useState(false);
@@ -113,7 +114,7 @@ const CloudSyncButton = ({ localTransactions, onSyncComplete }) => {
       </button>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <Overlay onClose={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>☁️ Sincronização Cloud</h2>
@@ -192,7 +193,7 @@ const CloudSyncButton = ({ localTransactions, onSyncComplete }) => {
               </div>
             </div>
           </div>
-        </div>
+        </Overlay>
       )}
     </>
   );

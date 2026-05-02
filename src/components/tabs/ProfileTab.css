@@ -34,7 +34,7 @@
 .btn-logout .sf-icon{font-size:1rem}
 
 /* ── Modals ──────────────────────────────────────────────────────────────── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center;z-index:1000;backdrop-filter:blur(4px);padding-bottom:env(safe-area-inset-bottom)}
+/* .modal-overlay removed — Overlay.jsx portal handles backdrop + z-index   */
 .modal-content{background:var(--bg-secondary);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 1.5rem;animation:slideUp 0.25s ease}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.25rem 0.75rem}

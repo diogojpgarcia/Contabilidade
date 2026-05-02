@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
+import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import './ProfileTab.css';
 
@@ -69,15 +70,15 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const renderProfileModals = () => (
     <>
       {showCategoryManager && (
-        <div className="modal-overlay" onClick={() => setShowCategoryManager(false)}>
+        <Overlay onClose={() => setShowCategoryManager(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <CategoryManager userId={user.id} onClose={() => setShowCategoryManager(false)} onUpdate={(c) => console.log('Categories updated:', c)} />
           </div>
-        </div>
+        </Overlay>
       )}
 
       {showDeleteHistory && (
-        <div className="modal-overlay" onClick={() => { setShowDeleteHistory(false); resetDeleteDraft({ confirmText: '' }); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
+        <Overlay onClose={() => { setShowDeleteHistory(false); resetDeleteDraft({ confirmText: '' }); if (deleteSucceededRef.current && onDataDeleted) { deleteSucceededRef.current = false; onDataDeleted(); }}}>
           <div className="modal-content delete-history-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Apagar Todos os Dados</h3>
@@ -123,11 +124,11 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
               >{deleting ? 'A apagar…' : 'Apagar tudo'}</button>
             </div>
           </div>
-        </div>
+        </Overlay>
       )}
 
       {showResetPassword && (
-        <div className="modal-overlay" onClick={() => { setShowResetPassword(false); resetResetDraft({ email: '' }); setResetStatus(''); }}>
+        <Overlay onClose={() => { setShowResetPassword(false); resetResetDraft({ email: '' }); setResetStatus(''); }}>
           <div className="modal-content reset-password-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Alterar Password</h3>
@@ -148,7 +149,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
               <button className="btn-primary full-width" onClick={handleResetPassword}>Enviar Link</button>
             </div>
           </div>
-        </div>
+        </Overlay>
       )}
     </>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
+import Overlay from './Overlay';
 import './CategoryPicker.css';
 
 /**
@@ -32,12 +33,8 @@ const CategoryPicker = ({ transaction, onSelect, onClose }) => {
   };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="cp-overlay" onClick={onClose} />
-
-      {/* Sheet */}
-      <div className="cp-sheet">
+    <Overlay onClose={onClose}>
+      <div className="cp-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="cp-handle" />
 
         <div className="cp-header">
@@ -74,7 +71,7 @@ const CategoryPicker = ({ transaction, onSelect, onClose }) => {
           )}
         </div>
       </div>
-    </>
+    </Overlay>
   );
 };
 
