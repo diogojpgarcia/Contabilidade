@@ -502,6 +502,25 @@ async function loadPdfJs() {
   return pdfjsLib;
 }
 
+// ── PDF transaction helpers ────────────────────────────────────────────────────
+// Shared by all three extraction paths so the same rules apply everywhere.
+
+// Metadata lines to skip — headers, footers, IBAN rows, totals, etc.
+// Kept as a single regex with word-boundary anchors to avoid false positives
+// (e.g. a description containing "saldo" as a substring).
+const PDF_NOISE_RE = /\b(nib|iban|bic|swift|saldo|extrato|extracto|p[aá]gina|pagina|titular|balan[cç]o|capital social|data emiss[aã]o|referencia|referência|entidade|total|montante)\b/i;
+
+// A line is a transaction candidate only when it has BOTH:
+//   • a formatted monetary amount (up to 3-digit groups + 2 decimal places), AND
+//   • at least one letter (i.e. a description — pure-numeric rows are not txns).
+// This single gate kills IBAN lines, account numbers, date-only rows, running
+// balances, subtotals, and any other numeric metadata before heavier parsing.
+function isTransaction(line) {
+  const hasAmount = /[-+]?\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})/.test(line);
+  const hasText   = /[a-zA-Z]/.test(line);
+  return hasAmount && hasText;
+}
+
 // Groups PDF text items into visual lines by y-coordinate (1pt precision).
 // PDF y=0 is at the bottom, so we sort descending to get top-to-bottom order.
 // 1pt precision (Math.round) keeps BCP's tightly-spaced adjacent lines separate;
@@ -533,11 +552,9 @@ function reconstructPdfLines(items) {
 // Lines that are clearly metadata (saldo, IBAN, etc.) are skipped.
 function extractTransactionsFromLines(rawLines) {
   // Matches any monetary amount: handles 45,80 / 1.234,56 / 1 234,56 / 1234,56
-  const MONEY_RE  = /[-+]?\d+(?:[.\s]\d{3})*[.,]\d{2}/g;
+  const MONEY_RE     = /[-+]?\d+(?:[.\s]\d{3})*[.,]\d{2}/g;
   // Date anywhere on the line — no start-of-line anchor
-  const DATE_RE   = /\b(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\b/;
-  // Metadata lines to skip (case-insensitive; Portuguese + generic)
-  const NOISE_RE  = /\b(nib|iban|saldo|extrato|extracto|p[aá]gina|titular|bic|swift|balan[cç]o|capital social|data emiss[aã]o|referencia|referência|entidade|total)\b/i;
+  const DATE_RE      = /\b(\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?)\b/;
   // Lines that are only a date with no description or amount
   const DATE_ONLY_RE = /^\d{2}[\/\-\.]\d{2}(?:[\/\-\.]\d{2,4})?$/;
 
@@ -558,8 +575,8 @@ function extractTransactionsFromLines(rawLines) {
       if (d) lastDate = d;
     }
 
-    // Skip metadata / header / footer lines
-    if (NOISE_RE.test(line)) continue;
+    // Skip metadata / header / footer lines (IBAN, saldo, total, montante, etc.)
+    if (PDF_NOISE_RE.test(line)) continue;
 
     // Skip date-only lines — they updated carry-forward above, nothing else to do
     if (DATE_ONLY_RE.test(line)) continue;
@@ -567,7 +584,13 @@ function extractTransactionsFromLines(rawLines) {
     // Skip lines with 8+ consecutive digits (IBAN, account numbers, long refs)
     if (/\d{8,}/.test(line)) continue;
 
-    // Skip lines with no monetary amount
+    // Require both a formatted monetary amount AND at least one letter.
+    // This kills pure-numeric rows (running balances, subtotals, account refs)
+    // and lines that have no description text, before the heavier MONEY_RE scan.
+    if (!isTransaction(line)) continue;
+
+    // Full amount scan (MONEY_RE is more permissive than isTransaction — kept for
+    // precise token extraction even when isTransaction already pre-qualified)
     const amtMatches = [...line.matchAll(MONEY_RE)];
     if (!amtMatches.length) continue;
 
@@ -646,6 +669,11 @@ function extractTransactionsFromText(text) {
   const seen   = new Set();
   const result = [];
   for (const line of lines) {
+    // Apply the same noise + transaction-shape guards as the primary path
+    if (PDF_NOISE_RE.test(line)) continue;
+    if (/\d{8,}/.test(line)) continue;
+    if (!isTransaction(line)) continue;
+
     const dateMatch = line.match(DATE_RE);
     if (!dateMatch) continue;
     const allAmt   = [...line.matchAll(AMT_RE_G)];
