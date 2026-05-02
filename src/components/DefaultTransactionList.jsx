@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import CategoryPicker from './CategoryPicker';
 
+/* Transfer flow: reconstruct "From → To" from paired transfer records */
+function getTransferFlow(tx) {
+  const desc = (tx.description || '').trim();
+  const toMatch   = desc.match(/^Transferência para (.+)$/i);
+  const fromMatch = desc.match(/^Transferência de (.+)$/i);
+  if (toMatch)   return `${tx.category} → ${toMatch[1]}`;
+  if (fromMatch) return `${fromMatch[1]} → ${tx.category}`;
+  return desc || tx.category || 'Transferência';
+}
+
 const ICON_MAP = {
   'Alimentação': '⚑', 'Habitação': '⌂', 'Transporte': '⚐', 'Saúde': '✚',
   'Lazer': '◉', 'Educação': '⊞', 'Roupa': '◫', 'Tecnologia': '◧',
@@ -35,27 +45,43 @@ const DefaultTransactionList = ({ transactions, onCategoryChange }) => {
   return (
     <>
       <div className="transactions-list">
-        {transactions.map((tx, index) => (
-          <div key={tx.id || index} className="transaction-item">
-            <div className="transaction-icon">{icon(tx.category)}</div>
+        {transactions.map((tx, index) => {
+          const isTransfer = tx.type === 'transfer';
+          return (
+          <div key={tx.id || index} className={`transaction-item ${tx.type}`}>
+            <div className="transaction-icon">{isTransfer ? '↔' : icon(tx.category)}</div>
             <div className="transaction-details">
-              <div
-                className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
-                onClick={() => onCategoryChange && setPickerTx(tx)}
-                title={onCategoryChange ? 'Toca para alterar categoria' : undefined}
-              >
-                {tx.category}
-                {onCategoryChange && <span className="category-edit-hint">&#8250;</span>}
-              </div>
-              {tx.description && (
+              {isTransfer ? (
+                /* Transfer: show "From → To" as the primary label */
+                <div className="transaction-category" style={{ fontWeight: 600 }}>
+                  {getTransferFlow(tx)}
+                </div>
+              ) : (
+                <div
+                  className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
+                  onClick={() => onCategoryChange && setPickerTx(tx)}
+                  title={onCategoryChange ? 'Toca para alterar categoria' : undefined}
+                >
+                  {tx.category}
+                  {onCategoryChange && <span className="category-edit-hint">&#8250;</span>}
+                </div>
+              )}
+              {/* Show description only for non-transfers */}
+              {!isTransfer && tx.description && (
                 <div className="transaction-description">{tx.description}</div>
               )}
             </div>
-            <div className={`transaction-amount ${tx.type}`}>
-              {tx.type === 'income' ? '+' : '-'}{parseFloat(tx.amount).toFixed(2)}€
+            <div
+              className={`transaction-amount ${tx.type}`}
+              style={isTransfer ? { color: 'var(--text-secondary, #888)', fontWeight: 500 } : undefined}
+            >
+              {isTransfer
+                ? `${parseFloat(tx.amount).toFixed(2)}€`
+                : `${tx.type === 'income' ? '+' : '-'}${parseFloat(tx.amount).toFixed(2)}€`}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {pickerTx && (

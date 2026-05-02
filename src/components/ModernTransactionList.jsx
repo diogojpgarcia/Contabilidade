@@ -35,6 +35,23 @@ const getIcon = (cat, type) =>
     ? { e: '💰', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' }
     : { e: '💳', bg: 'rgba(156,163,175,0.13)', c: '#6b7280' });
 
+const TRANSFER_ICON = { e: '↔', bg: 'rgba(99,102,241,0.1)', c: '#6366f1' };
+
+/* ── Transfer flow label ────────────────────────────────────────────────────
+   Transfer transactions are stored as two paired records:
+     out: { category: fromName, description: "Transferência para {toName}" }
+     in:  { category: toName,   description: "Transferência de {fromName}" }
+   We reconstruct the visual "From → To" string from these two fields.        */
+function getTransferFlow(tx) {
+  const desc = (tx.description || '').trim();
+  const toMatch   = desc.match(/^Transferência para (.+)$/i);
+  const fromMatch = desc.match(/^Transferência de (.+)$/i);
+  if (toMatch)   return `${tx.category} → ${toMatch[1]}`;
+  if (fromMatch) return `${fromMatch[1]} → ${tx.category}`;
+  // Fallback: show raw description or category
+  return desc || tx.category || 'Transferência';
+}
+
 /* ── Date grouping helpers ── */
 const today     = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
 const yesterday = () => { const d = today(); d.setDate(d.getDate()-1); return d; };
@@ -103,7 +120,11 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
             const isExpanded   = expandedId === tx.id;
             const isTransfer   = tx.type === 'transfer';
             const isIncome     = tx.type === 'income';
-            const icon         = getIcon(tx.category, tx.type);
+            const icon         = isTransfer ? TRANSFER_ICON : getIcon(tx.category, tx.type);
+            // For transfers: derive "From → To" from description + category
+            const title        = isTransfer
+              ? getTransferFlow(tx)
+              : (tx.description || tx.category);
 
             return (
               <div key={tx.id}>
@@ -117,10 +138,10 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
                   </div>
 
                   <div className="ft-center">
-                    <span className="ft-title">{tx.description || tx.category}</span>
+                    <span className="ft-title">{title}</span>
                     <span className="ft-sub">
                       {isTransfer
-                        ? <span style={{ fontSize: '0.7rem', background: 'var(--accent, #6366f1)', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>↕ Transferência</span>
+                        ? <span style={{ fontSize: '0.7rem', background: 'rgba(99,102,241,0.15)', color: 'var(--accent, #6366f1)', borderRadius: '4px', padding: '1px 6px' }}>↔ Transferência</span>
                         : tx.type === 'adjustment'
                           ? <span style={{ fontSize: '0.7rem', background: '#f97316', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>⚖ Ajuste</span>
                           : tx.category}
@@ -128,8 +149,10 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
                   </div>
 
                   <span className={`ft-amount ${isTransfer ? 'transfer' : (isIncome ? 'income' : 'expense')}`}
-                        style={isTransfer ? { color: 'var(--accent, #6366f1)' } : undefined}>
-                    {isTransfer ? '↕ ' : (isIncome ? '+' : '−')}{parseFloat(tx.amount).toFixed(2)}€
+                        style={isTransfer ? { color: 'var(--text-secondary, #888)', fontWeight: 500 } : undefined}>
+                    {isTransfer
+                      ? `${parseFloat(tx.amount).toFixed(2)}€`
+                      : `${isIncome ? '+' : '−'}${parseFloat(tx.amount).toFixed(2)}€`}
                   </span>
                 </div>
 

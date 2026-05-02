@@ -5,6 +5,16 @@ import ModernTransactionList from '../ModernTransactionList';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
+/* Transfer flow helper (mirrors ModernTransactionList / DefaultTransactionList) */
+function getTransferFlow(tx) {
+  const desc = (tx.description || '').trim();
+  const toMatch   = desc.match(/^Transferência para (.+)$/i);
+  const fromMatch = desc.match(/^Transferência de (.+)$/i);
+  if (toMatch)   return `${tx.category} → ${toMatch[1]}`;
+  if (fromMatch) return `${fromMatch[1]} → ${tx.category}`;
+  return desc || tx.category || 'Transferência';
+}
+
 const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted, onCategoryChange, theme = 'default' }) => {
   const [pickerTx, setPickerTx] = useState(null);
 
@@ -589,33 +599,47 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           ) : (
             /* ── Default list ── */
             <div className="transactions-list">
-              {visibleTransactions.map((transaction, index) => (
+              {visibleTransactions.map((transaction, index) => {
+                const isTr = transaction.type === 'transfer';
+                return (
                 <div
                   key={transaction.id || index}
                   className={`transaction-item ${transaction.type}`}
                 >
                   <div className="transaction-left">
                     <span className="transaction-icon">
-                      {getCategoryIcon(transaction.category)}
+                      {isTr ? '↔' : getCategoryIcon(transaction.category)}
                     </span>
                     <div className="transaction-details">
-                      <span
-                        className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
-                        onClick={() => handleCategoryClick(transaction)}
-                        title={onCategoryChange ? 'Toca para alterar categoria' : undefined}
-                      >
-                        {transaction.category}
-                        {onCategoryChange && <span className="category-edit-hint">&#8250;</span>}
-                      </span>
-                      {transaction.description && (
+                      {isTr ? (
+                        /* Transfer: "From → To" as primary label */
+                        <span className="transaction-category" style={{ fontWeight: 600 }}>
+                          {getTransferFlow(transaction)}
+                        </span>
+                      ) : (
+                        <span
+                          className={`transaction-category${onCategoryChange ? ' transaction-category--editable' : ''}`}
+                          onClick={() => handleCategoryClick(transaction)}
+                          title={onCategoryChange ? 'Toca para alterar categoria' : undefined}
+                        >
+                          {transaction.category}
+                          {onCategoryChange && <span className="category-edit-hint">&#8250;</span>}
+                        </span>
+                      )}
+                      {!isTr && transaction.description && (
                         <span className="transaction-description">{transaction.description}</span>
                       )}
                     </div>
                   </div>
                   <div className="transaction-right">
                     <div className="transaction-info">
-                      <span className={`transaction-amount ${transaction.type}`}>
-                        {transaction.type === 'income' ? '+' : '-'}{parseFloat(transaction.amount).toFixed(2)}€
+                      <span
+                        className={`transaction-amount ${transaction.type}`}
+                        style={isTr ? { color: 'var(--text-secondary, #888)', fontWeight: 500 } : undefined}
+                      >
+                        {isTr
+                          ? `${parseFloat(transaction.amount).toFixed(2)}€`
+                          : `${transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount).toFixed(2)}€`}
                       </span>
                       <span className="transaction-date">{formatDate(transaction.date)}</span>
                     </div>
@@ -629,7 +653,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
           
