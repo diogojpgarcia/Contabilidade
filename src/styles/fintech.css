@@ -821,6 +821,27 @@
 }
 .m-fab:active { opacity: 0.85; transform: scale(0.93); }
 
+/* Transfer trigger — modern branch */
+.m-transfer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 16px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1.5px solid rgba(99, 102, 241, 0.25);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #818cf8;
+  cursor: pointer;
+  transition: opacity 0.12s;
+  margin: 6px 0 4px;
+}
+.m-transfer-btn:active { opacity: 0.7; }
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PROFILE TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */

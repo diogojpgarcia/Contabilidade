@@ -129,5 +129,35 @@
 .btn-add-patrimony{flex:2;padding:0.875rem;background:linear-gradient(135deg,#D97706 0%,#F59E0B 100%);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s ease}
 .btn-add-patrimony:active{transform:scale(0.98)}
 
+/* ── Transfer modal ──────────────────────────────────────────────────────── */
+.tr-label{display:block;font-size:0.75rem;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin:1rem 0 0.5rem}
+.tr-label:first-of-type{margin-top:0.25rem}
+.tr-cards{display:flex;flex-direction:column;gap:0.5rem}
+.tr-card{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:var(--bg-primary);border:1.5px solid var(--separator);border-radius:12px;cursor:pointer;text-align:left;width:100%;transition:border-color 0.15s,background 0.15s}
+.tr-card:active{opacity:0.75}
+.tr-card--sel{border-color:#6366f1;background:rgba(99,102,241,0.08);box-shadow:0 0 0 1px rgba(99,102,241,0.2)}
+.tr-card-name{font-size:0.9rem;font-weight:500;color:var(--text-primary)}
+.tr-card--sel .tr-card-name{color:#818cf8;font-weight:600}
+.tr-card-bal{font-size:0.9rem;font-weight:700;color:var(--text-primary);white-space:nowrap}
+.tr-swap-row{display:flex;justify-content:center;margin:0.25rem 0}
+.tr-swap-btn{background:var(--bg-secondary);border:1.5px solid var(--separator);border-radius:50%;width:44px;height:44px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.25s ease,background 0.15s}
+.tr-swap-btn:active{transform:rotate(180deg);background:var(--bg-tertiary)}
+.tr-amount-wrap{display:flex;align-items:center;justify-content:center;gap:0.5rem;margin:1rem 0 0.375rem;padding:1rem 1.25rem;background:var(--bg-primary);border:1.5px solid var(--separator);border-radius:16px}
+.tr-amount-input{background:transparent;border:none;outline:none;font-size:2.25rem;font-weight:700;color:var(--text-primary);text-align:center;width:150px;letter-spacing:-0.03em;-moz-appearance:textfield}
+.tr-amount-input::-webkit-outer-spin-button,.tr-amount-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.tr-amount-input::placeholder{color:var(--text-tertiary)}
+.tr-amount-eur{font-size:1.5rem;font-weight:600;color:var(--text-tertiary)}
+.tr-available{font-size:0.875rem;color:var(--text-secondary);text-align:center;margin:0 0 0.875rem}
+.tr-available strong{color:var(--text-primary)}
+.tr-status{font-size:0.875rem;text-align:center;color:#34D399;padding:0.5rem 0.75rem;background:rgba(52,211,153,0.1);border-radius:8px;margin:0 0 0.75rem}
+.tr-empty{font-size:0.9rem;color:var(--text-secondary);text-align:center;padding:1.5rem 0;margin:0}
+.btn-transfer{width:100%;min-height:52px;background:#6366f1;color:#fff;border:none;border-radius:14px;font-size:1.0625rem;font-weight:700;cursor:pointer;transition:opacity 0.15s;letter-spacing:-0.01em;margin-top:0.25rem}
+.btn-transfer:disabled{opacity:0.3;cursor:not-allowed}
+.btn-transfer:not(:disabled):active{opacity:0.85}
+
+/* Trigger button in default branch */
+.btn-transfer-open{display:flex;align-items:center;justify-content:center;gap:0.5rem;width:100%;min-height:44px;padding:0.75rem 1rem;background:var(--bg-secondary);border:1.5px solid var(--separator);border-radius:12px;font-size:0.9375rem;font-weight:500;color:var(--text-primary);cursor:pointer;transition:background 0.15s;margin-bottom:0.75rem}
+.btn-transfer-open:active{background:var(--bg-tertiary)}
+
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:480px){.budget-tab{padding:0.75rem;padding-bottom:0}.input-group input{width:80px}}
