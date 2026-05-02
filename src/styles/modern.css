@@ -304,33 +304,15 @@ body {
   color: inherit;
 }
 
-/* Add Button (Center) */
-.nav-item-add {
-  position: relative;
-  margin-top: -8px;
+/* Add Button (Center) — same size/spacing as other nav items */
+.nav-icon-add {
+  font-size: 1.6rem;
+  font-weight: 400;
+  line-height: 1;
 }
 
-.nav-icon-large {
-  font-size: 2rem;
-  background: var(--primary);
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
-  transition: all var(--transition-fast);
-  font-weight: 300;
-}
-
-.nav-item-add:active .nav-icon-large {
-  transform: scale(0.92);
-}
-
-.nav-item-add.active .nav-icon-large {
-  background: var(--primary-light);
-  box-shadow: 0 6px 16px rgba(90, 200, 250, 0.5);
+.nav-item.active .nav-icon-add {
+  color: var(--primary);
 }
 
 /* Card Styles - iOS inspired */

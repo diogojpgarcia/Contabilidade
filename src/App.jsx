@@ -477,10 +477,11 @@ const App = () => {
         </button>
 
         <button
-          className={`nav-item nav-item-add ${activeTab === 'add' ? 'active' : ''}`}
+          className={`nav-item ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => setActiveTab('add')}
         >
-          <span className="nav-icon-large">+</span>
+          <span className="nav-icon nav-icon-add">+</span>
+          <span className="nav-label">Adicionar</span>
         </button>
 
         <button
