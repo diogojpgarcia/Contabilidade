@@ -263,7 +263,12 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const prevMonthExpenses = transactions.filter(t => t.type === 'expense' && t.date && t.date.startsWith(prevMonthKey)).reduce((s, t) => s + parseFloat(t.amount), 0);
   const prevMonthSaldo    = prevMonthIncome - prevMonthExpenses;
   const saldoDelta        = monthSaldo - prevMonthSaldo;
-  const saldoDeltaLabel   = (saldoDelta >= 0 ? '+' : '') + saldoDelta.toFixed(2) + '€';
+
+  const fmt = (n) => {
+    const abs = Math.abs(n).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `€${abs}`;
+  };
+  const saldoDeltaLabel = (saldoDelta >= 0 ? '↑ +' : '↓ ') + fmt(Math.abs(saldoDelta)) + ' vs mês anterior';
 
   console.log('INSIGHTS ITEMS:', insights);
 
@@ -306,38 +311,49 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
             {/* Main summary card */}
             <div style={{
-              borderRadius: 16, padding: 20,
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(168,85,247,0.1) 100%)',
+              borderRadius: 20, padding: 20,
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(168,85,247,0.12) 100%)',
               border: '1px solid rgba(255,255,255,0.1)',
-              marginBottom: 12,
+              boxShadow: '0 8px 32px rgba(99,102,241,0.12)',
+              marginBottom: 16,
             }}>
-              <div style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>Saldo do mês</div>
-              <div style={{ fontSize: '1.875rem', fontWeight: 700, color: '#fff', lineHeight: 1.2, marginTop: 2 }}>
-                {monthSaldo >= 0 ? '+' : ''}{monthSaldo.toFixed(2)}€
+              <div style={{ fontSize: '0.72rem', color: '#a1a1aa', letterSpacing: '0.05em', textTransform: 'uppercase' }}>💰 Saldo do mês</div>
+              <div style={{
+                fontSize: '2rem', fontWeight: 700, lineHeight: 1.15, marginTop: 6,
+                color: monthSaldo >= 0 ? '#4ade80' : '#f87171',
+              }}>
+                {monthSaldo >= 0 ? '+' : '−'}{fmt(Math.abs(monthSaldo))}
               </div>
-              <div style={{ fontSize: '0.875rem', color: saldoDelta >= 0 ? '#4ade80' : '#f87171', marginTop: 4 }}>
-                {saldoDeltaLabel} vs mês anterior
+              <div style={{ fontSize: '0.8rem', color: saldoDelta >= 0 ? '#4ade80' : '#f87171', marginTop: 6, opacity: 0.85 }}>
+                {saldoDeltaLabel}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, fontSize: '0.875rem' }}>
-                <span style={{ color: '#4ade80' }}>+{monthIncome.toFixed(2)}€</span>
-                <span style={{ color: '#f87171' }}>−{monthExpenses.toFixed(2)}€</span>
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '14px 0' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.68rem', color: '#71717a', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Receitas</div>
+                  <span style={{ color: '#4ade80', fontWeight: 600 }}>+{fmt(monthIncome)}</span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#71717a', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Despesas</div>
+                  <span style={{ color: '#f87171', fontWeight: 600 }}>−{fmt(monthExpenses)}</span>
+                </div>
               </div>
             </div>
 
             {/* Secondary grid cards */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div style={{ background: '#18181b', borderRadius: 12, padding: 16 }}>
-                <div style={{ fontSize: '0.75rem', color: '#a1a1aa', marginBottom: 4 }}>Receitas</div>
-                <div style={{ fontSize: '1rem', fontWeight: 600, color: '#4ade80' }}>+{monthIncome.toFixed(2)}€</div>
+              <div style={{ background: '#18181b', borderRadius: 16, padding: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+                <div style={{ fontSize: '0.68rem', color: '#71717a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Receitas</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#4ade80' }}>+{fmt(monthIncome)}</div>
               </div>
-              <div style={{ background: '#18181b', borderRadius: 12, padding: 16 }}>
-                <div style={{ fontSize: '0.75rem', color: '#a1a1aa', marginBottom: 4 }}>Despesas</div>
-                <div style={{ fontSize: '1rem', fontWeight: 600, color: '#f87171' }}>−{monthExpenses.toFixed(2)}€</div>
+              <div style={{ background: '#18181b', borderRadius: 16, padding: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+                <div style={{ fontSize: '0.68rem', color: '#71717a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Despesas</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f87171' }}>−{fmt(monthExpenses)}</div>
               </div>
             </div>
 
             {/* 6-month chart */}
-            <div className="m-chart">
+            <div className="m-chart" style={{ borderRadius: 16, overflow: 'hidden' }}>
               <div className="m-chart-label">Evolução 6 meses</div>
               <div className="m-chart-grid">
                 {monthlyData.map((data, i) => (
