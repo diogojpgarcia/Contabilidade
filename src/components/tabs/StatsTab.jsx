@@ -487,8 +487,11 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: 2 }}>{item.title}</div>
                       <div style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.4 }}>{item.message}</div>
-                      {item.extra && <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 2 }}>{item.extra}</div>}
-                      {item.action && <div style={{ fontSize: '0.7rem', color: '#6366f1', marginTop: 4, fontWeight: 500 }}>{item.action}</div>}
+                      {(item.explanation || item.extra) && (
+                        <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>
+                          {item.explanation || item.extra}
+                        </div>
+                      )}
                     </div>
                     <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', flexShrink: 0, marginLeft: 8 }}>{item.value}</div>
                   </div>
