@@ -827,6 +827,25 @@
 .m-bcc-delta.up   { color: #ef4444; }
 .m-bcc-delta.down { color: #22c55e; }
 
+.m-bcc-prediction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.m-bcc-prediction.exceed { color: #F59E0B; }
+.m-bcc-prediction-warn {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+/* Patrimony card override (uses ui-card base) */
+.m-asset-type.ui-card { padding: 14px 16px; margin-bottom: 8px; }
+.m-asset-type.ui-card:last-child { margin-bottom: 0; }
+
 .m-bcc-edit {
   background: transparent; border: none; cursor: pointer;
   font-size: 0.8rem; opacity: 0.35;

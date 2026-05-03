@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
+import { Card, Bubble, ProgressBar, getGradient } from '../ui';
 import './BudgetTab.css';
 
 const CATEGORY_ICONS = {
@@ -45,10 +46,14 @@ const formatMonthLabel = (yyyymm) => {
   return `${MONTH_NAMES[m - 1]} ${y}`;
 };
 
-const getGradient = (percent) => {
-  if (percent > 100) return 'linear-gradient(90deg, #ef4444, #b91c1c)';
-  if (percent >= 70)  return 'linear-gradient(90deg, #eab308, #f97316)';
-  return 'linear-gradient(90deg, #22c55e, #4ade80)';
+const getPrediction = (spent, selectedMonth) => {
+  const today = new Date();
+  const [y, m] = selectedMonth.split('-').map(Number);
+  if (today.getFullYear() !== y || today.getMonth() + 1 !== m) return null;
+  const daysPassed = today.getDate();
+  if (daysPassed === 0 || spent === 0) return null;
+  const daysTotal = new Date(y, m, 0).getDate();
+  return Math.round((spent / daysPassed) * daysTotal);
 };
 
 const CountUp = ({ value, decimals = 0 }) => {
@@ -73,17 +78,15 @@ const CountUp = ({ value, decimals = 0 }) => {
   return <>{display.toFixed(decimals)}</>;
 };
 
-const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
+const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
   const color      = CAT_COLORS[cat.label] || '#6B7280';
-  const barWidth   = Math.min(percent, 100);
   const colorClass = percent > 100 ? 'over' : percent >= 70 ? 'warn' : '';
+  const willExceed = predicted !== null && limit > 0 && predicted > limit;
 
   return (
     <div className="m-bcc">
       <div className="m-bcc-row">
-        <div className="m-bcc-bubble" style={{ background: `${color}26` }}>
-          <span style={{ color }}>{getCategoryIcon(cat.label)}</span>
-        </div>
+        <Bubble color={color} icon={getCategoryIcon(cat.label)} size={40} radius="12px" />
         <div className="m-bcc-info">
           <div className="m-bcc-name-row">
             <span className="m-bcc-name">{cat.label}</span>
@@ -94,12 +97,8 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, animated, isEdi
             <span className={`m-bcc-spent ${colorClass}`}>
               {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
             </span>
-            {delta > 0.5 && (
-              <span className="m-bcc-delta up">↑ +{delta.toFixed(0)}€</span>
-            )}
-            {delta < -0.5 && (
-              <span className="m-bcc-delta down">↓ {Math.abs(delta).toFixed(0)}€</span>
-            )}
+            {delta > 0.5  && <span className="m-bcc-delta up">↑ +{delta.toFixed(0)}€</span>}
+            {delta < -0.5 && <span className="m-bcc-delta down">↓ {Math.abs(delta).toFixed(0)}€</span>}
           </div>
         </div>
         <button className="m-bcc-edit" onClick={onEditToggle}>✏</button>
@@ -121,18 +120,12 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, animated, isEdi
         </div>
       )}
 
-      {limit > 0 && (
-        <div className="m-budget-bar-bg">
-          <div
-            style={{
-              height: '100%',
-              borderRadius: '4px',
-              transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
-              width: animated ? `${barWidth}%` : '0%',
-              background: getGradient(percent),
-              boxShadow: '0 0 8px rgba(255,255,255,0.15)',
-            }}
-          />
+      {limit > 0 && <ProgressBar percent={percent} animated={animated} height={8} />}
+
+      {predicted !== null && limit > 0 && (
+        <div className={`m-bcc-prediction${willExceed ? ' exceed' : ''}`}>
+          <span>Previsto: {predicted}€</span>
+          {willExceed && <span className="m-bcc-prediction-warn">Vai ultrapassar</span>}
         </div>
       )}
     </div>
@@ -244,6 +237,21 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   };
 
   const getSpentByCategory = (categoryId) => getSpentForMonth(categoryId, selectedMonth);
+
+  const sortedItems = useMemo(() => {
+    const prevMonth = shiftMonth(selectedMonth, -1);
+    return categories.expense
+      .map(cat => {
+        const limit     = budgets[cat.id] || 0;
+        const spent     = getSpentForMonth(cat.id, selectedMonth);
+        const prevSpent = getSpentForMonth(cat.id, prevMonth);
+        const percent   = limit > 0 ? (spent / limit) * 100 : 0;
+        const delta     = spent - prevSpent;
+        const predicted = getPrediction(spent, selectedMonth);
+        return { cat, limit, spent, percent, delta, predicted };
+      })
+      .sort((a, b) => b.percent - a.percent);
+  }, [categories.expense, budgets, transactions, selectedMonth]);
 
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
@@ -467,39 +475,24 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
             })()}
 
             {/* Category cards */}
-            {(() => {
-              const prevMonth = shiftMonth(selectedMonth, -1);
-              return (
-                <div className="m-bcc-list">
-                  {categories.expense
-                    .map(cat => {
-                      const limit     = budgets[cat.id] || 0;
-                      const spent     = getSpentForMonth(cat.id, selectedMonth);
-                      const prevSpent = getSpentForMonth(cat.id, prevMonth);
-                      const percent   = limit > 0 ? (spent / limit) * 100 : 0;
-                      const delta     = spent - prevSpent;
-                      return { cat, limit, spent, prevSpent, percent, delta };
-                    })
-                    .sort((a, b) => b.percent - a.percent)
-                    .map(({ cat, limit, spent, percent, delta }) => (
-                      <BudgetCategoryCard
-                        key={`${cat.id}-${Math.round(percent)}`}
-                        cat={cat}
-                        limit={limit}
-                        spent={spent}
-                        percent={percent}
-                        delta={delta}
-                        animated={animated}
-                        isEditing={editingCategoryId === cat.id}
-                        onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
-                        onLimitChange={handleLimitChange}
-                        onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
-                      />
-                    ))
-                  }
-                </div>
-              );
-            })()}
+            <div className="m-bcc-list">
+              {sortedItems.map(({ cat, limit, spent, percent, delta, predicted }) => (
+                <BudgetCategoryCard
+                  key={`${cat.id}-${Math.round(percent)}`}
+                  cat={cat}
+                  limit={limit}
+                  spent={spent}
+                  percent={percent}
+                  delta={delta}
+                  predicted={predicted}
+                  animated={animated}
+                  isEditing={editingCategoryId === cat.id}
+                  onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
+                  onLimitChange={handleLimitChange}
+                  onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
+                />
+              ))}
+            </div>
           </>
         )}
 
@@ -555,9 +548,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
               const items     = patrimony[key] || [];
               const typeTotal = getPatrimonyTypeValue(key);
               return (
-                <div key={key} className="m-asset-type">
+                <Card key={key} className="m-asset-type">
                   <div className="m-asset-type-header">
-                    <span className="m-asset-type-icon" style={{ color }}>{icon}</span>
+                    <Bubble color={color} icon={icon} size={36} />
                     <span className="m-asset-type-name">{label}</span>
                     <span className="m-asset-type-val">{typeTotal.toFixed(0)}€</span>
                   </div>
@@ -569,7 +562,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                     </div>
                   ))}
                   {items.length === 0 && <div className="m-asset-empty">Sem registos</div>}
-                </div>
+                </Card>
               );
             })}
           </>
