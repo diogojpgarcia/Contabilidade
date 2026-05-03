@@ -85,146 +85,179 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
     }
   };
 
-  const switchType = (newType) => { setType(newType); setCategory(''); setSelectedGoal(''); setTransferFrom(''); setTransferTo(''); };
+  const switchType = (newType) => {
+    setType(newType);
+    setCategory(''); setSelectedGoal(''); setTransferFrom(''); setTransferTo('');
+  };
 
-  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
-  if (theme === 'modern') {
+  /* ── Shared form fields (rendered in both branches) ─────────────────────── */
+  const formFields = (
+    <>
+      {/* Type toggle */}
+      <div className={theme === 'default' ? 'type-toggle' : 'm-toggle'} style={theme !== 'default' ? { margin: '0 0 2px' } : {}}>
+        {theme === 'default' ? (
+          <>
+            <button type="button" className={`type-btn ${type === 'expense' ? 'active expense' : ''}`} onClick={() => switchType('expense')}><span className="type-icon-sf">−</span><span>Despesa</span></button>
+            <button type="button" className={`type-btn ${type === 'income' ? 'active income' : ''}`} onClick={() => switchType('income')}><span className="type-icon-sf">+</span><span>Receita</span></button>
+            <button type="button" className={`type-btn ${type === 'transfer' ? 'active transfer' : ''}`} onClick={() => switchType('transfer')}><span className="type-icon-sf">↕</span><span>Transferência</span></button>
+            <button type="button" className={`type-btn ${type === 'goal' ? 'active goal' : ''}`} onClick={() => switchType('goal')}><span className="type-icon-sf">◆</span><span>Objetivos</span></button>
+          </>
+        ) : (
+          <>
+            <button className={`m-toggle-btn ${type === 'expense'  ? 'active' : ''}`} onClick={() => switchType('expense')}>− Despesa</button>
+            <button className={`m-toggle-btn ${type === 'income'   ? 'active' : ''}`} onClick={() => switchType('income')}>+ Receita</button>
+            <button className={`m-toggle-btn ${type === 'transfer' ? 'active' : ''}`} onClick={() => switchType('transfer')}>↕ Transferência</button>
+            <button className={`m-toggle-btn ${type === 'goal'     ? 'active' : ''}`} onClick={() => switchType('goal')}>◆ Objetivo</button>
+          </>
+        )}
+      </div>
+
+      {/* Amount */}
+      {theme === 'default' ? (
+        <div className="form-field">
+          <label>Valor</label>
+          <div className="amount-input">
+            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" step="0.01" min="0" inputMode="decimal" />
+            <span className="currency">€</span>
+          </div>
+        </div>
+      ) : (
+        <div className="m-amount-field">
+          <input type="number" className="m-amount-input" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" step="0.01" min="0" inputMode="decimal" />
+          <span className="m-currency">€</span>
+        </div>
+      )}
+
+      {/* Transfer fields */}
+      {type === 'transfer' && (theme === 'default' ? (
+        <>
+          <div className="form-field">
+            <label>Conta de origem</label>
+            {accounts.length === 0
+              ? <p className="helper-text">Sem contas. Adiciona uma em Budget → Património.</p>
+              : <select value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} className="category-select">
+                  <option value="">Seleciona conta de origem</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€</option>)}
+                </select>}
+          </div>
+          <div className="form-field">
+            <label>Conta de destino</label>
+            {accounts.length > 0 &&
+              <select value={transferTo} onChange={(e) => setTransferTo(e.target.value)} className="category-select">
+                <option value="">Seleciona conta de destino</option>
+                {accounts.filter(a => a.id !== transferFrom).map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>)}
+              </select>}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="m-field-card">
+            <span className="m-field-label">Conta de origem</span>
+            {accounts.length === 0
+              ? <span className="m-helper">Sem contas. Adiciona uma em Budget → Património.</span>
+              : <select className="m-field-select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
+                  <option value="">Seleciona conta de origem</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€</option>)}
+                </select>}
+          </div>
+          <div className="m-field-card">
+            <span className="m-field-label">Conta de destino</span>
+            {accounts.length > 0 &&
+              <select className="m-field-select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
+                <option value="">Seleciona conta de destino</option>
+                {accounts.filter(a => a.id !== transferFrom).map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>)}
+              </select>}
+          </div>
+        </>
+      ))}
+
+      {/* Category / Goal */}
+      {type !== 'transfer' && (theme === 'default' ? (
+        type === 'goal' ? (
+          <div className="form-field">
+            <label>Objetivo</label>
+            <select value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)} className="category-select">
+              <option value="">Seleciona um objetivo</option>
+              {goals.map(g => <option key={g.id} value={g.id}>◆ {g.name} ({g.currentSavings?.toFixed(0) || 0}€ / {g.amount.toFixed(0)}€)</option>)}
+            </select>
+            {goals.length === 0 && <p className="helper-text">Sem objetivos. Cria um em Budget → Objetivos</p>}
+          </div>
+        ) : (
+          <div className="form-field">
+            <label>Categoria</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="category-select">
+              <option value="">Seleciona uma categoria</option>
+              {currentCategories.map(cat => <option key={cat.id} value={cat.label}>{getCategoryIcon(cat.label)} {cat.label}</option>)}
+            </select>
+          </div>
+        )
+      ) : (
+        type === 'goal' ? (
+          <div className="m-field-card">
+            <span className="m-field-label">Objetivo</span>
+            <select className="m-field-select" value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)}>
+              <option value="">Seleciona um objetivo</option>
+              {goals.map(g => <option key={g.id} value={g.id}>◆ {g.name} ({g.currentSavings?.toFixed(0) || 0}€ / {g.amount.toFixed(0)}€)</option>)}
+            </select>
+            {goals.length === 0 && <span className="m-helper">Sem objetivos. Cria um em Budget → Objetivos</span>}
+          </div>
+        ) : (
+          <div className="m-field-card">
+            <span className="m-field-label">Categoria</span>
+            <select className="m-field-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">Seleciona uma categoria</option>
+              {currentCategories.map(cat => <option key={cat.id} value={cat.label}>{getCategoryIcon(cat.label)} {cat.label}</option>)}
+            </select>
+          </div>
+        )
+      ))}
+
+      {/* Description */}
+      {theme === 'default' ? (
+        <div className="form-field">
+          <label>Descrição (opcional)</label>
+          <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex: Compras supermercado" maxLength={100} className="text-input" />
+        </div>
+      ) : (
+        <div className="m-field-card">
+          <span className="m-field-label">Descrição (opcional)</span>
+          <input type="text" className="m-field-input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex: Compras supermercado" maxLength={100} />
+        </div>
+      )}
+
+      {/* Date */}
+      {theme === 'default' ? (
+        <div className="form-field">
+          <label>Data</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={new Date().toISOString().split('T')[0]} className="date-input" />
+        </div>
+      ) : (
+        <div className="m-field-card">
+          <span className="m-field-label">Data</span>
+          <input type="date" className="m-field-input" value={date} onChange={(e) => setDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
+        </div>
+      )}
+    </>
+  );
+
+  /* ── MODERN / FINTECH BRANCH ─────────────────────────────────────────────
+     Layout: flex column — scrollable body on top, sticky footer on bottom.
+     No height:100vh, no overflow:hidden on this element.                   */
+  if (theme === 'modern' || theme === 'fintech') {
     return (
       <div className="m-add-page">
-        <div className="m-add-header">
-          <div className="m-page-title">Nova Transação</div>
+        {/* Scrollable form body */}
+        <div className="m-add-body">
+          <div className="m-add-header">
+            <div className="m-page-title">Nova Transação</div>
+          </div>
+          <div className="m-form">
+            {formFields}
+          </div>
         </div>
 
-        <div className="m-form">
-          {/* Type toggle */}
-          <div className="m-toggle" style={{ margin: '0 0 2px' }}>
-            <button className={`m-toggle-btn ${type === 'expense' ? 'active' : ''}`} onClick={() => switchType('expense')}>
-              − Despesa
-            </button>
-            <button className={`m-toggle-btn ${type === 'income' ? 'active' : ''}`} onClick={() => switchType('income')}>
-              + Receita
-            </button>
-            <button className={`m-toggle-btn ${type === 'transfer' ? 'active' : ''}`} onClick={() => switchType('transfer')}>
-              ↕ Transferência
-            </button>
-            <button className={`m-toggle-btn ${type === 'goal' ? 'active' : ''}`} onClick={() => switchType('goal')}>
-              ◆ Objetivo
-            </button>
-          </div>
-
-          {/* Amount */}
-          <div className="m-amount-field">
-            <input
-              type="number"
-              className="m-amount-input"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-              inputMode="decimal"
-            />
-            <span className="m-currency">€</span>
-          </div>
-
-          {/* Transfer fields */}
-          {type === 'transfer' && (
-            <>
-              <div className="m-field-card">
-                <span className="m-field-label">Conta de origem</span>
-                {accounts.length === 0 ? (
-                  <span className="m-helper">Sem contas. Adiciona uma em Budget → Património.</span>
-                ) : (
-                  <select className="m-field-select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
-                    <option value="">Seleciona conta de origem</option>
-                    {accounts.map(a => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              <div className="m-field-card">
-                <span className="m-field-label">Conta de destino</span>
-                {accounts.length === 0 ? null : (
-                  <select className="m-field-select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
-                    <option value="">Seleciona conta de destino</option>
-                    {accounts.filter(a => a.id !== transferFrom).map(a => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}{a.bank ? ` · ${a.bank}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Category or Goal (hidden for transfers) */}
-          {type !== 'transfer' && (type === 'goal' ? (
-            <div className="m-field-card">
-              <span className="m-field-label">Objetivo</span>
-              <select
-                className="m-field-select"
-                value={selectedGoal}
-                onChange={(e) => setSelectedGoal(e.target.value)}
-              >
-                <option value="">Seleciona um objetivo</option>
-                {goals.map(g => (
-                  <option key={g.id} value={g.id}>
-                    ◆ {g.name} ({g.currentSavings?.toFixed(0) || 0}€ / {g.amount.toFixed(0)}€)
-                  </option>
-                ))}
-              </select>
-              {goals.length === 0 && (
-                <span className="m-helper">Sem objetivos. Cria um em Budget → Objetivos</span>
-              )}
-            </div>
-          ) : (
-            <div className="m-field-card">
-              <span className="m-field-label">Categoria</span>
-              <select
-                className="m-field-select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                <option value="">Seleciona uma categoria</option>
-                {currentCategories.map(cat => (
-                  <option key={cat.id} value={cat.label}>
-                    {getCategoryIcon(cat.label)} {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
-
-          {/* Description */}
-          <div className="m-field-card">
-            <span className="m-field-label">Descrição (opcional)</span>
-            <input
-              type="text"
-              className="m-field-input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ex: Compras supermercado"
-              maxLength={100}
-            />
-          </div>
-
-          {/* Date */}
-          <div className="m-field-card">
-            <span className="m-field-label">Data</span>
-            <input
-              type="date"
-              className="m-field-input"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </div>
-
-          {/* Submit */}
+        {/* Sticky submit footer — always visible above keyboard / nav */}
+        <div className="m-add-footer">
           <button
             className={`m-submit-btn ${type}`}
             onClick={handleSubmit}
@@ -245,97 +278,13 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
         <p>Adiciona receitas ou despesas</p>
       </div>
 
+      {/* Scrollable form body */}
       <div className="add-form-container">
-        {/* Type Toggle */}
-        <div className="type-toggle">
-          <button type="button" className={`type-btn ${type === 'expense' ? 'active expense' : ''}`} onClick={() => switchType('expense')}>
-            <span className="type-icon-sf">−</span><span>Despesa</span>
-          </button>
-          <button type="button" className={`type-btn ${type === 'income' ? 'active income' : ''}`} onClick={() => switchType('income')}>
-            <span className="type-icon-sf">+</span><span>Receita</span>
-          </button>
-          <button type="button" className={`type-btn ${type === 'transfer' ? 'active transfer' : ''}`} onClick={() => switchType('transfer')}>
-            <span className="type-icon-sf">↕</span><span>Transferência</span>
-          </button>
-          <button type="button" className={`type-btn ${type === 'goal' ? 'active goal' : ''}`} onClick={() => switchType('goal')}>
-            <span className="type-icon-sf">◆</span><span>Objetivos</span>
-          </button>
-        </div>
+        {formFields}
+      </div>
 
-        {type === 'transfer' && (
-          <>
-            <div className="form-field">
-              <label>Conta de origem</label>
-              {accounts.length === 0 ? (
-                <p className="helper-text">Sem contas. Adiciona uma em Budget → Património.</p>
-              ) : (
-                <select value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} className="category-select">
-                  <option value="">Seleciona conta de origem</option>
-                  {accounts.map(a => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            <div className="form-field">
-              <label>Conta de destino</label>
-              {accounts.length === 0 ? null : (
-                <select value={transferTo} onChange={(e) => setTransferTo(e.target.value)} className="category-select">
-                  <option value="">Seleciona conta de destino</option>
-                  {accounts.filter(a => a.id !== transferFrom).map(a => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}{a.bank ? ` · ${a.bank}` : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          </>
-        )}
-
-        <div className="form-field">
-          <label>Valor</label>
-          <div className="amount-input">
-            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" step="0.01" min="0" inputMode="decimal" />
-            <span className="currency">€</span>
-          </div>
-        </div>
-
-        {type !== 'transfer' && (type === 'goal' ? (
-          <div className="form-field">
-            <label>Objetivo</label>
-            <select value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)} className="category-select">
-              <option value="">Seleciona um objetivo</option>
-              {goals.map(goal => (
-                <option key={goal.id} value={goal.id}>◆ {goal.name} ({goal.currentSavings?.toFixed(0) || 0}€ / {goal.amount.toFixed(0)}€)</option>
-              ))}
-            </select>
-            {goals.length === 0 && <p className="helper-text">Sem objetivos ativos. Cria um em Budget → Objetivos</p>}
-          </div>
-        ) : (
-          <div className="form-field">
-            <label>Categoria</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="category-select">
-              <option value="">Seleciona uma categoria</option>
-              {currentCategories.map(cat => (
-                <option key={cat.id} value={cat.label}>{getCategoryIcon(cat.label)} {cat.label}</option>
-              ))}
-            </select>
-          </div>
-        ))}
-
-        <div className="form-field">
-          <label>Descrição (opcional)</label>
-          <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex: Compras supermercado" maxLength={100} className="text-input" />
-        </div>
-
-        <div className="form-field">
-          <label>Data</label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={new Date().toISOString().split('T')[0]} className="date-input" />
-        </div>
-
+      {/* Sticky submit button */}
+      <div className="add-footer">
         <button type="button" className={`btn-submit ${type}`} onClick={handleSubmit} disabled={loading}>
           {loading ? '◷ A guardar...' : '✓ Adicionar'}
         </button>

@@ -1,4 +1,7 @@
 .add-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 1rem;
   animation: fadeIn 0.3s ease;
   max-width: 500px;
@@ -8,6 +11,7 @@
 .add-header {
   margin-bottom: 1.5rem;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .add-header h2 {
@@ -25,15 +29,23 @@
 }
 
 .add-form-container {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
+/* ── Sticky submit footer ─────────────────────────────────────────────────── */
+.add-footer {
+  flex-shrink: 0;
+  padding: 0.75rem 0 0;
+}
+
 /* Type Toggle */
 .type-toggle {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
   padding: 0.25rem;
   background: var(--bg-secondary);
@@ -70,6 +82,17 @@
 .type-btn.active.income {
   background: var(--success);
   color: white;
+}
+
+.type-btn.active.transfer {
+  background: #6366f1;
+  color: white;
+}
+
+.type-btn.active.goal {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .type-icon-sf {
@@ -172,6 +195,7 @@
 
 /* Submit Button */
 .btn-submit {
+  width: 100%;
   padding: 1rem;
   border: none;
   border-radius: 14px;
@@ -180,7 +204,6 @@
   color: white;
   cursor: pointer;
   transition: all var(--transition-fast);
-  margin-top: 0.5rem;
   letter-spacing: -0.02em;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -195,31 +218,10 @@
   cursor: not-allowed;
 }
 
-.btn-submit.expense {
-  background: var(--danger);
-}
-
-.btn-submit.income {
-  background: var(--success);
-}
-
-/* Goal Type Button */
-.type-btn.goal {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: transparent;
-}
-
-.type-btn.goal:hover {
-  opacity: 0.9;
-}
-
-.type-btn.active.goal {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transform: translateY(-2px);
-}
+.btn-submit.expense  { background: var(--danger); }
+.btn-submit.income   { background: var(--success); }
+.btn-submit.transfer { background: #6366f1; }
+.btn-submit.goal     { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
 /* Helper Text */
 .helper-text {
@@ -227,11 +229,4 @@
   color: var(--text-tertiary);
   margin-top: 0.5rem;
   font-style: italic;
-}
-
-/* 3-button grid layout */
-.type-toggle {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
 }

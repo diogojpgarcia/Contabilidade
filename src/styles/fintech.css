@@ -508,9 +508,17 @@
    ADD TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
 .m-add-page {
-  padding: 0 16px calc(84px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
 }
-.m-add-header { padding: 16px 0 8px; }
+
+/* Scrollable form area */
+.m-add-body {
+  flex: 1;
+}
+
+.m-add-header { padding: 16px 0 8px; flex-shrink: 0; }
 .m-page-title {
   font-size: 1.25rem;
   font-weight: 700;
@@ -519,6 +527,12 @@
 }
 
 .m-form { display: flex; flex-direction: column; gap: 10px; }
+
+/* Sticky submit footer — sits below form, clears the fixed bottom nav */
+.m-add-footer {
+  flex-shrink: 0;
+  padding: 8px 0 calc(16px + 56px + env(safe-area-inset-bottom));
+}
 
 /* Big amount field */
 .m-amount-field {
@@ -596,7 +610,8 @@
 .m-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .m-submit-btn.expense  { background: #dc2626; color: #fff; box-shadow: 0 3px 12px rgba(220,38,38,0.28); }
 .m-submit-btn.income   { background: #16a34a; color: #fff; box-shadow: 0 3px 12px rgba(22,163,74,0.28); }
-.m-submit-btn.goal     { background: #6366f1; color: #fff; box-shadow: 0 3px 12px rgba(99,102,241,0.28); }
+.m-submit-btn.transfer { background: #6366f1; color: #fff; box-shadow: 0 3px 12px rgba(99,102,241,0.28); }
+.m-submit-btn.goal     { background: #7c3aed; color: #fff; box-shadow: 0 3px 12px rgba(124,58,237,0.28); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BUDGET TAB — MODERN
