@@ -304,22 +304,31 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
             </div>
 
             <div className="m-list">
-              {categories.expense.map(cat => {
-                const limit   = budgets[cat.id] || 0;
-                const spent   = getSpentByCategory(cat.id);
-                const pct     = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-                const isOver  = limit > 0 && spent > limit;
-                return (
+              {categories.expense
+                .map(cat => {
+                  const limit = budgets[cat.id] || 0;
+                  const spent = getSpentByCategory(cat.id);
+                  const percent = limit > 0 ? (spent / limit) * 100 : 0;
+                  const barWidth = Math.min(percent, 100);
+                  const colorClass = percent > 100 ? 'over' : percent >= 70 ? 'warn' : '';
+                  return { cat, limit, spent, percent, barWidth, colorClass };
+                })
+                .sort((a, b) => b.percent - a.percent)
+                .map(({ cat, limit, spent, percent, barWidth, colorClass }) => (
                   <div key={cat.id} className="m-budget-row">
                     <div className="m-budget-top">
                       <span className="m-budget-cat">{cat.label}</span>
-                      <span className={`m-budget-spent ${isOver ? 'over' : ''}`}>
-                        {spent.toFixed(0)} / {limit > 0 ? limit.toFixed(0) : '—'}€
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        {percent >= 100 && <span className="m-budget-alert over">Excedido</span>}
+                        {percent >= 80 && percent < 100 && <span className="m-budget-alert warn">Atenção</span>}
+                        <span className={`m-budget-spent ${colorClass}`}>
+                          {spent.toFixed(0)} / {limit > 0 ? limit.toFixed(0) : '—'}€
+                        </span>
+                      </div>
                     </div>
                     {limit > 0 && (
                       <div className="m-budget-bar-bg">
-                        <div className={`m-budget-bar-fill ${isOver ? 'over' : ''}`} style={{ width: `${pct}%` }} />
+                        <div className={`m-budget-bar-fill ${colorClass}`} style={{ width: `${barWidth}%` }} />
                       </div>
                     )}
                     <div className="m-budget-input-row">
@@ -336,8 +345,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                       <button className="m-budget-save" onClick={saveBudgetToDb}>✓</button>
                     </div>
                   </div>
-                );
-              })}
+                ))
+              }
             </div>
           </>
         )}
@@ -464,17 +473,24 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
             );
           })()}
           <div className="categories-budgets">
-            {categories.expense.map(cat => {
-              const limit = budgets[cat.id] || 0;
-              const spent = getSpentByCategory(cat.id);
-              const hasLimit = limit > 0;
-              const percentage = hasLimit ? (spent / limit) * 100 : 0;
-              const isOver = percentage > 100;
-              return (
+            {categories.expense
+              .map(cat => {
+                const limit = budgets[cat.id] || 0;
+                const spent = getSpentByCategory(cat.id);
+                const hasLimit = limit > 0;
+                const percent = hasLimit ? (spent / limit) * 100 : 0;
+                const barWidth = Math.min(percent, 100);
+                const colorClass = percent > 100 ? 'over' : percent >= 70 ? 'warn' : '';
+                return { cat, limit, spent, hasLimit, percent, barWidth, colorClass };
+              })
+              .sort((a, b) => b.percent - a.percent)
+              .map(({ cat, limit, spent, hasLimit, percent, barWidth, colorClass }) => (
                 <div key={cat.id} className="budget-category">
                   <div className="category-header">
                     <span className="category-icon">{getCategoryIcon(cat.label)}</span>
                     <span className="category-name">{cat.label}</span>
+                    {percent >= 100 && <span className="budget-alert over">Excedido</span>}
+                    {percent >= 80 && percent < 100 && <span className="budget-alert warn">Atenção</span>}
                   </div>
                   <div className="budget-input-row">
                     <input type="number" inputMode="decimal" className="budget-input" value={limit || ''} onChange={(e) => handleLimitChange(cat.id, e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { saveBudgetToDb(); e.target.blur(); } }} placeholder="0" step="10" min="0" />
@@ -483,18 +499,18 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                   </div>
                   {hasLimit && (
                     <div className="budget-progress-container">
-                      <div className="budget-bar"><div className={`budget-fill ${isOver ? 'over' : ''}`} style={{ width: `${Math.min(percentage, 100)}%` }} /></div>
+                      <div className="budget-bar"><div className={`budget-fill ${colorClass}`} style={{ width: `${barWidth}%` }} /></div>
                       <div className="budget-stats">
-                        <span className={`spent ${isOver ? 'over' : ''}`}>{spent.toFixed(2)}€</span>
+                        <span className={`spent ${colorClass}`}>{spent.toFixed(2)}€</span>
                         <span className="separator">/</span>
                         <span className="limit">{limit.toFixed(2)}€</span>
-                        <span className={`percentage ${isOver ? 'over' : ''}`}>({percentage.toFixed(0)}%)</span>
+                        <span className={`percentage ${colorClass}`}>({percent.toFixed(0)}%)</span>
                       </div>
                     </div>
                   )}
                 </div>
-              );
-            })}
+              ))
+            }
           </div>
         </div>
       )}

@@ -649,10 +649,15 @@
   font-weight: 500;
   white-space: nowrap;
 }
+.m-budget-spent.warn { color: #F59E0B; }
 .m-budget-spent.over { color: #dc2626; }
+.m-budget-alert { font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 3px; flex-shrink: 0; }
+.m-budget-alert.warn { background: rgba(245,158,11,0.15); color: #F59E0B; }
+.m-budget-alert.over { background: rgba(220,38,38,0.15); color: #dc2626; }
 
-.m-budget-bar-bg   { height: 3px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; }
-.m-budget-bar-fill { height: 100%; border-radius: 2px; background: #6366f1; transition: width 0.3s ease; }
+.m-budget-bar-bg   { height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+.m-budget-bar-fill { height: 100%; border-radius: 4px; background: #10B981; transition: width 0.3s ease; }
+.m-budget-bar-fill.warn { background: #F59E0B; }
 .m-budget-bar-fill.over { background: #dc2626; }
 
 .m-budget-input-row {
