@@ -258,8 +258,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const getSpentForMonth = (categoryId, month) => {
     const categoryName = categories.expense.find(c => c.id === categoryId)?.label;
     return transactions
-      .filter(t => t.type === 'expense' && t.category === categoryName && t.date.startsWith(month))
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      .filter(t => t.type === 'expense' && t.category === categoryName && t.date && t.date.startsWith(month))
+      .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   };
 
   const getSpentByCategory = (categoryId) => getSpentForMonth(categoryId, selectedMonth);

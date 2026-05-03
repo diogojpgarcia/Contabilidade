@@ -229,9 +229,14 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   );
 
   const insights = useMemo(() => {
-    const items = generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth });
-    console.log('SUMMARY ITEMS:', items);
-    return items;
+    try {
+      const items = generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth });
+      console.log('[Insights]', { budgetKeys: Object.keys(budgets).length, txCount: transactions.length, month: currentMonth, items: items.length });
+      return items;
+    } catch (e) {
+      console.error('[Insights] generateInsights threw:', e);
+      return [];
+    }
   }, [transactions, budgets, categories, currentMonth]);
 
   // Get month name from the global currentMonth

@@ -23,8 +23,8 @@ export const getPrediction = (spent, selectedMonth) => {
 
 const getSpent = (transactions, catName, month) =>
   transactions
-    .filter(t => t.type === 'expense' && t.category === catName && t.date.startsWith(month))
-    .reduce((s, t) => s + parseFloat(t.amount), 0);
+    .filter(t => t.type === 'expense' && t.category === catName && t.date && t.date.startsWith(month))
+    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
 export const generateInsights = ({ transactions, budgets, categories, selectedMonth }) => {
   const prevMonth = shiftMonth(selectedMonth, -1);
