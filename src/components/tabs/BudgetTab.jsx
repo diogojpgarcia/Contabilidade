@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
@@ -20,6 +20,34 @@ const PATRIMONY_TYPES = [
 
 const EMPTY_PATRIMONY = { accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] };
 const EMPTY_GOAL      = { name: '', amount: '', targetDate: '', currentSavings: '' };
+
+const CAT_COLORS = {
+  'Alimentação':'#F59E0B','Habitação':'#3B82F6','Transporte':'#8B5CF6',
+  'Saúde':'#10B981','Lazer':'#EC4899','Educação':'#06B6D4',
+  'Roupa':'#F97316','Tecnologia':'#6366F1','Subscrições':'#84CC16','Outros':'#6B7280',
+};
+
+const CountUp = ({ value, decimals = 0 }) => {
+  const [display, setDisplay] = useState(0);
+  const fromRef = useRef(0);
+  const rafRef  = useRef(null);
+  useEffect(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    const from = fromRef.current;
+    const start = Date.now();
+    const tick = () => {
+      const p = Math.min((Date.now() - start) / 700, 1);
+      const eased = 1 - (1 - p) ** 3;
+      const curr = from + (value - from) * eased;
+      setDisplay(curr);
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
+      else fromRef.current = value;
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [value]);
+  return <>{display.toFixed(decimals)}</>;
+};
 
 /**
  * Isolated input so the goal-savings field has its own draft.
@@ -52,6 +80,15 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const [editingGoalId,       setEditingGoalId]       = useState(null);
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
+  const [editingCategoryId,   setEditingCategoryId]   = useState(null);
+  const [animated,            setAnimated]            = useState(false);
+
+  useEffect(() => {
+    if (activeView !== 'budgets') return;
+    setAnimated(false);
+    const t = setTimeout(() => setAnimated(true), 80);
+    return () => clearTimeout(t);
+  }, [activeView, transactions]);
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
@@ -291,19 +328,44 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
         {/* ── BUDGETS ── */}
         {activeView === 'budgets' && (
           <>
-            {/* Summary chips */}
-            <div className="m-budget-summary">
-              <div className="m-chip" style={{ flex: 1 }}>
-                <span className="m-chip-label">Orçamento</span>
-                <span className="m-chip-amount">{totalBudget.toFixed(0)}€</span>
-              </div>
-              <div className="m-chip" style={{ flex: 1 }}>
-                <span className="m-chip-label">Gasto</span>
-                <span className="m-chip-amount" style={{ color: isTotalOver ? '#dc2626' : undefined }}>{totalSpent.toFixed(0)}€</span>
-              </div>
-            </div>
+            {/* Main summary card */}
+            {(() => {
+              const remaining = totalBudget - totalSpent;
+              const totalPct  = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
+              const barColor  = isTotalOver ? '#dc2626' : totalPct >= 70 ? '#F59E0B' : '#10B981';
+              return (
+                <div className="m-bmc">
+                  <span className="m-bmc-label">Orçamento mensal</span>
+                  <div className="m-bmc-big">
+                    <span className="m-bmc-amount" style={{ color: isTotalOver ? '#dc2626' : undefined }}>
+                      <CountUp value={totalBudget > 0 ? Math.abs(remaining) : totalSpent} />€
+                    </span>
+                    <span className="m-bmc-sub">{isTotalOver ? 'excedido' : totalBudget > 0 ? 'disponível' : 'gasto'}</span>
+                  </div>
+                  <div className="m-bmc-row">
+                    <div className="m-bmc-col">
+                      <span className="m-bmc-col-val"><CountUp value={totalBudget} />€</span>
+                      <span className="m-bmc-col-label">Orçamento</span>
+                    </div>
+                    <div className="m-bmc-sep" />
+                    <div className="m-bmc-col">
+                      <span className="m-bmc-col-val" style={{ color: isTotalOver ? '#dc2626' : undefined }}>
+                        <CountUp value={totalSpent} />€
+                      </span>
+                      <span className="m-bmc-col-label">Gasto</span>
+                    </div>
+                  </div>
+                  {totalBudget > 0 && (
+                    <div className="m-bmc-bar-bg">
+                      <div className="m-bmc-bar-fill" style={{ width: animated ? `${totalPct}%` : '0%', background: barColor }} />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
-            <div className="m-list">
+            {/* Category cards */}
+            <div className="m-bcc-list">
               {categories.expense
                 .map(cat => {
                   const limit = budgets[cat.id] || 0;
@@ -314,38 +376,50 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                   return { cat, limit, spent, percent, barWidth, colorClass };
                 })
                 .sort((a, b) => b.percent - a.percent)
-                .map(({ cat, limit, spent, percent, barWidth, colorClass }) => (
-                  <div key={cat.id} className="m-budget-row">
-                    <div className="m-budget-top">
-                      <span className="m-budget-cat">{cat.label}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        {percent >= 100 && <span className="m-budget-alert over">Excedido</span>}
-                        {percent >= 80 && percent < 100 && <span className="m-budget-alert warn">Atenção</span>}
-                        <span className={`m-budget-spent ${colorClass}`}>
-                          {spent.toFixed(0)} / {limit > 0 ? limit.toFixed(0) : '—'}€
-                        </span>
+                .map(({ cat, limit, spent, percent, barWidth, colorClass }) => {
+                  const color = CAT_COLORS[cat.label] || '#6B7280';
+                  const isEditing = editingCategoryId === cat.id;
+                  return (
+                    <div key={cat.id} className="m-bcc">
+                      <div className="m-bcc-row">
+                        <div className="m-bcc-bubble" style={{ background: `${color}26` }}>
+                          <span style={{ color }}>{getCategoryIcon(cat.label)}</span>
+                        </div>
+                        <div className="m-bcc-info">
+                          <div className="m-bcc-name-row">
+                            <span className="m-bcc-name">{cat.label}</span>
+                            {percent >= 100 && <span className="m-bcc-badge over">Ultrapassado</span>}
+                            {percent >= 80 && percent < 100 && <span className="m-bcc-badge warn">Atenção</span>}
+                          </div>
+                          <span className={`m-bcc-spent ${colorClass}`}>
+                            {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
+                          </span>
+                        </div>
+                        <button className="m-bcc-edit" onClick={() => setEditingCategoryId(isEditing ? null : cat.id)}>✏</button>
                       </div>
+                      {isEditing && (
+                        <div className="m-bcc-edit-row">
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            className="m-bcc-input"
+                            value={limit || ''}
+                            onChange={(e) => handleLimitChange(cat.id, e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { saveBudgetToDb(); setEditingCategoryId(null); e.target.blur(); }}}
+                            placeholder="Limite €/mês"
+                            autoFocus
+                          />
+                          <button className="m-bcc-save" onClick={() => { saveBudgetToDb(); setEditingCategoryId(null); }}>✓</button>
+                        </div>
+                      )}
+                      {limit > 0 && (
+                        <div className="m-budget-bar-bg">
+                          <div className={`m-budget-bar-fill ${colorClass}`} style={{ width: animated ? `${barWidth}%` : '0%' }} />
+                        </div>
+                      )}
                     </div>
-                    {limit > 0 && (
-                      <div className="m-budget-bar-bg">
-                        <div className={`m-budget-bar-fill ${colorClass}`} style={{ width: `${barWidth}%` }} />
-                      </div>
-                    )}
-                    <div className="m-budget-input-row">
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        className="m-budget-limit-input"
-                        value={limit || ''}
-                        onChange={(e) => handleLimitChange(cat.id, e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { saveBudgetToDb(); e.target.blur(); }}}
-                        placeholder="Limite"
-                      />
-                      <span className="m-budget-unit">€/mês</span>
-                      <button className="m-budget-save" onClick={saveBudgetToDb}>✓</button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               }
             </div>
           </>
