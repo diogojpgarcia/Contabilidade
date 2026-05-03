@@ -3,7 +3,7 @@ import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { Bubble, Card } from '../ui';
-import { generateInsights, shiftMonth } from '../../utils/insights';
+import { generateInsights, computeFinancialScore, shiftMonth } from '../../utils/insights';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -236,13 +236,36 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
   const insights = useMemo(() => {
     try {
-      const items = generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth });
-      console.log('items:', items);
-      return items;
+      return generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth });
     } catch (e) {
       console.error('[Insights] generateInsights threw:', e);
       return [];
     }
+  }, [transactions, budgets, categories, currentMonth]);
+
+  const financialScore = useMemo(() => {
+    try {
+      return computeFinancialScore({ transactions, budgets, categories, selectedMonth: currentMonth });
+    } catch (e) {
+      return { score: 0, color: '#52525b', label: '—' };
+    }
+  }, [transactions, budgets, categories, currentMonth]);
+
+  const forecast = useMemo(() => {
+    const [fy, fm] = currentMonth.split('-').map(Number);
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === fy && today.getMonth() + 1 === fm;
+    if (!isCurrentMonth) return null;
+    const daysPassed = today.getDate();
+    const daysInMonth = new Date(fy, fm, 0).getDate();
+    const totalExpenses = transactions
+      .filter(t => t.type === 'expense' && t.date && t.date.startsWith(currentMonth))
+      .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+    if (daysPassed < 3 || totalExpenses === 0) return null;
+    const dailyAvg = totalExpenses / daysPassed;
+    const projected = Math.round(dailyAvg * daysInMonth);
+    const totalBudget = categories.expense.reduce((s, c) => s + (budgets[c.id] || 0), 0);
+    return { projected, dailyAvg, totalBudget, daysLeft: daysInMonth - daysPassed };
   }, [transactions, budgets, categories, currentMonth]);
 
   // Get month name from the global currentMonth
@@ -449,35 +472,83 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           const PRIORITY      = { alert: 4, warning: 3, opportunity: 2, info: 1 };
           const TYPE_ICON     = { alert: '⚠️', warning: '⚡', opportunity: '📈', info: '📊' };
           const TYPE_STYLE    = {
-            alert:       { border: 'rgba(239,68,68,0.3)',   bg: 'rgba(239,68,68,0.08)',   glow: '0 0 16px rgba(239,68,68,0.12)'   },
-            warning:     { border: 'rgba(234,179,8,0.3)',   bg: 'rgba(234,179,8,0.08)',   glow: '0 0 16px rgba(234,179,8,0.12)'   },
-            opportunity: { border: 'rgba(74,222,128,0.3)',  bg: 'rgba(74,222,128,0.08)',  glow: '0 0 16px rgba(74,222,128,0.12)'  },
-            info:        { border: 'rgba(255,255,255,0.08)', bg: '#18181b',               glow: 'none'                            },
+            alert:       { border: 'rgba(239,68,68,0.3)',    bg: 'rgba(239,68,68,0.08)',   glow: '0 0 16px rgba(239,68,68,0.12)'   },
+            warning:     { border: 'rgba(234,179,8,0.3)',    bg: 'rgba(234,179,8,0.08)',   glow: '0 0 16px rgba(234,179,8,0.12)'   },
+            opportunity: { border: 'rgba(74,222,128,0.3)',   bg: 'rgba(74,222,128,0.08)',  glow: '0 0 16px rgba(74,222,128,0.12)'  },
+            info:        { border: 'rgba(255,255,255,0.08)', bg: '#18181b',                glow: 'none'                            },
           };
-
           const feed = insights
             .map(item => ({ ...item, feedType: COLOR_TO_TYPE[item.color] || 'info' }))
             .sort((a, b) => PRIORITY[b.feedType] - PRIORITY[a.feedType])
-            .slice(0, 3);
+            .slice(0, 4);
 
           return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16, padding: '0 16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px 0' }}>
+
+              {/* Score card */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#18181b', borderRadius: 16, padding: '16px 20px' }}>
+                {/* Circular gauge */}
+                <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
+                  <div style={{
+                    width: 60, height: 60, borderRadius: '50%',
+                    background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, #27272a ${financialScore.score}% 100%)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700, color: financialScore.color }}>
+                      {financialScore.score}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.65rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Score Financeiro</div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{financialScore.label}</div>
+                </div>
+              </div>
+
+              {/* Prediction card — current month only */}
+              {forecast && (
+                <div style={{
+                  background: forecast.totalBudget > 0 && forecast.projected > forecast.totalBudget
+                    ? 'rgba(239,68,68,0.08)' : '#18181b',
+                  border: forecast.totalBudget > 0 && forecast.projected > forecast.totalBudget
+                    ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 16, padding: '14px 16px',
+                }}>
+                  <div style={{ fontSize: '0.65rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Previsão do mês</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
+                        {fmt(forecast.projected)}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#71717a', marginTop: 2 }}>
+                        {fmt(Math.round(forecast.dailyAvg))}/dia · {forecast.daysLeft} dias restantes
+                      </div>
+                    </div>
+                    {forecast.totalBudget > 0 && (
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', color: forecast.projected > forecast.totalBudget ? '#f87171' : '#4ade80', fontWeight: 600 }}>
+                          {forecast.projected > forecast.totalBudget
+                            ? `+${fmt(forecast.projected - forecast.totalBudget)} acima`
+                            : `−${fmt(forecast.totalBudget - forecast.projected)} abaixo`}
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: '#52525b', marginTop: 2 }}>do orçamento total</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Alerts feed */}
               {feed.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#52525b', fontSize: '0.875rem', padding: '32px 0' }}>
-                  Sem insights relevantes ainda
+                <div style={{ textAlign: 'center', color: '#52525b', fontSize: '0.875rem', padding: '24px 0' }}>
+                  Sem alertas relevantes neste momento
                 </div>
               ) : feed.map((item, i) => {
                 const s = TYPE_STYLE[item.feedType];
                 return (
                   <div
                     key={i}
-                    style={{
-                      borderRadius: 14, padding: '14px 16px',
-                      display: 'flex', gap: 12, alignItems: 'center',
-                      background: s.bg, border: `1px solid ${s.border}`,
-                      boxShadow: s.glow,
-                      transition: 'transform 0.15s ease',
-                    }}
+                    style={{ borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, boxShadow: s.glow, transition: 'transform 0.15s ease' }}
                     onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                   >
@@ -488,9 +559,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: 2 }}>{item.title}</div>
                       <div style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.4 }}>{item.message}</div>
                       {(item.explanation || item.extra) && (
-                        <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>
-                          {item.explanation || item.extra}
-                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>{item.explanation || item.extra}</div>
                       )}
                     </div>
                     <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', flexShrink: 0, marginLeft: 8 }}>{item.value}</div>

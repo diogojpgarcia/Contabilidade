@@ -214,5 +214,67 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
 
   return items
     .sort((a, b) => b.priority - a.priority)
-    .slice(0, 3);
+    .slice(0, 4);
+};
+
+// ── Financial score (0-100) ─────────────────────────────────────────────────
+export const computeFinancialScore = ({ transactions, budgets, categories, selectedMonth }) => {
+  const prevMonth  = shiftMonth(selectedMonth, -1);
+  const prev2Month = shiftMonth(selectedMonth, -2);
+
+  const catSpent = (label, month) =>
+    transactions
+      .filter(t => t.type === 'expense' && t.category === label && t.date && t.date.startsWith(month))
+      .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
+  const catTotals = categories.expense.map(cat => ({
+    cat,
+    spent: catSpent(cat.label, selectedMonth),
+  }));
+  const totalCurr  = catTotals.reduce((s, c) => s + c.spent, 0);
+  const totalPrev  = categories.expense.reduce((s, c) => s + catSpent(c.label, prevMonth),  0);
+  const totalPrev2 = categories.expense.reduce((s, c) => s + catSpent(c.label, prev2Month), 0);
+
+  // 1. Budget control (40 pts)
+  const withBudget = catTotals.filter(c => (budgets[c.cat.id] || 0) > 0);
+  let budgetPts = 20; // neutral when no budgets are set
+  if (withBudget.length > 0) {
+    const earned = withBudget.reduce((s, c) => {
+      const pct = c.spent / budgets[c.cat.id];
+      return s + (pct <= 0.8 ? 1 : pct <= 1.0 ? 0.4 : 0);
+    }, 0);
+    budgetPts = Math.round((earned / withBudget.length) * 40);
+  }
+
+  // 2. Monthly trend (30 pts)
+  let trendPts = 20;
+  if (totalPrev > 5) {
+    const chg = (totalCurr - totalPrev) / totalPrev;
+    trendPts = chg < -0.05 ? 30 : chg <= 0.05 ? 20 : chg <= 0.20 ? 10 : 0;
+  }
+
+  // 3. Stability (20 pts) — variance over last 3 months
+  let stabilityPts = 10;
+  if (totalPrev > 5 && totalPrev2 > 5) {
+    const vals = [totalPrev2, totalPrev, totalCurr];
+    const mean   = vals.reduce((s, v) => s + v, 0) / 3;
+    const maxDev = Math.max(...vals.map(v => Math.abs(v - mean) / mean));
+    stabilityPts = maxDev <= 0.15 ? 20 : maxDev <= 0.35 ? 12 : 5;
+  }
+
+  // 4. Category concentration (10 pts)
+  let concPts = 10;
+  if (totalCurr > 20) {
+    const topShare = Math.max(...catTotals.map(c => c.spent)) / totalCurr;
+    concPts = topShare <= 0.30 ? 10 : topShare <= 0.50 ? 5 : 0;
+  }
+
+  const score = Math.min(100, Math.round(budgetPts + trendPts + stabilityPts + concPts));
+  const color = score >= 80 ? '#4ade80' : score >= 60 ? '#facc15' : score >= 40 ? '#fb923c' : '#f87171';
+  const label = score >= 80 ? 'Excelente controlo financeiro'
+              : score >= 60 ? 'Bom controlo — há margem para melhorar'
+              : score >= 40 ? 'Atenção a alguns gastos'
+              : 'Gastos sob pressão — ação necessária';
+
+  return { score, color, label };
 };
