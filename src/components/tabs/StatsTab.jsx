@@ -437,19 +437,18 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
         {/* ── INSIGHTS ── */}
         {activeView === 'insights' && (
-          <div>
-            <div style={{ padding: '8px 16px', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>INSIGHTS COUNT: {insights.length}</div>
-            {insights.map(item => (
-              <Card key={item.type} style={{ margin: '0 16px 8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Bubble color={INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{item.title}</div>
-                    <div style={{ fontWeight: 700, color: INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info }}>{item.value}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{item.message}</div>
-                  </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16, padding: '0 16px' }}>
+            {insights.map((item, i) => (
+              <div key={i} style={{ background: '#18181b', borderRadius: 12, padding: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span>{INSIGHT_ICONS[item.type] || '📊'}</span>
                 </div>
-              </Card>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#fff' }}>{item.title}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>{item.message}</div>
+                </div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', flexShrink: 0 }}>{item.value}</div>
+              </div>
             ))}
           </div>
         )}
