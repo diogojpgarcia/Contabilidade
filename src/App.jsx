@@ -332,6 +332,25 @@ const App = () => {
     }
   };
 
+  // ── Hooks that must run unconditionally (before any early return) ──────────
+  // Rules of Hooks: useMemo/useCallback/useState must never appear after a
+  // conditional return — doing so causes React error #310.
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
+  // All-time balance: income adds, expenses subtract, transfers are ignored
+  const totalBalance = useMemo(() =>
+    safeTransactions.reduce((acc, t) => {
+      if (!t || !t.type) return acc;
+      const amt = parseFloat(t.amount || 0);
+      if (t.type === 'income')  return acc + amt;
+      if (t.type === 'expense') return acc - amt;
+      return acc;
+    }, 0),
+    [safeTransactions]
+  );
+
+  // ── Conditional early returns (AFTER all hooks) ────────────────────────────
+
   // Loading state
   if (loading) {
     return (
@@ -362,27 +381,15 @@ const App = () => {
     );
   }
 
-  // Logged in - show main app with bottom navigation
-  const filteredTransactions = transactions.filter(t => getMonthKey(t.date) === currentMonth);
+  // Logged in — derive monthly figures (plain expressions, not hooks)
+  const filteredTransactions = safeTransactions.filter(t => getMonthKey(t.date) === currentMonth);
   const monthlyIncome = filteredTransactions
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const monthlyExpenses = filteredTransactions
     .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const balance = monthlyIncome - monthlyExpenses;
-
-  // All-time balance: income adds, expenses subtract, transfers are ignored
-  const totalBalance = useMemo(() => {
-    if (!Array.isArray(transactions)) return 0;
-    return transactions.reduce((acc, t) => {
-      if (!t || !t.type) return acc;
-      const amt = parseFloat(t.amount || 0);
-      if (t.type === 'income')  return acc + amt;
-      if (t.type === 'expense') return acc - amt;
-      return acc; // transfer / adjustment — no effect on lifetime balance
-    }, 0);
-  }, [transactions]);
 
   const userName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
@@ -412,7 +419,7 @@ const App = () => {
 
         {activeTab === 'stats' && (
           <StatsTab
-            transactions={transactions}
+            transactions={safeTransactions}
             filteredTransactions={filteredTransactions}
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
@@ -437,7 +444,7 @@ const App = () => {
         {activeTab === 'budget' && (
           <BudgetTab
             user={currentUser}
-            transactions={transactions}
+            transactions={safeTransactions}
             currentMonth={currentMonth}
             categories={categoriesProfessional}
             patrimony={patrimony}
