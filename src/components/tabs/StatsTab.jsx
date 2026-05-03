@@ -254,12 +254,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
   const monthExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
 
-  // DEBUG — revert after test
-  return (
-    <div style={{ color: 'red', padding: 20 }}>
-      TEST FEED ACTIVE
-    </div>
-  );
+  console.log('INSIGHTS ITEMS:', insights);
 
   /* ── MODERN / FINTECH BRANCH ───────────────────────────────────────────── */
   if (theme === 'modern' || theme === 'fintech') {
