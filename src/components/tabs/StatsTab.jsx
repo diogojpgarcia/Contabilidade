@@ -2,7 +2,7 @@
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
-import { Bubble } from '../ui';
+import { Bubble, Card } from '../ui';
 import { generateInsights } from '../../utils/insights';
 import './StatsTab.css';
 import './HomeTab.modern.css';
@@ -435,30 +435,21 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
         {/* ── INSIGHTS ── */}
         {activeView === 'insights' && (
-          insights.length === 0 ? (
-            <div className="m-insights-empty">
-              <span className="m-insights-empty-icon">✓</span>
-              <p>Sem dados suficientes</p>
-            </div>
-          ) : (
-            <div className="m-insights-list">
-              {insights.map((item, i) => {
-                const c = INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info;
-                return (
-                  <div key={i} className="m-insight-card">
-                    <Bubble color={c} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
-                    <div className="m-insight-body">
-                      <div className="m-insight-top">
-                        <span className="m-insight-title">{item.title}</span>
-                        <span className="m-insight-value" style={{ color: c }}>{item.value}</span>
-                      </div>
-                      <span className="m-insight-msg">{item.message}</span>
-                    </div>
+          <div>
+            <div style={{ padding: '8px 16px', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>INSIGHTS COUNT: {insights.length}</div>
+            {insights.map(item => (
+              <Card key={item.type} style={{ margin: '0 16px 8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Bubble color={INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{item.title}</div>
+                    <div style={{ fontWeight: 700, color: INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info }}>{item.value}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{item.message}</div>
                   </div>
-                );
-              })}
-            </div>
-          )
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
 
         {pickerTx && (
@@ -794,27 +785,21 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       )}
 
       {activeView === 'insights' && (
-        insights.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)' }}>Sem dados suficientes</div>
-        ) : (
-          <div className="m-insights-list" style={{ padding: '0 16px' }}>
-            {insights.map((item, i) => {
-              const c = INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info;
-              return (
-                <div key={i} className="m-insight-card">
-                  <Bubble color={c} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
-                  <div className="m-insight-body">
-                    <div className="m-insight-top">
-                      <span className="m-insight-title">{item.title}</span>
-                      <span className="m-insight-value" style={{ color: c }}>{item.value}</span>
-                    </div>
-                    <span className="m-insight-msg">{item.message}</span>
-                  </div>
+        <div style={{ padding: '0 16px' }}>
+          <div style={{ padding: '8px 0', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>INSIGHTS COUNT: {insights.length}</div>
+          {insights.map(item => (
+            <Card key={item.type} style={{ marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Bubble color={INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{item.title}</div>
+                  <div style={{ fontWeight: 700, color: INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info }}>{item.value}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{item.message}</div>
                 </div>
-              );
-            })}
-          </div>
-        )
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
 
       {/* Category Picker */}
