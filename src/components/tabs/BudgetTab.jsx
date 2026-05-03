@@ -32,6 +32,19 @@ const getCategoryIcon = (category) => {
   return CATEGORY_ICONS[label] || '◌';
 };
 
+const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+const shiftMonth = (yyyymm, delta) => {
+  const [y, m] = yyyymm.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const formatMonthLabel = (yyyymm) => {
+  const [y, m] = yyyymm.split('-').map(Number);
+  return `${MONTH_NAMES[m - 1]} ${y}`;
+};
+
 const getGradient = (percent) => {
   if (percent > 100) return 'linear-gradient(90deg, #ef4444, #b91c1c)';
   if (percent >= 70)  return 'linear-gradient(90deg, #eab308, #f97316)';
@@ -60,12 +73,10 @@ const CountUp = ({ value, decimals = 0 }) => {
   return <>{display.toFixed(decimals)}</>;
 };
 
-const BudgetCategoryCard = ({ cat, limit, spent, percent, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
-  const color     = CAT_COLORS[cat.label] || '#6B7280';
-  const barWidth  = Math.min(percent, 100);
+const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
+  const color      = CAT_COLORS[cat.label] || '#6B7280';
+  const barWidth   = Math.min(percent, 100);
   const colorClass = percent > 100 ? 'over' : percent >= 70 ? 'warn' : '';
-
-  console.log(cat.label, percent);
 
   return (
     <div className="m-bcc">
@@ -79,9 +90,17 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, animated, isEditing, o
             {percent >= 100 && <span className="m-bcc-badge over">Ultrapassado</span>}
             {percent >= 80 && percent < 100 && <span className="m-bcc-badge warn">Atenção</span>}
           </div>
-          <span className={`m-bcc-spent ${colorClass}`}>
-            {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
-          </span>
+          <div className="m-bcc-meta-row">
+            <span className={`m-bcc-spent ${colorClass}`}>
+              {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
+            </span>
+            {delta > 0.5 && (
+              <span className="m-bcc-delta up">↑ +{delta.toFixed(0)}€</span>
+            )}
+            {delta < -0.5 && (
+              <span className="m-bcc-delta down">↓ {Math.abs(delta).toFixed(0)}€</span>
+            )}
+          </div>
         </div>
         <button className="m-bcc-edit" onClick={onEditToggle}>✏</button>
       </div>
@@ -153,13 +172,16 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
   const [animated,            setAnimated]            = useState(false);
+  const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
+
+  useEffect(() => { setSelectedMonth(currentMonth); }, [currentMonth]);
 
   useEffect(() => {
     if (activeView !== 'budgets') return;
     setAnimated(false);
     const t = setTimeout(() => setAnimated(true), 80);
     return () => clearTimeout(t);
-  }, [activeView, transactions]);
+  }, [activeView, transactions, selectedMonth]);
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
@@ -214,12 +236,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
     setBudgetField(categoryId, parseFloat(value) || 0);
   };
 
-  const getSpentByCategory = (categoryId) => {
+  const getSpentForMonth = (categoryId, month) => {
     const categoryName = categories.expense.find(c => c.id === categoryId)?.label;
     return transactions
-      .filter(t => t.type === 'expense' && t.category === categoryName && t.date.startsWith(currentMonth))
+      .filter(t => t.type === 'expense' && t.category === categoryName && t.date.startsWith(month))
       .reduce((sum, t) => sum + parseFloat(t.amount), 0);
   };
+
+  const getSpentByCategory = (categoryId) => getSpentForMonth(categoryId, selectedMonth);
 
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
@@ -394,6 +418,18 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
         {/* ── BUDGETS ── */}
         {activeView === 'budgets' && (
           <>
+            {/* Month navigation */}
+            <div className="m-month-nav">
+              <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}>‹</button>
+              <div className="m-month-nav-center">
+                <span className="m-month-nav-label">{formatMonthLabel(selectedMonth)}</span>
+                {selectedMonth !== currentMonth && (
+                  <button className="m-month-nav-today" onClick={() => setSelectedMonth(currentMonth)}>Este mês</button>
+                )}
+              </div>
+              <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, 1))}>›</button>
+            </div>
+
             {/* Main summary card */}
             {(() => {
               const remaining = totalBudget - totalSpent;
@@ -431,31 +467,39 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
             })()}
 
             {/* Category cards */}
-            <div className="m-bcc-list">
-              {categories.expense
-                .map(cat => {
-                  const limit = budgets[cat.id] || 0;
-                  const spent = getSpentByCategory(cat.id);
-                  const percent = limit > 0 ? (spent / limit) * 100 : 0;
-                  return { cat, limit, spent, percent };
-                })
-                .sort((a, b) => b.percent - a.percent)
-                .map(({ cat, limit, spent, percent }) => (
-                  <BudgetCategoryCard
-                    key={`${cat.id}-${Math.round(percent)}`}
-                    cat={cat}
-                    limit={limit}
-                    spent={spent}
-                    percent={percent}
-                    animated={animated}
-                    isEditing={editingCategoryId === cat.id}
-                    onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
-                    onLimitChange={handleLimitChange}
-                    onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
-                  />
-                ))
-              }
-            </div>
+            {(() => {
+              const prevMonth = shiftMonth(selectedMonth, -1);
+              return (
+                <div className="m-bcc-list">
+                  {categories.expense
+                    .map(cat => {
+                      const limit     = budgets[cat.id] || 0;
+                      const spent     = getSpentForMonth(cat.id, selectedMonth);
+                      const prevSpent = getSpentForMonth(cat.id, prevMonth);
+                      const percent   = limit > 0 ? (spent / limit) * 100 : 0;
+                      const delta     = spent - prevSpent;
+                      return { cat, limit, spent, prevSpent, percent, delta };
+                    })
+                    .sort((a, b) => b.percent - a.percent)
+                    .map(({ cat, limit, spent, percent, delta }) => (
+                      <BudgetCategoryCard
+                        key={`${cat.id}-${Math.round(percent)}`}
+                        cat={cat}
+                        limit={limit}
+                        spent={spent}
+                        percent={percent}
+                        delta={delta}
+                        animated={animated}
+                        isEditing={editingCategoryId === cat.id}
+                        onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
+                        onLimitChange={handleLimitChange}
+                        onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
+                      />
+                    ))
+                  }
+                </div>
+              );
+            })()}
           </>
         )}
 
