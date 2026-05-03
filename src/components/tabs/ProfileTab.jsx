@@ -199,6 +199,9 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
                 <button className={`m-seg-btn ${theme === 'modern'  ? 'active' : ''}`} onClick={() => handleThemeChange('modern')}>
                   <span>Modern</span>
                 </button>
+                <button className={`m-seg-btn ${theme === 'fintech' ? 'active' : ''}`} onClick={() => handleThemeChange('fintech')}>
+                  <span>Fintech</span>
+                </button>
               </div>
             </div>
           </div>
@@ -297,6 +300,13 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           >
             <span className="sf-icon">◧</span>
             <span>Modern</span>
+          </button>
+          <button
+            className={`theme-option ${theme === 'fintech' ? 'active' : ''}`}
+            onClick={() => handleThemeChange('fintech')}
+          >
+            <span className="sf-icon">◈</span>
+            <span>Fintech</span>
           </button>
         </div>
       </div>

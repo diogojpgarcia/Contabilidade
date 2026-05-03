@@ -2,6 +2,7 @@
 import InsightsPanel from '../InsightsPanel.jsx';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
+import FintechTransactionCard from '../FintechTransactionCard';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -221,8 +222,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
   const monthExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
 
-  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
-  if (theme === 'modern') {
+  /* ── MODERN / FINTECH BRANCH ───────────────────────────────────────────── */
+  if (theme === 'modern' || theme === 'fintech') {
     return (
       <div className="m-page">
         {/* Header */}
@@ -340,6 +341,18 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   {filterDate
                     ? 'Sem transações neste dia'
                     : historyView === 'patrimony' ? 'Sem transferências este mês' : 'Sem transações neste mês'}
+                </div>
+              ) : theme === 'fintech' ? (
+                /* ── Fintech card list (isolated rollout) ── */
+                <div className="ftc-list">
+                  {visibleTransactions.map(tx => (
+                    <FintechTransactionCard
+                      key={tx.id}
+                      tx={tx}
+                      onCategoryChange={onCategoryChange}
+                      onDelete={onTransactionDeleted}
+                    />
+                  ))}
                 </div>
               ) : (
                 <ModernTransactionList

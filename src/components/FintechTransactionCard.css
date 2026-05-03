@@ -1,0 +1,167 @@
+/* ── FintechTransactionCard ──────────────────────────────────────────────────
+   Isolated card component for the "fintech" layout theme.
+   Uses CSS custom properties from the app theme system so it adapts to
+   light / gray / dark color schemes automatically.                           */
+
+.ftc-card {
+  background: var(--card-bg, #fff);
+  border: 0.5px solid var(--separator, rgba(0,0,0,0.06));
+  border-radius: 14px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ftc-card:active {
+  background: var(--surface-2, rgba(0,0,0,0.03));
+}
+
+/* ── Main row ── */
+.ftc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+/* ── Icon bubble ── */
+.ftc-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ftc-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── Text body ── */
+.ftc-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ftc-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary, #111);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.ftc-sub {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+/* Category/type badges */
+.ftc-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ftc-badge--transfer {
+  background: rgba(99,102,241,0.12);
+  color: #6366f1;
+}
+
+.ftc-badge--adjust {
+  background: rgba(249,115,22,0.12);
+  color: #ea580c;
+}
+
+.ftc-cat {
+  color: var(--text-secondary, #888);
+}
+
+/* ── Right column: amount + date ── */
+.ftc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.ftc-amt {
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ftc-amt--income  { color: #16a34a; }
+.ftc-amt--expense { color: #dc2626; }
+.ftc-amt--neutral {
+  color: var(--text-secondary, #888);
+  font-weight: 500;
+}
+
+.ftc-date {
+  font-size: 0.68rem;
+  color: var(--text-tertiary, #aaa);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Expanded action strip ── */
+.ftc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 14px 12px;
+  border-top: 0.5px solid var(--separator, rgba(0,0,0,0.06));
+  animation: ftc-expand 0.15s ease;
+}
+
+@keyframes ftc-expand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.ftc-action-date {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #aaa);
+}
+
+.ftc-action-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ftc-action-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface-2, rgba(0,0,0,0.06));
+  color: var(--text-primary, #111);
+  min-height: 32px;
+  transition: opacity 0.1s;
+}
+
+.ftc-action-btn:active   { opacity: 0.7; }
+.ftc-action-btn:disabled { opacity: 0.4; cursor: default; }
+
+.ftc-action-btn--danger {
+  background: rgba(220,38,38,0.1);
+  color: #dc2626;
+}

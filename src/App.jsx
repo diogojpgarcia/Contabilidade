@@ -103,7 +103,7 @@ const App = () => {
       if (settings?.learned_rules) setLearnedRules(settings.learned_rules);
       // Load layout theme — guard against old colour values ('dark','light','gray')
       const t = settings?.theme;
-      if (t === 'default' || t === 'modern') setTheme(t);
+      if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
     } catch (error) { console.error("Error loading settings:", error); }
   };
 
