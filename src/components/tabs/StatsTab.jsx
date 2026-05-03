@@ -444,22 +444,57 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         )}
 
         {/* ── INSIGHTS ── */}
-        {activeView === 'insights' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16, padding: '0 16px' }}>
-            {insights.map((item, i) => (
-              <div key={i} style={{ background: '#18181b', borderRadius: 12, padding: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span>{INSIGHT_ICONS[item.type] || '📊'}</span>
+        {activeView === 'insights' && (() => {
+          const COLOR_TO_TYPE = { risk: 'alert', warn: 'warning', good: 'opportunity', info: 'info' };
+          const PRIORITY      = { alert: 4, warning: 3, opportunity: 2, info: 1 };
+          const TYPE_ICON     = { alert: '⚠️', warning: '⚡', opportunity: '📈', info: '📊' };
+          const TYPE_STYLE    = {
+            alert:       { border: 'rgba(239,68,68,0.3)',   bg: 'rgba(239,68,68,0.08)',   glow: '0 0 16px rgba(239,68,68,0.12)'   },
+            warning:     { border: 'rgba(234,179,8,0.3)',   bg: 'rgba(234,179,8,0.08)',   glow: '0 0 16px rgba(234,179,8,0.12)'   },
+            opportunity: { border: 'rgba(74,222,128,0.3)',  bg: 'rgba(74,222,128,0.08)',  glow: '0 0 16px rgba(74,222,128,0.12)'  },
+            info:        { border: 'rgba(255,255,255,0.08)', bg: '#18181b',               glow: 'none'                            },
+          };
+
+          const feed = insights
+            .map(item => ({ ...item, feedType: COLOR_TO_TYPE[item.color] || 'info' }))
+            .sort((a, b) => PRIORITY[b.feedType] - PRIORITY[a.feedType])
+            .slice(0, 5);
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16, padding: '0 16px' }}>
+              {feed.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#52525b', fontSize: '0.875rem', padding: '32px 0' }}>
+                  Sem insights relevantes ainda
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#fff' }}>{item.title}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>{item.message}</div>
-                </div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', flexShrink: 0 }}>{item.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
+              ) : feed.map((item, i) => {
+                const s = TYPE_STYLE[item.feedType];
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      borderRadius: 14, padding: '14px 16px',
+                      display: 'flex', gap: 12, alignItems: 'center',
+                      background: s.bg, border: `1px solid ${s.border}`,
+                      boxShadow: s.glow,
+                      transition: 'transform 0.15s ease',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.1rem' }}>
+                      {TYPE_ICON[item.feedType]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: 2 }}>{item.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#71717a', lineHeight: 1.4 }}>{item.message}</div>
+                    </div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>{item.value}</div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {pickerTx && (
           <CategoryPicker
