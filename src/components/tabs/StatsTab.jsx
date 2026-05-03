@@ -3,7 +3,7 @@ import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { Bubble, Card } from '../ui';
-import { generateInsights } from '../../utils/insights';
+import { generateInsights, shiftMonth } from '../../utils/insights';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -255,6 +255,15 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   // ── derived totals for chips ──
   const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
   const monthExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+  const monthSaldo    = monthIncome - monthExpenses;
+
+  // ── previous-month totals for delta ──
+  const prevMonthKey      = shiftMonth(currentMonth, -1);
+  const prevMonthIncome   = transactions.filter(t => t.type === 'income'  && t.date && t.date.startsWith(prevMonthKey)).reduce((s, t) => s + parseFloat(t.amount), 0);
+  const prevMonthExpenses = transactions.filter(t => t.type === 'expense' && t.date && t.date.startsWith(prevMonthKey)).reduce((s, t) => s + parseFloat(t.amount), 0);
+  const prevMonthSaldo    = prevMonthIncome - prevMonthExpenses;
+  const saldoDelta        = monthSaldo - prevMonthSaldo;
+  const saldoDeltaLabel   = (saldoDelta >= 0 ? '+' : '') + saldoDelta.toFixed(2) + '€';
 
   console.log('INSIGHTS ITEMS:', insights);
 
@@ -293,20 +302,41 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
         {/* ── OVERVIEW ── */}
         {activeView === 'overview' && (
-          <>
-            {/* Income / Expense chips */}
-            <div className="m-chips" style={{ marginBottom: 12 }}>
-              <div className="m-chip income">
-                <span className="m-chip-label">Receitas</span>
-                <span className="m-chip-amount">+{monthIncome.toFixed(2)}€</span>
+          <div style={{ padding: '0 16px' }}>
+
+            {/* Main summary card */}
+            <div style={{
+              borderRadius: 16, padding: 20,
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(168,85,247,0.1) 100%)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              marginBottom: 12,
+            }}>
+              <div style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>Saldo do mês</div>
+              <div style={{ fontSize: '1.875rem', fontWeight: 700, color: '#fff', lineHeight: 1.2, marginTop: 2 }}>
+                {monthSaldo >= 0 ? '+' : ''}{monthSaldo.toFixed(2)}€
               </div>
-              <div className="m-chip expense">
-                <span className="m-chip-label">Despesas</span>
-                <span className="m-chip-amount">−{monthExpenses.toFixed(2)}€</span>
+              <div style={{ fontSize: '0.875rem', color: saldoDelta >= 0 ? '#4ade80' : '#f87171', marginTop: 4 }}>
+                {saldoDeltaLabel} vs mês anterior
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, fontSize: '0.875rem' }}>
+                <span style={{ color: '#4ade80' }}>+{monthIncome.toFixed(2)}€</span>
+                <span style={{ color: '#f87171' }}>−{monthExpenses.toFixed(2)}€</span>
               </div>
             </div>
 
-            {/* 6-month mini bar chart */}
+            {/* Secondary grid cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div style={{ background: '#18181b', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: '0.75rem', color: '#a1a1aa', marginBottom: 4 }}>Receitas</div>
+                <div style={{ fontSize: '1rem', fontWeight: 600, color: '#4ade80' }}>+{monthIncome.toFixed(2)}€</div>
+              </div>
+              <div style={{ background: '#18181b', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: '0.75rem', color: '#a1a1aa', marginBottom: 4 }}>Despesas</div>
+                <div style={{ fontSize: '1rem', fontWeight: 600, color: '#f87171' }}>−{monthExpenses.toFixed(2)}€</div>
+              </div>
+            </div>
+
+            {/* 6-month chart */}
             <div className="m-chart">
               <div className="m-chart-label">Evolução 6 meses</div>
               <div className="m-chart-grid">
@@ -322,25 +352,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               </div>
             </div>
 
-            {/* Category breakdown */}
-            <div className="m-section">
-              <div className="m-section-label" style={{ marginBottom: 6 }}>Despesas por categoria</div>
-              {categoryData.length === 0 ? (
-                <div className="m-empty">Sem despesas neste mês</div>
-              ) : (
-                categoryData.map((item, i) => (
-                  <div key={i} className="m-cat-row">
-                    <span className="m-cat-name">{item.category}</span>
-                    <div className="m-cat-bar-bg">
-                      <div className="m-cat-bar-fill" style={{ width: `${item.percentage}%` }} />
-                    </div>
-                    <span className="m-cat-amt">{item.amount.toFixed(0)}€</span>
-                    <span className="m-cat-pct">{item.percentage.toFixed(0)}%</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </>
+          </div>
         )}
 
         {/* ── LOG ── */}
