@@ -176,9 +176,9 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
   );
 };
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
-  const { draft: budgets,      setField: setBudgetField,    reset: resetBudgets,     save: saveBudgetsForm } = useForm({});
+  const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
   const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
   const { draft: patrimonyForm, setField: setPatrimonyField, reset: resetPatrimonyForm                     } = useForm({});
 
@@ -192,6 +192,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
 
   useEffect(() => { setSelectedMonth(currentMonth); }, [currentMonth]);
+
+  // Sync local draft whenever App-level budgets change (initial load or external update)
+  useEffect(() => { resetBudgets(externalBudgets); }, [externalBudgets]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (activeView !== 'budgets') return;
@@ -207,15 +210,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   const loadData = async () => {
     try {
       const settings = await dbService.getUserSettings(user.id);
-      if (settings?.category_budgets) resetBudgets(settings.category_budgets);
+      // budgets are owned by App.jsx — only goals are loaded here
       if (settings?.goals) setGoals(settings.goals);
     } catch (error) { console.error('Error loading data:', error); }
   };
 
   const saveBudgetToDb = () => {
     saveBudgetsForm((current) => {
-      dbService.updateUserSettings(user.id, { category_budgets: current })
-        .catch(err => { console.error('Error saving budgets:', err); alert('Erro ao guardar'); });
+      onBudgetsChange && onBudgetsChange(current);
     });
   };
 

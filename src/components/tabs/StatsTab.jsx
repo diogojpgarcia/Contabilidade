@@ -33,7 +33,7 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, onTransactionDeleted, onCategoryChange, theme = 'default' }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, theme = 'default' }) => {
   const [pickerTx, setPickerTx] = useState(null);
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
@@ -229,10 +229,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   );
 
   const insights = useMemo(() => {
-    const items = generateInsights({ transactions, budgets: {}, categories, selectedMonth: currentMonth });
+    const items = generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth });
     console.log('SUMMARY ITEMS:', items);
     return items;
-  }, [transactions, categories, currentMonth]);
+  }, [transactions, budgets, categories, currentMonth]);
 
   // Get month name from the global currentMonth
   const [year, month] = currentMonth.split('-');

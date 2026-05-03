@@ -30,6 +30,7 @@ const App = () => {
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
   const [learnedRules, setLearnedRules] = useState([]); // [{ pattern, category }]
+  const [budgets, setBudgets] = useState({});
   const [theme, setTheme] = useState('default'); // 'default' | 'modern'
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
@@ -102,6 +103,7 @@ const App = () => {
       if (settings?.patrimony) setPatrimony(settings.patrimony);
       if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
       if (settings?.learned_rules) setLearnedRules(settings.learned_rules);
+      if (settings?.category_budgets) setBudgets(settings.category_budgets);
       // Load layout theme — guard against old colour values ('dark','light','gray')
       const t = settings?.theme;
       if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
@@ -206,6 +208,12 @@ const App = () => {
     setPatrimony(newPatrimony);
     try { await dbService.updateUserSettings(currentUser.id, { patrimony: newPatrimony }); }
     catch (error) { console.error("Error saving patrimony:", error); }
+  };
+
+  const handleBudgetsChange = async (newBudgets) => {
+    setBudgets(newBudgets);
+    try { await dbService.updateUserSettings(currentUser.id, { category_budgets: newBudgets }); }
+    catch (error) { console.error('Error saving budgets:', error); alert('Erro ao guardar orçamento'); }
   };
 
   const handlePatrimonyViewChange = async (view) => {
@@ -424,6 +432,7 @@ const App = () => {
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
             categories={categoriesProfessional}
+            budgets={budgets}
             onTransactionDeleted={handleDeleteTransaction}
             onCategoryChange={handleCategoryChange}
             theme={theme}
@@ -447,6 +456,8 @@ const App = () => {
             transactions={safeTransactions}
             currentMonth={currentMonth}
             categories={categoriesProfessional}
+            budgets={budgets}
+            onBudgetsChange={handleBudgetsChange}
             patrimony={patrimony}
             onPatrimonyChange={handlePatrimonyChange}
             theme={theme}
