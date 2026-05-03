@@ -5,7 +5,7 @@ import {
   Heart, BookOpen, Shirt, Gift, Baby,
   PiggyBank, TrendingUp, Briefcase, RefreshCw,
   Tag, Trophy, CreditCard, Scale, Dumbbell,
-} from 'lucide-react';
+} from './icons';
 import CategoryPicker from './CategoryPicker';
 import './FintechTransactionCard.css';
 
@@ -179,35 +179,46 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
   const [deleting,  setDeleting] = useState(false);
   const [logoErr,   setLogoErr]  = useState(false);
 
-  const isTransfer   = tx.type === 'transfer';
-  const isAdjustment = tx.type === 'adjustment';
-  const isIncome     = tx.type === 'income';
+  /* ── Guard: never render with missing/invalid data ── */
+  if (!tx || typeof tx !== 'object') return null;
+
+  const txType       = tx.type       || 'expense';
+  const txCategory   = tx.category   || 'Outros';
+  const txDesc       = tx.description || '';
+  const txAmount     = parseFloat(tx.amount  || 0);
+  const txDate       = tx.date       || '';
+
+  const isTransfer   = txType === 'transfer';
+  const isAdjustment = txType === 'adjustment';
+  const isIncome     = txType === 'income';
 
   /* Merchant detection — only for regular transactions */
-  const merchant = (!isTransfer && !isAdjustment)
-    ? getMerchantVisual(tx.description || tx.category || '')
-    : null;
+  let merchant = null;
+  try {
+    if (!isTransfer && !isAdjustment) {
+      merchant = getMerchantVisual(txDesc || txCategory);
+    }
+  } catch { /* ignore merchant detection errors */ }
 
-  const effectiveCat = merchant?.detectedCategory || tx.category;
-  const { Icon, color } = getMeta(effectiveCat, tx.type);
+  const effectiveCat = merchant?.detectedCategory || txCategory;
+  const { Icon, color } = getMeta(effectiveCat, txType);
 
-  const showLogo  = !!merchant?.logoUrl && !logoErr;
-  const bubbleBg  = showLogo
+  const showLogo = !!merchant?.logoUrl && !logoErr;
+  const bubbleBg = showLogo
     ? 'rgba(255,255,255,0.08)'
     : `${color}26`; /* 15% opacity */
 
   const title = isTransfer
     ? getTransferFlow(tx)
-    : (tx.description || tx.category || '—');
+    : (txDesc || txCategory || '—');
 
-  const amount    = parseFloat(tx.amount || 0);
   const amountStr = isTransfer
-    ? `${amount.toFixed(2)}€`
-    : `${isIncome ? '+' : '−'}${amount.toFixed(2)}€`;
+    ? `${txAmount.toFixed(2)}€`
+    : `${isIncome ? '+' : '−'}${txAmount.toFixed(2)}€`;
 
   const handlePickerSelect = (newCategory) => {
     if (pickerTx && onCategoryChange) {
-      onCategoryChange(pickerTx.id, newCategory, pickerTx.description);
+      onCategoryChange(pickerTx.id, newCategory, pickerTx.description || '');
     }
     setPickerTx(null);
     setOpen(false);
@@ -264,14 +275,14 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
             <span className={`ftc-amt ${isTransfer ? 'ftc-amt--neutral' : isIncome ? 'ftc-amt--income' : 'ftc-amt--expense'}`}>
               {amountStr}
             </span>
-            <span className="ftc-date">{formatShort(tx.date)}</span>
+            <span className="ftc-date">{formatShort(txDate)}</span>
           </div>
         </div>
 
         {/* ── Expanded actions ── */}
         {open && (
           <div className="ftc-actions" onClick={e => e.stopPropagation()}>
-            <span className="ftc-action-date">{formatLong(tx.date)}</span>
+            <span className="ftc-action-date">{formatLong(txDate)}</span>
             <div className="ftc-action-btns">
               {onCategoryChange && !isTransfer && !isAdjustment && (
                 <button className="ftc-action-btn" onClick={() => setPickerTx(tx)}>

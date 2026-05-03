@@ -15,8 +15,10 @@ function getTransferFlow(tx) {
 }
 
 function dedupeTransfers(txs) {
+  if (!Array.isArray(txs)) return [];
   const seen = new Set();
   return txs.filter(tx => {
+    if (!tx || typeof tx !== 'object') return false;
     if (tx.type !== 'transfer') return true;
     const key = `${tx.date}|${parseFloat(tx.amount || 0).toFixed(2)}|${getTransferFlow(tx)}`;
     if (seen.has(key)) return false;
@@ -149,18 +151,31 @@ const HomeTab = ({
 
         {/* Transaction list */}
         <div className="m-txs">
-          {theme === 'fintech' ? (
-            <div className="ftc-list">
-              {dedupeTransfers(transactions).map(tx => (
-                <FintechTransactionCard
-                  key={tx.id}
-                  tx={tx}
+          {theme === 'fintech' ? (() => {
+            try {
+              return (
+                <div className="ftc-list">
+                  {dedupeTransfers(transactions).map(tx => (
+                    <FintechTransactionCard
+                      key={tx.id || Math.random()}
+                      tx={tx}
+                      onCategoryChange={onCategoryChange}
+                      onDelete={onTransactionDeleted}
+                    />
+                  ))}
+                </div>
+              );
+            } catch (e) {
+              console.error('[HomeTab] FintechTransactionCard render error:', e);
+              return (
+                <ModernTransactionList
+                  transactions={transactions}
                   onCategoryChange={onCategoryChange}
-                  onDelete={onTransactionDeleted}
+                  onTransactionDeleted={onTransactionDeleted}
                 />
-              ))}
-            </div>
-          ) : (
+              );
+            }
+          })() : (
             <ModernTransactionList
               transactions={transactions}
               onCategoryChange={onCategoryChange}

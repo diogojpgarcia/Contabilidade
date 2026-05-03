@@ -2,6 +2,7 @@
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import BulkUpdateModal from './components/BulkUpdateModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { authService, dbService } from './lib/supabase';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from './utils/categories-professional';
 import { getMonthKey } from './utils/data';
@@ -372,15 +373,16 @@ const App = () => {
   const balance = monthlyIncome - monthlyExpenses;
 
   // All-time balance: income adds, expenses subtract, transfers are ignored
-  const totalBalance = useMemo(() =>
-    transactions.reduce((acc, t) => {
+  const totalBalance = useMemo(() => {
+    if (!Array.isArray(transactions)) return 0;
+    return transactions.reduce((acc, t) => {
+      if (!t || !t.type) return acc;
       const amt = parseFloat(t.amount || 0);
       if (t.type === 'income')  return acc + amt;
       if (t.type === 'expense') return acc - amt;
       return acc; // transfer / adjustment — no effect on lifetime balance
-    }, 0),
-    [transactions]
-  );
+    }, 0);
+  }, [transactions]);
 
   const userName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
@@ -388,6 +390,7 @@ const App = () => {
     <div className={`app-new ${theme}-ui${theme === 'fintech' ? ' modern-ui' : ''}`}>
       {/* Main Content */}
       <main className="main-content-new">
+      <ErrorBoundary>
         {activeTab === 'home' && (
           <HomeTab
             balance={balance}
@@ -470,6 +473,7 @@ const App = () => {
             }}
           />
         )}
+      </ErrorBoundary>
       </main>
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
