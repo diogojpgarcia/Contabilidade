@@ -288,6 +288,32 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           <button className={`m-toggle-btn ${activeView === 'insights'  ? 'active' : ''}`} onClick={() => setActiveView('insights')}>Insights</button>
         </div>
 
+        {/* Diário / Património — only shown in Histórico */}
+        {activeView === 'log' && (
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '12px 0 0' }}>
+            <div style={{ display: 'inline-flex', gap: 4, background: '#18181b', padding: 4, borderRadius: 12 }}>
+              <button
+                onClick={() => setHistoryView('daily')}
+                style={{
+                  padding: '6px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  fontSize: '0.8125rem', fontWeight: 500,
+                  background: historyView === 'daily' ? '#6366f1' : 'transparent',
+                  color:      historyView === 'daily' ? '#fff' : '#71717a',
+                }}
+              >Diário</button>
+              <button
+                onClick={() => setHistoryView('patrimony')}
+                style={{
+                  padding: '6px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  fontSize: '0.8125rem', fontWeight: 500,
+                  background: historyView === 'patrimony' ? '#6366f1' : 'transparent',
+                  color:      historyView === 'patrimony' ? '#fff' : '#71717a',
+                }}
+              >Património</button>
+            </div>
+          </div>
+        )}
+
         {/* Month nav */}
         <div className="m-month-nav">
           <button className="m-month-nav-btn" onClick={goToPreviousMonth}>‹</button>
@@ -352,36 +378,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         {/* ── LOG ── */}
         {activeView === 'log' && (
           <>
-            {/* Segmented control */}
-            <div style={{ padding: '0 16px', marginBottom: 12 }}>
-              <div style={{ display: 'inline-flex', gap: 4, background: '#18181b', padding: 4, borderRadius: 12 }}>
-                <button
-                  onClick={() => setHistoryView('daily')}
-                  style={{
-                    padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    fontSize: '0.8125rem', fontWeight: 500, transition: 'background 0.15s, color 0.15s',
-                    background: historyView === 'daily' ? '#6366f1' : 'transparent',
-                    color:      historyView === 'daily' ? '#fff' : '#71717a',
-                  }}
-                >Diário</button>
-                <button
-                  onClick={() => setHistoryView('patrimony')}
-                  style={{
-                    padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                    fontSize: '0.8125rem', fontWeight: 500, transition: 'background 0.15s, color 0.15s',
-                    background: historyView === 'patrimony' ? '#6366f1' : 'transparent',
-                    color:      historyView === 'patrimony' ? '#fff' : '#71717a',
-                  }}
-                >Património</button>
-              </div>
-            </div>
-
             <div className="m-tx-list">
               {visibleTransactions.length === 0 ? (
                 <div className="m-empty">
-                  {filterDate
-                    ? 'Sem transações neste dia'
-                    : historyView === 'patrimony' ? 'Sem transferências este mês' : 'Sem transações neste mês'}
+                  {historyView === 'patrimony' ? 'Sem transferências este mês' : 'Sem transações neste mês'}
                 </div>
               ) : theme === 'fintech' ? (
                 /* ── Fintech card list (isolated rollout) ── */
@@ -404,29 +404,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               )}
             </div>
 
-            {visibleTransactions.length > 0 && (() => {
-              const logIncome   = visibleTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
-              const logExpenses = visibleTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
-              const logBalance  = logIncome - logExpenses;
-              return (
-                <div className="m-log-summary">
-                  <div className="m-summary-row">
-                    <span className="m-summary-label">Receitas</span>
-                    <span className="m-summary-val income">+{logIncome.toFixed(2)}€</span>
-                  </div>
-                  <div className="m-summary-sep" />
-                  <div className="m-summary-row">
-                    <span className="m-summary-label">Despesas</span>
-                    <span className="m-summary-val expense">−{logExpenses.toFixed(2)}€</span>
-                  </div>
-                  <div className="m-summary-sep" />
-                  <div className="m-summary-row">
-                    <span className="m-summary-label">Saldo</span>
-                    <span className={`m-summary-val ${logBalance >= 0 ? 'income' : 'expense'}`}>{logBalance >= 0 ? '+' : ''}{logBalance.toFixed(2)}€</span>
-                  </div>
-                </div>
-              );
-            })()}
           </>
         )}
 
