@@ -25,10 +25,15 @@ function dedupeTransfers(txs) {
   });
 }
 
+/* ── Formatting helpers ──────────────────────────────────────────────────── */
+function fmtBalance(val) {
+  return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 const VIEW_LABELS = { total: 'Total', accounts: 'Contas', investments: 'Investimentos', realestate: 'Imóveis' };
 
 const HomeTab = ({
-  balance, income, expenses, transactions,
+  balance, income, expenses, totalBalance = 0, transactions,
   currentMonth, onMonthChange,
   patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
   onCategoryChange,
@@ -92,7 +97,7 @@ const HomeTab = ({
           <button className="m-today-btn" onClick={goToToday}>Hoje</button>
         </div>
 
-        {/* Balance */}
+        {/* Monthly balance */}
         <div className="m-balance-section">
           <div className={`m-balance-amount ${balance >= 0 ? 'positive' : 'negative'}`}>
             {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
@@ -112,6 +117,19 @@ const HomeTab = ({
           </div>
         </div>
 
+        {/* ── Total (lifetime) balance card ── */}
+        <div className="m-total-balance-card">
+          <div className="m-total-balance-inner">
+            <div className="m-total-balance-left">
+              <span className="m-total-balance-label">Saldo total</span>
+              <span className="m-total-balance-sub">Desde o início</span>
+            </div>
+            <span className="m-total-balance-value">
+              {fmtBalance(totalBalance)}€
+            </span>
+          </div>
+        </div>
+
         {/* Patrimony compact row */}
         <div className="m-patrimony-row">
           <span className="m-patrimony-label">Património</span>
@@ -125,7 +143,7 @@ const HomeTab = ({
             ))}
           </select>
           <span className="m-patrimony-value">
-            {patrimonyValue.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+            {fmtBalance(patrimonyValue)}€
           </span>
         </div>
 
@@ -179,13 +197,13 @@ const HomeTab = ({
             </select>
           </div>
           <div className="hero-amount hero-amount-patrimony">
-            {patrimonyValue.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+            {fmtBalance(patrimonyValue)}€
           </div>
           <div className="hero-status">{VIEW_LABELS[homePatrimonyView]}</div>
         </div>
       </div>
 
-      {/* Mini Cards */}
+      {/* Total balance + mini cards row */}
       <div className="mini-cards">
         <div className="mini-card income">
           <div className="mini-card-label">Receitas</div>
@@ -194,6 +212,10 @@ const HomeTab = ({
         <div className="mini-card expense">
           <div className="mini-card-label">Despesas</div>
           <div className="mini-card-amount">-{expenses.toFixed(2)}€</div>
+        </div>
+        <div className="mini-card total-balance">
+          <div className="mini-card-label">Saldo total</div>
+          <div className="mini-card-amount">{fmtBalance(totalBalance)}€</div>
         </div>
       </div>
 

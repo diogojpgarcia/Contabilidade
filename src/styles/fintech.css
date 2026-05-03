@@ -949,3 +949,172 @@
   margin-top: 4px;
 }
 .m-logout-btn:active { background: rgba(239,68,68,0.15); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FINTECH THEME — additional overrides scoped to .fintech-ui
+   .fintech-ui already inherits .modern-ui (both classes on root div).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── FTC list container ──────────────────────────────────────────────────── */
+.ftc-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Page background ────────────────────────────────────────────────────── */
+.fintech-ui .main-content-new {
+  background: #111;
+}
+
+/* ── Month bar ──────────────────────────────────────────────────────────── */
+.fintech-ui .m-month-name {
+  color: rgba(255,255,255,0.85);
+}
+.fintech-ui .m-month-btn,
+.fintech-ui .m-today-btn {
+  color: #818cf8;
+}
+.fintech-ui .m-today-btn {
+  background: rgba(99,102,241,0.15);
+}
+
+/* ── Monthly balance ────────────────────────────────────────────────────── */
+.fintech-ui .m-balance-amount.positive { color: #4ade80; }
+.fintech-ui .m-balance-amount.negative { color: #f87171; }
+.fintech-ui .m-balance-label           { color: rgba(255,255,255,0.35); }
+
+/* ── Income/expense chips ───────────────────────────────────────────────── */
+.fintech-ui .m-chip {
+  background: #1A1A1A;
+  border: 0.5px solid rgba(255,255,255,0.07);
+}
+.fintech-ui .m-chip-label  { color: rgba(255,255,255,0.35); }
+.fintech-ui .m-chip-amount { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-chip.income  .m-chip-amount { color: #4ade80; }
+.fintech-ui .m-chip.expense .m-chip-amount { color: #f87171; }
+
+/* ── Total balance card ──────────────────────────────────────────────────── */
+.m-total-balance-card {
+  margin: 0 16px 8px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* Modern (light/gray/dark) variant — neutral surface card */
+.m-total-balance-inner {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-secondary);
+  border-radius: 14px;
+  gap: 12px;
+}
+[data-theme="light"] .m-total-balance-inner {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* Fintech variant — indigo gradient */
+.fintech-ui .m-total-balance-inner {
+  background: linear-gradient(135deg, rgba(79,70,229,0.25) 0%, rgba(109,40,217,0.18) 100%);
+  border: 0.5px solid rgba(99,102,241,0.25);
+  box-shadow: 0 2px 12px rgba(99,102,241,0.12);
+}
+
+.m-total-balance-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.m-total-balance-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+.fintech-ui .m-total-balance-label {
+  color: rgba(165,180,252,0.75); /* indigo-300 muted */
+}
+
+.m-total-balance-sub {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+.fintech-ui .m-total-balance-sub {
+  color: rgba(255,255,255,0.30);
+}
+
+.m-total-balance-value {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fintech-ui .m-total-balance-value {
+  color: rgba(255,255,255,0.92);
+}
+
+/* ── Patrimony row ──────────────────────────────────────────────────────── */
+.fintech-ui .m-patrimony-row {
+  background: #1A1A1A;
+  border: 0.5px solid rgba(255,255,255,0.07);
+}
+.fintech-ui .m-patrimony-label  { color: rgba(255,255,255,0.35); }
+.fintech-ui .m-patrimony-select { color: #818cf8; }
+.fintech-ui .m-patrimony-value  { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-patrimony-select option { background: #1A1A1A; }
+
+/* ── Transactions section wrapper ────────────────────────────────────────── */
+.fintech-ui .m-txs {
+  padding: 4px 16px 0;
+}
+
+/* ── Stats page chrome ───────────────────────────────────────────────────── */
+.fintech-ui .m-stats-title       { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-month-nav-name    { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-month-nav-btn     { color: #818cf8; }
+
+.fintech-ui .m-log-summary {
+  background: #1A1A1A;
+  border: 0.5px solid rgba(255,255,255,0.07);
+}
+.fintech-ui .m-summary-label     { color: rgba(255,255,255,0.35); }
+.fintech-ui .m-summary-val       { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-summary-val.income  { color: #4ade80; }
+.fintech-ui .m-summary-val.expense { color: #f87171; }
+.fintech-ui .m-summary-sep         { background: rgba(255,255,255,0.07); }
+
+.fintech-ui .m-toggle {
+  background: #1A1A1A;
+  border: 0.5px solid rgba(255,255,255,0.07);
+}
+.fintech-ui .m-toggle-btn        { color: rgba(255,255,255,0.35); }
+.fintech-ui .m-toggle-btn.active {
+  background: rgba(99,102,241,0.2);
+  color: #a5b4fc;
+  box-shadow: none;
+}
+
+.fintech-ui .m-cat-row           { border-bottom-color: rgba(255,255,255,0.06); }
+.fintech-ui .m-cat-name          { color: rgba(255,255,255,0.80); }
+.fintech-ui .m-cat-amt           { color: rgba(255,255,255,0.80); }
+.fintech-ui .m-cat-pct           { color: rgba(255,255,255,0.30); }
+.fintech-ui .m-cat-bar-bg        { background: rgba(255,255,255,0.08); }
+.fintech-ui .m-cat-bar-fill      { background: #f87171; }
+
+/* ── Bottom nav ─────────────────────────────────────────────────────────── */
+.fintech-ui .bottom-nav {
+  background: #161616;
+  border-top-color: rgba(255,255,255,0.07);
+}
+.fintech-ui .nav-item.active            { background: rgba(99,102,241,0.15); }
+.fintech-ui .nav-item.active .nav-icon,
+.fintech-ui .nav-item.active .nav-label { color: #818cf8; }
+.fintech-ui .nav-label,
+.fintech-ui .nav-icon                   { color: rgba(255,255,255,0.40); }

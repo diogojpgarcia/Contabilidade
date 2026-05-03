@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import BulkUpdateModal from './components/BulkUpdateModal';
@@ -371,6 +371,17 @@ const App = () => {
     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
   const balance = monthlyIncome - monthlyExpenses;
 
+  // All-time balance: income adds, expenses subtract, transfers are ignored
+  const totalBalance = useMemo(() =>
+    transactions.reduce((acc, t) => {
+      const amt = parseFloat(t.amount || 0);
+      if (t.type === 'income')  return acc + amt;
+      if (t.type === 'expense') return acc - amt;
+      return acc; // transfer / adjustment — no effect on lifetime balance
+    }, 0),
+    [transactions]
+  );
+
   const userName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
 
   return (
@@ -382,6 +393,7 @@ const App = () => {
             balance={balance}
             income={monthlyIncome}
             expenses={monthlyExpenses}
+            totalBalance={totalBalance}
             transactions={filteredTransactions}
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
