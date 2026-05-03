@@ -1,7 +1,29 @@
 import React from 'react';
-import ModernTransactionList  from '../ModernTransactionList';
-import DefaultTransactionList from '../DefaultTransactionList';
+import ModernTransactionList      from '../ModernTransactionList';
+import DefaultTransactionList     from '../DefaultTransactionList';
+import FintechTransactionCard     from '../FintechTransactionCard';
 import './HomeTab.css';
+
+/* ── Transfer dedup (mirrors StatsTab / ModernTransactionList) ──────────── */
+function getTransferFlow(tx) {
+  const desc = (tx.description || '').trim();
+  const toMatch   = desc.match(/^Transferência para (.+)$/i);
+  const fromMatch = desc.match(/^Transferência de (.+)$/i);
+  if (toMatch)   return `${tx.category} → ${toMatch[1]}`;
+  if (fromMatch) return `${fromMatch[1]} → ${tx.category}`;
+  return desc || tx.category || 'Transferência';
+}
+
+function dedupeTransfers(txs) {
+  const seen = new Set();
+  return txs.filter(tx => {
+    if (tx.type !== 'transfer') return true;
+    const key = `${tx.date}|${parseFloat(tx.amount || 0).toFixed(2)}|${getTransferFlow(tx)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 const VIEW_LABELS = { total: 'Total', accounts: 'Contas', investments: 'Investimentos', realestate: 'Imóveis' };
 
@@ -58,8 +80,8 @@ const HomeTab = ({
   };
   const patrimonyValue = patrimonyTotals[homePatrimonyView] || 0;
 
-  /* ── MODERN BRANCH ───────────────────────────────────────────────────── */
-  if (theme === 'modern') {
+  /* ── MODERN / FINTECH BRANCH ─────────────────────────────────────────── */
+  if (theme === 'modern' || theme === 'fintech') {
     return (
       <div className="m-home">
         {/* Month navigation */}
@@ -109,11 +131,24 @@ const HomeTab = ({
 
         {/* Transaction list */}
         <div className="m-txs">
-          <ModernTransactionList
-            transactions={transactions}
-            onCategoryChange={onCategoryChange}
-            onTransactionDeleted={onTransactionDeleted}
-          />
+          {theme === 'fintech' ? (
+            <div className="ftc-list">
+              {dedupeTransfers(transactions).map(tx => (
+                <FintechTransactionCard
+                  key={tx.id}
+                  tx={tx}
+                  onCategoryChange={onCategoryChange}
+                  onDelete={onTransactionDeleted}
+                />
+              ))}
+            </div>
+          ) : (
+            <ModernTransactionList
+              transactions={transactions}
+              onCategoryChange={onCategoryChange}
+              onTransactionDeleted={onTransactionDeleted}
+            />
+          )}
         </div>
       </div>
     );
