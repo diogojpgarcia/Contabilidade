@@ -3,7 +3,7 @@ import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { Bubble, Card } from '../ui';
-import { generateInsights, computeFinancialScore, shiftMonth } from '../../utils/insights';
+import { generateInsights, computeFinancialScore, generateGoals, shiftMonth } from '../../utils/insights';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -241,6 +241,11 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       console.error('[Insights] generateInsights threw:', e);
       return [];
     }
+  }, [transactions, budgets, categories, currentMonth]);
+
+  const goals = useMemo(() => {
+    try { return generateGoals({ transactions, budgets, categories, selectedMonth: currentMonth }); }
+    catch (e) { return []; }
   }, [transactions, budgets, categories, currentMonth]);
 
   const financialScore = useMemo(() => {
@@ -566,6 +571,43 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   </div>
                 );
               })}
+
+              {/* Goals section */}
+              {goals.length > 0 && (
+                <>
+                  <div style={{ fontSize: '0.65rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 8 }}>
+                    Objetivos automáticos
+                  </div>
+                  {goals.map((g, i) => {
+                    const TYPE_EMOJI = { reduction: '🎯', saving: '💰', balance: '⚖️', improvement: '📉' };
+                    const statusLabel = g.status === 'done' ? 'Concluído' : g.status === 'on_track' ? 'No caminho certo' : g.status === 'risk' ? 'Em risco' : 'Atrasado';
+                    return (
+                      <div key={i} style={{ background: '#18181b', borderRadius: 14, padding: '14px 16px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: '1rem' }}>{TYPE_EMOJI[g.type] || '🎯'}</span>
+                            <div>
+                              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{g.title}</div>
+                              <div style={{ fontSize: '0.72rem', color: '#71717a', marginTop: 1 }}>{g.description}</div>
+                            </div>
+                          </div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: g.barColor, flexShrink: 0, marginLeft: 8, marginTop: 2 }}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        {/* Progress bar */}
+                        <div style={{ width: '100%', height: 5, background: '#27272a', borderRadius: 999, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${g.progressPct}%`, background: g.barColor, borderRadius: 999, transition: 'width 0.4s ease' }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.68rem', color: '#52525b' }}>
+                          <span>{g.type === 'saving' ? `${fmt(g.currentAmount)} poupados` : `${fmt(g.currentAmount)} gastos`}</span>
+                          <span>{g.progressPct}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
           );
         })()}
