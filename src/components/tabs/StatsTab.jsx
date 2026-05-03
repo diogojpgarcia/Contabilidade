@@ -34,6 +34,10 @@ function getTransferFlow(tx) {
 }
 
 const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, theme = 'default' }) => {
+  console.log('RENDER STATS');
+  console.log('transactions:', transactions);
+  console.log('budgets:', budgets);
+
   const [pickerTx, setPickerTx] = useState(null);
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
@@ -231,7 +235,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const insights = useMemo(() => {
     try {
       const items = generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth });
-      console.log('[Insights]', { budgetKeys: Object.keys(budgets).length, txCount: transactions.length, month: currentMonth, items: items.length });
+      console.log('items:', items);
       return items;
     } catch (e) {
       console.error('[Insights] generateInsights threw:', e);
@@ -249,6 +253,9 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   // ── derived totals for chips ──
   const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
   const monthExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+
+  // DEBUG — remove after confirming render path
+  // return <div style={{ color: 'red', padding: 20 }}>TEST FEED — theme: {theme} | items: {insights.length} | tx: {transactions.length}</div>;
 
   /* ── MODERN / FINTECH BRANCH ───────────────────────────────────────────── */
   if (theme === 'modern' || theme === 'fintech') {
