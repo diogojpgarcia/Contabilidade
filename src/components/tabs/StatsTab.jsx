@@ -356,6 +356,42 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               </div>
             </div>
 
+            {/* Progress bar — expenses vs income */}
+            {(() => {
+              const pct = monthIncome > 0 ? Math.min((monthExpenses / monthIncome) * 100, 100) : 0;
+              const barColor = pct >= 90 ? '#f87171' : pct >= 70 ? '#fb923c' : '#6366f1';
+              const trendUp  = monthExpenses > prevMonthExpenses;
+              return (
+                <div style={{ background: '#18181b', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                  {/* Spend ratio bar */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#71717a', marginBottom: 6 }}>
+                    <span>Gasto mensal</span>
+                    <span style={{ color: barColor, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: 6, background: '#27272a', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: `linear-gradient(90deg, #6366f1, ${barColor})`, transition: 'width 0.4s ease' }} />
+                  </div>
+                  {/* Spending trend */}
+                  <div style={{ marginTop: 10, fontSize: '0.8125rem', color: trendUp ? '#f87171' : '#4ade80' }}>
+                    {trendUp ? '↑ A gastar mais que o mês passado' : '↓ A gastar menos que o mês passado'}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Top 3 categories */}
+            {categoryData.length > 0 && (
+              <div style={{ background: '#18181b', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                <div style={{ fontSize: '0.68rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Top categorias</div>
+                {categoryData.slice(0, 3).map((cat, i) => (
+                  <div key={cat.category} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: i < 2 ? 8 : 0 }}>
+                    <span style={{ fontSize: '0.875rem', color: '#d4d4d8' }}>{cat.category}</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{fmt(cat.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* 6-month chart */}
             <div className="m-chart" style={{ borderRadius: 16, overflow: 'hidden' }}>
               <div className="m-chart-label">Evolução 6 meses</div>
