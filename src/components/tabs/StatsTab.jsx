@@ -229,6 +229,16 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         {/* Header */}
         <div className="m-stats-header">
           <span className="m-stats-title">Estatísticas</span>
+          {/* Temporary debug banner — remove after fintech theme is validated */}
+          {theme === 'fintech' && (
+            <span style={{
+              fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.08em',
+              background: '#6366f1', color: '#fff',
+              borderRadius: '5px', padding: '2px 7px',
+            }}>
+              FINTECH MODE
+            </span>
+          )}
         </div>
 
         {/* View toggle */}
