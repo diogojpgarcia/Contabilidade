@@ -11,6 +11,18 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
+/* Keep only the first of each paired transfer (out + in share same key) */
+function dedupeTransfers(txs) {
+  const seen = new Set();
+  return txs.filter(tx => {
+    if (tx.type !== 'transfer') return true;
+    const key = `${tx.date}|${tx.amount}|${getTransferFlow(tx)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const ICON_MAP = {
   'Alimentação': '⚑', 'Habitação': '⌂', 'Transporte': '⚐', 'Saúde': '✚',
   'Lazer': '◉', 'Educação': '⊞', 'Roupa': '◫', 'Tecnologia': '◧',
@@ -33,7 +45,9 @@ const DefaultTransactionList = ({ transactions, onCategoryChange }) => {
     setPickerTx(null);
   };
 
-  if (!transactions.length) {
+  const dedupedTxs = dedupeTransfers(transactions);
+
+  if (!dedupedTxs.length) {
     return (
       <div className="empty-state">
         <div className="empty-icon">◌</div>
@@ -45,7 +59,7 @@ const DefaultTransactionList = ({ transactions, onCategoryChange }) => {
   return (
     <>
       <div className="transactions-list">
-        {transactions.map((tx, index) => {
+        {dedupedTxs.map((tx, index) => {
           const isTransfer = tx.type === 'transfer';
           return (
           <div key={tx.id || index} className={`transaction-item ${tx.type}`}>

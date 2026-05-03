@@ -48,8 +48,21 @@ function getTransferFlow(tx) {
   const fromMatch = desc.match(/^Transferência de (.+)$/i);
   if (toMatch)   return `${tx.category} → ${toMatch[1]}`;
   if (fromMatch) return `${fromMatch[1]} → ${tx.category}`;
-  // Fallback: show raw description or category
   return desc || tx.category || 'Transferência';
+}
+
+/* ── Transfer deduplication ──────────────────────────────────────────────────
+   Each transfer creates two DB records (out + in) with identical date, amount
+   and flow string. Keep only the first occurrence of each pair.               */
+function dedupeTransfers(txs) {
+  const seen = new Set();
+  return txs.filter(tx => {
+    if (tx.type !== 'transfer') return true;
+    const key = `${tx.date}|${tx.amount}|${getTransferFlow(tx)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /* ── Date grouping helpers ── */
@@ -100,7 +113,9 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
     setPickerTx(null);
   };
 
-  if (!transactions.length) {
+  const dedupedTxs = dedupeTransfers(transactions);
+
+  if (!dedupedTxs.length) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)' }}>
         Sem transações este mês
@@ -108,7 +123,7 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
     );
   }
 
-  const groups = groupByDate(transactions);
+  const groups = groupByDate(dedupedTxs);
 
   return (
     <>

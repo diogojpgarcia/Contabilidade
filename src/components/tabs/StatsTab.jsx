@@ -186,14 +186,23 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const categoryData      = useMemo(() => computeExpensesByCategory(filteredTransactions),  [filteredTransactions]);
   const monthTransactions = useMemo(() => computeMonthTransactions(filteredTransactions),   [filteredTransactions, filterDate]);
   // Further filter the log list by historyView (daily = expense+income, patrimony = transfer+adjustment)
-  const visibleTransactions = useMemo(() =>
-    monthTransactions.filter(t =>
+  // Transfer pairs (out + in) share the same date/amount/flow — dedupe keeps only the first.
+  const visibleTransactions = useMemo(() => {
+    const filtered = monthTransactions.filter(t =>
       historyView === 'daily'
         ? (t.type === 'expense' || t.type === 'income' || !t.type)
         : (t.type === 'transfer' || t.type === 'adjustment')
-    ),
-    [monthTransactions, historyView]
-  );
+    );
+    // Deduplicate paired transfer records
+    const seen = new Set();
+    return filtered.filter(t => {
+      if (t.type !== 'transfer') return true;
+      const key = `${t.date}|${t.amount}|${getTransferFlow(t)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [monthTransactions, historyView]);
   // 6-month chart still needs all transactions so it can look at past months
   const monthlyData       = useMemo(() => getMonthlyData(),                                 [transactions, currentMonth]);
   const maxAmount         = useMemo(
