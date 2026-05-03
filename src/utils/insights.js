@@ -322,11 +322,12 @@ export const generateGoals = ({ transactions, budgets, categories, selectedMonth
     .filter(c => c.prev > 10 && c.current > c.prev * 1.15)
     .sort((a, b) => (b.current - b.prev) - (a.current - a.prev))[0];
   if (biggestRiser) {
-    const target = Math.round(biggestRiser.prev * 1.05); // allow 5% above last month
+    const target  = Math.round(biggestRiser.prev * 1.05);
+    const cutNeeded = Math.max(0, biggestRiser.current - target);
     goals.push(goal(
       'reduction',
-      `Reduzir ${biggestRiser.cat.label}`,
-      `Gastar ≤ ${fmt0(target)}€ (mês passado: ${fmt0(biggestRiser.prev)}€)`,
+      `Reduzir ${fmt0(cutNeeded)}€ em ${biggestRiser.cat.label}`,
+      `Atual: ${fmt0(biggestRiser.current)}€ · Meta: ≤ ${fmt0(target)}€ este mês`,
       target, biggestRiser.current,
     ));
   }
@@ -337,8 +338,8 @@ export const generateGoals = ({ transactions, budgets, categories, selectedMonth
     const savings = Math.max(0, monthIncome - totalCurrent);
     goals.push(goal(
       'saving',
-      'Poupar este mês',
-      `Meta: ${fmt0(target)}€ (10% de ${fmt0(monthIncome)}€)`,
+      `Poupar ${fmt0(target)}€ este mês`,
+      `Já poupaste ${fmt0(savings)}€ de ${fmt0(target)}€ (10% de ${fmt0(monthIncome)}€)`,
       target, savings,
     ));
   }
@@ -347,11 +348,12 @@ export const generateGoals = ({ transactions, budgets, categories, selectedMonth
   if (totalCurrent > 20 && goals.length < 3) {
     const topCat = catTotals.filter(c => c.current > 0).sort((a, b) => b.current - a.current)[0];
     if (topCat && topCat.current / totalCurrent > 0.5) {
-      const target = Math.round(totalCurrent * 0.40);
+      const target    = Math.round(totalCurrent * 0.40);
+      const cutNeeded = Math.max(0, topCat.current - target);
       goals.push(goal(
         'balance',
-        `Equilibrar ${topCat.cat.label}`,
-        `Reduzir para ≤ ${fmt0(target)}€ (40% do total de ${fmt0(totalCurrent)}€)`,
+        `Cortar ${fmt0(cutNeeded)}€ em ${topCat.cat.label}`,
+        `Atual: ${fmt0(topCat.current)}€ · Meta: ≤ ${fmt0(target)}€ (40% do total)`,
         target, topCat.current,
       ));
     }
@@ -359,11 +361,12 @@ export const generateGoals = ({ transactions, budgets, categories, selectedMonth
 
   // 4. Improvement: overall spending 5% below last month (filler if < 2 goals)
   if (totalPrev > 10 && goals.length < 2) {
-    const target = Math.round(totalPrev * 0.95);
+    const target    = Math.round(totalPrev * 0.95);
+    const cutNeeded = Math.max(0, totalCurrent - target);
     goals.push(goal(
       'improvement',
-      'Melhorar vs mês passado',
-      `Total de despesas ≤ ${fmt0(target)}€ (−5% vs ${fmt0(totalPrev)}€)`,
+      `Reduzir ${fmt0(cutNeeded > 0 ? cutNeeded : Math.round(totalPrev * 0.05))}€ no total`,
+      `Atual: ${fmt0(totalCurrent)}€ · Meta: ≤ ${fmt0(target)}€ (−5% vs mês passado)`,
       target, totalCurrent,
     ));
   }

@@ -259,18 +259,28 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const forecast = useMemo(() => {
     const [fy, fm] = currentMonth.split('-').map(Number);
     const today = new Date();
-    const isCurrentMonth = today.getFullYear() === fy && today.getMonth() + 1 === fm;
-    if (!isCurrentMonth) return null;
-    const daysPassed = today.getDate();
+    if (today.getFullYear() !== fy || today.getMonth() + 1 !== fm) return null;
+    const daysPassed  = today.getDate();
     const daysInMonth = new Date(fy, fm, 0).getDate();
     const totalExpenses = transactions
       .filter(t => t.type === 'expense' && t.date && t.date.startsWith(currentMonth))
       .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
     if (daysPassed < 3 || totalExpenses === 0) return null;
-    const dailyAvg = totalExpenses / daysPassed;
+    const dailyAvg  = totalExpenses / daysPassed;
     const projected = Math.round(dailyAvg * daysInMonth);
     const totalBudget = categories.expense.reduce((s, c) => s + (budgets[c.id] || 0), 0);
-    return { projected, dailyAvg, totalBudget, daysLeft: daysInMonth - daysPassed };
+    // 3-month average for comparison
+    const threeMonthAvg = [1, 2, 3].reduce((sum, delta) => {
+      const m = shiftMonth(currentMonth, -delta);
+      return sum + transactions
+        .filter(t => t.type === 'expense' && t.date && t.date.startsWith(m))
+        .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+    }, 0) / 3;
+    const vsAvg     = threeMonthAvg > 0 ? projected - threeMonthAvg : null;
+    const vsBudget  = totalBudget > 0   ? projected - totalBudget   : null;
+    const riskLevel = (vsBudget !== null && vsBudget > 0) || (vsAvg !== null && vsAvg > threeMonthAvg * 0.15)
+      ? 'high' : vsAvg !== null && vsAvg > 0 ? 'medium' : 'low';
+    return { projected, dailyAvg, totalBudget, threeMonthAvg, vsAvg, vsBudget, riskLevel, daysLeft: daysInMonth - daysPassed };
   }, [transactions, budgets, categories, currentMonth]);
 
   // Get month name from the global currentMonth
@@ -482,130 +492,130 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             opportunity: { border: 'rgba(74,222,128,0.3)',   bg: 'rgba(74,222,128,0.08)',  glow: '0 0 16px rgba(74,222,128,0.12)'  },
             info:        { border: 'rgba(255,255,255,0.08)', bg: '#18181b',                glow: 'none'                            },
           };
-          const feed = insights
-            .map(item => ({ ...item, feedType: COLOR_TO_TYPE[item.color] || 'info' }))
-            .sort((a, b) => PRIORITY[b.feedType] - PRIORITY[a.feedType])
-            .slice(0, 4);
+          const tagged = insights.map(item => ({ ...item, feedType: COLOR_TO_TYPE[item.color] || 'info' }));
+          const alerts     = tagged.filter(i => i.feedType === 'alert' || i.feedType === 'warning').slice(0, 3);
+          const behavioral = tagged.filter(i => i.feedType !== 'alert' && i.feedType !== 'warning').slice(0, 2);
+
+          const FeedCard = ({ item }) => {
+            const s = TYPE_STYLE[item.feedType];
+            return (
+              <div
+                style={{ borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, boxShadow: s.glow, transition: 'transform 0.15s ease' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.1rem' }}>
+                  {TYPE_ICON[item.feedType]}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: 2 }}>{item.title}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.4 }}>{item.message}</div>
+                  {(item.explanation || item.extra) && (
+                    <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>{item.explanation || item.extra}</div>
+                  )}
+                </div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', flexShrink: 0, marginLeft: 8 }}>{item.value}</div>
+              </div>
+            );
+          };
+
+          const RISK_COLOR  = { high: '#f87171', medium: '#facc15', low: '#4ade80' };
+          const RISK_LABEL  = { high: 'Risco alto', medium: 'Atenção', low: 'Controlado' };
 
           return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px 0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px 16px' }}>
 
-              {/* Score card */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#18181b', borderRadius: 16, padding: '16px 20px' }}>
-                {/* Circular gauge */}
-                <div style={{ position: 'relative', width: 60, height: 60, flexShrink: 0 }}>
-                  <div style={{
-                    width: 60, height: 60, borderRadius: '50%',
-                    background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, #27272a ${financialScore.score}% 100%)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700, color: financialScore.color }}>
-                      {financialScore.score}
+              {/* 1. Alerts / risks */}
+              {alerts.length > 0 && alerts.map((item, i) => <FeedCard key={i} item={item} />)}
+              {alerts.length === 0 && (
+                <div style={{ textAlign: 'center', color: '#52525b', fontSize: '0.8rem', padding: '12px 0 4px' }}>
+                  Sem alertas ativos
+                </div>
+              )}
+
+              {/* 2. Prediction */}
+              {forecast && (() => {
+                const rc = RISK_COLOR[forecast.riskLevel];
+                const rl = RISK_LABEL[forecast.riskLevel];
+                return (
+                  <div style={{ background: forecast.riskLevel === 'high' ? 'rgba(239,68,68,0.08)' : '#18181b', border: `1px solid ${forecast.riskLevel === 'high' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 16, padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ fontSize: '0.65rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Previsão do mês</div>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, color: rc, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{rl}</span>
                     </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                      <div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>{fmt(forecast.projected)}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#71717a', marginTop: 2 }}>{fmt(Math.round(forecast.dailyAvg))}/dia · {forecast.daysLeft} dias restantes</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        {forecast.vsBudget !== null && (
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: forecast.vsBudget > 0 ? '#f87171' : '#4ade80' }}>
+                            {forecast.vsBudget > 0 ? `+${fmt(forecast.vsBudget)} acima` : `−${fmt(Math.abs(forecast.vsBudget))} abaixo`}
+                          </div>
+                        )}
+                        {forecast.vsAvg !== null && (
+                          <div style={{ fontSize: '0.7rem', color: forecast.vsAvg > 0 ? '#fb923c' : '#71717a', marginTop: 2 }}>
+                            {forecast.vsAvg > 0 ? '+' : '−'}{fmt(Math.abs(Math.round(forecast.vsAvg)))} vs média 3m
+                          </div>
+                        )}
+                        {forecast.vsBudget !== null && <div style={{ fontSize: '0.6rem', color: '#52525b', marginTop: 1 }}>orçamento · média 3 meses</div>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 3. Score */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#18181b', borderRadius: 16, padding: '14px 16px' }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, #27272a ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700, color: financialScore.color }}>
+                    {financialScore.score}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.65rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Score Financeiro</div>
+                  <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Score Financeiro</div>
                   <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{financialScore.label}</div>
                 </div>
               </div>
 
-              {/* Prediction card — current month only */}
-              {forecast && (
-                <div style={{
-                  background: forecast.totalBudget > 0 && forecast.projected > forecast.totalBudget
-                    ? 'rgba(239,68,68,0.08)' : '#18181b',
-                  border: forecast.totalBudget > 0 && forecast.projected > forecast.totalBudget
-                    ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: 16, padding: '14px 16px',
-                }}>
-                  <div style={{ fontSize: '0.65rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Previsão do mês</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                    <div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
-                        {fmt(forecast.projected)}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#71717a', marginTop: 2 }}>
-                        {fmt(Math.round(forecast.dailyAvg))}/dia · {forecast.daysLeft} dias restantes
-                      </div>
-                    </div>
-                    {forecast.totalBudget > 0 && (
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.75rem', color: forecast.projected > forecast.totalBudget ? '#f87171' : '#4ade80', fontWeight: 600 }}>
-                          {forecast.projected > forecast.totalBudget
-                            ? `+${fmt(forecast.projected - forecast.totalBudget)} acima`
-                            : `−${fmt(forecast.totalBudget - forecast.projected)} abaixo`}
-                        </div>
-                        <div style={{ fontSize: '0.65rem', color: '#52525b', marginTop: 2 }}>do orçamento total</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Alerts feed */}
-              {feed.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#52525b', fontSize: '0.875rem', padding: '24px 0' }}>
-                  Sem alertas relevantes neste momento
-                </div>
-              ) : feed.map((item, i) => {
-                const s = TYPE_STYLE[item.feedType];
-                return (
-                  <div
-                    key={i}
-                    style={{ borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, boxShadow: s.glow, transition: 'transform 0.15s ease' }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.1rem' }}>
-                      {TYPE_ICON[item.feedType]}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: 2 }}>{item.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.4 }}>{item.message}</div>
-                      {(item.explanation || item.extra) && (
-                        <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>{item.explanation || item.extra}</div>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', flexShrink: 0, marginLeft: 8 }}>{item.value}</div>
-                  </div>
-                );
-              })}
-
-              {/* Goals section */}
+              {/* 4. Goals */}
               {goals.length > 0 && (
                 <>
-                  <div style={{ fontSize: '0.65rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 8 }}>
-                    Objetivos automáticos
-                  </div>
+                  <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>Objetivos automáticos</div>
                   {goals.map((g, i) => {
-                    const TYPE_EMOJI = { reduction: '🎯', saving: '💰', balance: '⚖️', improvement: '📉' };
-                    const statusLabel = g.status === 'done' ? 'Concluído' : g.status === 'on_track' ? 'No caminho certo' : g.status === 'risk' ? 'Em risco' : 'Atrasado';
+                    const TYPE_EMOJI  = { reduction: '🎯', saving: '💰', balance: '⚖️', improvement: '📉' };
+                    const STATUS_LABEL = { done: 'Concluído', on_track: 'No caminho', risk: 'Em risco', behind: 'Atrasado' };
                     return (
                       <div key={i} style={{ background: '#18181b', borderRadius: 14, padding: '14px 16px', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            <span style={{ fontSize: '1rem' }}>{TYPE_EMOJI[g.type] || '🎯'}</span>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: '1rem', marginTop: 1 }}>{TYPE_EMOJI[g.type] || '🎯'}</span>
                             <div>
                               <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{g.title}</div>
-                              <div style={{ fontSize: '0.72rem', color: '#71717a', marginTop: 1 }}>{g.description}</div>
+                              <div style={{ fontSize: '0.7rem', color: '#71717a', marginTop: 2 }}>{g.description}</div>
                             </div>
                           </div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: g.barColor, flexShrink: 0, marginLeft: 8, marginTop: 2 }}>
-                            {statusLabel}
-                          </span>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 600, color: g.barColor, flexShrink: 0, marginLeft: 8 }}>{STATUS_LABEL[g.status]}</span>
                         </div>
-                        {/* Progress bar */}
-                        <div style={{ width: '100%', height: 5, background: '#27272a', borderRadius: 999, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${g.progressPct}%`, background: g.barColor, borderRadius: 999, transition: 'width 0.4s ease' }} />
+                        <div style={{ width: '100%', height: 4, background: '#27272a', borderRadius: 999, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${g.progressPct}%`, background: g.barColor, borderRadius: 999 }} />
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.68rem', color: '#52525b' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.65rem', color: '#52525b' }}>
                           <span>{g.type === 'saving' ? `${fmt(g.currentAmount)} poupados` : `${fmt(g.currentAmount)} gastos`}</span>
                           <span>{g.progressPct}%</span>
                         </div>
                       </div>
                     );
                   })}
+                </>
+              )}
+
+              {/* 5. Behavioral insights */}
+              {behavioral.length > 0 && (
+                <>
+                  <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>Padrões detetados</div>
+                  {behavioral.map((item, i) => <FeedCard key={i} item={item} />)}
                 </>
               )}
             </div>
