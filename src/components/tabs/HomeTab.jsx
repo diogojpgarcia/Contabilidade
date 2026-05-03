@@ -99,37 +99,41 @@ const HomeTab = ({
           <button className="m-today-btn" onClick={goToToday}>Hoje</button>
         </div>
 
-        {/* Monthly balance */}
-        <div className="m-balance-section">
-          <div className={`m-balance-amount ${balance >= 0 ? 'positive' : 'negative'}`}>
-            {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
-          </div>
-          <div className="m-balance-label">Saldo do mês</div>
-        </div>
+        {/* ── Unified summary card ─────────────────────────────────── */}
+        <div className="m-summary-card">
 
-        {/* Income / Expense chips */}
-        <div className="m-chips">
-          <div className="m-chip income">
-            <span className="m-chip-label">Receitas</span>
-            <span className="m-chip-amount">+{income.toFixed(2)}€</span>
+          {/* TOP: lifetime balance */}
+          <div className="m-sc-top">
+            <div className="m-sc-total-value">{fmtBalance(totalBalance)}€</div>
+            <div className="m-sc-total-label">Saldo total</div>
+            <div className="m-sc-total-sub">Desde o início</div>
           </div>
-          <div className="m-chip expense">
-            <span className="m-chip-label">Despesas</span>
-            <span className="m-chip-amount">−{expenses.toFixed(2)}€</span>
-          </div>
-        </div>
 
-        {/* ── Total (lifetime) balance card ── */}
-        <div className="m-total-balance-card">
-          <div className="m-total-balance-inner">
-            <div className="m-total-balance-left">
-              <span className="m-total-balance-label">Saldo total</span>
-              <span className="m-total-balance-sub">Desde o início</span>
+          <div className="m-sc-divider" />
+
+          {/* MIDDLE: receitas + despesas */}
+          <div className="m-sc-middle">
+            <div className="m-sc-col">
+              <span className="m-sc-amount income">+{income.toFixed(2)}€</span>
+              <span className="m-sc-label">Receitas</span>
             </div>
-            <span className="m-total-balance-value">
-              {fmtBalance(totalBalance)}€
+            <div className="m-sc-col-sep" />
+            <div className="m-sc-col">
+              <span className="m-sc-amount expense">−{expenses.toFixed(2)}€</span>
+              <span className="m-sc-label">Despesas</span>
+            </div>
+          </div>
+
+          <div className="m-sc-divider" />
+
+          {/* BOTTOM: monthly balance */}
+          <div className="m-sc-bottom">
+            <span className="m-sc-month-label">Saldo do mês</span>
+            <span className={`m-sc-month-value ${balance >= 0 ? 'positive' : 'negative'}`}>
+              {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
             </span>
           </div>
+
         </div>
 
         {/* Patrimony compact row */}

@@ -1118,3 +1118,138 @@
 .fintech-ui .nav-item.active .nav-label { color: #818cf8; }
 .fintech-ui .nav-label,
 .fintech-ui .nav-icon                   { color: rgba(255,255,255,0.40); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIFIED SUMMARY CARD  (.m-summary-card)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shell ── */
+.m-summary-card {
+  margin: 0 16px 12px;
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--separator);
+}
+[data-theme="light"] .m-summary-card {
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border-color: rgba(0,0,0,0.06);
+}
+
+/* Fintech: dark indigo gradient */
+.fintech-ui .m-summary-card {
+  background: linear-gradient(145deg, #111827 0%, #1E1B4B 100%);
+  border: 0.5px solid rgba(139,92,246,0.20);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* ── TOP: lifetime balance ── */
+.m-sc-top {
+  margin-bottom: 4px;
+}
+.m-sc-total-value {
+  font-size: 1.75rem;   /* 28px */
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.fintech-ui .m-sc-total-value {
+  color: rgba(255,255,255,0.94);
+}
+.m-sc-total-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+}
+.fintech-ui .m-sc-total-label {
+  color: rgba(165,180,252,0.70); /* indigo-300 muted */
+}
+.m-sc-total-sub {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.fintech-ui .m-sc-total-sub {
+  color: rgba(255,255,255,0.25);
+}
+
+/* ── Divider ── */
+.m-sc-divider {
+  height: 0.5px;
+  background: var(--separator, rgba(0,0,0,0.08));
+  margin: 14px 0;
+}
+.fintech-ui .m-sc-divider {
+  background: rgba(255,255,255,0.07);
+}
+
+/* ── MIDDLE: 2-column row ── */
+.m-sc-middle {
+  display: flex;
+  align-items: center;
+}
+.m-sc-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.m-sc-col-sep {
+  width: 0.5px;
+  height: 38px;
+  background: var(--separator, rgba(0,0,0,0.08));
+  margin: 0 18px;
+  flex-shrink: 0;
+}
+.fintech-ui .m-sc-col-sep {
+  background: rgba(255,255,255,0.07);
+}
+.m-sc-amount {
+  font-size: 1rem;       /* 16px */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.m-sc-amount.income  { color: #22c55e; }
+.m-sc-amount.expense { color: #f87171; }
+
+.m-sc-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+.fintech-ui .m-sc-label {
+  color: rgba(255,255,255,0.28);
+}
+
+/* ── BOTTOM: monthly balance ── */
+.m-sc-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.m-sc-month-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.fintech-ui .m-sc-month-label {
+  color: rgba(255,255,255,0.32);
+}
+.m-sc-month-value {
+  font-size: 0.8125rem;  /* 13px */
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.m-sc-month-value.positive { color: #22c55e; }
+.m-sc-month-value.negative { color: #f87171; }
