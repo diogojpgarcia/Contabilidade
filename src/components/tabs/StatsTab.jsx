@@ -1,10 +1,27 @@
 ﻿import React, { useState, useMemo } from 'react';
-import InsightsPanel from '../InsightsPanel.jsx';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
+import { Bubble } from '../ui';
+import { generateInsights } from '../../utils/insights';
 import './StatsTab.css';
 import './HomeTab.modern.css';
+
+const INSIGHT_ICONS = {
+  budget_exceeded:   '⚠',
+  budget_warning:    '⚡',
+  prediction:        '◎',
+  category_increase: '↑',
+  top_category:      '★',
+  trend:             '↗',
+};
+
+const INSIGHT_COLORS = {
+  risk: '#ef4444',
+  warn: '#F59E0B',
+  good: '#22c55e',
+  info: '#6B7280',
+};
 
 /* Transfer flow helper (mirrors ModernTransactionList / DefaultTransactionList) */
 function getTransferFlow(tx) {
@@ -211,6 +228,12 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     [monthlyData]
   );
 
+  const insights = useMemo(() => {
+    const items = generateInsights({ transactions, budgets: {}, categories, selectedMonth: currentMonth });
+    console.log('SUMMARY ITEMS:', items);
+    return items;
+  }, [transactions, categories, currentMonth]);
+
   // Get month name from the global currentMonth
   const [year, month] = currentMonth.split('-');
   const monthName = new Date(year, parseInt(month) - 1, 1).toLocaleDateString('pt-PT', {
@@ -401,7 +424,30 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
         {/* ── INSIGHTS ── */}
         {activeView === 'insights' && (
-          <InsightsPanel transactions={transactions} currentMonth={currentMonth} />
+          insights.length === 0 ? (
+            <div className="m-insights-empty">
+              <span className="m-insights-empty-icon">✓</span>
+              <p>Sem dados suficientes</p>
+            </div>
+          ) : (
+            <div className="m-insights-list">
+              {insights.map((item, i) => {
+                const c = INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info;
+                return (
+                  <div key={i} className="m-insight-card">
+                    <Bubble color={c} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
+                    <div className="m-insight-body">
+                      <div className="m-insight-top">
+                        <span className="m-insight-title">{item.title}</span>
+                        <span className="m-insight-value" style={{ color: c }}>{item.value}</span>
+                      </div>
+                      <span className="m-insight-msg">{item.message}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
         )}
 
         {pickerTx && (
@@ -737,10 +783,27 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       )}
 
       {activeView === 'insights' && (
-        <InsightsPanel
-          transactions={transactions}
-          currentMonth={currentMonth}
-        />
+        insights.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)' }}>Sem dados suficientes</div>
+        ) : (
+          <div className="m-insights-list" style={{ padding: '0 16px' }}>
+            {insights.map((item, i) => {
+              const c = INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info;
+              return (
+                <div key={i} className="m-insight-card">
+                  <Bubble color={c} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
+                  <div className="m-insight-body">
+                    <div className="m-insight-top">
+                      <span className="m-insight-title">{item.title}</span>
+                      <span className="m-insight-value" style={{ color: c }}>{item.value}</span>
+                    </div>
+                    <span className="m-insight-msg">{item.message}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       )}
 
       {/* Category Picker */}
