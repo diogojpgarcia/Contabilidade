@@ -35,6 +35,7 @@ function getTransferFlow(tx) {
 
 const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, theme = 'default' }) => {
   console.log('RENDER STATS');
+  console.log('ACTIVE THEME:', theme);
   console.log('transactions:', transactions);
   console.log('budgets:', budgets);
 
