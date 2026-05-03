@@ -436,6 +436,7 @@ const App = () => {
             user={currentUser}
             onImportDone={handleImport}
             learnedRules={learnedRules}
+            theme={theme}
           />
         )}
 

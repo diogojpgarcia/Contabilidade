@@ -2,64 +2,151 @@ import React, { useState } from 'react';
 import {
   Utensils, Car, ShoppingBag, Receipt, Wallet,
   ArrowRightLeft, Home, Zap, Smartphone, Plane,
-  Heart, BookOpen, Shirt, Dumbbell, Gift, Baby,
+  Heart, BookOpen, Shirt, Gift, Baby,
   PiggyBank, TrendingUp, Briefcase, RefreshCw,
-  Tag, Trophy, CreditCard, Scale, Circle,
+  Tag, Trophy, CreditCard, Scale, Dumbbell,
 } from 'lucide-react';
 import CategoryPicker from './CategoryPicker';
 import './FintechTransactionCard.css';
 
+/* ── Merchant map ─────────────────────────────────────────────────────────────
+   keys[]  — lowercase substrings to match in the transaction description
+   domain  — used for logo.clearbit.com; null = icon only
+   category — Portuguese category name used for icon/colour lookup            */
+const MERCHANT_MAP = [
+  /* Transport */
+  { keys: ['uber'],                        domain: 'uber.com',         category: 'Transporte' },
+  { keys: ['bolt'],                        domain: 'bolt.eu',          category: 'Transporte' },
+  { keys: ['cabify'],                      domain: 'cabify.com',       category: 'Transporte' },
+  { keys: ['galp'],                        domain: 'galp.com',         category: 'Transporte' },
+  { keys: [' bp '],                        domain: 'bp.com',           category: 'Transporte' },
+  { keys: ['repsol'],                      domain: 'repsol.pt',        category: 'Transporte' },
+  { keys: ['cp ','comboios de portugal'],  domain: 'cp.pt',            category: 'Transporte' },
+  { keys: ['gira'],                        domain: null,               category: 'Transporte' },
+  /* Food & Groceries */
+  { keys: ['continente'],                  domain: 'continente.pt',    category: 'Alimentação' },
+  { keys: ['pingo doce','pingodoce'],      domain: 'pingodoce.pt',     category: 'Alimentação' },
+  { keys: ['lidl'],                        domain: 'lidl.pt',          category: 'Alimentação' },
+  { keys: ['aldi'],                        domain: 'aldi.pt',          category: 'Alimentação' },
+  { keys: ['mercadona'],                   domain: 'mercadona.es',     category: 'Alimentação' },
+  { keys: ['intermarche','intermarché'],   domain: 'intermarche.pt',   category: 'Alimentação' },
+  { keys: ['minipreco','minipreço'],       domain: null,               category: 'Alimentação' },
+  { keys: ['mcdonalds',"mcdonald's",'mcdonald'], domain: 'mcdonalds.com', category: 'Alimentação' },
+  { keys: ['burger king'],                 domain: 'burgerking.com',   category: 'Alimentação' },
+  { keys: ['kfc'],                         domain: 'kfc.com',          category: 'Alimentação' },
+  { keys: ['starbucks'],                   domain: 'starbucks.com',    category: 'Alimentação' },
+  { keys: ['nespresso'],                   domain: 'nespresso.com',    category: 'Alimentação' },
+  /* Shopping */
+  { keys: ['amazon prime'],                domain: 'amazon.com',       category: 'Subscrições' },
+  { keys: ['amazon'],                      domain: 'amazon.com',       category: 'Outros' },
+  { keys: ['zara'],                        domain: 'zara.com',         category: 'Roupa & Calçado' },
+  { keys: ['h&m',' hm '],                  domain: 'hm.com',           category: 'Roupa & Calçado' },
+  { keys: ['primark'],                     domain: 'primark.com',      category: 'Roupa & Calçado' },
+  { keys: ['mango'],                       domain: 'mango.com',        category: 'Roupa & Calçado' },
+  { keys: ['el corte ingles','el corte inglés','elcorteingles'], domain: 'elcorteingles.pt', category: 'Outros' },
+  { keys: ['ikea'],                        domain: 'ikea.com',         category: 'Casa & Jardim' },
+  { keys: ['leroy merlin','leroymerlin'],  domain: 'leroymerlin.pt',   category: 'Casa & Jardim' },
+  { keys: ['decathlon'],                   domain: 'decathlon.pt',     category: 'Lazer & Entretenimento' },
+  /* Tech & Electronics */
+  { keys: ['worten'],                      domain: 'worten.pt',        category: 'Tecnologia' },
+  { keys: ['fnac'],                        domain: 'fnac.pt',          category: 'Tecnologia' },
+  { keys: ['apple'],                       domain: 'apple.com',        category: 'Tecnologia' },
+  { keys: ['google'],                      domain: 'google.com',       category: 'Tecnologia' },
+  { keys: ['microsoft'],                   domain: 'microsoft.com',    category: 'Tecnologia' },
+  /* Subscriptions & Entertainment */
+  { keys: ['netflix'],                     domain: 'netflix.com',      category: 'Subscrições' },
+  { keys: ['spotify'],                     domain: 'spotify.com',      category: 'Subscrições' },
+  { keys: ['disney+','disneyplus'],        domain: 'disneyplus.com',   category: 'Subscrições' },
+  { keys: ['hbo max','hbomax','hbo'],      domain: 'max.com',          category: 'Subscrições' },
+  { keys: ['youtube premium'],             domain: 'youtube.com',      category: 'Subscrições' },
+  { keys: ['steam'],                       domain: 'store.steampowered.com', category: 'Lazer & Entretenimento' },
+  { keys: ['playstation','ps store','psn'],domain: 'playstation.com',  category: 'Lazer & Entretenimento' },
+  { keys: ['xbox'],                        domain: 'xbox.com',         category: 'Lazer & Entretenimento' },
+  /* Communications */
+  { keys: ['vodafone'],                    domain: 'vodafone.pt',      category: 'Comunicações' },
+  { keys: ['meo'],                         domain: 'meo.pt',           category: 'Comunicações' },
+  { keys: ['nos ','nos.pt'],               domain: 'nos.pt',           category: 'Comunicações' },
+  { keys: ['nowo','cabovisao'],            domain: null,               category: 'Comunicações' },
+  /* Utilities */
+  { keys: ['edp'],                         domain: 'edp.pt',           category: 'Utilities' },
+  { keys: ['endesa'],                      domain: 'endesa.pt',        category: 'Utilities' },
+  { keys: ['epal','aguas de'],             domain: null,               category: 'Utilities' },
+  /* Travel */
+  { keys: ['airbnb'],                      domain: 'airbnb.com',       category: 'Viagens & Férias' },
+  { keys: ['booking'],                     domain: 'booking.com',      category: 'Viagens & Férias' },
+  { keys: ['ryanair'],                     domain: 'ryanair.com',      category: 'Viagens & Férias' },
+  { keys: ['tap air','tap portugal','flytap'], domain: 'flytap.com',   category: 'Viagens & Férias' },
+  { keys: ['easyjet'],                     domain: 'easyjet.com',      category: 'Viagens & Férias' },
+  /* Health */
+  { keys: ['farmacia','farmácia'],         domain: null,               category: 'Saúde' },
+  { keys: ['wells'],                       domain: null,               category: 'Saúde' },
+];
+
+/* ── getMerchantVisual ───────────────────────────────────────────────────── */
+function getMerchantVisual(description) {
+  if (!description) return null;
+  const lower = description.toLowerCase();
+  for (const m of MERCHANT_MAP) {
+    if (m.keys.some(k => lower.includes(k))) {
+      return {
+        logoUrl:          m.domain ? `https://logo.clearbit.com/${m.domain}` : null,
+        detectedCategory: m.category,
+      };
+    }
+  }
+  return null;
+}
+
 /* ── Category → icon + color ─────────────────────────────────────────────── */
 const CAT_META = {
-  /* Expenses */
-  'Alimentação':                { Icon: Utensils,      color: '#3B82F6' },
-  'Habitação':                  { Icon: Home,          color: '#6366F1' },
-  'Transporte':                 { Icon: Car,           color: '#8B5CF6' },
-  'Saúde':                      { Icon: Heart,         color: '#EF4444' },
-  'Lazer':                      { Icon: Dumbbell,      color: '#A855F7' },
-  'Lazer & Entretenimento':     { Icon: Dumbbell,      color: '#A855F7' },
-  'Educação':                   { Icon: BookOpen,      color: '#6366F1' },
-  'Roupa':                      { Icon: Shirt,         color: '#EC4899' },
-  'Roupa & Calçado':            { Icon: Shirt,         color: '#EC4899' },
-  'Tecnologia':                 { Icon: Smartphone,    color: '#6366F1' },
-  'Subscrições':                { Icon: Smartphone,    color: '#6366F1' },
-  'Comunicações':               { Icon: Smartphone,    color: '#0EA5E9' },
-  'Utilities':                  { Icon: Zap,           color: '#F59E0B' },
-  'Serviços Financeiros':       { Icon: CreditCard,    color: '#6366F1' },
-  'Viagens & Férias':           { Icon: Plane,         color: '#0EA5E9' },
-  'Presentes & Doações':        { Icon: Gift,          color: '#EC4899' },
-  'Animais de Estimação':       { Icon: Heart,         color: '#F59E0B' },
-  'Crianças & Família':         { Icon: Baby,          color: '#EC4899' },
-  'Cuidados Pessoais':          { Icon: Dumbbell,      color: '#A855F7' },
-  'Casa & Jardim':              { Icon: Home,          color: '#10B981' },
-  'Impostos & Taxas':           { Icon: Receipt,       color: '#EF4444' },
-  'Emergências':                { Icon: Receipt,       color: '#EF4444' },
-  'Outros':                     { Icon: ShoppingBag,   color: '#6B7280' },
+  'Alimentação':                { Icon: Utensils,    color: '#3B82F6' },
+  'Habitação':                  { Icon: Home,        color: '#6366F1' },
+  'Transporte':                 { Icon: Car,         color: '#8B5CF6' },
+  'Saúde':                      { Icon: Heart,       color: '#EF4444' },
+  'Lazer':                      { Icon: Dumbbell,    color: '#A855F7' },
+  'Lazer & Entretenimento':     { Icon: Dumbbell,    color: '#A855F7' },
+  'Educação':                   { Icon: BookOpen,    color: '#6366F1' },
+  'Roupa':                      { Icon: Shirt,       color: '#EC4899' },
+  'Roupa & Calçado':            { Icon: Shirt,       color: '#EC4899' },
+  'Tecnologia':                 { Icon: Smartphone,  color: '#6366F1' },
+  'Subscrições':                { Icon: Smartphone,  color: '#6366F1' },
+  'Comunicações':               { Icon: Smartphone,  color: '#0EA5E9' },
+  'Utilities':                  { Icon: Zap,         color: '#F59E0B' },
+  'Serviços Financeiros':       { Icon: CreditCard,  color: '#6366F1' },
+  'Viagens & Férias':           { Icon: Plane,       color: '#0EA5E9' },
+  'Presentes & Doações':        { Icon: Gift,        color: '#EC4899' },
+  'Animais de Estimação':       { Icon: Heart,       color: '#F59E0B' },
+  'Crianças & Família':         { Icon: Baby,        color: '#EC4899' },
+  'Cuidados Pessoais':          { Icon: Dumbbell,    color: '#A855F7' },
+  'Casa & Jardim':              { Icon: Home,        color: '#10B981' },
+  'Impostos & Taxas':           { Icon: Receipt,     color: '#EF4444' },
+  'Emergências':                { Icon: Receipt,     color: '#EF4444' },
+  'Outros':                     { Icon: ShoppingBag, color: '#6B7280' },
   /* Income */
-  'Salário':                    { Icon: Wallet,        color: '#10B981' },
-  'Salário Principal':          { Icon: Wallet,        color: '#10B981' },
-  'Subsídios':                  { Icon: Wallet,        color: '#10B981' },
-  'Freelance':                  { Icon: Briefcase,     color: '#10B981' },
-  'Trabalho Extra / Freelance': { Icon: Briefcase,     color: '#10B981' },
-  'Investimentos':              { Icon: TrendingUp,    color: '#10B981' },
-  'Rendas Recebidas':           { Icon: Home,          color: '#10B981' },
-  'Reembolsos':                 { Icon: RefreshCw,     color: '#10B981' },
-  'Vendas':                     { Icon: Tag,           color: '#10B981' },
-  'Prémios & Sorteios':         { Icon: Trophy,        color: '#10B981' },
-  'Prendas & Doações Recebidas':{ Icon: Gift,          color: '#10B981' },
-  'Bonus':                      { Icon: PiggyBank,     color: '#10B981' },
-  'Outros Rendimentos':         { Icon: Wallet,        color: '#10B981' },
+  'Salário':                    { Icon: Wallet,      color: '#10B981' },
+  'Salário Principal':          { Icon: Wallet,      color: '#10B981' },
+  'Subsídios':                  { Icon: Wallet,      color: '#10B981' },
+  'Freelance':                  { Icon: Briefcase,   color: '#10B981' },
+  'Trabalho Extra / Freelance': { Icon: Briefcase,   color: '#10B981' },
+  'Investimentos':              { Icon: TrendingUp,  color: '#10B981' },
+  'Rendas Recebidas':           { Icon: Home,        color: '#10B981' },
+  'Reembolsos':                 { Icon: RefreshCw,   color: '#10B981' },
+  'Vendas':                     { Icon: Tag,         color: '#10B981' },
+  'Prémios & Sorteios':         { Icon: Trophy,      color: '#10B981' },
+  'Prendas & Doações Recebidas':{ Icon: Gift,        color: '#10B981' },
+  'Bonus':                      { Icon: PiggyBank,   color: '#10B981' },
+  'Outros Rendimentos':         { Icon: Wallet,      color: '#10B981' },
 };
 
 const TRANSFER_META  = { Icon: ArrowRightLeft, color: '#9CA3AF' };
 const ADJUST_META    = { Icon: Scale,          color: '#F97316' };
-const DEFAULT_INCOME = { Icon: Wallet,         color: '#10B981' };
-const DEFAULT_EXPENSE= { Icon: CreditCard,     color: '#6B7280' };
 
 function getMeta(cat, type) {
   if (type === 'transfer')   return TRANSFER_META;
   if (type === 'adjustment') return ADJUST_META;
-  return CAT_META[cat] || (type === 'income' ? DEFAULT_INCOME : DEFAULT_EXPENSE);
+  return CAT_META[cat] || (type === 'income'
+    ? { Icon: Wallet,     color: '#10B981' }
+    : { Icon: CreditCard, color: '#6B7280' });
 }
 
 /* ── Transfer flow helper ─────────────────────────────────────────────────── */
@@ -72,7 +159,7 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-/* ── Date formatting ─────────────────────────────────────────────────────── */
+/* ── Date helpers ─────────────────────────────────────────────────────────── */
 function formatShort(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr.length === 10 ? dateStr + 'T00:00:00' : dateStr);
@@ -86,16 +173,28 @@ function formatLong(dateStr) {
 }
 
 /* ── Component ────────────────────────────────────────────────────────────── */
-const FintechTransactionCard = ({ tx, onCategoryChange, onDelete }) => {
-  const [open,      setOpen]     = useState(false);
+const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = false }) => {
+  const [open,      setOpen]    = useState(false);
   const [pickerTx,  setPickerTx] = useState(null);
   const [deleting,  setDeleting] = useState(false);
+  const [logoErr,   setLogoErr]  = useState(false);
 
   const isTransfer   = tx.type === 'transfer';
   const isAdjustment = tx.type === 'adjustment';
   const isIncome     = tx.type === 'income';
 
-  const { Icon, color } = getMeta(tx.category, tx.type);
+  /* Merchant detection — only for regular transactions */
+  const merchant = (!isTransfer && !isAdjustment)
+    ? getMerchantVisual(tx.description || tx.category || '')
+    : null;
+
+  const effectiveCat = merchant?.detectedCategory || tx.category;
+  const { Icon, color } = getMeta(effectiveCat, tx.type);
+
+  const showLogo  = !!merchant?.logoUrl && !logoErr;
+  const bubbleBg  = showLogo
+    ? 'rgba(255,255,255,0.08)'
+    : `${color}26`; /* 15% opacity */
 
   const title = isTransfer
     ? getTransferFlow(tx)
@@ -127,15 +226,23 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete }) => {
 
   return (
     <>
-      <div className="ftc-card" onClick={() => setOpen(o => !o)}>
+      <div className={`ftc-card${isDuplicate ? ' ftc-card--dupe' : ''}`} onClick={() => setOpen(o => !o)}>
+        {isDuplicate && <div className="ftc-dupe-bar">duplicado</div>}
+
         {/* ── Main row ── */}
         <div className="ftc-row">
-          {/* Icon bubble */}
-          <div
-            className="ftc-icon-wrap"
-            style={{ background: `${color}26` /* ~15% opacity */ }}
-          >
-            <Icon size={18} color={color} strokeWidth={2} />
+          {/* Icon / logo bubble */}
+          <div className="ftc-icon-wrap" style={{ background: bubbleBg }}>
+            {showLogo ? (
+              <img
+                src={merchant.logoUrl}
+                alt=""
+                className="ftc-logo-img"
+                onError={() => setLogoErr(true)}
+              />
+            ) : (
+              <Icon size={18} color={color} strokeWidth={2} />
+            )}
           </div>
 
           {/* Body */}
@@ -147,7 +254,7 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete }) => {
               ) : isAdjustment ? (
                 <span className="ftc-badge ftc-badge--adjust">Ajuste</span>
               ) : (
-                <span className="ftc-cat">{tx.category}</span>
+                <span className="ftc-cat">{effectiveCat}</span>
               )}
             </span>
           </div>
@@ -167,10 +274,7 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete }) => {
             <span className="ftc-action-date">{formatLong(tx.date)}</span>
             <div className="ftc-action-btns">
               {onCategoryChange && !isTransfer && !isAdjustment && (
-                <button
-                  className="ftc-action-btn"
-                  onClick={() => setPickerTx(tx)}
-                >
+                <button className="ftc-action-btn" onClick={() => setPickerTx(tx)}>
                   ✎ Categoria
                 </button>
               )}

@@ -3,9 +3,20 @@ import { dbService } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import { categorizeWithClaude } from '../../utils/categorizeWithClaude.js';
+import FintechTransactionCard from '../FintechTransactionCard';
 import './ImportTab.css';
 
-const ImportTab = ({ user, onImportDone, learnedRules = [] }) => {
+/* Map a preview row to the shape FintechTransactionCard expects */
+const toFtcShape = (tx, i) => ({
+  id:          `preview-${i}`,
+  date:        tx.date,
+  description: tx.clean_description || tx.description || '',
+  amount:      tx.amount,
+  type:        tx.type,
+  category:    tx.category || (tx.type === 'income' ? 'Outros Rendimentos' : 'Outros'),
+});
+
+const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' }) => {
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);
@@ -181,28 +192,42 @@ const ImportTab = ({ user, onImportDone, learnedRules = [] }) => {
             <span className="import-preview-title">Pré-visualização</span>
             <span className="import-preview-count">{preview.length} linhas</span>
           </div>
-          <div className="import-preview-list">
-            {preview.map((tx, i) => (
-              <div
-                key={i}
-                className={`import-row ${tx.type}${tx.is_duplicate ? ' duplicate' : ''}`}
-              >
-                <div className="import-row-left">
-                  <span className="import-row-meta">
-                    {tx.date} · {tx.category}
-                    {tx.is_duplicate && <span className="import-dupe-badge">duplicado</span>}
+          {theme === 'fintech' ? (
+            <div className="ftc-list import-ftc-list">
+              {preview.map((tx, i) => (
+                <FintechTransactionCard
+                  key={i}
+                  tx={toFtcShape(tx, i)}
+                  isDuplicate={!!tx.is_duplicate}
+                  onCategoryChange={null}
+                  onDelete={null}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="import-preview-list">
+              {preview.map((tx, i) => (
+                <div
+                  key={i}
+                  className={`import-row ${tx.type}${tx.is_duplicate ? ' duplicate' : ''}`}
+                >
+                  <div className="import-row-left">
+                    <span className="import-row-meta">
+                      {tx.date} · {tx.category}
+                      {tx.is_duplicate && <span className="import-dupe-badge">duplicado</span>}
+                    </span>
+                    <span className="import-row-desc">{tx.clean_description}</span>
+                    {tx.clean_description !== tx.description && (
+                      <span className="import-row-original">{tx.description}</span>
+                    )}
+                  </div>
+                  <span className={`import-row-amount ${tx.type}`}>
+                    {tx.type === 'income' ? '+' : '-'}{tx.amount.toFixed(2)}€
                   </span>
-                  <span className="import-row-desc">{tx.clean_description}</span>
-                  {tx.clean_description !== tx.description && (
-                    <span className="import-row-original">{tx.description}</span>
-                  )}
                 </div>
-                <span className={`import-row-amount ${tx.type}`}>
-                  {tx.type === 'income' ? '+' : '-'}{tx.amount.toFixed(2)}€
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
