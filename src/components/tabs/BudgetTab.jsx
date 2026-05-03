@@ -27,6 +27,17 @@ const CAT_COLORS = {
   'Roupa':'#F97316','Tecnologia':'#6366F1','Subscrições':'#84CC16','Outros':'#6B7280',
 };
 
+const getCategoryIcon = (category) => {
+  const label = typeof category === 'string' ? category : category?.label;
+  return CATEGORY_ICONS[label] || '◌';
+};
+
+const getGradient = (percent) => {
+  if (percent > 100) return 'linear-gradient(90deg, #ef4444, #b91c1c)';
+  if (percent >= 70)  return 'linear-gradient(90deg, #eab308, #f97316)';
+  return 'linear-gradient(90deg, #22c55e, #4ade80)';
+};
+
 const CountUp = ({ value, decimals = 0 }) => {
   const [display, setDisplay] = useState(0);
   const fromRef = useRef(0);
@@ -47,6 +58,66 @@ const CountUp = ({ value, decimals = 0 }) => {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [value]);
   return <>{display.toFixed(decimals)}</>;
+};
+
+const BudgetCategoryCard = ({ cat, limit, spent, percent, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
+  const color     = CAT_COLORS[cat.label] || '#6B7280';
+  const barWidth  = Math.min(percent, 100);
+  const colorClass = percent > 100 ? 'over' : percent >= 70 ? 'warn' : '';
+
+  console.log(cat.label, percent);
+
+  return (
+    <div className="m-bcc">
+      <div className="m-bcc-row">
+        <div className="m-bcc-bubble" style={{ background: `${color}26` }}>
+          <span style={{ color }}>{getCategoryIcon(cat.label)}</span>
+        </div>
+        <div className="m-bcc-info">
+          <div className="m-bcc-name-row">
+            <span className="m-bcc-name">{cat.label}</span>
+            {percent >= 100 && <span className="m-bcc-badge over">Ultrapassado</span>}
+            {percent >= 80 && percent < 100 && <span className="m-bcc-badge warn">Atenção</span>}
+          </div>
+          <span className={`m-bcc-spent ${colorClass}`}>
+            {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
+          </span>
+        </div>
+        <button className="m-bcc-edit" onClick={onEditToggle}>✏</button>
+      </div>
+
+      {isEditing && (
+        <div className="m-bcc-edit-row">
+          <input
+            type="number"
+            inputMode="decimal"
+            className="m-bcc-input"
+            value={limit || ''}
+            onChange={(e) => onLimitChange(cat.id, e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { onSave(); e.target.blur(); } }}
+            placeholder="Limite €/mês"
+            autoFocus
+          />
+          <button className="m-bcc-save" onClick={onSave}>✓</button>
+        </div>
+      )}
+
+      {limit > 0 && (
+        <div className="m-budget-bar-bg">
+          <div
+            style={{
+              height: '100%',
+              borderRadius: '4px',
+              transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+              width: animated ? `${barWidth}%` : '0%',
+              background: getGradient(percent),
+              boxShadow: '0 0 8px rgba(255,255,255,0.15)',
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
 };
 
 /**
@@ -91,11 +162,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
   }, [activeView, transactions]);
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
-
-  const getCategoryIcon = (category) => {
-    const label = typeof category === 'string' ? category : category?.label;
-    return CATEGORY_ICONS[label] || '◌';
-  };
 
   useEffect(() => { loadData(); }, [user]);
 
@@ -310,8 +376,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
     );
   };
 
-  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
-  if (theme === 'modern') {
+  /* ── MODERN / FINTECH BRANCH ──────────────────────────────────────────── */
+  if (theme === 'modern' || theme === 'fintech') {
     const totalBudget = Object.values(budgets).reduce((s, v) => s + (v || 0), 0);
     const totalSpent  = categories.expense.reduce((s, cat) => s + getSpentByCategory(cat.id), 0);
     const isTotalOver = totalBudget > 0 && totalSpent > totalBudget;
@@ -371,55 +437,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, patrimony: ex
                   const limit = budgets[cat.id] || 0;
                   const spent = getSpentByCategory(cat.id);
                   const percent = limit > 0 ? (spent / limit) * 100 : 0;
-                  const barWidth = Math.min(percent, 100);
-                  const colorClass = percent > 100 ? 'over' : percent >= 70 ? 'warn' : '';
-                  return { cat, limit, spent, percent, barWidth, colorClass };
+                  return { cat, limit, spent, percent };
                 })
                 .sort((a, b) => b.percent - a.percent)
-                .map(({ cat, limit, spent, percent, barWidth, colorClass }) => {
-                  const color = CAT_COLORS[cat.label] || '#6B7280';
-                  const isEditing = editingCategoryId === cat.id;
-                  return (
-                    <div key={cat.id} className="m-bcc">
-                      <div className="m-bcc-row">
-                        <div className="m-bcc-bubble" style={{ background: `${color}26` }}>
-                          <span style={{ color }}>{getCategoryIcon(cat.label)}</span>
-                        </div>
-                        <div className="m-bcc-info">
-                          <div className="m-bcc-name-row">
-                            <span className="m-bcc-name">{cat.label}</span>
-                            {percent >= 100 && <span className="m-bcc-badge over">Ultrapassado</span>}
-                            {percent >= 80 && percent < 100 && <span className="m-bcc-badge warn">Atenção</span>}
-                          </div>
-                          <span className={`m-bcc-spent ${colorClass}`}>
-                            {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
-                          </span>
-                        </div>
-                        <button className="m-bcc-edit" onClick={() => setEditingCategoryId(isEditing ? null : cat.id)}>✏</button>
-                      </div>
-                      {isEditing && (
-                        <div className="m-bcc-edit-row">
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            className="m-bcc-input"
-                            value={limit || ''}
-                            onChange={(e) => handleLimitChange(cat.id, e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { saveBudgetToDb(); setEditingCategoryId(null); e.target.blur(); }}}
-                            placeholder="Limite €/mês"
-                            autoFocus
-                          />
-                          <button className="m-bcc-save" onClick={() => { saveBudgetToDb(); setEditingCategoryId(null); }}>✓</button>
-                        </div>
-                      )}
-                      {limit > 0 && (
-                        <div className="m-budget-bar-bg">
-                          <div className={`m-budget-bar-fill ${colorClass}`} style={{ width: animated ? `${barWidth}%` : '0%' }} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+                .map(({ cat, limit, spent, percent }) => (
+                  <BudgetCategoryCard
+                    key={`${cat.id}-${Math.round(percent)}`}
+                    cat={cat}
+                    limit={limit}
+                    spent={spent}
+                    percent={percent}
+                    animated={animated}
+                    isEditing={editingCategoryId === cat.id}
+                    onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
+                    onLimitChange={handleLimitChange}
+                    onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
+                  />
+                ))
               }
             </div>
           </>
