@@ -10,12 +10,17 @@
   margin-bottom: 8px;
   overflow: hidden;
   cursor: pointer;
-  transition: box-shadow 0.15s, background 0.15s;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s;
   -webkit-tap-highlight-color: transparent;
+}
+
+.ftc-card:hover {
+  transform: scale(0.98);
 }
 
 .ftc-card:active {
   background: var(--surface-2, rgba(0,0,0,0.03));
+  transform: scale(0.97);
 }
 
 /* ── Main row ── */
@@ -28,18 +33,13 @@
 
 /* ── Icon bubble ── */
 .ftc-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
-
-.ftc-icon {
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 /* ── Text body ── */
