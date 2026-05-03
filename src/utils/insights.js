@@ -26,35 +26,67 @@ const getSpent = (transactions, catName, month) =>
     .filter(t => t.type === 'expense' && t.category === catName && t.date && t.date.startsWith(month))
     .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
+const fmt0 = (n) => n.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
 export const generateInsights = ({ transactions, budgets, categories, selectedMonth }) => {
   const prevMonth = shiftMonth(selectedMonth, -1);
   const items = [];
-  let topSpent = 0;
-  let topCatLabel = null;
 
-  for (const cat of categories.expense) {
-    const limit     = budgets[cat.id] || 0;
-    const spent     = getSpent(transactions, cat.label, selectedMonth);
-    const prevSpent = getSpent(transactions, cat.label, prevMonth);
-    const percent   = limit > 0 ? (spent / limit) * 100 : 0;
+  // Days remaining in selected month (0 if past month)
+  const today = new Date();
+  const [sy, sm] = selectedMonth.split('-').map(Number);
+  const isCurrentMonth = today.getFullYear() === sy && today.getMonth() + 1 === sm;
+  const daysInMonth = new Date(sy, sm, 0).getDate();
+  const daysLeft = isCurrentMonth ? daysInMonth - today.getDate() : 0;
 
-    if (spent > topSpent) { topSpent = spent; topCatLabel = cat.label; }
+  // Category totals for current + previous month
+  const catTotals = categories.expense.map(cat => ({
+    cat,
+    spent:     getSpent(transactions, cat.label, selectedMonth),
+    prevSpent: getSpent(transactions, cat.label, prevMonth),
+  }));
+
+  const totalCurr = catTotals.reduce((s, c) => s + c.spent, 0);
+  const totalPrev = catTotals.reduce((s, c) => s + c.prevSpent, 0);
+
+  // Category with biggest absolute increase vs last month (for trend extra)
+  const biggestIncrease = catTotals
+    .filter(c => c.spent > c.prevSpent)
+    .sort((a, b) => (b.spent - b.prevSpent) - (a.spent - a.prevSpent))[0];
+  const biggestDecrease = catTotals
+    .filter(c => c.prevSpent > c.spent && c.prevSpent > 5)
+    .sort((a, b) => (b.prevSpent - b.spent) - (a.prevSpent - a.spent))[0];
+
+  // Top spent category
+  const topCat = catTotals.filter(c => c.spent > 0).sort((a, b) => b.spent - a.spent)[0];
+
+  for (const { cat, spent, prevSpent } of catTotals) {
+    const limit   = budgets[cat.id] || 0;
+    const percent = limit > 0 ? (spent / limit) * 100 : 0;
 
     if (limit > 0 && percent >= 100) {
+      const over = spent - limit;
       items.push({
         type: 'budget_exceeded',
-        title: cat.label,
+        title: `Limite ultrapassado em ${cat.label}`,
+        message: `${fmt0(spent)}€ de ${fmt0(limit)}€ — ${fmt0(over)}€ acima`,
         value: `${percent.toFixed(0)}%`,
-        message: `Excedido em ${(spent - limit).toFixed(0)}€`,
+        extra: daysLeft > 0 ? `Ainda faltam ${daysLeft} dias para o fim do mês` : 'Mês encerrado',
+        action: 'Evita novos gastos nesta categoria este mês',
         priority: 100,
         color: 'risk',
       });
     } else if (limit > 0 && percent >= 80) {
+      const remaining = limit - spent;
       items.push({
         type: 'budget_warning',
-        title: cat.label,
+        title: `Estás perto do limite em ${cat.label}`,
+        message: `${fmt0(spent)}€ de ${fmt0(limit)}€ já usados`,
         value: `${percent.toFixed(0)}%`,
-        message: `${spent.toFixed(0)}€ de ${limit.toFixed(0)}€ usados`,
+        extra: daysLeft > 0
+          ? `Faltam ${fmt0(remaining)}€ e ${daysLeft} dias para o fim do mês`
+          : `Faltam ${fmt0(remaining)}€ para o limite`,
+        action: 'Reduz gastos nesta categoria para evitar ultrapassar',
         priority: 100,
         color: 'warn',
       });
@@ -64,9 +96,11 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
     if (predicted !== null && limit > 0 && predicted > limit && percent < 100) {
       items.push({
         type: 'prediction',
-        title: cat.label,
-        value: `${predicted}€`,
-        message: `Previsão: ${((predicted / limit) * 100).toFixed(0)}% do orçamento`,
+        title: `Risco de ultrapassar ${cat.label}`,
+        message: `Ao ritmo atual vais gastar ${fmt0(predicted)}€ (limite: ${fmt0(limit)}€)`,
+        value: `${fmt0(predicted)}€`,
+        extra: `Já usaste ${percent.toFixed(0)}% do orçamento`,
+        action: 'Abranda os gastos até ao fim do mês',
         priority: 90,
         color: 'risk',
       });
@@ -77,9 +111,11 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
       if (pct >= 20) {
         items.push({
           type: 'category_increase',
-          title: cat.label,
+          title: `${cat.label} aumentou significativamente`,
+          message: `${fmt0(prevSpent)}€ → ${fmt0(spent)}€ vs mês anterior`,
           value: `+${pct.toFixed(0)}%`,
-          message: `${prevSpent.toFixed(0)}€ → ${spent.toFixed(0)}€ vs mês anterior`,
+          extra: `Aumento de ${fmt0(spent - prevSpent)}€ face ao mês passado`,
+          action: 'Verifica se há gastos inesperados nesta categoria',
           priority: 80,
           color: 'warn',
         });
@@ -87,28 +123,38 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
     }
   }
 
-  if (topCatLabel && topSpent > 0) {
+  if (topCat && topCat.spent > 0) {
+    const share = totalCurr > 0 ? (topCat.spent / totalCurr) * 100 : 0;
     items.push({
       type: 'top_category',
-      title: topCatLabel,
-      value: `${topSpent.toFixed(0)}€`,
-      message: 'Categoria com maior despesa',
+      title: 'Maior foco de gasto',
+      message: `${topCat.cat.label} representa ${share.toFixed(0)}% do total`,
+      value: `${fmt0(topCat.spent)}€`,
+      extra: `Total gasto este mês: ${fmt0(totalCurr)}€`,
+      action: 'Rever esta categoria pode gerar poupança',
       priority: 70,
       color: 'info',
     });
   }
 
-  const totalCurr = categories.expense.reduce((s, c) => s + getSpent(transactions, c.label, selectedMonth), 0);
-  const totalPrev = categories.expense.reduce((s, c) => s + getSpent(transactions, c.label, prevMonth), 0);
   if (totalPrev > 5) {
     const trendPct = ((totalCurr - totalPrev) / totalPrev) * 100;
+    const diff = totalCurr - totalPrev;
+    const trendUp = diff > 0;
+    const contextCat = trendUp ? biggestIncrease : biggestDecrease;
     items.push({
       type: 'trend',
-      title: 'Tendência mensal',
-      value: `${trendPct > 0 ? '+' : ''}${trendPct.toFixed(0)}%`,
-      message: trendPct > 0
-        ? `+${(totalCurr - totalPrev).toFixed(0)}€ vs mês anterior`
-        : `−${Math.abs(totalCurr - totalPrev).toFixed(0)}€ vs mês anterior`,
+      title: trendUp ? 'Estás a gastar mais este mês' : 'Estás a gastar menos este mês',
+      message: `${trendUp ? '+' : ''}${fmt0(diff)}€ vs mês anterior`,
+      value: `${trendUp ? '+' : ''}${trendPct.toFixed(0)}%`,
+      extra: contextCat
+        ? trendUp
+          ? `Principal aumento em ${contextCat.cat.label}`
+          : `Principal poupança em ${contextCat.cat.label}`
+        : null,
+      action: trendUp
+        ? 'Identifica onde estás a gastar mais e toma ação'
+        : 'Bom controlo — mantém este ritmo',
       priority: 60,
       color: trendPct > 10 ? 'warn' : trendPct < 0 ? 'good' : 'info',
     });
@@ -116,5 +162,5 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
 
   return items
     .sort((a, b) => b.priority - a.priority)
-    .slice(0, 5);
+    .slice(0, 3);
 };
