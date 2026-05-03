@@ -279,16 +279,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         {/* Header */}
         <div className="m-stats-header">
           <span className="m-stats-title">Estatísticas</span>
-          {/* Temporary debug banner — remove after fintech theme is validated */}
-          {theme === 'fintech' && (
-            <span style={{
-              fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.08em',
-              background: '#6366f1', color: '#fff',
-              borderRadius: '5px', padding: '2px 7px',
-            }}>
-              FINTECH MODE
-            </span>
-          )}
         </div>
 
         {/* View toggle */}
@@ -340,18 +330,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               </div>
             </div>
 
-            {/* Secondary grid cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div style={{ background: '#18181b', borderRadius: 16, padding: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
-                <div style={{ fontSize: '0.68rem', color: '#71717a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Receitas</div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#4ade80' }}>+{fmt(monthIncome)}</div>
-              </div>
-              <div style={{ background: '#18181b', borderRadius: 16, padding: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
-                <div style={{ fontSize: '0.68rem', color: '#71717a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Despesas</div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f87171' }}>−{fmt(monthExpenses)}</div>
-              </div>
-            </div>
-
             {/* 6-month chart */}
             <div className="m-chart" style={{ borderRadius: 16, overflow: 'hidden' }}>
               <div className="m-chart-label">Evolução 6 meses</div>
@@ -374,38 +352,27 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         {/* ── LOG ── */}
         {activeView === 'log' && (
           <>
-            <div className="m-date-filter">
-              <input
-                type="date"
-                className="m-date-input"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-              />
-              {filterDate && (
-                <button className="m-clear-btn" onClick={() => setFilterDate('')}>×</button>
-              )}
-              <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
+            {/* Segmented control */}
+            <div style={{ padding: '0 16px', marginBottom: 12 }}>
+              <div style={{ display: 'inline-flex', gap: 4, background: '#18181b', padding: 4, borderRadius: 12 }}>
                 <button
                   onClick={() => setHistoryView('daily')}
                   style={{
-                    padding: '4px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                    fontSize: '0.75rem', fontWeight: 600,
-                    background: historyView === 'daily' ? 'var(--accent, #6366f1)' : 'var(--surface-2, #f0f0f5)',
-                    color:      historyView === 'daily' ? '#fff' : 'var(--text-secondary, #666)',
+                    padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    fontSize: '0.8125rem', fontWeight: 500, transition: 'background 0.15s, color 0.15s',
+                    background: historyView === 'daily' ? '#6366f1' : 'transparent',
+                    color:      historyView === 'daily' ? '#fff' : '#71717a',
                   }}
-                  title="Transações diárias"
-                >💳 Diário</button>
+                >Diário</button>
                 <button
                   onClick={() => setHistoryView('patrimony')}
                   style={{
-                    padding: '4px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                    fontSize: '0.75rem', fontWeight: 600,
-                    background: historyView === 'patrimony' ? 'var(--accent, #6366f1)' : 'var(--surface-2, #f0f0f5)',
-                    color:      historyView === 'patrimony' ? '#fff' : 'var(--text-secondary, #666)',
+                    padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    fontSize: '0.8125rem', fontWeight: 500, transition: 'background 0.15s, color 0.15s',
+                    background: historyView === 'patrimony' ? '#6366f1' : 'transparent',
+                    color:      historyView === 'patrimony' ? '#fff' : '#71717a',
                   }}
-                  title="Transferências e ajustes"
-                >🔁 Património</button>
+                >Património</button>
               </div>
             </div>
 
