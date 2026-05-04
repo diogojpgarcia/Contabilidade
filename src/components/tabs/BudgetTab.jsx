@@ -218,6 +218,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
   const [assetHistory,        setAssetHistory]        = useState({});  // { ticker/coin → number[] }
   const [stockSearch,         setStockSearch]         = useState({ results: [], open: false, loading: false });
+  const [stockConfirmed,      setStockConfirmed]      = useState(false); // true only after explicit click/Enter
   const stockSearchTimerRef  = useRef(null);
 
   // Refs so the stock-price effect can read latest values without re-triggering
@@ -446,6 +447,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const clearStockSearch = () => {
     clearTimeout(stockSearchTimerRef.current);
     setStockSearch({ results: [], open: false, loading: false });
+    setStockConfirmed(false);
   };
 
   const handleStockSearchInput = (val) => {
@@ -466,6 +468,16 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     setPatrimonyField('ticker', result.symbol);
     setPatrimonyField('name',   result.name);
     setStockSearch({ results: [], open: false, loading: false });
+    setStockConfirmed(true);
+  };
+
+  // Called when user presses Enter in the search field (manual ticker confirm)
+  const handleStockConfirmManual = () => {
+    const ticker = patrimonyForm.ticker?.trim();
+    if (!ticker) return;
+    console.log('[AssetForm] STOCK CONFIRMED (manual) →', ticker);
+    setStockSearch({ results: [], open: false, loading: false });
+    setStockConfirmed(true);
   };
 
   const handlePatrimonyAdd = () => {
@@ -523,12 +535,12 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Stocks ──────────────────────────────────────────────────────────── */
       case 'stocks': {
-        // "selected" = ticker is committed and dropdown is closed
-        const selected = !!f.ticker && !stockSearch.open && !stockSearch.loading;
+        // Only true after explicit click on a result OR pressing Enter — never from typing alone
+        const confirmed = stockConfirmed;
         return (
           <div className="pat-stock-form">
-            {!selected ? (
-              /* Step 1: search */
+            {!confirmed ? (
+              /* Step 1: search freely */
               <div className="pat-search-wrap">
                 <span className="pat-search-icon">⊕</span>
                 <input
@@ -537,7 +549,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   placeholder="Procurar empresa ou ticker…"
                   value={f.ticker || ''}
                   onChange={e => handleStockSearchInput(e.target.value)}
-                  onBlur={() => setTimeout(() => setStockSearch(s => ({ ...s, open: false })), 160)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); handleStockConfirmManual(); }
+                    if (e.key === 'Escape') { e.preventDefault(); setStockSearch(s => ({ ...s, open: false })); }
+                  }}
+                  onBlur={() => setTimeout(() => setStockSearch(s => ({ ...s, open: false })), 200)}
                   autoComplete="off"
                   autoFocus
                 />
@@ -545,7 +561,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                 {stockSearch.open && stockSearch.results.length > 0 && (
                   <div className="pat-search-dropdown">
                     {stockSearch.results.map(r => (
-                      <div key={r.symbol} className="pat-search-result" onMouseDown={() => handleStockSelect(r)}>
+                      /* onMouseDown fires before onBlur → selection happens before dropdown closes */
+                      <div key={r.symbol} className="pat-search-result" onMouseDown={e => { e.preventDefault(); handleStockSelect(r); }}>
                         <span className="pat-search-sym">{r.symbol}</span>
                         <span className="pat-search-name">{r.name}</span>
                         {r.exchange && <span className="pat-search-exch">{r.exchange}</span>}
@@ -555,7 +572,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                 )}
               </div>
             ) : (
-              /* Step 2: stock confirmed — show chip + fields */
+              /* Step 2: confirmed — show chip + quantity fields */
               <>
                 <div className="pat-stock-chip">
                   <div className="pat-stock-chip-body">
@@ -565,7 +582,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   <button
                     type="button"
                     className="pat-stock-chip-clear"
-                    onClick={() => { set('ticker', ''); set('name', ''); set('qty', ''); set('avgPrice', ''); }}
+                    onClick={() => {
+                      set('ticker', ''); set('name', ''); set('qty', ''); set('avgPrice', '');
+                      setStockConfirmed(false);
+                      clearTimeout(stockSearchTimerRef.current);
+                    }}
                   >×</button>
                 </div>
                 <input
