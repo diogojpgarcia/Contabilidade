@@ -13,6 +13,7 @@
 // ─── constants ───────────────────────────────────────────────────────────────
 
 export const CACHE_TTL    = 60_000;   // 1 minute — matches the 60 s refresh interval
+export const HISTORY_TTL  = 5 * 60_000;  // 5 minutes — history changes slowly
 const        FETCH_TIMEOUT = 7_000;   // abort after 7 s
 
 const TWELVE_DATA_KEY = import.meta.env.VITE_TWELVE_DATA_KEY ?? '';
@@ -25,6 +26,10 @@ export const HAS_STOCK_KEY = TWELVE_DATA_KEY.length > 0;
 const stockCache  = new Map();
 /** coinId → { price, changePct24h, ts } */
 const cryptoCache = new Map();
+/** ticker → { prices: number[], ts } */
+const stockHistoryCache  = new Map();
+/** coinId → { prices: number[], ts } */
+const cryptoHistoryCache = new Map();
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -163,6 +168,96 @@ export const fetchCryptoBatch = async (symbols) => {
   } finally {
     clear();
   }
+
+  return result;
+};
+
+// ─── history (sparkline data) ────────────────────────────────────────────────
+
+/**
+ * Fetch 7-day daily close prices for a stock (Twelve Data time_series).
+ * Returns number[] oldest→newest, or null on failure / no key.
+ */
+export const fetchStockHistory = async (ticker) => {
+  if (!HAS_STOCK_KEY || !ticker) return null;
+
+  const hit = stockHistoryCache.get(ticker);
+  if (hit && Date.now() - hit.ts < HISTORY_TTL) return hit.prices;
+
+  const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(ticker)}&interval=1day&outputsize=8&apikey=${TWELVE_DATA_KEY}`,
+      { signal }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code || data.status === 'error' || !Array.isArray(data.values)) return null;
+
+    // values are newest-first → reverse to oldest-first, take last 7
+    const prices = data.values
+      .slice(0, 7)
+      .reverse()
+      .map(v => parseFloat(v.close))
+      .filter(n => !isNaN(n));
+    if (prices.length < 2) return null;
+
+    const entry = { prices, ts: Date.now() };
+    stockHistoryCache.set(ticker, entry);
+    return prices;
+  } catch {
+    return null;
+  } finally {
+    clear();
+  }
+};
+
+/**
+ * Fetch 7-day EUR price history for an array of crypto symbols (CoinGecko).
+ * Returns { [symbol]: number[] } — missing/failed symbols are omitted.
+ * No API key needed.
+ */
+export const fetchCryptoHistoryBatch = async (symbols) => {
+  if (!symbols?.length) return {};
+
+  const result  = {};
+  const toFetch = [];
+
+  for (const sym of symbols) {
+    const id  = toCoinId(sym);
+    const hit = cryptoHistoryCache.get(id);
+    if (hit && Date.now() - hit.ts < HISTORY_TTL) {
+      result[sym] = hit.prices;
+    } else {
+      toFetch.push({ sym, id });
+    }
+  }
+
+  if (!toFetch.length) return result;
+
+  // One request per coin (CoinGecko market_chart cannot batch)
+  await Promise.allSettled(
+    toFetch.map(async ({ sym, id }) => {
+      const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+      try {
+        const res = await fetch(
+          `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=eur&days=7&interval=daily`,
+          { signal }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!Array.isArray(data?.prices) || data.prices.length < 2) return;
+
+        const prices = data.prices.map(([, p]) => p);
+        cryptoHistoryCache.set(id, { prices, ts: Date.now() });
+        result[sym] = prices;
+      } catch {
+        // silent — return whatever was already in result
+      } finally {
+        clear();
+      }
+    })
+  );
 
   return result;
 };

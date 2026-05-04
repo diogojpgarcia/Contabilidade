@@ -1197,6 +1197,174 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Intelligent asset card ──────────────────────────────────────────────── */
+.pat-asset-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 10px 16px;
+  border-bottom: 0.5px solid var(--border-subtle, rgba(255,255,255,0.06));
+  transition: background 0.18s;
+}
+.pat-asset-card:last-child { border-bottom: none; }
+.pat-asset-card:hover { background: rgba(255,255,255,0.03); }
+[data-theme="light"] .pat-asset-card:hover { background: rgba(0,0,0,0.02); }
+
+/* Top row: name/price left | value/qty right */
+.pat-asset-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.pat-asset-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Bottom row: sparkline | impact */
+.pat-asset-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 24px; /* room for delete btn */
+}
+.pat-sparkline-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.pat-sparkline-svg {
+  display: block;
+  filter: drop-shadow(0 0 4px currentColor);
+  opacity: 0.9;
+  animation: pat-chart-in 0.4s ease-out both;
+}
+@keyframes pat-chart-in {
+  from { opacity: 0; transform: scaleX(0.85); transform-origin: left center; }
+  to   { opacity: 0.9; transform: scaleX(1); }
+}
+.pat-sparkline-empty {
+  font-size: 0.62rem;
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+/* Impact bar + percentage */
+.pat-impact {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.pat-impact-bar-bg {
+  width: 52px;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+[data-theme="light"] .pat-impact-bar-bg { background: rgba(0,0,0,0.08); }
+.pat-impact-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 6px currentColor;
+}
+.pat-impact-pct {
+  font-size: 0.62rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* Delete button repositioned for asset card */
+.pat-asset-del {
+  position: absolute;
+  top: 10px;
+  right: 6px;
+}
+
+/* ── Alerts panel ──────────────────────────────────────────────────────────── */
+.pat-alerts-panel {
+  margin: 0 16px 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 0.5px solid rgba(255,255,255,0.08);
+  animation: pat-alerts-in 0.35s ease-out both;
+}
+@keyframes pat-alerts-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+[data-theme="light"] .pat-alerts-panel { border-color: rgba(0,0,0,0.08); }
+.pat-alerts-title {
+  padding: 7px 12px 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.03);
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+}
+[data-theme="light"] .pat-alerts-title {
+  background: rgba(0,0,0,0.02);
+  border-bottom-color: rgba(0,0,0,0.06);
+}
+.pat-alert-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.04);
+  animation: pat-alert-row-in 0.3s ease-out both;
+}
+.pat-alert-row:last-child { border-bottom: none; }
+@keyframes pat-alert-row-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.pat-alert-row.pos { background: rgba(34,197,94,0.05); }
+.pat-alert-row.neg { background: rgba(239,68,68,0.05); }
+.pat-alert-sym {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 36px;
+}
+.pat-alert-msg {
+  flex: 1;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.pat-alert-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.pat-alert-badge.pos {
+  color: #22c55e;
+  background: rgba(34,197,94,0.15);
+  box-shadow: 0 0 8px rgba(34,197,94,0.2);
+}
+.pat-alert-badge.neg {
+  color: #ef4444;
+  background: rgba(239,68,68,0.15);
+  box-shadow: 0 0 8px rgba(239,68,68,0.2);
+}
+[data-theme="light"] .pat-alert-badge.pos { color: #15803d; background: rgba(34,197,94,0.18); }
+[data-theme="light"] .pat-alert-badge.neg { color: #dc2626; background: rgba(239,68,68,0.18); }
+
 /* Stock / crypto name row with inline change badge */
 .pat-stock-name-row {
   display: flex;
