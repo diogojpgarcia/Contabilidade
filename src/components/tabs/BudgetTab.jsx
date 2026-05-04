@@ -572,6 +572,24 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             pctOf('stocks') > 0.4    ? 'Portfólio com forte componente em ações. Boa diversificação de crescimento.' :
                                        'Portfólio distribuído por múltiplos tipos de ativos.';
 
+          // ── Wealth Intelligence ─────────────────────────────────────────────
+          // Derive monthly net savings from transactions (no snapshot history needed)
+          const last6Months = Array.from({ length: 6 }, (_, i) => shiftMonth(currentMonth, -(5 - i)));
+          const monthlySavings = last6Months.map(m => {
+            const txns = transactions.filter(t => t.date && t.date.startsWith(m));
+            const inc  = txns.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+            const exp  = txns.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+            return inc - exp;
+          });
+          const avg6       = monthlySavings.reduce((s, v) => s + v, 0) / 6;
+          const avg3       = monthlySavings.slice(3).reduce((s, v) => s + v, 0) / 3;
+          const forecast12 = totalPatrimony + avg6 * 12;
+          const monthlyRate = totalPatrimony > 0 ? (avg6 / totalPatrimony) * 100 : 0;
+          const trendDiff  = avg3 - avg6;
+          const trendStatus = Math.abs(trendDiff) < 50 ? 'neutral' : trendDiff > 0 ? 'above' : 'below';
+          const hasIntelData = monthlySavings.some(v => v !== 0);
+          const maxAbs = Math.max(...monthlySavings.map(Math.abs), 1);
+
           return (
             <>
               {/* Hero card */}
@@ -590,7 +608,79 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                 )}
               </div>
 
-              {/* Micro insight */}
+              {/* ── Wealth Intelligence ── */}
+              {hasIntelData && (
+                <div className="pat-intel">
+                  {/* Forecast card */}
+                  <div className="pat-intel-forecast" style={avg6 >= 0
+                    ? { borderColor: 'rgba(74,222,128,0.18)', boxShadow: '0 4px 20px rgba(74,222,128,0.08)' }
+                    : { borderColor: 'rgba(248,113,113,0.18)', boxShadow: '0 4px 20px rgba(248,113,113,0.08)' }}>
+                    <div className="pat-intel-forecast-label">Previsão em 12 meses</div>
+                    <div className="pat-intel-forecast-amount" style={{ color: avg6 >= 0 ? '#4ade80' : '#f87171' }}>
+                      {fmt(Math.round(forecast12))}<span style={{ fontSize: '1.1rem', opacity: 0.65, marginLeft: 2 }}>€</span>
+                    </div>
+                    <div className="pat-intel-forecast-sub">
+                      {avg6 >= 0
+                        ? `+${fmt(Math.round(avg6 * 12))}€ ao ritmo atual de poupança`
+                        : `−${fmt(Math.round(Math.abs(avg6 * 12)))}€ — gastos superiores ao rendimento`}
+                    </div>
+                  </div>
+
+                  {/* Growth chips */}
+                  <div className="pat-intel-chips">
+                    <div className="pat-intel-chip">
+                      <span className="pat-intel-chip-val" style={{ color: avg6 >= 0 ? '#4ade80' : '#f87171' }}>
+                        {avg6 >= 0 ? '+' : ''}{fmt(Math.round(avg6))}€
+                      </span>
+                      <span className="pat-intel-chip-label">poupança / mês</span>
+                    </div>
+                    <div className="pat-intel-chip">
+                      <span className="pat-intel-chip-val" style={{ color: monthlyRate >= 0 ? '#4ade80' : '#f87171' }}>
+                        {monthlyRate >= 0 ? '+' : ''}{monthlyRate.toFixed(2)}%
+                      </span>
+                      <span className="pat-intel-chip-label">crescimento / mês</span>
+                    </div>
+                  </div>
+
+                  {/* Trend comparison */}
+                  <div className="pat-intel-trend">
+                    <span className="pat-intel-trend-dot" style={{
+                      background: trendStatus === 'above' ? '#4ade80' : trendStatus === 'below' ? '#f87171' : '#71717a'
+                    }} />
+                    <span className="pat-intel-trend-msg">
+                      {trendStatus === 'above'
+                        ? `Acima do teu padrão habitual · +${fmt(Math.round(trendDiff))}€/mês vs últimos 6m`
+                        : trendStatus === 'below'
+                        ? `Abaixo do teu ritmo habitual · ${fmt(Math.round(trendDiff))}€/mês vs últimos 6m`
+                        : 'Poupança estável nos últimos meses'}
+                    </span>
+                  </div>
+
+                  {/* Sparkline — last 6 months net savings */}
+                  <div className="pat-intel-chart">
+                    <span className="pat-intel-chart-title">Poupança mensal</span>
+                    <div className="pat-intel-bars">
+                      {monthlySavings.map((v, i) => {
+                        const h = Math.max((Math.abs(v) / maxAbs) * 40, 3);
+                        return (
+                          <div key={i} className="pat-intel-bar-col">
+                            <div className="pat-intel-bar-wrap">
+                              <div className="pat-intel-bar" style={{
+                                height: h,
+                                background: v >= 0 ? '#4ade80' : '#f87171',
+                                boxShadow: v >= 0 ? '0 0 6px rgba(74,222,128,0.4)' : '0 0 6px rgba(248,113,113,0.4)',
+                              }} />
+                            </div>
+                            <span className="pat-intel-bar-label">{last6Months[i].slice(5)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Micro insight — composition */}
               <div className="pat-insight">
                 <span className="pat-insight-icon">◉</span>
                 <span className="pat-insight-msg">{insightMsg}</span>

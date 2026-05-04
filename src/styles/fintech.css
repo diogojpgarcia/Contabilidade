@@ -1157,6 +1157,160 @@
 .pat-cat-item-val { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pat-cat-empty { padding: 8px 16px 12px 66px; font-size: 0.72rem; color: var(--text-tertiary); }
 
+/* ── Wealth Intelligence ──────────────────────────────────────────────────── */
+.pat-intel {
+  margin: 0 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Forecast card */
+.pat-intel-forecast {
+  padding: 18px 20px;
+  background: var(--bg-secondary);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+[data-theme="light"] .pat-intel-forecast {
+  background: #fff;
+  border-color: rgba(0,0,0,0.06);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+}
+.pat-intel-forecast-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+.pat-intel-forecast-amount {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.pat-intel-forecast-sub {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  margin-top: 3px;
+}
+
+/* Growth chips */
+.pat-intel-chips { display: flex; gap: 8px; }
+.pat-intel-chip {
+  flex: 1;
+  background: var(--bg-secondary);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+[data-theme="light"] .pat-intel-chip {
+  background: #fff;
+  border-color: rgba(0,0,0,0.06);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.pat-intel-chip-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.pat-intel-chip-label {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Trend comparison */
+.pat-intel-trend {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+[data-theme="light"] .pat-intel-trend {
+  background: #fff;
+  border-color: rgba(0,0,0,0.06);
+}
+.pat-intel-trend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pat-intel-trend-msg {
+  font-size: 0.79rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Sparkline */
+.pat-intel-chart {
+  padding: 13px 16px 10px;
+  background: var(--bg-secondary);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+[data-theme="light"] .pat-intel-chart {
+  background: #fff;
+  border-color: rgba(0,0,0,0.06);
+}
+.pat-intel-chart-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+}
+.pat-intel-bars {
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+}
+.pat-intel-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.pat-intel-bar-wrap {
+  display: flex;
+  align-items: flex-end;
+  height: 44px;
+  width: 100%;
+  justify-content: center;
+}
+.pat-intel-bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.pat-intel-bar-label {
+  font-size: 0.58rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
 /* FAB */
 .m-fab {
   position: fixed;
