@@ -261,3 +261,33 @@ export const fetchCryptoHistoryBatch = async (symbols) => {
 
   return result;
 };
+
+// ─── stock symbol search (Twelve Data) ───────────────────────────────────────
+
+/**
+ * Search for stocks by name or ticker (Twelve Data /symbol_search).
+ * Returns [{ symbol, name, exchange }] — max 8 results — or [] on any failure.
+ */
+export const fetchStockSearch = async (query) => {
+  if (!HAS_STOCK_KEY || !query?.trim()) return [];
+
+  const { signal, clear } = abortAfter(5_000);
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/symbol_search?symbol=${encodeURIComponent(query.trim())}&apikey=${TWELVE_DATA_KEY}`,
+      { signal }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data?.data)) return [];
+
+    return data.data
+      .filter(r => !r.instrument_type || r.instrument_type === 'Common Stock' || r.instrument_type === 'ETF')
+      .slice(0, 8)
+      .map(r => ({ symbol: r.symbol, name: r.instrument_name ?? r.symbol, exchange: r.exchange ?? '' }));
+  } catch {
+    return [];
+  } finally {
+    clear();
+  }
+};

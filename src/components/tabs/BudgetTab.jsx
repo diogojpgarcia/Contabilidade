@@ -4,7 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
-import { fetchStockQuote, fetchCryptoBatch, fetchStockHistory, fetchCryptoHistoryBatch, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
+import { fetchStockQuote, fetchCryptoBatch, fetchStockHistory, fetchCryptoHistoryBatch, fetchStockSearch, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
 
 /* ─── Sparkline SVG ─────────────────────────────────────────────────────────
    Pure SVG mini line chart from an array of prices (oldest→newest).
@@ -217,6 +217,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
   const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
   const [assetHistory,        setAssetHistory]        = useState({});  // { ticker/coin → number[] }
+  const [stockSearch,         setStockSearch]         = useState({ results: [], open: false, loading: false });
+  const stockSearchTimerRef  = useRef(null);
 
   // Refs so the stock-price effect can read latest values without re-triggering
   const patrimonyRef        = useRef(externalPatrimony);
@@ -441,6 +443,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     onPatrimonyChange && onPatrimonyChange(updated);
   };
 
+  const clearStockSearch = () => {
+    clearTimeout(stockSearchTimerRef.current);
+    setStockSearch({ results: [], open: false, loading: false });
+  };
+
+  const handleStockSearchInput = (val) => {
+    setPatrimonyField('ticker', val);
+    setPatrimonyField('name', '');
+    clearTimeout(stockSearchTimerRef.current);
+    if (!val.trim()) { clearStockSearch(); return; }
+    setStockSearch(s => ({ ...s, loading: true, open: false }));
+    stockSearchTimerRef.current = setTimeout(async () => {
+      const results = await fetchStockSearch(val);
+      setStockSearch({ results, open: results.length > 0, loading: false });
+    }, 320);
+  };
+
   const handlePatrimonyAdd = () => {
     if (!patrimonyFormType) return;
     const id = Date.now().toString();
@@ -450,6 +469,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     resetPatrimonyForm({});
     setPatrimonyFormType(null);
     setShowPatrimonyModal(false);
+    clearStockSearch();
   };
 
   const renderPatrimonyItemValue = (typeKey, item) => {
@@ -489,8 +509,40 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         </>);
       case 'stocks':
         return (<>
-          <input className={cls} placeholder="Ticker (ex: AAPL)"  value={f.ticker   || ''} onChange={e => set('ticker',   e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"     value={f.qty      || ''} onChange={e => set('qty',      e.target.value)} />
+          <div className="pat-search-wrap">
+            <input
+              className={cls}
+              placeholder={HAS_STOCK_KEY ? 'Pesquisar ação (ex: Apple, AAPL)' : 'Ticker (ex: AAPL)'}
+              value={f.ticker || ''}
+              onChange={e => HAS_STOCK_KEY ? handleStockSearchInput(e.target.value) : set('ticker', e.target.value)}
+              onBlur={() => setTimeout(() => setStockSearch(s => ({ ...s, open: false })), 160)}
+              autoComplete="off"
+            />
+            {stockSearch.loading && <span className="pat-search-spinner">◌</span>}
+            {stockSearch.open && stockSearch.results.length > 0 && (
+              <div className="pat-search-dropdown">
+                {stockSearch.results.map(r => (
+                  <div
+                    key={r.symbol}
+                    className="pat-search-result"
+                    onMouseDown={() => {
+                      set('ticker', r.symbol);
+                      set('name',   r.name);
+                      setStockSearch({ results: [], open: false, loading: false });
+                    }}
+                  >
+                    <span className="pat-search-sym">{r.symbol}</span>
+                    <span className="pat-search-name">{r.name}</span>
+                    {r.exchange && <span className="pat-search-exch">{r.exchange}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {f.name && !stockSearch.open && (
+              <div className="pat-search-selected">◭ {f.name}</div>
+            )}
+          </div>
+          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"      value={f.qty      || ''} onChange={e => set('qty',      e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Preço médio (€)" value={f.avgPrice || ''} onChange={e => set('avgPrice', e.target.value)} />
         </>);
       case 'bonds':
@@ -511,9 +563,17 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         </>);
       case 'crypto':
         return (<>
-          <input className={cls} placeholder="Moeda (ex: BTC)" value={f.coin  || ''} onChange={e => set('coin',  e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"       value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
+          <input className={cls} placeholder="Moeda (ex: BTC)"      value={f.coin  || ''} onChange={e => set('coin',  e.target.value.toUpperCase())} autoCapitalize="characters" />
+          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"        value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Preço unitário (€)" value={f.price || ''} onChange={e => set('price', e.target.value)} />
+          <select className={`${cls} pat-exchange-select`} value={f.exchange || ''} onChange={e => set('exchange', e.target.value)}>
+            <option value="">Exchange (opcional)</option>
+            <option value="Binance">Binance</option>
+            <option value="Coinbase">Coinbase</option>
+            <option value="Kraken">Kraken</option>
+            <option value="XTB">XTB</option>
+            <option value="Outra">Outra</option>
+          </select>
         </>);
       default: return null;
     }
@@ -549,11 +609,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       )}
 
       {showPatrimonyModal && (
-        <Overlay onClose={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); }}>
+        <Overlay onClose={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); clearStockSearch(); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>{patrimonyFormType ? PATRIMONY_TYPES.find(t => t.key === patrimonyFormType)?.label : 'Adicionar Activo'}</h4>
-              <button className="modal-close" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); }}>×</button>
+              <button className="modal-close" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); clearStockSearch(); }}>×</button>
             </div>
             {!patrimonyFormType ? (
               <div className="patrimony-type-selector">
@@ -762,6 +822,81 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           const hasIntelData = monthlySavings.some(v => v !== 0);
           const maxAbs = Math.max(...monthlySavings.map(Math.abs), 1);
 
+          // ── Asset card renderer — shared by stocks + crypto ──────────────
+          const assetCardFor = (item, assetKey) => {
+            const isStock      = assetKey === 'stocks';
+            const sym          = isStock ? item.ticker : item.coin;
+            const isRefreshing = refreshingTickers.has(sym);
+            const marketPrice  = isStock
+              ? parseFloat(item.lastPrice ?? item.avgPrice) || 0
+              : parseFloat(item.lastPrice ?? item.price)    || 0;
+            const marketVal    = (parseFloat(item.qty) || 0) * marketPrice;
+            const age          = formatAge(item.lastUpdated);
+            const chg          = isStock
+              ? (item.changePct != null ? parseFloat(item.changePct)  : null)
+              : (item.change24h != null ? parseFloat(item.change24h)  : null);
+            const sparkPrices  = assetHistory[sym];
+            const sparkUp      = sparkPrices?.length >= 2
+              ? sparkPrices[sparkPrices.length - 1] >= sparkPrices[0]
+              : chg != null ? chg >= 0 : null;
+            const sparkColor   = sparkUp === true ? '#22c55e' : sparkUp === false ? '#ef4444' : '#6b7280';
+            const impact       = totalPatrimony > 0 ? (marketVal / totalPatrimony) * 100 : 0;
+            const barWidth     = maxSingleImpact > 0 ? Math.min((impact / maxSingleImpact) * 100, 100) : 0;
+            const qty          = parseFloat(item.qty) || 0;
+            const qtyLabel     = isStock ? 'ações' : 'moedas';
+            const priceLabel   = isStock ? 'ação'  : 'moeda';
+            const basePrice    = isStock
+              ? parseFloat(item.avgPrice || 0).toFixed(2)
+              : parseFloat(item.price    || 0).toFixed(2);
+            return (
+              <div key={item.id} className="pat-asset-card">
+                <div className="pat-asset-top">
+                  <div className="pat-asset-left">
+                    <div className="pat-stock-name-row">
+                      <span className="pat-cat-item-name">{sym}</span>
+                      {chg != null && (
+                        <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
+                          {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
+                        </span>
+                      )}
+                    </div>
+                    {item.name && <span className="pat-asset-fullname">{item.name}</span>}
+                    <span className="pat-stock-sub">
+                      {isRefreshing ? (
+                        <span className="pat-stock-loading">A atualizar…</span>
+                      ) : item.lastPrice != null ? (
+                        <>{parseFloat(item.lastPrice).toFixed(2)}€/{priceLabel} · {age}</>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)' }}>preço base: {basePrice}€</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="pat-stock-right">
+                    <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
+                    <span className="pat-stock-qty">{qty} {qtyLabel}</span>
+                  </div>
+                </div>
+                <div className="pat-asset-bottom">
+                  <div className="pat-sparkline-wrap">
+                    {sparkPrices
+                      ? <Sparkline prices={sparkPrices} color={sparkColor} />
+                      : <div className="pat-sparkline-empty">{HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}</div>
+                    }
+                  </div>
+                  {totalPatrimony > 0 && (
+                    <div className="pat-impact">
+                      <div className="pat-impact-bar-bg">
+                        <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
+                      </div>
+                      <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
+                    </div>
+                  )}
+                </div>
+                <button className="m-asset-item-del pat-asset-del" onClick={() => handlePatrimonyDelete(assetKey, item.id)}>×</button>
+              </div>
+            );
+          };
+
           return (
             <>
               {/* Hero card */}
@@ -927,88 +1062,27 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       </div>
                       {items.length > 0 && (
                         <div className="pat-cat-items">
-                          {items.map(item => {
-                            if (key === 'stocks' || key === 'crypto') {
-                              /* ── Intelligent asset card (stocks + crypto) ── */
-                              const isStock      = key === 'stocks';
-                              const sym          = isStock ? item.ticker : item.coin;
-                              const isRefreshing = refreshingTickers.has(sym);
-                              const marketPrice  = isStock
-                                ? parseFloat(item.lastPrice ?? item.avgPrice) || 0
-                                : parseFloat(item.lastPrice ?? item.price)    || 0;
-                              const marketVal    = (parseFloat(item.qty) || 0) * marketPrice;
-                              const age          = formatAge(item.lastUpdated);
-                              const chg          = isStock
-                                ? (item.changePct  != null ? parseFloat(item.changePct)  : null)
-                                : (item.change24h  != null ? parseFloat(item.change24h)  : null);
-                              const sparkPrices  = assetHistory[sym];
-                              // Trend colour: prefer 7d sparkline direction, fall back to change %
-                              const sparkUp      = sparkPrices?.length >= 2
-                                ? sparkPrices[sparkPrices.length - 1] >= sparkPrices[0]
-                                : chg != null ? chg >= 0 : null;
-                              const sparkColor   = sparkUp === true ? '#22c55e' : sparkUp === false ? '#ef4444' : '#6b7280';
-                              const impact       = totalPatrimony > 0 ? (marketVal / totalPatrimony) * 100 : 0;
-                              const barWidth     = maxSingleImpact > 0 ? Math.min((impact / maxSingleImpact) * 100, 100) : 0;
-                              const qty          = parseFloat(item.qty) || 0;
-                              const qtyLabel     = isStock ? 'ações' : 'moedas';
-                              const priceLabel   = isStock ? 'ação' : 'moeda';
-                              const basePrice    = isStock
-                                ? parseFloat(item.avgPrice || 0).toFixed(2)
-                                : parseFloat(item.price    || 0).toFixed(2);
-                              return (
-                                <div key={item.id} className="pat-asset-card">
-                                  {/* Top row: name + change badge | value + qty */}
-                                  <div className="pat-asset-top">
-                                    <div className="pat-asset-left">
-                                      <div className="pat-stock-name-row">
-                                        <span className="pat-cat-item-name">{sym}</span>
-                                        {chg != null && (
-                                          <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
-                                            {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
-                                          </span>
-                                        )}
-                                      </div>
-                                      <span className="pat-stock-sub">
-                                        {isRefreshing ? (
-                                          <span className="pat-stock-loading">A atualizar…</span>
-                                        ) : item.lastPrice != null ? (
-                                          <>{parseFloat(item.lastPrice).toFixed(2)}€/{priceLabel} · {age}</>
-                                        ) : (
-                                          <span style={{ color: 'var(--text-tertiary)' }}>
-                                            preço base: {basePrice}€
-                                          </span>
-                                        )}
-                                      </span>
-                                    </div>
-                                    <div className="pat-stock-right">
-                                      <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
-                                      <span className="pat-stock-qty">{qty} {qtyLabel}</span>
-                                    </div>
-                                  </div>
-                                  {/* Bottom row: sparkline | impact bar */}
-                                  <div className="pat-asset-bottom">
-                                    <div className="pat-sparkline-wrap">
-                                      {sparkPrices ? (
-                                        <Sparkline prices={sparkPrices} color={sparkColor} />
-                                      ) : (
-                                        <div className="pat-sparkline-empty">
-                                          {HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}
-                                        </div>
-                                      )}
-                                    </div>
-                                    {totalPatrimony > 0 && (
-                                      <div className="pat-impact">
-                                        <div className="pat-impact-bar-bg">
-                                          <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
-                                        </div>
-                                        <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <button className="m-asset-item-del pat-asset-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
+                          {key === 'crypto' ? (() => {
+                            /* ── Crypto: group by exchange ── */
+                            const byExchange = {};
+                            items.forEach(item => {
+                              const ex = item.exchange || 'Sem exchange';
+                              if (!byExchange[ex]) byExchange[ex] = [];
+                              byExchange[ex].push(item);
+                            });
+                            const multiGroup = Object.keys(byExchange).length > 1;
+                            return Object.entries(byExchange).flatMap(([ex, groupItems]) => [
+                              ...(multiGroup ? [
+                                <div key={`hdr-${ex}`} className="pat-exchange-header">
+                                  <span className="pat-exchange-name">{ex}</span>
+                                  <span className="pat-exchange-count">{groupItems.length}</span>
                                 </div>
-                              );
-                            }
+                              ] : []),
+                              ...groupItems.map(item => assetCardFor(item, 'crypto')),
+                            ]);
+                          })() : items.map(item => {
+                            /* ── Stocks: asset card ── */
+                            if (key === 'stocks') return assetCardFor(item, 'stocks');
                             /* ── Generic row for all other asset types ── */
                             return (
                               <div key={item.id} className="pat-cat-item">
