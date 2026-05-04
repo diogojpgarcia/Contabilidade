@@ -262,6 +262,63 @@ const STOCK_LIST = [
   { symbol: 'EXSA',  name: 'iShares Core EURO STOXX 50 UCITS ETF' },
 ];
 
+/* ─── Internal crypto list (no API needed) ──────────────────────────────────
+   ~50 popular coins. Filtered locally while the user types.                  */
+const CRYPTO_LIST = [
+  // Layer 1
+  { symbol: 'BTC',    name: 'Bitcoin' },
+  { symbol: 'ETH',    name: 'Ethereum' },
+  { symbol: 'BNB',    name: 'BNB (Binance)' },
+  { symbol: 'SOL',    name: 'Solana' },
+  { symbol: 'ADA',    name: 'Cardano' },
+  { symbol: 'AVAX',   name: 'Avalanche' },
+  { symbol: 'DOT',    name: 'Polkadot' },
+  { symbol: 'NEAR',   name: 'NEAR Protocol' },
+  { symbol: 'ICP',    name: 'Internet Computer' },
+  { symbol: 'APT',    name: 'Aptos' },
+  { symbol: 'SUI',    name: 'Sui' },
+  { symbol: 'ALGO',   name: 'Algorand' },
+  { symbol: 'VET',    name: 'VeChain' },
+  { symbol: 'TRX',    name: 'TRON' },
+  { symbol: 'TON',    name: 'Toncoin' },
+  { symbol: 'XLM',    name: 'Stellar' },
+  { symbol: 'XRP',    name: 'XRP (Ripple)' },
+  { symbol: 'LTC',    name: 'Litecoin' },
+  { symbol: 'BCH',    name: 'Bitcoin Cash' },
+  { symbol: 'ETC',    name: 'Ethereum Classic' },
+  { symbol: 'XMR',    name: 'Monero' },
+  // Layer 2 & DeFi
+  { symbol: 'MATIC',  name: 'Polygon' },
+  { symbol: 'OP',     name: 'Optimism' },
+  { symbol: 'ARB',    name: 'Arbitrum' },
+  { symbol: 'LINK',   name: 'Chainlink' },
+  { symbol: 'UNI',    name: 'Uniswap' },
+  { symbol: 'AAVE',   name: 'Aave' },
+  { symbol: 'MKR',    name: 'Maker' },
+  { symbol: 'CRV',    name: 'Curve DAO' },
+  { symbol: 'SNX',    name: 'Synthetix' },
+  { symbol: 'LDO',    name: 'Lido DAO' },
+  { symbol: 'RUNE',   name: 'THORChain' },
+  { symbol: 'GRT',    name: 'The Graph' },
+  { symbol: 'JUP',    name: 'Jupiter' },
+  { symbol: 'ATOM',   name: 'Cosmos' },
+  // AI / Infra
+  { symbol: 'RNDR',   name: 'Render Network' },
+  { symbol: 'FET',    name: 'Fetch.ai' },
+  { symbol: 'INJ',    name: 'Injective' },
+  { symbol: 'FIL',    name: 'Filecoin' },
+  // Meme & culture
+  { symbol: 'DOGE',   name: 'Dogecoin' },
+  { symbol: 'SHIB',   name: 'Shiba Inu' },
+  { symbol: 'PEPE',   name: 'Pepe' },
+  { symbol: 'WIF',    name: 'Dogwifhat' },
+  { symbol: 'BONK',   name: 'Bonk' },
+  // Gaming / Metaverse
+  { symbol: 'SAND',   name: 'The Sandbox' },
+  { symbol: 'MANA',   name: 'Decentraland' },
+  { symbol: 'APE',    name: 'ApeCoin' },
+];
+
 const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
@@ -280,6 +337,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [assetHistory,        setAssetHistory]        = useState({});  // { ticker/coin → number[] }
   const [stockSearchQuery,    setStockSearchQuery]    = useState('');   // live filter text
   const [stockConfirmed,      setStockConfirmed]      = useState(false); // true only after explicit click/Enter
+  const [cryptoSearchQuery,   setCryptoSearchQuery]   = useState('');   // live filter text for crypto
+  const [cryptoConfirmed,     setCryptoConfirmed]     = useState(false); // true only after explicit click/Enter
   const [editingAssetId,      setEditingAssetId]      = useState(null);  // null = add, string = editing existing
 
   // Refs so the stock-price effect can read latest values without re-triggering
@@ -505,9 +564,12 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     onPatrimonyChange && onPatrimonyChange(updated);
   };
 
-  const clearStockSearch = () => {
+  // Reset all asset-form search state (called on modal close / submit)
+  const clearAssetForms = () => {
     setStockSearchQuery('');
     setStockConfirmed(false);
+    setCryptoSearchQuery('');
+    setCryptoConfirmed(false);
   };
 
   // Select a stock from the local-filter dropdown
@@ -518,22 +580,29 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     setStockConfirmed(true);
   };
 
+  // Select a coin from the local-filter dropdown
+  const handleCryptoSelect = (result) => {
+    setPatrimonyField('coin', result.symbol);
+    setPatrimonyField('name', result.name);
+    setCryptoSearchQuery('');
+    setCryptoConfirmed(true);
+  };
+
   // Open edit modal pre-filled with an existing asset
   const handlePatrimonyEdit = (typeKey, item) => {
-    // Strip internal UI flags before pre-filling
-    const { _outraMode, ...clean } = item;
-    resetPatrimonyForm(clean);
+    resetPatrimonyForm(item);
     setPatrimonyFormType(typeKey);
     setEditingAssetId(item.id);
     if (typeKey === 'stocks' && item.ticker) setStockConfirmed(true);
+    if (typeKey === 'crypto' && item.coin)   setCryptoConfirmed(true);
     setShowPatrimonyModal(true);
   };
 
   // Shared add / update handler
   const handlePatrimonySubmit = () => {
     if (!patrimonyFormType) return;
-    // Strip internal UI flags; preserve all real fields (incl. live price / lastUpdated)
-    const { _outraMode, ...clean } = patrimonyForm;
+    // Preserve all real fields (incl. live price / lastUpdated); id already in form when editing
+    const clean = { ...patrimonyForm };
     if (editingAssetId) {
       // Update existing item in-place
       const updated = {
@@ -554,7 +623,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     setPatrimonyFormType(null);
     setEditingAssetId(null);
     setShowPatrimonyModal(false);
-    clearStockSearch();
+    clearAssetForms();
   };
 
   const renderPatrimonyItemValue = (typeKey, item) => {
@@ -604,7 +673,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Stocks ──────────────────────────────────────────────────────────── */
       case 'stocks': {
-        // Suggestions from the internal list, filtered by what the user typed
         const q           = stockSearchQuery.trim().toUpperCase();
         const suggestions = q.length >= 1
           ? STOCK_LIST.filter(s =>
@@ -614,9 +682,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           : [];
 
         return (
-          <div className="pat-stock-form">
+          <div className="pat-asset-form">
             {!stockConfirmed ? (
-              /* Step 1: type to filter from internal list */
+              /* Step 1: search */
               <div className="pat-search-wrap">
                 <span className="pat-search-icon">⊕</span>
                 <input
@@ -628,12 +696,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      // Confirm with the first suggestion, or treat typed text as ticker
                       if (suggestions.length > 0) {
                         handleStockSelect(suggestions[0]);
                       } else if (stockSearchQuery.trim()) {
-                        const ticker = stockSearchQuery.trim().toUpperCase();
-                        setPatrimonyField('ticker', ticker);
+                        setPatrimonyField('ticker', stockSearchQuery.trim().toUpperCase());
                         setPatrimonyField('name', '');
                         setStockSearchQuery('');
                         setStockConfirmed(true);
@@ -648,11 +714,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                 {suggestions.length > 0 && (
                   <div className="pat-search-dropdown">
                     {suggestions.map(r => (
-                      <div
-                        key={r.symbol}
-                        className="pat-search-result"
-                        onMouseDown={e => { e.preventDefault(); handleStockSelect(r); }}
-                      >
+                      <div key={r.symbol} className="pat-search-result"
+                        onMouseDown={e => { e.preventDefault(); handleStockSelect(r); }}>
                         <span className="pat-search-sym">{r.symbol}</span>
                         <span className="pat-search-name">{r.name}</span>
                       </div>
@@ -661,41 +724,22 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                 )}
               </div>
             ) : (
-              /* Step 2: confirmed — chip + qty + broker */
+              /* Step 2: confirmed */
               <>
                 <div className="pat-stock-chip">
                   <div className="pat-stock-chip-body">
                     <span className="pat-stock-chip-ticker">{f.ticker}</span>
                     {f.name && <span className="pat-stock-chip-name">{f.name}</span>}
                   </div>
-                  <button
-                    type="button"
-                    className="pat-stock-chip-clear"
-                    onClick={() => { set('ticker', ''); set('name', ''); set('qty', ''); set('broker', ''); setStockConfirmed(false); }}
-                  >×</button>
+                  <button type="button" className="pat-stock-chip-clear"
+                    onClick={() => { set('ticker',''); set('name',''); set('qty',''); set('broker',''); setStockConfirmed(false); }}>×</button>
                 </div>
-                <input
-                  className={cls}
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="Quantidade de ações"
-                  value={f.qty || ''}
-                  onChange={e => set('qty', e.target.value)}
-                  autoFocus
-                />
-                <div className="pat-exchange-field">
-                  <span className="pat-exchange-field-label">Broker</span>
-                  <div className="pat-exchange-chips">
-                    {['XTB','Degiro','Trading212','Outra'].map(b => (
-                      <button
-                        key={b}
-                        type="button"
-                        className={`pat-exchange-chip${f.broker === b ? ' active' : ''}`}
-                        onClick={() => set('broker', f.broker === b ? '' : b)}
-                      >{b}</button>
-                    ))}
-                  </div>
-                </div>
+                <input className={cls} type="number" inputMode="decimal"
+                  placeholder="Quantidade de ações" value={f.qty || ''}
+                  onChange={e => set('qty', e.target.value)} autoFocus />
+                <input className={cls}
+                  placeholder="Broker — ex: XTB, Degiro (opcional)" value={f.broker || ''}
+                  onChange={e => set('broker', e.target.value)} autoComplete="off" />
               </>
             )}
           </div>
@@ -726,67 +770,74 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Crypto ──────────────────────────────────────────────────────────── */
       case 'crypto': {
-        const QUICK    = ['BTC','ETH','SOL','BNB','XRP','ADA'];
-        const isOutra  = f.coin && !QUICK.includes(f.coin);
-        const outraActive = isOutra || f._outraMode;
+        const q           = cryptoSearchQuery.trim().toUpperCase();
+        const suggestions = q.length >= 1
+          ? CRYPTO_LIST.filter(c =>
+              c.symbol.includes(q) ||
+              c.name.toLowerCase().includes(cryptoSearchQuery.trim().toLowerCase())
+            ).slice(0, 7)
+          : [];
+
         return (
-          <div className="pat-crypto-form">
-            {/* Coin chips — top 6 + "Outra" */}
-            <div className="pat-coin-quick">
-              {QUICK.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`pat-coin-chip${f.coin === c ? ' active' : ''}`}
-                  onClick={() => { set('coin', f.coin === c ? '' : c); set('_outraMode', false); }}
-                >{c}</button>
-              ))}
-              <button
-                type="button"
-                className={`pat-coin-chip${outraActive ? ' active' : ''}`}
-                onClick={() => { set('coin', ''); set('_outraMode', true); }}
-              >Outra</button>
-            </div>
-
-            {/* Free-text input — only visible when "Outra" mode */}
-            {outraActive && (
-              <input
-                className={cls}
-                placeholder="Ticker — ex: DOGE, MATIC, INJ"
-                value={(QUICK.includes(f.coin) ? '' : f.coin) || ''}
-                onChange={e => set('coin', e.target.value.toUpperCase())}
-                autoCapitalize="characters"
-                autoComplete="off"
-                autoFocus
-              />
-            )}
-
-            {/* Qty + exchange — shown once a coin is chosen */}
-            {f.coin && (
-              <>
+          <div className="pat-asset-form">
+            {!cryptoConfirmed ? (
+              /* Step 1: search */
+              <div className="pat-search-wrap">
+                <span className="pat-search-icon">⊕</span>
                 <input
                   className={cls}
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="Quantidade"
-                  value={f.qty || ''}
-                  onChange={e => set('qty', e.target.value)}
-                  autoFocus={!outraActive}
+                  style={{ paddingLeft: '2.4rem' }}
+                  placeholder="Procurar moeda ou símbolo…"
+                  value={cryptoSearchQuery}
+                  onChange={e => setCryptoSearchQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (suggestions.length > 0) {
+                        handleCryptoSelect(suggestions[0]);
+                      } else if (cryptoSearchQuery.trim()) {
+                        setPatrimonyField('coin', cryptoSearchQuery.trim().toUpperCase());
+                        setPatrimonyField('name', '');
+                        setCryptoSearchQuery('');
+                        setCryptoConfirmed(true);
+                      }
+                    }
+                    if (e.key === 'Escape') setCryptoSearchQuery('');
+                  }}
+                  onBlur={() => setTimeout(() => setCryptoSearchQuery(''), 200)}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  autoFocus
                 />
-
-                <div className="pat-exchange-field">
-                  <span className="pat-exchange-field-label">Exchange</span>
-                  <div className="pat-exchange-chips">
-                    {['Binance','Coinbase','Kraken','XTB','Outra'].map(ex => (
-                      <button
-                        key={ex}
-                        type="button"
-                        className={`pat-exchange-chip${f.exchange === ex ? ' active' : ''}`}
-                        onClick={() => set('exchange', f.exchange === ex ? '' : ex)}
-                      >{ex}</button>
+                {suggestions.length > 0 && (
+                  <div className="pat-search-dropdown">
+                    {suggestions.map(r => (
+                      <div key={r.symbol} className="pat-search-result"
+                        onMouseDown={e => { e.preventDefault(); handleCryptoSelect(r); }}>
+                        <span className="pat-search-sym">{r.symbol}</span>
+                        <span className="pat-search-name">{r.name}</span>
+                      </div>
                     ))}
                   </div>
+                )}
+              </div>
+            ) : (
+              /* Step 2: confirmed */
+              <>
+                <div className="pat-stock-chip">
+                  <div className="pat-stock-chip-body">
+                    <span className="pat-stock-chip-ticker">{f.coin}</span>
+                    {f.name && <span className="pat-stock-chip-name">{f.name}</span>}
+                  </div>
+                  <button type="button" className="pat-stock-chip-clear"
+                    onClick={() => { set('coin',''); set('name',''); set('qty',''); set('exchange',''); setCryptoConfirmed(false); }}>×</button>
                 </div>
+                <input className={cls} type="number" inputMode="decimal"
+                  placeholder="Quantidade" value={f.qty || ''}
+                  onChange={e => set('qty', e.target.value)} autoFocus />
+                <input className={cls}
+                  placeholder="Exchange — ex: Binance, Coinbase (opcional)" value={f.exchange || ''}
+                  onChange={e => set('exchange', e.target.value)} autoComplete="off" />
               </>
             )}
           </div>
@@ -833,13 +884,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           setPatrimonyFormType(null);
           setEditingAssetId(null);
           resetPatrimonyForm({});
-          clearStockSearch();
+          clearAssetForms();
         };
         // Per-type submit guard — only enable when required fields are filled
         const canSubmit = (() => {
           switch (patrimonyFormType) {
-            case 'stocks':     return stockConfirmed && !!f.qty;
-            case 'crypto':     return !!f.coin && !!f.qty;
+            case 'stocks':     return stockConfirmed  && !!f.qty;
+            case 'crypto':     return cryptoConfirmed && !!f.qty;
             case 'accounts':   return !!f.name;
             case 'bonds':      return !!f.series && !!f.value;
             case 'realestate': return !!f.description && !!f.value;
