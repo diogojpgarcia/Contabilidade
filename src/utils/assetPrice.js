@@ -271,34 +271,136 @@ export const fetchCryptoHistoryBatch = async (symbols) => {
   return result;
 };
 
-// ─── simple price getter (Twelve Data /price) ────────────────────────────────
-// Accepts any symbol Twelve Data understands: "AAPL", "BTC/USD", "ETH/EUR", …
-// Returns a numeric price, or null on any failure.
+// ─── localStorage price cache ─────────────────────────────────────────────────
+//
+//  Schema (per ticker, key = "price_AAPL"):
+//    { price: number, timestamp: number }
+//
+//  Flow for getPrice(ticker):
+//    1. getCachedPrice()  →  fresh hit (< CACHE_TTL)  →  return cached price
+//    2. fetchPrice()      →  API call + persist         →  return fresh price
+//    3. API failure       →  getCachedPrice() stale     →  FALLBACK CACHE
+//
+//  In-flight deduplication: concurrent calls for the same ticker share one
+//  Promise, so the API is never hit more than once simultaneously per symbol.
+
+const LS_PREFIX = 'price_';
+
+/** In-flight fetch promises keyed by normalised ticker. */
+const inFlight = new Map();
+
+// ── helpers ────────────────────────────────────────────────────────────────────
+
+const lsKey = (ticker) => LS_PREFIX + ticker.toUpperCase();
+
+const lsWrite = (ticker, price) => {
+  try {
+    localStorage.setItem(lsKey(ticker), JSON.stringify({ price, timestamp: Date.now() }));
+  } catch { /* storage full / disabled — silent */ }
+};
+
+// ── public API ─────────────────────────────────────────────────────────────────
 
 /**
- * Fetch the current price for a single symbol from Twelve Data /price.
- * symbol can be a stock ticker ("AAPL") or a crypto pair ("BTC/USD").
- * Returns a number or null.
+ * Read a price entry from localStorage.
+ * Returns { price: number, timestamp: number } or null.
+ * Does NOT check TTL — callers decide if the entry is fresh enough.
  */
-export const getPrice = async (symbol) => {
-  if (!HAS_STOCK_KEY || !symbol) return null;
-  const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+export const getCachedPrice = (ticker) => {
+  if (!ticker) return null;
   try {
-    const res = await fetch(
-      `https://api.twelvedata.com/price?symbol=${encodeURIComponent(symbol)}&apikey=${TWELVE_DATA_KEY}`,
-      { signal }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.code || data.status === 'error') return null;
-    const price = parseFloat(data.price);
-    return isNaN(price) ? null : price;
-  } catch (err) {
-    console.error('[assetPrice] getPrice error:', symbol, err);
+    const raw = localStorage.getItem(lsKey(ticker));
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (typeof entry?.price !== 'number' || typeof entry?.timestamp !== 'number') return null;
+    return entry;
+  } catch {
     return null;
-  } finally {
-    clear();
   }
+};
+
+/**
+ * Fetch a fresh price from Twelve Data /price, persist it to localStorage,
+ * and return the numeric value.
+ *
+ * Concurrent calls for the same ticker are deduplicated — only one HTTP
+ * request is made regardless of how many callers are waiting.
+ *
+ * Returns a number or null on any failure.
+ */
+export const fetchPrice = async (ticker) => {
+  if (!HAS_STOCK_KEY || !ticker) return null;
+
+  const key = ticker.toUpperCase();
+
+  // Return the already-running promise (deduplication)
+  if (inFlight.has(key)) return inFlight.get(key);
+
+  const promise = (async () => {
+    console.log(`[assetPrice] FETCH API — ${key}`);
+    const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+    try {
+      const res = await fetch(
+        `https://api.twelvedata.com/price?symbol=${encodeURIComponent(key)}&apikey=${TWELVE_DATA_KEY}`,
+        { signal }
+      );
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (data.code || data.status === 'error') return null;
+
+      const price = parseFloat(data.price);
+      if (isNaN(price)) return null;
+
+      lsWrite(key, price);
+      return price;
+    } catch (err) {
+      console.error(`[assetPrice] fetchPrice error — ${key}:`, err);
+      return null;
+    } finally {
+      clear();
+      inFlight.delete(key); // always release the slot
+    }
+  })();
+
+  inFlight.set(key, promise);
+  return promise;
+};
+
+/**
+ * Primary entry point — resolves a price for any Twelve Data symbol
+ * ("AAPL", "BTC/USD", "IWDA.L", …) using a three-tier strategy:
+ *
+ *   1. CACHE HIT     – localStorage entry is fresher than CACHE_TTL → no API call
+ *   2. FETCH API     – entry is stale / absent  → fetch, persist, return fresh price
+ *   3. FALLBACK CACHE – API failed              → return last known price if available
+ *
+ * Never throws; returns null only when there is truly no data at all.
+ */
+export const getPrice = async (ticker) => {
+  if (!ticker) return null;
+
+  const key   = ticker.toUpperCase();
+  const entry = getCachedPrice(key);
+  const age   = entry ? Date.now() - entry.timestamp : Infinity;
+
+  // 1 — fresh cache hit
+  if (entry && age < CACHE_TTL) {
+    console.log(`[assetPrice] CACHE HIT — ${key} (${Math.round(age / 1000)}s old)`);
+    return entry.price;
+  }
+
+  // 2 — fetch from API
+  const fresh = await fetchPrice(key);
+  if (fresh !== null) return fresh;
+
+  // 3 — stale fallback (API down / no key)
+  if (entry) {
+    console.log(`[assetPrice] FALLBACK CACHE — ${key} (${Math.round(age / 60_000)}m old)`);
+    return entry.price;
+  }
+
+  return null;
 };
 
 // ─── crypto prices via Twelve Data (BTC/USD format) ──────────────────────────
