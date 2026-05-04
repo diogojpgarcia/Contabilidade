@@ -1571,12 +1571,53 @@
   text-align: right;
 }
 
+/* Asset body — the clickable area that opens edit modal */
+.pat-asset-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pat-asset-body:active { opacity: 0.75; }
+
+/* Action buttons — edit ✏ + delete × — absolute top-right */
+.pat-asset-actions {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.pat-asset-edit {
+  background: none;
+  border: none;
+  padding: 3px 4px;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+  line-height: 1;
+}
+.pat-asset-edit:hover { opacity: 1; color: #6366f1; }
+
 /* Delete button repositioned for asset card */
 .pat-asset-del {
-  position: absolute;
-  top: 10px;
-  right: 6px;
+  position: static; /* now inside .pat-asset-actions flex */
 }
+
+/* Broker / exchange badge on asset card */
+.pat-asset-broker {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-top: 1px;
+  opacity: 0.75;
+}
+
+/* Bottom row: give room for the actions column (2 buttons) */
+.pat-asset-bottom { padding-right: 52px; }
 
 /* ── Alerts panel ──────────────────────────────────────────────────────────── */
 .pat-alerts-panel {

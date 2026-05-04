@@ -149,6 +149,7 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
             value={limit || ''}
             onChange={(e) => onLimitChange(cat.id, e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { onSave(); e.target.blur(); } }}
+            onBlur={onSave}
             placeholder="Limite €/mês"
             autoFocus
           />
@@ -279,6 +280,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [assetHistory,        setAssetHistory]        = useState({});  // { ticker/coin → number[] }
   const [stockSearchQuery,    setStockSearchQuery]    = useState('');   // live filter text
   const [stockConfirmed,      setStockConfirmed]      = useState(false); // true only after explicit click/Enter
+  const [editingAssetId,      setEditingAssetId]      = useState(null);  // null = add, string = editing existing
 
   // Refs so the stock-price effect can read latest values without re-triggering
   const patrimonyRef        = useRef(externalPatrimony);
@@ -516,14 +518,41 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     setStockConfirmed(true);
   };
 
-  const handlePatrimonyAdd = () => {
+  // Open edit modal pre-filled with an existing asset
+  const handlePatrimonyEdit = (typeKey, item) => {
+    // Strip internal UI flags before pre-filling
+    const { _outraMode, ...clean } = item;
+    resetPatrimonyForm(clean);
+    setPatrimonyFormType(typeKey);
+    setEditingAssetId(item.id);
+    if (typeKey === 'stocks' && item.ticker) setStockConfirmed(true);
+    setShowPatrimonyModal(true);
+  };
+
+  // Shared add / update handler
+  const handlePatrimonySubmit = () => {
     if (!patrimonyFormType) return;
-    const id   = Date.now().toString();
-    const item = { id, ...patrimonyForm };
-    const updated = { ...patrimony, [patrimonyFormType]: [...(patrimony[patrimonyFormType] || []), item] };
-    onPatrimonyChange && onPatrimonyChange(updated);
+    // Strip internal UI flags; preserve all real fields (incl. live price / lastUpdated)
+    const { _outraMode, ...clean } = patrimonyForm;
+    if (editingAssetId) {
+      // Update existing item in-place
+      const updated = {
+        ...patrimony,
+        [patrimonyFormType]: (patrimony[patrimonyFormType] || []).map(x =>
+          x.id === editingAssetId ? { ...clean, id: editingAssetId } : x
+        ),
+      };
+      onPatrimonyChange && onPatrimonyChange(updated);
+    } else {
+      // Add new item
+      const id   = Date.now().toString();
+      const item = { id, ...clean };
+      const updated = { ...patrimony, [patrimonyFormType]: [...(patrimony[patrimonyFormType] || []), item] };
+      onPatrimonyChange && onPatrimonyChange(updated);
+    }
     resetPatrimonyForm({});
     setPatrimonyFormType(null);
+    setEditingAssetId(null);
     setShowPatrimonyModal(false);
     clearStockSearch();
   };
@@ -632,7 +661,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                 )}
               </div>
             ) : (
-              /* Step 2: confirmed — chip + quantity only (price fetched live) */
+              /* Step 2: confirmed — chip + qty + broker */
               <>
                 <div className="pat-stock-chip">
                   <div className="pat-stock-chip-body">
@@ -642,7 +671,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   <button
                     type="button"
                     className="pat-stock-chip-clear"
-                    onClick={() => { set('ticker', ''); set('name', ''); set('qty', ''); setStockConfirmed(false); }}
+                    onClick={() => { set('ticker', ''); set('name', ''); set('qty', ''); set('broker', ''); setStockConfirmed(false); }}
                   >×</button>
                 </div>
                 <input
@@ -654,6 +683,19 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   onChange={e => set('qty', e.target.value)}
                   autoFocus
                 />
+                <div className="pat-exchange-field">
+                  <span className="pat-exchange-field-label">Broker</span>
+                  <div className="pat-exchange-chips">
+                    {['XTB','Degiro','Trading212','Outra'].map(b => (
+                      <button
+                        key={b}
+                        type="button"
+                        className={`pat-exchange-chip${f.broker === b ? ' active' : ''}`}
+                        onClick={() => set('broker', f.broker === b ? '' : b)}
+                      >{b}</button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
           </div>
@@ -784,34 +826,69 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         </Overlay>
       )}
 
-      {showPatrimonyModal && (
-        <Overlay onClose={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); clearStockSearch(); }}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h4>{patrimonyFormType ? PATRIMONY_TYPES.find(t => t.key === patrimonyFormType)?.label : 'Adicionar Activo'}</h4>
-              <button className="modal-close" onClick={() => { setShowPatrimonyModal(false); setPatrimonyFormType(null); resetPatrimonyForm({}); clearStockSearch(); }}>×</button>
-            </div>
-            {!patrimonyFormType ? (
-              <div className="patrimony-type-selector">
-                {PATRIMONY_TYPES.map(({ key, label, icon, color }) => (
-                  <button key={key} className="patrimony-type-btn" onClick={() => { setPatrimonyFormType(key); resetPatrimonyForm({}); }}>
-                    <span style={{ color, fontSize: '1.5rem' }}>{icon}</span>
-                    <span>{label}</span>
-                  </button>
-                ))}
+      {showPatrimonyModal && (() => {
+        const f   = patrimonyForm;
+        const closeModal = () => {
+          setShowPatrimonyModal(false);
+          setPatrimonyFormType(null);
+          setEditingAssetId(null);
+          resetPatrimonyForm({});
+          clearStockSearch();
+        };
+        // Per-type submit guard — only enable when required fields are filled
+        const canSubmit = (() => {
+          switch (patrimonyFormType) {
+            case 'stocks':     return stockConfirmed && !!f.qty;
+            case 'crypto':     return !!f.coin && !!f.qty;
+            case 'accounts':   return !!f.name;
+            case 'bonds':      return !!f.series && !!f.value;
+            case 'realestate': return !!f.description && !!f.value;
+            case 'vehicles':   return !!f.description && !!f.value;
+            default:           return true;
+          }
+        })();
+        const typeLabel    = PATRIMONY_TYPES.find(t => t.key === patrimonyFormType)?.label ?? '';
+        const modalTitle   = editingAssetId
+          ? `Editar ${typeLabel}`
+          : (patrimonyFormType ? `Adicionar ${typeLabel}` : 'Adicionar Activo');
+        const submitLabel  = editingAssetId ? 'Guardar' : 'Adicionar';
+
+        return (
+          <Overlay onClose={closeModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h4>{modalTitle}</h4>
+                <button className="modal-close" onClick={closeModal}>×</button>
               </div>
-            ) : (
-              <div className="patrimony-form">
-                {renderPatrimonyForm()}
-                <div className="patrimony-form-actions">
-                  <button className="btn-patrimony-back" onClick={() => { setPatrimonyFormType(null); resetPatrimonyForm({}); }}>← Voltar</button>
-                  <button className="btn-add-patrimony" onClick={handlePatrimonyAdd}>Adicionar</button>
+              {!patrimonyFormType ? (
+                <div className="patrimony-type-selector">
+                  {PATRIMONY_TYPES.map(({ key, label, icon, color }) => (
+                    <button key={key} className="patrimony-type-btn" onClick={() => { setPatrimonyFormType(key); resetPatrimonyForm({}); }}>
+                      <span style={{ color, fontSize: '1.5rem' }}>{icon}</span>
+                      <span>{label}</span>
+                    </button>
+                  ))}
                 </div>
-              </div>
-            )}
-          </div>
-        </Overlay>
-      )}
+              ) : (
+                <div className="patrimony-form">
+                  {renderPatrimonyForm()}
+                  <div className="patrimony-form-actions">
+                    {!editingAssetId && (
+                      <button className="btn-patrimony-back" onClick={() => { setPatrimonyFormType(null); resetPatrimonyForm({}); }}>← Voltar</button>
+                    )}
+                    <button
+                      className="btn-add-patrimony"
+                      onClick={handlePatrimonySubmit}
+                      disabled={!canSubmit}
+                      style={!canSubmit ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
+                    >{submitLabel}</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Overlay>
+        );
+      })()}
 
     </>
     );
@@ -1023,49 +1100,71 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             const priceLabel   = isStock ? 'ação'  : 'moeda';
             return (
               <div key={item.id} className="pat-asset-card">
-                <div className="pat-asset-top">
-                  <div className="pat-asset-left">
-                    <div className="pat-stock-name-row">
-                      <span className="pat-cat-item-name">{sym}</span>
-                      {chg != null && (
-                        <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
-                          {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
-                        </span>
-                      )}
-                    </div>
-                    {item.name && <span className="pat-asset-fullname">{item.name}</span>}
-                    <span className="pat-stock-sub">
-                      {isRefreshing ? (
-                        <span className="pat-stock-loading">A atualizar…</span>
-                      ) : item.lastPrice != null ? (
-                        <>{parseFloat(item.lastPrice).toFixed(2)}€/{priceLabel} · {age}</>
-                      ) : (
-                        <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="pat-stock-right">
-                    <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
-                    <span className="pat-stock-qty">{qty} {qtyLabel}</span>
-                  </div>
-                </div>
-                <div className="pat-asset-bottom">
-                  <div className="pat-sparkline-wrap">
-                    {sparkPrices
-                      ? <Sparkline prices={sparkPrices} color={sparkColor} />
-                      : <div className="pat-sparkline-empty">{HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}</div>
-                    }
-                  </div>
-                  {totalPatrimony > 0 && (
-                    <div className="pat-impact">
-                      <div className="pat-impact-bar-bg">
-                        <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
+                {/* clickable body → opens edit modal */}
+                <div
+                  className="pat-asset-body"
+                  onClick={() => handlePatrimonyEdit(assetKey, item)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="pat-asset-top">
+                    <div className="pat-asset-left">
+                      <div className="pat-stock-name-row">
+                        <span className="pat-cat-item-name">{sym}</span>
+                        {chg != null && (
+                          <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
+                            {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
+                          </span>
+                        )}
                       </div>
-                      <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
+                      {item.name && <span className="pat-asset-fullname">{item.name}</span>}
+                      <span className="pat-stock-sub">
+                        {isRefreshing ? (
+                          <span className="pat-stock-loading">A atualizar…</span>
+                        ) : item.lastPrice != null ? (
+                          <>{parseFloat(item.lastPrice).toFixed(2)}€/{priceLabel} · {age}</>
+                        ) : (
+                          <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
+                        )}
+                      </span>
+                      {(item.broker || item.exchange) && (
+                        <span className="pat-asset-broker">{item.broker ?? item.exchange}</span>
+                      )}
                     </div>
-                  )}
+                    <div className="pat-stock-right">
+                      <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
+                      <span className="pat-stock-qty">{qty} {qtyLabel}</span>
+                    </div>
+                  </div>
+                  <div className="pat-asset-bottom">
+                    <div className="pat-sparkline-wrap">
+                      {sparkPrices
+                        ? <Sparkline prices={sparkPrices} color={sparkColor} />
+                        : <div className="pat-sparkline-empty">{HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}</div>
+                      }
+                    </div>
+                    {totalPatrimony > 0 && (
+                      <div className="pat-impact">
+                        <div className="pat-impact-bar-bg">
+                          <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
+                        </div>
+                        <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button className="m-asset-item-del pat-asset-del" onClick={() => handlePatrimonyDelete(assetKey, item.id)}>×</button>
+                {/* action buttons — stop propagation so card click doesn't fire */}
+                <div className="pat-asset-actions">
+                  <button
+                    className="pat-asset-edit"
+                    onClick={e => { e.stopPropagation(); handlePatrimonyEdit(assetKey, item); }}
+                    title="Editar"
+                  >✏</button>
+                  <button
+                    className="m-asset-item-del pat-asset-del"
+                    onClick={e => { e.stopPropagation(); handlePatrimonyDelete(assetKey, item.id); }}
+                    title="Remover"
+                  >×</button>
+                </div>
               </div>
             );
           };
