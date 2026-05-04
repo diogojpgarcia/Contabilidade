@@ -1,18 +1,27 @@
 /**
  * assetPrice.js
- * Live price fetcher for stocks (Twelve Data) and crypto (CoinGecko).
+ * Live price fetcher for stocks and crypto via Twelve Data.
  *
  * Stocks  – VITE_TWELVE_DATA_KEY required  (free: 8 credits/min, 800/day)
- * Crypto  – no API key needed              (CoinGecko free, batched per call)
+ * Crypto  – Twelve Data BTC/USD pairs when key is set;
+ *           falls back to CoinGecko (no key needed) for any failures.
  *
- * Each asset type has its own in-memory cache (TTL = 60 s).
- * Every exported fetch function returns null/empty on any failure so the
- * caller can fall back to the last stored value without breaking the UI.
+ * Exported:
+ *   getPrice(symbol)              – single price via /price ("AAPL" or "BTC/USD")
+ *   fetchStockQuote(ticker)       – price + changePct via /quote
+ *   fetchCryptoTwelveData(syms)   – batch crypto prices; CoinGecko fallback
+ *   fetchCryptoBatch(syms)        – CoinGecko batch (used internally as fallback)
+ *   fetchStockHistory(ticker)     – 7-day sparkline via /time_series
+ *   fetchCryptoHistoryBatch(syms) – 7-day sparkline via CoinGecko market_chart
+ *   fetchStockSearch(query)       – autocomplete via /symbol_search
+ *
+ * All functions return null / {} on any failure — UI never crashes.
+ * In-memory caches with CACHE_TTL = 5 min and HISTORY_TTL = 5 min.
  */
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
-export const CACHE_TTL    = 60_000;   // 1 minute — matches the 60 s refresh interval
+export const CACHE_TTL    = 5 * 60_000;  // 5 minutes — price refresh interval
 export const HISTORY_TTL  = 5 * 60_000;  // 5 minutes — history changes slowly
 const        FETCH_TIMEOUT = 7_000;   // abort after 7 s
 
@@ -258,6 +267,110 @@ export const fetchCryptoHistoryBatch = async (symbols) => {
       }
     })
   );
+
+  return result;
+};
+
+// ─── simple price getter (Twelve Data /price) ────────────────────────────────
+// Accepts any symbol Twelve Data understands: "AAPL", "BTC/USD", "ETH/EUR", …
+// Returns a numeric price, or null on any failure.
+
+/**
+ * Fetch the current price for a single symbol from Twelve Data /price.
+ * symbol can be a stock ticker ("AAPL") or a crypto pair ("BTC/USD").
+ * Returns a number or null.
+ */
+export const getPrice = async (symbol) => {
+  if (!HAS_STOCK_KEY || !symbol) return null;
+  const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/price?symbol=${encodeURIComponent(symbol)}&apikey=${TWELVE_DATA_KEY}`,
+      { signal }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code || data.status === 'error') return null;
+    const price = parseFloat(data.price);
+    return isNaN(price) ? null : price;
+  } catch (err) {
+    console.error('[assetPrice] getPrice error:', symbol, err);
+    return null;
+  } finally {
+    clear();
+  }
+};
+
+// ─── crypto prices via Twelve Data (BTC/USD format) ──────────────────────────
+// When VITE_TWELVE_DATA_KEY is set, uses Twelve Data /quote with BTC/USD pairs.
+// Falls back to CoinGecko (fetchCryptoBatch) for any symbols that fail or when
+// no API key is configured.  Returns the same shape as fetchCryptoBatch:
+//   { [symbol]: { price, changePct24h } }
+
+/**
+ * Batch-fetch crypto prices via Twelve Data (BTC/USD, ETH/USD, …).
+ * Falls back to CoinGecko for individual failures or when no key is set.
+ * Returns { [symbol]: { price, changePct24h } }.
+ */
+export const fetchCryptoTwelveData = async (symbols) => {
+  if (!symbols?.length) return {};
+
+  // No key → delegate entirely to CoinGecko
+  if (!HAS_STOCK_KEY) return fetchCryptoBatch(symbols);
+
+  const result  = {};
+  const toFetch = [];
+
+  for (const sym of symbols) {
+    const tdSym = `${sym.toUpperCase()}/USD`;
+    const hit   = cryptoCache.get(tdSym);
+    if (hit && Date.now() - hit.ts < CACHE_TTL) {
+      result[sym] = hit;
+    } else {
+      toFetch.push({ sym, tdSym });
+    }
+  }
+
+  if (!toFetch.length) return result;
+
+  const symbolList = toFetch.map(x => x.tdSym).join(',');
+  const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${TWELVE_DATA_KEY}`,
+      { signal }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    for (const { sym, tdSym } of toFetch) {
+      // Single-symbol responses come unwrapped; multi-symbol come as { "BTC/USD": {...}, … }
+      const q = toFetch.length === 1 ? data : (data[tdSym] ?? data[sym]);
+      if (!q || q.code || q.status === 'error') continue;
+
+      const price     = parseFloat(q.close) || null;
+      const changePct = parseFloat(q.percent_change) ?? null;
+      if (!price) continue;
+
+      const entry = { price, changePct24h: changePct, ts: Date.now() };
+      cryptoCache.set(tdSym, entry);
+      result[sym] = entry;
+    }
+  } catch (err) {
+    console.error('[assetPrice] fetchCryptoTwelveData error:', err);
+  } finally {
+    clear();
+  }
+
+  // CoinGecko fallback for any symbols Twelve Data didn't return
+  const failed = toFetch.filter(({ sym }) => !result[sym]).map(({ sym }) => sym);
+  if (failed.length) {
+    try {
+      const fallback = await fetchCryptoBatch(failed);
+      Object.assign(result, fallback);
+    } catch { /* silent */ }
+  }
 
   return result;
 };

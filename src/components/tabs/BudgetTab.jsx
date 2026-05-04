@@ -4,7 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
-import { fetchStockQuote, fetchCryptoBatch, fetchStockHistory, fetchCryptoHistoryBatch, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
+import { fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory, fetchCryptoHistoryBatch, getPrice, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
 
 /* ─── Sparkline SVG ─────────────────────────────────────────────────────────
    Pure SVG mini line chart from an array of prices (oldest→newest).
@@ -359,10 +359,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     return () => clearTimeout(t);
   }, [activeView, transactions, selectedMonth]);
 
-  // ── Live asset prices: stocks (Twelve Data) + crypto (CoinGecko) ──────────
-  // Runs immediately when patrimony view opens, then every 60 s.
+  // ── Live asset prices: stocks + crypto via Twelve Data (5 min refresh) ─────
+  // Runs immediately when patrimony view opens, then every CACHE_TTL (5 min).
   // Only fetches assets whose lastUpdated is stale (> CACHE_TTL).
-  // All failures are silent — stored lastPrice / avgPrice are kept as fallback.
+  // All failures are silent — stored lastPrice is kept as fallback.
   useEffect(() => {
     if (activeView !== 'patrimony') return;
 
@@ -390,9 +390,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       ]));
 
       // Fetch stocks + crypto in parallel
+      // Crypto: Twelve Data BTC/USD when key present, CoinGecko fallback otherwise
       const [stockResults, cryptoPrices] = await Promise.all([
         Promise.allSettled(staleStocks.map(s => fetchStockQuote(s.ticker))),
-        fetchCryptoBatch(staleCoins.map(c => c.coin)),
+        fetchCryptoTwelveData(staleCoins.map(c => c.coin)),
       ]);
 
       if (cancelled) return;
