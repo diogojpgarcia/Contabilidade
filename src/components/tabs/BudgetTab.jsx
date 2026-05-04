@@ -4,7 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
-import { fetchStockQuote, fetchCryptoBatch, fetchStockHistory, fetchCryptoHistoryBatch, fetchStockSearch, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
+import { fetchStockQuote, fetchCryptoBatch, fetchStockHistory, fetchCryptoHistoryBatch, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
 
 /* ─── Sparkline SVG ─────────────────────────────────────────────────────────
    Pure SVG mini line chart from an array of prices (oldest→newest).
@@ -201,6 +201,66 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
   );
 };
 
+/* ─── Internal stock list (no API needed) ───────────────────────────────────
+   ~50 popular stocks + UCITS ETFs. Filtered locally while the user types.   */
+const STOCK_LIST = [
+  // US mega-cap
+  { symbol: 'AAPL',  name: 'Apple Inc.' },
+  { symbol: 'MSFT',  name: 'Microsoft Corporation' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.' },
+  { symbol: 'AMZN',  name: 'Amazon.com Inc.' },
+  { symbol: 'NVDA',  name: 'NVIDIA Corporation' },
+  { symbol: 'META',  name: 'Meta Platforms Inc.' },
+  { symbol: 'TSLA',  name: 'Tesla Inc.' },
+  { symbol: 'BRK/B', name: 'Berkshire Hathaway B' },
+  { symbol: 'JPM',   name: 'JPMorgan Chase & Co.' },
+  { symbol: 'V',     name: 'Visa Inc.' },
+  { symbol: 'MA',    name: 'Mastercard Inc.' },
+  { symbol: 'UNH',   name: 'UnitedHealth Group' },
+  { symbol: 'JNJ',   name: 'Johnson & Johnson' },
+  { symbol: 'XOM',   name: 'Exxon Mobil Corp.' },
+  { symbol: 'PG',    name: 'Procter & Gamble Co.' },
+  { symbol: 'HD',    name: 'Home Depot Inc.' },
+  { symbol: 'COST',  name: 'Costco Wholesale Corp.' },
+  { symbol: 'ADBE',  name: 'Adobe Inc.' },
+  { symbol: 'CRM',   name: 'Salesforce Inc.' },
+  { symbol: 'NFLX',  name: 'Netflix Inc.' },
+  { symbol: 'AMD',   name: 'Advanced Micro Devices' },
+  { symbol: 'INTC',  name: 'Intel Corporation' },
+  { symbol: 'DIS',   name: 'Walt Disney Co.' },
+  { symbol: 'PYPL',  name: 'PayPal Holdings Inc.' },
+  { symbol: 'COIN',  name: 'Coinbase Global Inc.' },
+  // European
+  { symbol: 'ASML',  name: 'ASML Holding N.V.' },
+  { symbol: 'SAP',   name: 'SAP SE' },
+  { symbol: 'NVO',   name: 'Novo Nordisk A/S' },
+  { symbol: 'EDP',   name: 'EDP — Energias de Portugal' },
+  { symbol: 'GALP',  name: 'Galp Energia SGPS' },
+  { symbol: 'BCP',   name: 'Millennium BCP' },
+  { symbol: 'JMT',   name: 'Jerónimo Martins SGPS' },
+  { symbol: 'SON',   name: 'Sonae SGPS' },
+  { symbol: 'NOS',   name: 'NOS SGPS' },
+  { symbol: 'EGL',   name: 'Greenvolt — Energias Renováveis' },
+  // US ETFs
+  { symbol: 'SPY',   name: 'S&P 500 ETF (SPDR)' },
+  { symbol: 'QQQ',   name: 'Nasdaq-100 ETF (Invesco)' },
+  { symbol: 'VOO',   name: 'Vanguard S&P 500 ETF' },
+  { symbol: 'VTI',   name: 'Vanguard Total Market ETF' },
+  { symbol: 'GLD',   name: 'SPDR Gold Shares ETF' },
+  { symbol: 'TLT',   name: 'iShares 20+ Year Treasury ETF' },
+  { symbol: 'VGT',   name: 'Vanguard Info Technology ETF' },
+  { symbol: 'ARKK',  name: 'ARK Innovation ETF' },
+  // UCITS ETFs (popular in PT/EU)
+  { symbol: 'VWCE',  name: 'Vanguard FTSE All-World UCITS ETF' },
+  { symbol: 'IWDA',  name: 'iShares Core MSCI World UCITS ETF' },
+  { symbol: 'CSPX',  name: 'iShares Core S&P 500 UCITS ETF' },
+  { symbol: 'VUSA',  name: 'Vanguard S&P 500 UCITS ETF' },
+  { symbol: 'XDWD',  name: 'Xtrackers MSCI World Swap UCITS ETF' },
+  { symbol: 'SXR8',  name: 'iShares Core S&P 500 (Acc) EUR' },
+  { symbol: 'EUNL',  name: 'iShares Core MSCI World UCITS (EUR)' },
+  { symbol: 'EXSA',  name: 'iShares Core EURO STOXX 50 UCITS ETF' },
+];
+
 const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
@@ -217,9 +277,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
   const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
   const [assetHistory,        setAssetHistory]        = useState({});  // { ticker/coin → number[] }
-  const [stockSearch,         setStockSearch]         = useState({ results: [], open: false, loading: false });
+  const [stockSearchQuery,    setStockSearchQuery]    = useState('');   // live filter text
   const [stockConfirmed,      setStockConfirmed]      = useState(false); // true only after explicit click/Enter
-  const stockSearchTimerRef  = useRef(null);
 
   // Refs so the stock-price effect can read latest values without re-triggering
   const patrimonyRef        = useRef(externalPatrimony);
@@ -445,38 +504,15 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   };
 
   const clearStockSearch = () => {
-    clearTimeout(stockSearchTimerRef.current);
-    setStockSearch({ results: [], open: false, loading: false });
+    setStockSearchQuery('');
     setStockConfirmed(false);
   };
 
-  const handleStockSearchInput = (val) => {
-    setPatrimonyField('ticker', val.toUpperCase());
-    setPatrimonyField('name', '');
-    clearTimeout(stockSearchTimerRef.current);
-    if (!val.trim() || !HAS_STOCK_KEY) { clearStockSearch(); return; }
-    setStockSearch(s => ({ ...s, loading: true, open: false }));
-    stockSearchTimerRef.current = setTimeout(async () => {
-      const results = await fetchStockSearch(val);
-      console.log('[AssetForm] search →', results);
-      setStockSearch({ results, open: results.length > 0, loading: false });
-    }, 320);
-  };
-
+  // Select a stock from the local-filter dropdown
   const handleStockSelect = (result) => {
-    console.log('[AssetForm] STOCK SELECTED →', result);
     setPatrimonyField('ticker', result.symbol);
     setPatrimonyField('name',   result.name);
-    setStockSearch({ results: [], open: false, loading: false });
-    setStockConfirmed(true);
-  };
-
-  // Called when user presses Enter in the search field (manual ticker confirm)
-  const handleStockConfirmManual = () => {
-    const ticker = patrimonyForm.ticker?.trim();
-    if (!ticker) return;
-    console.log('[AssetForm] STOCK CONFIRMED (manual) →', ticker);
-    setStockSearch({ results: [], open: false, loading: false });
+    setStockSearchQuery('');
     setStockConfirmed(true);
   };
 
@@ -484,7 +520,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     if (!patrimonyFormType) return;
     const id   = Date.now().toString();
     const item = { id, ...patrimonyForm };
-    console.log('[AssetForm] ASSET SAVED →', patrimonyFormType, item);
     const updated = { ...patrimony, [patrimonyFormType]: [...(patrimony[patrimonyFormType] || []), item] };
     onPatrimonyChange && onPatrimonyChange(updated);
     resetPatrimonyForm({});
@@ -496,14 +531,19 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const renderPatrimonyItemValue = (typeKey, item) => {
     if (typeKey === 'accounts')   return `${parseFloat(item.balance || 0).toFixed(2)}€`;
     if (typeKey === 'stocks') {
-      const price = parseFloat(item.lastPrice ?? item.avgPrice) || 0;
+      const price = parseFloat(item.lastPrice ?? item.avgPrice) || null;
+      if (!price) return `${item.qty || 0} ações · cotação pendente`;
       const total = (parseFloat(item.qty) || 0) * price;
       return `${item.qty}×${price.toFixed(2)}€ = ${total.toFixed(2)}€`;
     }
     if (typeKey === 'bonds')      return `${parseFloat(item.value || 0).toFixed(2)}€`;
     if (typeKey === 'realestate') return `${parseFloat(item.value || 0).toFixed(2)}€`;
     if (typeKey === 'vehicles')   return `${parseFloat(item.value || 0).toFixed(2)}€`;
-    if (typeKey === 'crypto')     return `${item.qty}×${parseFloat(item.price || 0).toFixed(2)}€ = ${(parseFloat(item.qty || 0) * parseFloat(item.price || 0)).toFixed(2)}€`;
+    if (typeKey === 'crypto') {
+      const price = parseFloat(item.lastPrice ?? item.price) || null;
+      if (!price) return `${item.qty || 0} moedas · cotação pendente`;
+      return `${item.qty}×${price.toFixed(2)}€ = ${(parseFloat(item.qty || 0) * price).toFixed(2)}€`;
+    }
     return '';
   };
 
@@ -535,44 +575,64 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Stocks ──────────────────────────────────────────────────────────── */
       case 'stocks': {
-        // Only true after explicit click on a result OR pressing Enter — never from typing alone
-        const confirmed = stockConfirmed;
+        // Suggestions from the internal list, filtered by what the user typed
+        const q           = stockSearchQuery.trim().toUpperCase();
+        const suggestions = q.length >= 1
+          ? STOCK_LIST.filter(s =>
+              s.symbol.includes(q) ||
+              s.name.toLowerCase().includes(stockSearchQuery.trim().toLowerCase())
+            ).slice(0, 7)
+          : [];
+
         return (
           <div className="pat-stock-form">
-            {!confirmed ? (
-              /* Step 1: search freely */
+            {!stockConfirmed ? (
+              /* Step 1: type to filter from internal list */
               <div className="pat-search-wrap">
                 <span className="pat-search-icon">⊕</span>
                 <input
                   className={cls}
                   style={{ paddingLeft: '2.4rem' }}
                   placeholder="Procurar empresa ou ticker…"
-                  value={f.ticker || ''}
-                  onChange={e => handleStockSearchInput(e.target.value)}
+                  value={stockSearchQuery}
+                  onChange={e => setStockSearchQuery(e.target.value)}
                   onKeyDown={e => {
-                    if (e.key === 'Enter') { e.preventDefault(); handleStockConfirmManual(); }
-                    if (e.key === 'Escape') { e.preventDefault(); setStockSearch(s => ({ ...s, open: false })); }
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      // Confirm with the first suggestion, or treat typed text as ticker
+                      if (suggestions.length > 0) {
+                        handleStockSelect(suggestions[0]);
+                      } else if (stockSearchQuery.trim()) {
+                        const ticker = stockSearchQuery.trim().toUpperCase();
+                        setPatrimonyField('ticker', ticker);
+                        setPatrimonyField('name', '');
+                        setStockSearchQuery('');
+                        setStockConfirmed(true);
+                      }
+                    }
+                    if (e.key === 'Escape') setStockSearchQuery('');
                   }}
-                  onBlur={() => setTimeout(() => setStockSearch(s => ({ ...s, open: false })), 200)}
+                  onBlur={() => setTimeout(() => setStockSearchQuery(''), 200)}
                   autoComplete="off"
                   autoFocus
                 />
-                {stockSearch.loading && <span className="pat-search-spinner">◌</span>}
-                {stockSearch.open && stockSearch.results.length > 0 && (
+                {suggestions.length > 0 && (
                   <div className="pat-search-dropdown">
-                    {stockSearch.results.map(r => (
-                      /* onMouseDown fires before onBlur → selection happens before dropdown closes */
-                      <div key={r.symbol} className="pat-search-result" onMouseDown={e => { e.preventDefault(); handleStockSelect(r); }}>
+                    {suggestions.map(r => (
+                      <div
+                        key={r.symbol}
+                        className="pat-search-result"
+                        onMouseDown={e => { e.preventDefault(); handleStockSelect(r); }}
+                      >
                         <span className="pat-search-sym">{r.symbol}</span>
                         <span className="pat-search-name">{r.name}</span>
-                        {r.exchange && <span className="pat-search-exch">{r.exchange}</span>}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              /* Step 2: confirmed — show chip + quantity fields */
+              /* Step 2: confirmed — chip + quantity only (price fetched live) */
               <>
                 <div className="pat-stock-chip">
                   <div className="pat-stock-chip-body">
@@ -582,11 +642,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   <button
                     type="button"
                     className="pat-stock-chip-clear"
-                    onClick={() => {
-                      set('ticker', ''); set('name', ''); set('qty', ''); set('avgPrice', '');
-                      setStockConfirmed(false);
-                      clearTimeout(stockSearchTimerRef.current);
-                    }}
+                    onClick={() => { set('ticker', ''); set('name', ''); set('qty', ''); setStockConfirmed(false); }}
                   >×</button>
                 </div>
                 <input
@@ -597,14 +653,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   value={f.qty || ''}
                   onChange={e => set('qty', e.target.value)}
                   autoFocus
-                />
-                <input
-                  className={cls}
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="Preço de compra por ação (€)"
-                  value={f.avgPrice || ''}
-                  onChange={e => set('avgPrice', e.target.value)}
                 />
               </>
             )}
@@ -636,37 +684,53 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Crypto ──────────────────────────────────────────────────────────── */
       case 'crypto': {
-        const QUICK = ['BTC','ETH','SOL','BNB','XRP','ADA'];
+        const QUICK    = ['BTC','ETH','SOL','BNB','XRP','ADA'];
+        const isOutra  = f.coin && !QUICK.includes(f.coin);
+        const outraActive = isOutra || f._outraMode;
         return (
           <div className="pat-crypto-form">
-            {/* Quick-pick chips */}
+            {/* Coin chips — top 6 + "Outra" */}
             <div className="pat-coin-quick">
               {QUICK.map(c => (
                 <button
                   key={c}
                   type="button"
                   className={`pat-coin-chip${f.coin === c ? ' active' : ''}`}
-                  onClick={() => set('coin', f.coin === c ? '' : c)}
+                  onClick={() => { set('coin', f.coin === c ? '' : c); set('_outraMode', false); }}
                 >{c}</button>
               ))}
+              <button
+                type="button"
+                className={`pat-coin-chip${outraActive ? ' active' : ''}`}
+                onClick={() => { set('coin', ''); set('_outraMode', true); }}
+              >Outra</button>
             </div>
 
-            {/* Free-form coin input */}
-            <input
-              className={cls}
-              placeholder="Outra moeda — ex: DOGE, MATIC"
-              value={f.coin || ''}
-              onChange={e => set('coin', e.target.value.toUpperCase())}
-              autoCapitalize="characters"
-              autoComplete="off"
-            />
+            {/* Free-text input — only visible when "Outra" mode */}
+            {outraActive && (
+              <input
+                className={cls}
+                placeholder="Ticker — ex: DOGE, MATIC, INJ"
+                value={(QUICK.includes(f.coin) ? '' : f.coin) || ''}
+                onChange={e => set('coin', e.target.value.toUpperCase())}
+                autoCapitalize="characters"
+                autoComplete="off"
+                autoFocus
+              />
+            )}
 
+            {/* Qty + exchange — shown once a coin is chosen */}
             {f.coin && (
               <>
-                <div className="pat-form-row">
-                  <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade" value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
-                  <input className={cls} type="number" inputMode="decimal" placeholder="Preço (€)"  value={f.price || ''} onChange={e => set('price', e.target.value)} />
-                </div>
+                <input
+                  className={cls}
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Quantidade"
+                  value={f.qty || ''}
+                  onChange={e => set('qty', e.target.value)}
+                  autoFocus={!outraActive}
+                />
 
                 <div className="pat-exchange-field">
                   <span className="pat-exchange-field-label">Exchange</span>
@@ -676,10 +740,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                         key={ex}
                         type="button"
                         className={`pat-exchange-chip${f.exchange === ex ? ' active' : ''}`}
-                        onClick={() => {
-                          console.log('[AssetForm] exchange →', ex);
-                          set('exchange', f.exchange === ex ? '' : ex);
-                        }}
+                        onClick={() => set('exchange', f.exchange === ex ? '' : ex)}
                       >{ex}</button>
                     ))}
                   </div>
@@ -960,9 +1021,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             const qty          = parseFloat(item.qty) || 0;
             const qtyLabel     = isStock ? 'ações' : 'moedas';
             const priceLabel   = isStock ? 'ação'  : 'moeda';
-            const basePrice    = isStock
-              ? parseFloat(item.avgPrice || 0).toFixed(2)
-              : parseFloat(item.price    || 0).toFixed(2);
             return (
               <div key={item.id} className="pat-asset-card">
                 <div className="pat-asset-top">
@@ -982,7 +1040,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       ) : item.lastPrice != null ? (
                         <>{parseFloat(item.lastPrice).toFixed(2)}€/{priceLabel} · {age}</>
                       ) : (
-                        <span style={{ color: 'var(--text-tertiary)' }}>preço base: {basePrice}€</span>
+                        <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
                       )}
                     </span>
                   </div>
@@ -1207,12 +1265,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                               </div>
                             );
                           })}
-                        </div>
-                      )}
-                      {/* API key hint — only on the stocks card */}
-                      {key === 'stocks' && items.length > 0 && !HAS_STOCK_KEY && (
-                        <div className="pat-api-hint">
-                          ◎ Define VITE_TWELVE_DATA_KEY para cotações em tempo real
                         </div>
                       )}
                       {items.length === 0 && <div className="pat-cat-empty">Sem registos · toca + para adicionar</div>}
