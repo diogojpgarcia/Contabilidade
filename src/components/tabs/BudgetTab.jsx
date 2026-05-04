@@ -3,7 +3,7 @@ import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble, ProgressBar } from '../ui';
-import { shiftMonth, formatMonthLabel, getPrediction, generateInsights } from '../../utils/insights';
+import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
 import './BudgetTab.css';
 
 const CATEGORY_ICONS = {
@@ -34,51 +34,6 @@ const getCategoryIcon = (category) => {
   return CATEGORY_ICONS[label] || '◌';
 };
 
-const INSIGHT_ICONS = {
-  budget_exceeded: '⚠',
-  budget_warning:  '⚡',
-  prediction:      '◎',
-  category_increase:'↑',
-  top_category:    '★',
-  trend:           '↗',
-};
-
-const INSIGHT_COLORS = {
-  risk: '#ef4444',
-  warn: '#F59E0B',
-  good: '#22c55e',
-  info: '#6B7280',
-};
-
-const InsightsFeed = ({ items }) => {
-  if (!items.length) {
-    return (
-      <div className="m-insights-empty">
-        <span className="m-insights-empty-icon">✓</span>
-        <p>Tudo sob controlo este mês</p>
-      </div>
-    );
-  }
-  return (
-    <div className="m-insights-list">
-      {items.map((item, i) => {
-        const c = INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info;
-        return (
-          <div key={i} className="m-insight-card">
-            <Bubble color={c} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
-            <div className="m-insight-body">
-              <div className="m-insight-top">
-                <span className="m-insight-title">{item.title}</span>
-                <span className="m-insight-value" style={{ color: c }}>{item.value}</span>
-              </div>
-              <span className="m-insight-msg">{item.message}</span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 const CountUp = ({ value, decimals = 0 }) => {
   const [display, setDisplay] = useState(0);
@@ -279,11 +234,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       .sort((a, b) => b.percent - a.percent);
   }, [categories.expense, budgets, transactions, selectedMonth]);
 
-  const insights = useMemo(() =>
-    generateInsights({ transactions, budgets, categories, selectedMonth }),
-    [transactions, budgets, categories, selectedMonth]
-  );
-
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
     if (key === 'accounts')   return items.reduce((s, x) => s + (parseFloat(x.balance) || 0), 0);
@@ -452,11 +402,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           <button className={`m-toggle-btn ${activeView === 'budgets'   ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamentos</button>
           <button className={`m-toggle-btn ${activeView === 'goals'     ? 'active' : ''}`} onClick={() => setActiveView('goals')}>Objetivos</button>
           <button className={`m-toggle-btn ${activeView === 'patrimony' ? 'active' : ''}`} onClick={() => setActiveView('patrimony')}>Património</button>
-          <button className={`m-toggle-btn ${activeView === 'insights'  ? 'active' : ''}`} onClick={() => setActiveView('insights')}>Insights</button>
         </div>
 
-        {/* Month navigation — shared between budgets and insights */}
-        {(activeView === 'budgets' || activeView === 'insights') && (
+        {/* Month navigation */}
+        {activeView === 'budgets' && (
           <div className="m-month-nav">
             <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}>‹</button>
             <div className="m-month-nav-center">
@@ -468,9 +417,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, 1))}>›</button>
           </div>
         )}
-
-        {/* ── INSIGHTS ── */}
-        {activeView === 'insights' && <InsightsFeed items={insights} />}
 
         {/* ── BUDGETS ── */}
         {activeView === 'budgets' && (
