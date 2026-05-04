@@ -4,6 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
+import { fetchPrice, isStale, formatAge, HAS_API_KEY } from '../../utils/stockPrice';
 import './BudgetTab.css';
 
 const CATEGORY_ICONS = {
@@ -184,6 +185,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
   const [animated,            setAnimated]            = useState(false);
   const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
+  const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
+
+  // Refs so the stock-price effect can read latest values without re-triggering
+  const patrimonyRef        = useRef(externalPatrimony);
+  const onPatrimonyChangeRef = useRef(onPatrimonyChange);
+  useEffect(() => { patrimonyRef.current = externalPatrimony; },  [externalPatrimony]);
+  useEffect(() => { onPatrimonyChangeRef.current = onPatrimonyChange; }, [onPatrimonyChange]);
 
   useEffect(() => { setSelectedMonth(currentMonth); }, [currentMonth]);
 
@@ -196,6 +204,49 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     const t = setTimeout(() => setAnimated(true), 80);
     return () => clearTimeout(t);
   }, [activeView, transactions, selectedMonth]);
+
+  // ── Stock price refresh (fires when user opens the patrimony view) ───────
+  useEffect(() => {
+    if (activeView !== 'patrimony' || !HAS_API_KEY) return;
+
+    const stocks = patrimonyRef.current?.stocks ?? [];
+    const stale  = stocks.filter(s => s.ticker && isStale(s.lastUpdated));
+    if (stale.length === 0) return;
+
+    let cancelled = false;
+
+    const refresh = async () => {
+      setRefreshingTickers(new Set(stale.map(s => s.ticker)));
+
+      const results = await Promise.allSettled(stale.map(s => fetchPrice(s.ticker)));
+
+      if (cancelled) return;
+
+      const now = new Date().toISOString();
+      let didUpdate = false;
+
+      const updatedStocks = stocks.map(s => {
+        const idx = stale.findIndex(ss => ss.id === s.id);
+        if (idx === -1) return s;
+        const r = results[idx];
+        if (r.status === 'fulfilled' && r.value !== null) {
+          didUpdate = true;
+          return { ...s, lastPrice: r.value, lastUpdated: now };
+        }
+        return s; // keep stored price on failure
+      });
+
+      if (didUpdate) {
+        const current = patrimonyRef.current;
+        onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks });
+      }
+
+      setRefreshingTickers(new Set());
+    };
+
+    refresh();
+    return () => { cancelled = true; };
+  }, [activeView]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
@@ -276,7 +327,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
     if (key === 'accounts')   return items.reduce((s, x) => s + (parseFloat(x.balance) || 0), 0);
-    if (key === 'stocks')     return items.reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.avgPrice) || 0), 0);
+    if (key === 'stocks')     return items.reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.avgPrice) || 0), 0);
     if (key === 'bonds')      return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
     if (key === 'realestate') return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
     if (key === 'vehicles')   return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
@@ -305,7 +356,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   const renderPatrimonyItemValue = (typeKey, item) => {
     if (typeKey === 'accounts')   return `${parseFloat(item.balance || 0).toFixed(2)}€`;
-    if (typeKey === 'stocks')     return `${item.qty}×${parseFloat(item.avgPrice || 0).toFixed(2)}€ = ${(parseFloat(item.qty || 0) * parseFloat(item.avgPrice || 0)).toFixed(2)}€`;
+    if (typeKey === 'stocks') {
+      const price = parseFloat(item.lastPrice ?? item.avgPrice) || 0;
+      const total = (parseFloat(item.qty) || 0) * price;
+      return `${item.qty}×${price.toFixed(2)}€ = ${total.toFixed(2)}€`;
+    }
     if (typeKey === 'bonds')      return `${parseFloat(item.value || 0).toFixed(2)}€`;
     if (typeKey === 'realestate') return `${parseFloat(item.value || 0).toFixed(2)}€`;
     if (typeKey === 'vehicles')   return `${parseFloat(item.value || 0).toFixed(2)}€`;
@@ -737,13 +792,52 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       </div>
                       {items.length > 0 && (
                         <div className="pat-cat-items">
-                          {items.map(item => (
-                            <div key={item.id} className="pat-cat-item">
-                              <span className="pat-cat-item-name">{renderPatrimonyItemLabel(key, item)}</span>
-                              <span className="pat-cat-item-val">{renderPatrimonyItemValue(key, item)}</span>
-                              <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
-                            </div>
-                          ))}
+                          {items.map(item => {
+                            if (key === 'stocks') {
+                              /* ── Enhanced stock row ── */
+                              const isRefreshing = refreshingTickers.has(item.ticker);
+                              const marketPrice  = parseFloat(item.lastPrice ?? item.avgPrice) || 0;
+                              const marketVal    = (parseFloat(item.qty) || 0) * marketPrice;
+                              const age          = formatAge(item.lastUpdated);
+                              return (
+                                <div key={item.id} className="pat-cat-item pat-stock-item">
+                                  <div className="pat-cat-item-main">
+                                    <span className="pat-cat-item-name">{item.ticker}</span>
+                                    <span className="pat-stock-sub">
+                                      {isRefreshing ? (
+                                        <span className="pat-stock-loading">A atualizar cotação…</span>
+                                      ) : item.lastPrice != null ? (
+                                        <>{parseFloat(item.lastPrice).toFixed(2)}€/ação · {age}</>
+                                      ) : (
+                                        <span style={{ color: 'var(--text-tertiary)' }}>
+                                          preço base: {parseFloat(item.avgPrice || 0).toFixed(2)}€
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="pat-stock-right">
+                                    <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
+                                    <span className="pat-stock-qty">{item.qty} ações</span>
+                                  </div>
+                                  <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
+                                </div>
+                              );
+                            }
+                            /* ── Generic row for all other asset types ── */
+                            return (
+                              <div key={item.id} className="pat-cat-item">
+                                <span className="pat-cat-item-name">{renderPatrimonyItemLabel(key, item)}</span>
+                                <span className="pat-cat-item-val">{renderPatrimonyItemValue(key, item)}</span>
+                                <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {/* API key hint — only on the stocks card */}
+                      {key === 'stocks' && items.length > 0 && !HAS_API_KEY && (
+                        <div className="pat-api-hint">
+                          ◎ Define VITE_FINNHUB_KEY para cotações em tempo real
                         </div>
                       )}
                       {items.length === 0 && <div className="pat-cat-empty">Sem registos · toca + para adicionar</div>}

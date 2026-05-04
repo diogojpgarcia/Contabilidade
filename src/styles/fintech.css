@@ -1157,6 +1157,56 @@
 .pat-cat-item-val { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pat-cat-empty { padding: 8px 16px 12px 66px; font-size: 0.72rem; color: var(--text-tertiary); }
 
+/* ── Stock item enhancements ──────────────────────────────────────────────── */
+.pat-stock-item { align-items: flex-start; padding-top: 10px; padding-bottom: 10px; }
+
+/* Two-line left column: ticker name + sub-label */
+.pat-cat-item-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.pat-stock-sub {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.pat-stock-loading {
+  font-size: 0.68rem;
+  color: #818cf8;
+  animation: pat-pulse 1.3s ease-in-out infinite;
+}
+@keyframes pat-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* Right column: market value + share count */
+.pat-stock-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.pat-stock-qty {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* No-API-key hint at bottom of stocks card */
+.pat-api-hint {
+  padding: 8px 16px 10px;
+  font-size: 0.7rem;
+  color: #92400e;
+  background: rgba(245,158,11,0.08);
+  border-top: 0.5px solid rgba(245,158,11,0.15);
+}
+[data-theme="light"] .pat-api-hint { color: #78350f; }
+
 /* ── Wealth Intelligence ──────────────────────────────────────────────────── */
 .pat-intel {
   margin: 0 16px 12px;
