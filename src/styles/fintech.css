@@ -1197,6 +1197,40 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Stock / crypto name row with inline change badge */
+.pat-stock-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Change % badge — positive / negative */
+.pat-change-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+.pat-change-badge.pos {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+.pat-change-badge.neg {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+[data-theme="light"] .pat-change-badge.pos {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.15);
+}
+[data-theme="light"] .pat-change-badge.neg {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.15);
+}
+
 /* No-API-key hint at bottom of stocks card */
 .pat-api-hint {
   padding: 8px 16px 10px;

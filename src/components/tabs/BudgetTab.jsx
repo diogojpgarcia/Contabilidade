@@ -4,7 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
-import { fetchPrice, isStale, formatAge, HAS_API_KEY } from '../../utils/stockPrice';
+import { fetchStockQuote, fetchCryptoBatch, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL } from '../../utils/assetPrice';
 import './BudgetTab.css';
 
 const CATEGORY_ICONS = {
@@ -205,47 +205,79 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     return () => clearTimeout(t);
   }, [activeView, transactions, selectedMonth]);
 
-  // ── Stock price refresh (fires when user opens the patrimony view) ───────
+  // ── Live asset prices: stocks (Twelve Data) + crypto (CoinGecko) ──────────
+  // Runs immediately when patrimony view opens, then every 60 s.
+  // Only fetches assets whose lastUpdated is stale (> CACHE_TTL).
+  // All failures are silent — stored lastPrice / avgPrice are kept as fallback.
   useEffect(() => {
-    if (activeView !== 'patrimony' || !HAS_API_KEY) return;
-
-    const stocks = patrimonyRef.current?.stocks ?? [];
-    const stale  = stocks.filter(s => s.ticker && isStale(s.lastUpdated));
-    if (stale.length === 0) return;
+    if (activeView !== 'patrimony') return;
 
     let cancelled = false;
 
-    const refresh = async () => {
-      setRefreshingTickers(new Set(stale.map(s => s.ticker)));
+    const runRefresh = async () => {
+      const current = patrimonyRef.current;
+      if (!current) return;
 
-      const results = await Promise.allSettled(stale.map(s => fetchPrice(s.ticker)));
+      const stocks  = current.stocks  ?? [];
+      const cryptos = current.crypto  ?? [];
+      const now     = new Date().toISOString();
+
+      const staleStocks = HAS_STOCK_KEY
+        ? stocks.filter(s => s.ticker && isStale(s.lastUpdated))
+        : [];
+      const staleCoins = cryptos.filter(c => c.coin && isStale(c.lastUpdated));
+
+      if (staleStocks.length === 0 && staleCoins.length === 0) return;
+
+      // Mark all stale assets as "refreshing"
+      setRefreshingTickers(new Set([
+        ...staleStocks.map(s => s.ticker),
+        ...staleCoins.map(c => c.coin),
+      ]));
+
+      // Fetch stocks + crypto in parallel
+      const [stockResults, cryptoPrices] = await Promise.all([
+        Promise.allSettled(staleStocks.map(s => fetchStockQuote(s.ticker))),
+        fetchCryptoBatch(staleCoins.map(c => c.coin)),
+      ]);
 
       if (cancelled) return;
 
-      const now = new Date().toISOString();
       let didUpdate = false;
 
+      // Apply stock updates (keeps old values on failure)
       const updatedStocks = stocks.map(s => {
-        const idx = stale.findIndex(ss => ss.id === s.id);
+        const idx = staleStocks.findIndex(ss => ss.id === s.id);
         if (idx === -1) return s;
-        const r = results[idx];
-        if (r.status === 'fulfilled' && r.value !== null) {
+        const r = stockResults[idx];
+        if (r?.status === 'fulfilled' && r.value !== null) {
           didUpdate = true;
-          return { ...s, lastPrice: r.value, lastUpdated: now };
+          return { ...s, lastPrice: r.value.price, changePct: r.value.changePct, lastUpdated: now };
         }
-        return s; // keep stored price on failure
+        return s;
+      });
+
+      // Apply crypto updates (keeps old values on failure)
+      const updatedCrypto = cryptos.map(c => {
+        if (!staleCoins.find(sc => sc.id === c.id)) return c;
+        const data = cryptoPrices[c.coin];
+        if (data?.price != null) {
+          didUpdate = true;
+          return { ...c, lastPrice: data.price, change24h: data.changePct24h, lastUpdated: now };
+        }
+        return c;
       });
 
       if (didUpdate) {
-        const current = patrimonyRef.current;
-        onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks });
+        onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks, crypto: updatedCrypto });
       }
 
       setRefreshingTickers(new Set());
     };
 
-    refresh();
-    return () => { cancelled = true; };
+    runRefresh();
+    const interval = setInterval(runRefresh, CACHE_TTL);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [activeView]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
@@ -331,7 +363,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     if (key === 'bonds')      return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
     if (key === 'realestate') return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
     if (key === 'vehicles')   return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-    if (key === 'crypto')     return items.reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.price) || 0), 0);
+    if (key === 'crypto')     return items.reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.price) || 0), 0);
     return 0;
   };
 
@@ -799,10 +831,18 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                               const marketPrice  = parseFloat(item.lastPrice ?? item.avgPrice) || 0;
                               const marketVal    = (parseFloat(item.qty) || 0) * marketPrice;
                               const age          = formatAge(item.lastUpdated);
+                              const chg          = item.changePct != null ? parseFloat(item.changePct) : null;
                               return (
                                 <div key={item.id} className="pat-cat-item pat-stock-item">
                                   <div className="pat-cat-item-main">
-                                    <span className="pat-cat-item-name">{item.ticker}</span>
+                                    <div className="pat-stock-name-row">
+                                      <span className="pat-cat-item-name">{item.ticker}</span>
+                                      {chg != null && (
+                                        <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
+                                          {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
+                                        </span>
+                                      )}
+                                    </div>
                                     <span className="pat-stock-sub">
                                       {isRefreshing ? (
                                         <span className="pat-stock-loading">A atualizar cotação…</span>
@@ -823,6 +863,44 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                                 </div>
                               );
                             }
+                            if (key === 'crypto') {
+                              /* ── Enhanced crypto row ── */
+                              const isRefreshing = refreshingTickers.has(item.coin);
+                              const marketPrice  = parseFloat(item.lastPrice ?? item.price) || 0;
+                              const marketVal    = (parseFloat(item.qty) || 0) * marketPrice;
+                              const age          = formatAge(item.lastUpdated);
+                              const chg          = item.change24h != null ? parseFloat(item.change24h) : null;
+                              return (
+                                <div key={item.id} className="pat-cat-item pat-stock-item">
+                                  <div className="pat-cat-item-main">
+                                    <div className="pat-stock-name-row">
+                                      <span className="pat-cat-item-name">{item.coin}</span>
+                                      {chg != null && (
+                                        <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
+                                          {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="pat-stock-sub">
+                                      {isRefreshing ? (
+                                        <span className="pat-stock-loading">A atualizar preço…</span>
+                                      ) : item.lastPrice != null ? (
+                                        <>{parseFloat(item.lastPrice).toFixed(2)}€/moeda · {age}</>
+                                      ) : (
+                                        <span style={{ color: 'var(--text-tertiary)' }}>
+                                          preço base: {parseFloat(item.price || 0).toFixed(2)}€
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="pat-stock-right">
+                                    <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
+                                    <span className="pat-stock-qty">{item.qty} moedas</span>
+                                  </div>
+                                  <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
+                                </div>
+                              );
+                            }
                             /* ── Generic row for all other asset types ── */
                             return (
                               <div key={item.id} className="pat-cat-item">
@@ -835,9 +913,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                         </div>
                       )}
                       {/* API key hint — only on the stocks card */}
-                      {key === 'stocks' && items.length > 0 && !HAS_API_KEY && (
+                      {key === 'stocks' && items.length > 0 && !HAS_STOCK_KEY && (
                         <div className="pat-api-hint">
-                          ◎ Define VITE_FINNHUB_KEY para cotações em tempo real
+                          ◎ Define VITE_TWELVE_DATA_KEY para cotações em tempo real
                         </div>
                       )}
                       {items.length === 0 && <div className="pat-cat-empty">Sem registos · toca + para adicionar</div>}
