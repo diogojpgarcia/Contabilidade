@@ -449,21 +449,30 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   };
 
   const handleStockSearchInput = (val) => {
-    setPatrimonyField('ticker', val);
+    setPatrimonyField('ticker', val.toUpperCase());
     setPatrimonyField('name', '');
     clearTimeout(stockSearchTimerRef.current);
     if (!val.trim()) { clearStockSearch(); return; }
     setStockSearch(s => ({ ...s, loading: true, open: false }));
     stockSearchTimerRef.current = setTimeout(async () => {
       const results = await fetchStockSearch(val);
+      console.log('[AssetForm] stock search results for', val, '→', results);
       setStockSearch({ results, open: results.length > 0, loading: false });
     }, 320);
   };
 
+  const handleStockSelect = (result) => {
+    console.log('[AssetForm] STOCK SELECTED →', result);
+    setPatrimonyField('ticker', result.symbol);
+    setPatrimonyField('name',   result.name);
+    setStockSearch({ results: [], open: false, loading: false });
+  };
+
   const handlePatrimonyAdd = () => {
     if (!patrimonyFormType) return;
-    const id = Date.now().toString();
+    const id   = Date.now().toString();
     const item = { id, ...patrimonyForm };
+    console.log('[AssetForm] ASSET SAVED →', patrimonyFormType, item);
     const updated = { ...patrimony, [patrimonyFormType]: [...(patrimony[patrimonyFormType] || []), item] };
     onPatrimonyChange && onPatrimonyChange(updated);
     resetPatrimonyForm({});
@@ -497,39 +506,56 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   };
 
   const renderPatrimonyForm = () => {
-    const f   = patrimonyForm;                           // draft from useForm
-    const set = (k, v) => setPatrimonyField(k, v);      // onChange → local draft only
+    console.log('NEW ASSET FORM ACTIVE', patrimonyFormType);
+    const f   = patrimonyForm;
+    const set = (k, v) => setPatrimonyField(k, v);
     const cls = 'patrimony-input';
+
     switch (patrimonyFormType) {
+
+      /* ── Accounts ── */
       case 'accounts':
         return (<>
           <input className={cls} placeholder="Nome da conta"    value={f.name    || ''} onChange={e => set('name',    e.target.value)} />
           <input className={cls} placeholder="Banco (opcional)" value={f.bank    || ''} onChange={e => set('bank',    e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Saldo (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
         </>);
-      case 'stocks':
+
+      /* ── Stocks — search autocomplete (+ manual fallback) ── */
+      case 'stocks': {
+        const hasKey = HAS_STOCK_KEY;
         return (<>
+          {/* Field label row */}
+          <div className="pat-form-label-row">
+            <span className="pat-form-label">◭ Ação</span>
+            {hasKey
+              ? <span className="pat-form-badge new">Pesquisa inteligente</span>
+              : <span className="pat-form-badge manual">Entrada manual</span>}
+          </div>
+
+          {/* Ticker / search input */}
           <div className="pat-search-wrap">
             <input
               className={cls}
-              placeholder={HAS_STOCK_KEY ? 'Pesquisar ação (ex: Apple, AAPL)' : 'Ticker (ex: AAPL)'}
+              placeholder={hasKey ? 'Nome ou ticker — ex: Apple, AAPL' : 'Ticker — ex: AAPL'}
               value={f.ticker || ''}
-              onChange={e => HAS_STOCK_KEY ? handleStockSearchInput(e.target.value) : set('ticker', e.target.value)}
+              onChange={e => hasKey ? handleStockSearchInput(e.target.value) : set('ticker', e.target.value.toUpperCase())}
               onBlur={() => setTimeout(() => setStockSearch(s => ({ ...s, open: false })), 160)}
               autoComplete="off"
+              autoCapitalize="characters"
+              style={{ paddingLeft: hasKey ? '2.4rem' : undefined }}
             />
+            <span className="pat-search-icon">{hasKey ? '⊕' : '◭'}</span>
             {stockSearch.loading && <span className="pat-search-spinner">◌</span>}
+
+            {/* Dropdown results */}
             {stockSearch.open && stockSearch.results.length > 0 && (
               <div className="pat-search-dropdown">
                 {stockSearch.results.map(r => (
                   <div
                     key={r.symbol}
                     className="pat-search-result"
-                    onMouseDown={() => {
-                      set('ticker', r.symbol);
-                      set('name',   r.name);
-                      setStockSearch({ results: [], open: false, loading: false });
-                    }}
+                    onMouseDown={() => handleStockSelect(r)}
                   >
                     <span className="pat-search-sym">{r.symbol}</span>
                     <span className="pat-search-name">{r.name}</span>
@@ -538,43 +564,91 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                 ))}
               </div>
             )}
-            {f.name && !stockSearch.open && (
-              <div className="pat-search-selected">◭ {f.name}</div>
-            )}
           </div>
-          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"      value={f.qty      || ''} onChange={e => set('qty',      e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Preço médio (€)" value={f.avgPrice || ''} onChange={e => set('avgPrice', e.target.value)} />
+
+          {/* Confirmation chip when a stock is selected */}
+          {f.name && !stockSearch.open && (
+            <div className="pat-search-selected">◭ {f.name}</div>
+          )}
+
+          {/* Quantity + average price */}
+          <div className="pat-form-row">
+            <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"      value={f.qty      || ''} onChange={e => set('qty',      e.target.value)} />
+            <input className={cls} type="number" inputMode="decimal" placeholder="Preço médio (€)" value={f.avgPrice || ''} onChange={e => set('avgPrice', e.target.value)} />
+          </div>
+
+          {!hasKey && (
+            <div className="pat-form-hint">
+              ◎ Adiciona VITE_TWELVE_DATA_KEY para pesquisa automática de ações
+            </div>
+          )}
         </>);
+      }
+
+      /* ── Bonds ── */
       case 'bonds':
         return (<>
           <input className={cls} placeholder="Série (ex: E)"       value={f.series || ''} onChange={e => set('series', e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Valor actual (€)" value={f.value  || ''} onChange={e => set('value',  e.target.value)} />
           <input className={cls} type="date" value={f.date || ''} onChange={e => set('date', e.target.value)} />
         </>);
+
+      /* ── Real estate ── */
       case 'realestate':
         return (<>
           <input className={cls} placeholder="Descrição (ex: Apartamento Lisboa)" value={f.description || ''} onChange={e => set('description', e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Valor estimado (€)" value={f.value || ''} onChange={e => set('value', e.target.value)} />
         </>);
+
+      /* ── Vehicles ── */
       case 'vehicles':
         return (<>
           <input className={cls} placeholder="Descrição (ex: BMW X3 2020)" value={f.description || ''} onChange={e => set('description', e.target.value)} />
           <input className={cls} type="number" inputMode="decimal" placeholder="Valor estimado (€)" value={f.value || ''} onChange={e => set('value', e.target.value)} />
         </>);
+
+      /* ── Crypto — coin + exchange ── */
       case 'crypto':
         return (<>
-          <input className={cls} placeholder="Moeda (ex: BTC)"      value={f.coin  || ''} onChange={e => set('coin',  e.target.value.toUpperCase())} autoCapitalize="characters" />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"        value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Preço unitário (€)" value={f.price || ''} onChange={e => set('price', e.target.value)} />
-          <select className={`${cls} pat-exchange-select`} value={f.exchange || ''} onChange={e => set('exchange', e.target.value)}>
-            <option value="">Exchange (opcional)</option>
-            <option value="Binance">Binance</option>
-            <option value="Coinbase">Coinbase</option>
-            <option value="Kraken">Kraken</option>
-            <option value="XTB">XTB</option>
-            <option value="Outra">Outra</option>
-          </select>
+          <div className="pat-form-label-row">
+            <span className="pat-form-label">◉ Criptoativo</span>
+          </div>
+
+          <input
+            className={cls}
+            placeholder="Símbolo — ex: BTC, ETH"
+            value={f.coin || ''}
+            onChange={e => set('coin', e.target.value.toUpperCase())}
+            autoCapitalize="characters"
+            autoComplete="off"
+          />
+
+          <div className="pat-form-row">
+            <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"       value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
+            <input className={cls} type="number" inputMode="decimal" placeholder="Preço unitário €" value={f.price || ''} onChange={e => set('price', e.target.value)} />
+          </div>
+
+          {/* Exchange selector */}
+          <div className="pat-exchange-field">
+            <span className="pat-exchange-field-label">Exchange</span>
+            <div className="pat-exchange-chips">
+              {['Binance','Coinbase','Kraken','XTB','Outra'].map(ex => (
+                <button
+                  key={ex}
+                  type="button"
+                  className={`pat-exchange-chip${f.exchange === ex ? ' active' : ''}`}
+                  onClick={() => {
+                    console.log('[AssetForm] EXCHANGE SELECTED →', ex);
+                    set('exchange', ex);
+                  }}
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
         </>);
+
       default: return null;
     }
   };
