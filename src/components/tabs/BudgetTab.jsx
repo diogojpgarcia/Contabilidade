@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
-import { Card, Bubble, ProgressBar } from '../ui';
+import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
 import './BudgetTab.css';
 
@@ -34,6 +34,13 @@ const getCategoryIcon = (category) => {
   return CATEGORY_ICONS[label] || '◌';
 };
 
+/* 4-level budget status ─────────────────────────────────────────────────── */
+const STATUS = (pct) => {
+  if (pct >= 100) return { key: 'over',   label: 'Ultrapassado',    color: '#ef4444', grad: 'linear-gradient(90deg,#991b1b,#ef4444)', glow: 'rgba(239,68,68,0.35)'   };
+  if (pct >= 90)  return { key: 'danger', label: 'Quase no limite', color: '#f97316', grad: 'linear-gradient(90deg,#c2410c,#fb923c)', glow: 'rgba(249,115,22,0.28)'  };
+  if (pct >= 70)  return { key: 'warn',   label: 'Atenção',         color: '#F59E0B', grad: 'linear-gradient(90deg,#b45309,#fbbf24)', glow: 'rgba(245,158,11,0.25)'  };
+  return           { key: 'safe',   label: 'Seguro',            color: '#22c55e', grad: 'linear-gradient(90deg,#15803d,#4ade80)', glow: 'rgba(34,197,94,0.22)'   };
+};
 
 const CountUp = ({ value, decimals = 0 }) => {
   const [display, setDisplay] = useState(0);
@@ -58,31 +65,50 @@ const CountUp = ({ value, decimals = 0 }) => {
 };
 
 const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
-  const color      = CAT_COLORS[cat.label] || '#6B7280';
-  const colorClass = percent > 100 ? 'over' : percent >= 70 ? 'warn' : '';
+  const [hovered, setHovered] = useState(false);
+  const catColor   = CAT_COLORS[cat.label] || '#6B7280';
+  const st         = STATUS(percent);
   const willExceed = predicted !== null && limit > 0 && predicted > limit;
 
   return (
-    <div className="m-bcc">
+    <div
+      className="m-bcc"
+      style={hovered ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* top row */}
       <div className="m-bcc-row">
-        <Bubble color={color} icon={getCategoryIcon(cat.label)} size={40} radius="12px" />
+        <Bubble color={catColor} icon={getCategoryIcon(cat.label)} size={40} radius="12px" />
         <div className="m-bcc-info">
           <div className="m-bcc-name-row">
             <span className="m-bcc-name">{cat.label}</span>
-            {percent >= 100 && <span className="m-bcc-badge over">Ultrapassado</span>}
-            {percent >= 80 && percent < 100 && <span className="m-bcc-badge warn">Atenção</span>}
+            {limit > 0 && (
+              <span className="m-bcc-badge" style={{ color: st.color, background: st.glow }}>
+                {st.label}
+              </span>
+            )}
           </div>
           <div className="m-bcc-meta-row">
-            <span className={`m-bcc-spent ${colorClass}`}>
+            <span className="m-bcc-spent" style={limit > 0 && percent >= 70 ? { color: st.color } : {}}>
               {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
             </span>
             {delta > 0.5  && <span className="m-bcc-delta up">↑ +{delta.toFixed(0)}€</span>}
-            {delta < -0.5 && <span className="m-bcc-delta down">↓ {Math.abs(delta).toFixed(0)}€</span>}
+            {delta < -0.5 && <span className="m-bcc-delta down">↓ −{Math.abs(delta).toFixed(0)}€</span>}
           </div>
         </div>
-        <button className="m-bcc-edit" onClick={onEditToggle}>✏</button>
+        {/* percentage + edit button */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, marginLeft: 6, flexShrink: 0 }}>
+          {limit > 0 && (
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: st.color, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              {percent.toFixed(0)}%
+            </span>
+          )}
+          <button className="m-bcc-edit" onClick={onEditToggle}>✏</button>
+        </div>
       </div>
 
+      {/* inline limit editor */}
       {isEditing && (
         <div className="m-bcc-edit-row">
           <input
@@ -99,8 +125,21 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
         </div>
       )}
 
-      {limit > 0 && <ProgressBar percent={percent} animated={animated} height={8} />}
+      {/* gradient progress bar */}
+      {limit > 0 && (
+        <div className="m-bcc-bar-bg">
+          <div
+            className="m-bcc-bar-fill"
+            style={{
+              width:      animated ? `${Math.min(percent, 100)}%` : '0%',
+              background: st.grad,
+              boxShadow:  animated ? `0 0 10px ${st.glow}` : 'none',
+            }}
+          />
+        </div>
+      )}
 
+      {/* end-of-month prediction */}
       {predicted !== null && limit > 0 && (
         <div className={`m-bcc-prediction${willExceed ? ' exceed' : ''}`}>
           <span>Previsto: {predicted}€</span>
@@ -425,7 +464,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             {(() => {
               const remaining = totalBudget - totalSpent;
               const totalPct  = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
-              const barColor  = isTotalOver ? '#dc2626' : totalPct >= 70 ? '#F59E0B' : '#10B981';
+              const barColor  = STATUS(totalPct).grad;
               return (
                 <div className="m-bmc">
                   <span className="m-bmc-label">Orçamento mensal</span>
@@ -450,7 +489,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   </div>
                   {totalBudget > 0 && (
                     <div className="m-bmc-bar-bg">
-                      <div className="m-bmc-bar-fill" style={{ width: animated ? `${totalPct}%` : '0%', background: barColor }} />
+                      <div className="m-bmc-bar-fill" style={{ width: animated ? `${totalPct}%` : '0%', background: barColor, boxShadow: animated ? `0 0 12px ${STATUS(totalPct).glow}` : 'none' }} />
                     </div>
                   )}
                 </div>

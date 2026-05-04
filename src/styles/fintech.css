@@ -780,8 +780,8 @@
 .m-bmc-col-label { font-size: 0.7rem; color: var(--text-tertiary); font-weight: 500; }
 .m-bmc-sep { width: 1px; height: 28px; background: var(--separator); margin: 0 16px; }
 
-.m-bmc-bar-bg { height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; }
-.m-bmc-bar-fill { height: 100%; border-radius: 3px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+.m-bmc-bar-bg { height: 8px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden; }
+.m-bmc-bar-fill { height: 100%; border-radius: 6px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s ease; }
 
 /* Category cards */
 .m-bcc-list {
@@ -799,11 +799,10 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: transform 0.15s ease;
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
 }
 [data-theme="light"] .m-bcc { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
-.m-bcc:active { transform: scale(0.98); }
-@media (hover: hover) { .m-bcc:hover { transform: scale(0.99); } }
+.m-bcc:active { transform: scale(0.97); }
 
 .m-bcc-row { display: flex; align-items: center; gap: 12px; }
 .m-bcc-bubble {
@@ -840,6 +839,19 @@
   font-size: 0.68rem;
   font-weight: 700;
   color: #ef4444;
+}
+
+/* Gradient progress bar inside BudgetCategoryCard */
+.m-bcc-bar-bg {
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.m-bcc-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s ease;
 }
 
 /* Patrimony card override (uses ui-card base) */
