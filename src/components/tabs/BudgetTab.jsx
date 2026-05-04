@@ -558,37 +558,112 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         )}
 
         {/* ── PATRIMONY ── */}
-        {activeView === 'patrimony' && (
-          <>
-            <div className="m-patrimony-total">
-              <span className="m-patrimony-total-label">Património Total</span>
-              <span className="m-patrimony-total-val">
-                {totalPatrimony.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
-              </span>
-            </div>
-            {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
-              const items     = patrimony[key] || [];
-              const typeTotal = getPatrimonyTypeValue(key);
-              return (
-                <Card key={key} className="m-asset-type">
-                  <div className="m-asset-type-header">
-                    <Bubble color={color} icon={icon} size={36} />
-                    <span className="m-asset-type-name">{label}</span>
-                    <span className="m-asset-type-val">{typeTotal.toFixed(0)}€</span>
+        {activeView === 'patrimony' && (() => {
+          const fmt = (v) => v.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+          const typeValues = PATRIMONY_TYPES.map(t => ({ ...t, value: getPatrimonyTypeValue(t.key) }));
+
+          // Allocation percentages for insight + bars
+          const pctOf = (key) => totalPatrimony > 0 ? getPatrimonyTypeValue(key) / totalPatrimony : 0;
+          const insightMsg =
+            totalPatrimony === 0     ? 'Adiciona os teus ativos para começar a acompanhar o teu património.' :
+            pctOf('accounts') > 0.6  ? 'Grande parte do património está em liquidez. Considera diversificar.' :
+            pctOf('realestate') > 0.6? 'Património concentrado em imóveis — ativo ilíquido mas estável.' :
+            pctOf('crypto') > 0.25   ? 'Exposição significativa a criptoativos. Alto risco, alto potencial.' :
+            pctOf('stocks') > 0.4    ? 'Portfólio com forte componente em ações. Boa diversificação de crescimento.' :
+                                       'Portfólio distribuído por múltiplos tipos de ativos.';
+
+          return (
+            <>
+              {/* Hero card */}
+              <div className="pat-hero">
+                <div className="pat-hero-label">Património Total</div>
+                <div className="pat-hero-amount">{fmt(totalPatrimony)}<span className="pat-hero-eur">€</span></div>
+                {totalPatrimony > 0 && (
+                  <div className="pat-hero-chips">
+                    {typeValues.filter(t => t.value > 0).map(t => (
+                      <div key={t.key} className="pat-hero-chip">
+                        <span style={{ color: t.color, fontSize: '0.8rem' }}>{t.icon}</span>
+                        <span className="pat-hero-chip-val">{(pctOf(t.key) * 100).toFixed(0)}%</span>
+                      </div>
+                    ))}
                   </div>
-                  {items.map(item => (
-                    <div key={item.id} className="m-asset-item">
-                      <span className="m-asset-item-name">{renderPatrimonyItemLabel(key, item)}</span>
-                      <span className="m-asset-item-val">{renderPatrimonyItemValue(key, item)}</span>
-                      <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
+                )}
+              </div>
+
+              {/* Micro insight */}
+              <div className="pat-insight">
+                <span className="pat-insight-icon">◉</span>
+                <span className="pat-insight-msg">{insightMsg}</span>
+              </div>
+
+              {/* Allocation distribution */}
+              {totalPatrimony > 0 && (
+                <div className="pat-alloc">
+                  <div className="pat-alloc-title">Distribuição</div>
+                  {typeValues
+                    .filter(t => t.value > 0)
+                    .sort((a, b) => b.value - a.value)
+                    .map(t => {
+                      const pct = (t.value / totalPatrimony) * 100;
+                      return (
+                        <div key={t.key} className="pat-alloc-row">
+                          <div className="pat-alloc-info">
+                            <span className="pat-alloc-name">
+                              <span style={{ color: t.color, marginRight: 5 }}>{t.icon}</span>
+                              {t.label}
+                            </span>
+                            <span className="pat-alloc-right">
+                              <span className="pat-alloc-val">{fmt(t.value)}€</span>
+                              <span className="pat-alloc-pct">{pct.toFixed(0)}%</span>
+                            </span>
+                          </div>
+                          <div className="pat-alloc-bar-bg">
+                            <div className="pat-alloc-bar-fill" style={{ width: `${pct}%`, background: t.color }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Category cards */}
+              <div className="pat-cards">
+                {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
+                  const items     = patrimony[key] || [];
+                  const typeTotal = getPatrimonyTypeValue(key);
+                  return (
+                    <div key={key} className="pat-cat-card">
+                      <div className="pat-cat-header">
+                        <div className="pat-cat-icon-wrap" style={{ background: `${color}22` }}>
+                          <span style={{ color, fontSize: '1rem' }}>{icon}</span>
+                        </div>
+                        <div className="pat-cat-info">
+                          <span className="pat-cat-name">{label}</span>
+                          <span className="pat-cat-count">{items.length} {items.length === 1 ? 'ativo' : 'ativos'}</span>
+                        </div>
+                        <span className="pat-cat-total" style={typeTotal > 0 ? { color } : {}}>
+                          {typeTotal > 0 ? `${fmt(typeTotal)}€` : '—'}
+                        </span>
+                      </div>
+                      {items.length > 0 && (
+                        <div className="pat-cat-items">
+                          {items.map(item => (
+                            <div key={item.id} className="pat-cat-item">
+                              <span className="pat-cat-item-name">{renderPatrimonyItemLabel(key, item)}</span>
+                              <span className="pat-cat-item-val">{renderPatrimonyItemValue(key, item)}</span>
+                              <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {items.length === 0 && <div className="pat-cat-empty">Sem registos · toca + para adicionar</div>}
                     </div>
-                  ))}
-                  {items.length === 0 && <div className="m-asset-empty">Sem registos</div>}
-                </Card>
-              );
-            })}
-          </>
-        )}
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
 
         {/* FAB */}
         {(activeView === 'goals' || activeView === 'patrimony') && (
