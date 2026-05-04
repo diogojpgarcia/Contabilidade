@@ -452,11 +452,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     setPatrimonyField('ticker', val.toUpperCase());
     setPatrimonyField('name', '');
     clearTimeout(stockSearchTimerRef.current);
-    if (!val.trim()) { clearStockSearch(); return; }
+    if (!val.trim() || !HAS_STOCK_KEY) { clearStockSearch(); return; }
     setStockSearch(s => ({ ...s, loading: true, open: false }));
     stockSearchTimerRef.current = setTimeout(async () => {
       const results = await fetchStockSearch(val);
-      console.log('[AssetForm] stock search results for', val, '→', results);
+      console.log('[AssetForm] search →', results);
       setStockSearch({ results, open: results.length > 0, loading: false });
     }, 320);
   };
@@ -506,7 +506,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   };
 
   const renderPatrimonyForm = () => {
-    console.log('NEW ASSET FORM ACTIVE', patrimonyFormType);
+    console.log('[AssetForm] render', patrimonyFormType);
     const f   = patrimonyForm;
     const set = (k, v) => setPatrimonyField(k, v);
     const cls = 'patrimony-input';
@@ -521,68 +521,74 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           <input className={cls} type="number" inputMode="decimal" placeholder="Saldo (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
         </>);
 
-      /* ── Stocks — search autocomplete (+ manual fallback) ── */
+      /* ── Stocks ──────────────────────────────────────────────────────────── */
       case 'stocks': {
-        const hasKey = HAS_STOCK_KEY;
-        return (<>
-          {/* Field label row */}
-          <div className="pat-form-label-row">
-            <span className="pat-form-label">◭ Ação</span>
-            {hasKey
-              ? <span className="pat-form-badge new">Pesquisa inteligente</span>
-              : <span className="pat-form-badge manual">Entrada manual</span>}
-          </div>
-
-          {/* Ticker / search input */}
-          <div className="pat-search-wrap">
-            <input
-              className={cls}
-              placeholder={hasKey ? 'Nome ou ticker — ex: Apple, AAPL' : 'Ticker — ex: AAPL'}
-              value={f.ticker || ''}
-              onChange={e => hasKey ? handleStockSearchInput(e.target.value) : set('ticker', e.target.value.toUpperCase())}
-              onBlur={() => setTimeout(() => setStockSearch(s => ({ ...s, open: false })), 160)}
-              autoComplete="off"
-              autoCapitalize="characters"
-              style={{ paddingLeft: hasKey ? '2.4rem' : undefined }}
-            />
-            <span className="pat-search-icon">{hasKey ? '⊕' : '◭'}</span>
-            {stockSearch.loading && <span className="pat-search-spinner">◌</span>}
-
-            {/* Dropdown results */}
-            {stockSearch.open && stockSearch.results.length > 0 && (
-              <div className="pat-search-dropdown">
-                {stockSearch.results.map(r => (
-                  <div
-                    key={r.symbol}
-                    className="pat-search-result"
-                    onMouseDown={() => handleStockSelect(r)}
-                  >
-                    <span className="pat-search-sym">{r.symbol}</span>
-                    <span className="pat-search-name">{r.name}</span>
-                    {r.exchange && <span className="pat-search-exch">{r.exchange}</span>}
+        // "selected" = ticker is committed and dropdown is closed
+        const selected = !!f.ticker && !stockSearch.open && !stockSearch.loading;
+        return (
+          <div className="pat-stock-form">
+            {!selected ? (
+              /* Step 1: search */
+              <div className="pat-search-wrap">
+                <span className="pat-search-icon">⊕</span>
+                <input
+                  className={cls}
+                  style={{ paddingLeft: '2.4rem' }}
+                  placeholder="Procurar empresa ou ticker…"
+                  value={f.ticker || ''}
+                  onChange={e => handleStockSearchInput(e.target.value)}
+                  onBlur={() => setTimeout(() => setStockSearch(s => ({ ...s, open: false })), 160)}
+                  autoComplete="off"
+                  autoFocus
+                />
+                {stockSearch.loading && <span className="pat-search-spinner">◌</span>}
+                {stockSearch.open && stockSearch.results.length > 0 && (
+                  <div className="pat-search-dropdown">
+                    {stockSearch.results.map(r => (
+                      <div key={r.symbol} className="pat-search-result" onMouseDown={() => handleStockSelect(r)}>
+                        <span className="pat-search-sym">{r.symbol}</span>
+                        <span className="pat-search-name">{r.name}</span>
+                        {r.exchange && <span className="pat-search-exch">{r.exchange}</span>}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
+            ) : (
+              /* Step 2: stock confirmed — show chip + fields */
+              <>
+                <div className="pat-stock-chip">
+                  <div className="pat-stock-chip-body">
+                    <span className="pat-stock-chip-ticker">{f.ticker}</span>
+                    {f.name && <span className="pat-stock-chip-name">{f.name}</span>}
+                  </div>
+                  <button
+                    type="button"
+                    className="pat-stock-chip-clear"
+                    onClick={() => { set('ticker', ''); set('name', ''); set('qty', ''); set('avgPrice', ''); }}
+                  >×</button>
+                </div>
+                <input
+                  className={cls}
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Quantidade de ações"
+                  value={f.qty || ''}
+                  onChange={e => set('qty', e.target.value)}
+                  autoFocus
+                />
+                <input
+                  className={cls}
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Preço de compra por ação (€)"
+                  value={f.avgPrice || ''}
+                  onChange={e => set('avgPrice', e.target.value)}
+                />
+              </>
             )}
           </div>
-
-          {/* Confirmation chip when a stock is selected */}
-          {f.name && !stockSearch.open && (
-            <div className="pat-search-selected">◭ {f.name}</div>
-          )}
-
-          {/* Quantity + average price */}
-          <div className="pat-form-row">
-            <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"      value={f.qty      || ''} onChange={e => set('qty',      e.target.value)} />
-            <input className={cls} type="number" inputMode="decimal" placeholder="Preço médio (€)" value={f.avgPrice || ''} onChange={e => set('avgPrice', e.target.value)} />
-          </div>
-
-          {!hasKey && (
-            <div className="pat-form-hint">
-              ◎ Adiciona VITE_TWELVE_DATA_KEY para pesquisa automática de ações
-            </div>
-          )}
-        </>);
+        );
       }
 
       /* ── Bonds ── */
@@ -607,47 +613,61 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           <input className={cls} type="number" inputMode="decimal" placeholder="Valor estimado (€)" value={f.value || ''} onChange={e => set('value', e.target.value)} />
         </>);
 
-      /* ── Crypto — coin + exchange ── */
-      case 'crypto':
-        return (<>
-          <div className="pat-form-label-row">
-            <span className="pat-form-label">◉ Criptoativo</span>
-          </div>
-
-          <input
-            className={cls}
-            placeholder="Símbolo — ex: BTC, ETH"
-            value={f.coin || ''}
-            onChange={e => set('coin', e.target.value.toUpperCase())}
-            autoCapitalize="characters"
-            autoComplete="off"
-          />
-
-          <div className="pat-form-row">
-            <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade"       value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
-            <input className={cls} type="number" inputMode="decimal" placeholder="Preço unitário €" value={f.price || ''} onChange={e => set('price', e.target.value)} />
-          </div>
-
-          {/* Exchange selector */}
-          <div className="pat-exchange-field">
-            <span className="pat-exchange-field-label">Exchange</span>
-            <div className="pat-exchange-chips">
-              {['Binance','Coinbase','Kraken','XTB','Outra'].map(ex => (
+      /* ── Crypto ──────────────────────────────────────────────────────────── */
+      case 'crypto': {
+        const QUICK = ['BTC','ETH','SOL','BNB','XRP','ADA'];
+        return (
+          <div className="pat-crypto-form">
+            {/* Quick-pick chips */}
+            <div className="pat-coin-quick">
+              {QUICK.map(c => (
                 <button
-                  key={ex}
+                  key={c}
                   type="button"
-                  className={`pat-exchange-chip${f.exchange === ex ? ' active' : ''}`}
-                  onClick={() => {
-                    console.log('[AssetForm] EXCHANGE SELECTED →', ex);
-                    set('exchange', ex);
-                  }}
-                >
-                  {ex}
-                </button>
+                  className={`pat-coin-chip${f.coin === c ? ' active' : ''}`}
+                  onClick={() => set('coin', f.coin === c ? '' : c)}
+                >{c}</button>
               ))}
             </div>
+
+            {/* Free-form coin input */}
+            <input
+              className={cls}
+              placeholder="Outra moeda — ex: DOGE, MATIC"
+              value={f.coin || ''}
+              onChange={e => set('coin', e.target.value.toUpperCase())}
+              autoCapitalize="characters"
+              autoComplete="off"
+            />
+
+            {f.coin && (
+              <>
+                <div className="pat-form-row">
+                  <input className={cls} type="number" inputMode="decimal" placeholder="Quantidade" value={f.qty   || ''} onChange={e => set('qty',   e.target.value)} />
+                  <input className={cls} type="number" inputMode="decimal" placeholder="Preço (€)"  value={f.price || ''} onChange={e => set('price', e.target.value)} />
+                </div>
+
+                <div className="pat-exchange-field">
+                  <span className="pat-exchange-field-label">Exchange</span>
+                  <div className="pat-exchange-chips">
+                    {['Binance','Coinbase','Kraken','XTB','Outra'].map(ex => (
+                      <button
+                        key={ex}
+                        type="button"
+                        className={`pat-exchange-chip${f.exchange === ex ? ' active' : ''}`}
+                        onClick={() => {
+                          console.log('[AssetForm] exchange →', ex);
+                          set('exchange', f.exchange === ex ? '' : ex);
+                        }}
+                      >{ex}</button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-        </>);
+        );
+      }
 
       default: return null;
     }

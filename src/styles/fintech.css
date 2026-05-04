@@ -1197,47 +1197,109 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Asset form shared helpers ───────────────────────────────────────────── */
-.pat-form-label-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: -4px;  /* pull closer to first field */
-}
-.pat-form-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.02em;
-}
-.pat-form-badge {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-.pat-form-badge.new  { color: #4ade80; background: rgba(74,222,128,0.12); }
-.pat-form-badge.manual { color: #94a3b8; background: rgba(148,163,184,0.1); }
-[data-theme="light"] .pat-form-badge.new { color: #15803d; }
+/* ── Asset form layout helpers ───────────────────────────────────────────── */
 
 /* Two inputs side-by-side */
 .pat-form-row {
   display: flex;
   gap: 8px;
 }
-.pat-form-row .patrimony-input { flex: 1; }
+.pat-form-row .patrimony-input { flex: 1; min-width: 0; }
 
-/* Small hint below the form */
-.pat-form-hint {
-  font-size: 0.68rem;
-  color: #92400e;
-  background: rgba(245,158,11,0.07);
-  border: 0.5px solid rgba(245,158,11,0.15);
-  border-radius: 8px;
-  padding: 7px 10px;
+/* Stock form container */
+.pat-stock-form,
+.pat-crypto-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
+
+/* ── Selected stock chip ─────────────────────────────────────────────────── */
+.pat-stock-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(5,150,105,0.1);
+  border: 1.5px solid rgba(5,150,105,0.3);
+  border-radius: 12px;
+  animation: pat-chip-in 0.2s ease-out both;
+}
+@keyframes pat-chip-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+[data-theme="light"] .pat-stock-chip {
+  background: rgba(5,150,105,0.06);
+  border-color: rgba(5,150,105,0.25);
+}
+.pat-stock-chip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pat-stock-chip-ticker {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #34d399;
+  letter-spacing: 0.04em;
+}
+[data-theme="light"] .pat-stock-chip-ticker { color: #059669; }
+.pat-stock-chip-name {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.pat-stock-chip-clear {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-tertiary);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.pat-stock-chip-clear:hover { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
+[data-theme="light"] .pat-stock-chip-clear { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.04); }
+
+/* ── Crypto quick-pick coin chips ────────────────────────────────────────── */
+.pat-coin-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pat-coin-chip {
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pat-coin-chip:hover { background: rgba(255,255,255,0.08); }
+.pat-coin-chip.active {
+  border-color: #F59E0B;
+  background: rgba(245,158,11,0.14);
+  color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245,158,11,0.2);
+}
+[data-theme="light"] .pat-coin-chip { border-color: rgba(0,0,0,0.1); background: rgba(0,0,0,0.03); }
+[data-theme="light"] .pat-coin-chip.active { border-color: #d97706; background: rgba(245,158,11,0.08); color: #b45309; }
 
 /* ── Stock search autocomplete ───────────────────────────────────────────── */
 .pat-search-wrap {
