@@ -4,7 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
-import { fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory, fetchCryptoHistoryBatch, getPrice, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
+import { fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory, fetchCryptoHistoryBatch, fetchStockSearch, getPrice, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
 
 /* ─── Sparkline SVG ─────────────────────────────────────────────────────────
    Pure SVG mini line chart from an array of prices (oldest→newest).
@@ -341,14 +341,37 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [cryptoSearchQuery,   setCryptoSearchQuery]   = useState('');   // live filter text for crypto
   const [cryptoConfirmed,     setCryptoConfirmed]     = useState(false); // true only after explicit click/Enter
   const [editingAssetId,      setEditingAssetId]      = useState(null);  // null = add, string = editing existing
+  const [stockApiResults,    setStockApiResults]    = useState([]);     // results from Twelve Data /symbol_search
+  const [stockApiLoading,    setStockApiLoading]    = useState(false);  // true while debounced fetch is in-flight
 
   // Refs so the stock-price effect can read latest values without re-triggering
-  const patrimonyRef        = useRef(externalPatrimony);
+  const patrimonyRef         = useRef(externalPatrimony);
   const onPatrimonyChangeRef = useRef(onPatrimonyChange);
+  const stockSearchTimerRef  = useRef(null);
   useEffect(() => { patrimonyRef.current = externalPatrimony; },  [externalPatrimony]);
   useEffect(() => { onPatrimonyChangeRef.current = onPatrimonyChange; }, [onPatrimonyChange]);
 
   useEffect(() => { setSelectedMonth(currentMonth); }, [currentMonth]);
+
+  // ── Debounced stock symbol search (Twelve Data /symbol_search) ─────────────
+  // Fires 350 ms after the user stops typing; deduplicates against STOCK_LIST.
+  // When no API key is set, fetchStockSearch returns [] and local list is used.
+  useEffect(() => {
+    if (stockSearchTimerRef.current) clearTimeout(stockSearchTimerRef.current);
+    const q = stockSearchQuery.trim();
+    if (q.length < 2) {
+      setStockApiResults([]);
+      setStockApiLoading(false);
+      return;
+    }
+    setStockApiLoading(true);
+    stockSearchTimerRef.current = setTimeout(async () => {
+      const results = await fetchStockSearch(q);
+      setStockApiResults(results);
+      setStockApiLoading(false);
+    }, 350);
+    return () => { if (stockSearchTimerRef.current) clearTimeout(stockSearchTimerRef.current); };
+  }, [stockSearchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync local draft whenever App-level budgets change (initial load or external update)
   useEffect(() => { resetBudgets(externalBudgets); }, [externalBudgets]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -570,6 +593,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const clearAssetForms = () => {
     setStockSearchQuery('');
     setStockConfirmed(false);
+    setStockApiResults([]);
+    setStockApiLoading(false);
     setCryptoSearchQuery('');
     setCryptoConfirmed(false);
   };
@@ -675,13 +700,19 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Stocks ──────────────────────────────────────────────────────────── */
       case 'stocks': {
-        const q           = stockSearchQuery.trim().toUpperCase();
-        const suggestions = q.length >= 1
+        const q = stockSearchQuery.trim().toUpperCase();
+        // Local matches — instant, no network needed
+        const localMatches = q.length >= 1
           ? STOCK_LIST.filter(s =>
               s.symbol.includes(q) ||
               s.name.toLowerCase().includes(stockSearchQuery.trim().toLowerCase())
-            ).slice(0, 7)
+            )
           : [];
+        // API-only results: symbols not already covered by local list
+        const apiOnly = stockApiResults.filter(r => !localMatches.some(l => l.symbol === r.symbol));
+        // Merged list: local first (faster), then API extras — max 8
+        const suggestions = [...localMatches, ...apiOnly].slice(0, 8);
+        const showDropdown = q.length >= 1 && (suggestions.length > 0 || stockApiLoading);
 
         return (
           <div className="pat-asset-form">
@@ -713,15 +744,19 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   autoComplete="off"
                   autoFocus
                 />
-                {suggestions.length > 0 && (
+                {showDropdown && (
                   <div className="pat-search-dropdown">
                     {suggestions.map(r => (
                       <div key={r.symbol} className="pat-search-result"
                         onMouseDown={e => { e.preventDefault(); handleStockSelect(r); }}>
                         <span className="pat-search-sym">{r.symbol}</span>
                         <span className="pat-search-name">{r.name}</span>
+                        {r.exchange && <span className="pat-search-exch">{r.exchange}</span>}
                       </div>
                     ))}
+                    {stockApiLoading && (
+                      <div className="pat-search-loading">A procurar…</div>
+                    )}
                   </div>
                 )}
               </div>

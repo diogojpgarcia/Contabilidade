@@ -1403,6 +1403,12 @@
   flex-shrink: 0;
 }
 [data-theme="light"] .pat-search-exch { background: rgba(0,0,0,0.06); }
+.pat-search-loading {
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
 .pat-search-selected {
   margin-top: 4px;
   padding: 5px 10px;
