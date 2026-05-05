@@ -1,0 +1,349 @@
+/* ── CategoryManager — bottom-sheet content ─────────────────────────────────
+   Renders inside ProfileTab's <Overlay><div class="modal-content">.
+   modal-content already provides: bg, border-radius 24px top, max-width 480px.
+   This file styles everything inside that container.
+────────────────────────────────────────────────────────────────────────────── */
+
+.cm-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 88vh;
+  overflow: hidden;
+}
+
+/* ── Handle ── */
+.cm-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: var(--separator, rgba(255,255,255,0.15));
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+/* ── Header ── */
+.cm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  flex-shrink: 0;
+}
+
+.cm-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  letter-spacing: -0.01em;
+}
+
+.cm-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-tertiary, rgba(255,255,255,0.08));
+  border: none;
+  color: var(--text-secondary, rgba(255,255,255,0.6));
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.cm-close:hover { background: var(--bg-hover, rgba(255,255,255,0.14)); }
+
+/* ── Tabs ── */
+.cm-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 12px;
+  flex-shrink: 0;
+}
+
+.cm-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--separator, rgba(255,255,255,0.1));
+  background: transparent;
+  color: var(--text-secondary, rgba(255,255,255,0.5));
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.cm-tab--on {
+  background: var(--accent, #3b82f6);
+  border-color: transparent;
+  color: #fff;
+}
+
+.cm-tab-count {
+  background: rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 1px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+.cm-tab--on .cm-tab-count { background: rgba(255,255,255,0.3); }
+
+/* ── List ── */
+.cm-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 80px;
+  max-height: 42vh;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cm-empty {
+  text-align: center;
+  color: var(--text-tertiary, rgba(255,255,255,0.35));
+  font-size: 0.8rem;
+  padding: 24px 0;
+  font-style: italic;
+}
+
+/* ── Category row ── */
+.cm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  background: var(--bg-tertiary, rgba(255,255,255,0.05));
+  transition: background 0.12s;
+}
+.cm-row:hover { background: var(--bg-hover, rgba(255,255,255,0.08)); }
+
+.cm-row-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cm-row-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.cm-row-label {
+  flex: 1;
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: var(--text-primary, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-row-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cm-edit-btn,
+.cm-del-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  transition: opacity 0.12s, background 0.12s;
+}
+.cm-edit-btn:hover { opacity: 1; background: rgba(59,130,246,0.18); }
+.cm-del-btn:hover  { opacity: 1; background: rgba(239,68,68,0.18); }
+
+/* ── Edit row ── */
+.cm-row--edit {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--bg-secondary, rgba(255,255,255,0.08));
+  border: 1px solid var(--accent, #3b82f6);
+}
+
+.cm-edit-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cm-edit-input {
+  flex: 1;
+  background: var(--bg-tertiary, rgba(255,255,255,0.07));
+  border: 1px solid var(--separator, rgba(255,255,255,0.12));
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  color: var(--text-primary, #fff);
+  outline: none;
+  min-width: 0;
+}
+.cm-edit-input:focus { border-color: var(--accent, #3b82f6); }
+
+/* ── Shared swatch / icon buttons ── */
+.cm-swatch-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.25);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.cm-swatch-btn:hover { transform: scale(1.12); border-color: rgba(255,255,255,0.6); }
+
+.cm-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--separator, rgba(255,255,255,0.12));
+  background: var(--bg-tertiary, rgba(255,255,255,0.06));
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s;
+  line-height: 1;
+}
+.cm-icon-btn:hover { background: rgba(255,255,255,0.12); }
+
+/* ── Save / Cancel ── */
+.cm-save-btn,
+.cm-cancel-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.cm-save-btn   { background: var(--accent, #3b82f6); color: #fff; }
+.cm-cancel-btn { background: var(--bg-tertiary, rgba(255,255,255,0.07)); color: var(--text-secondary, rgba(255,255,255,0.6)); }
+.cm-save-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* ── Colour / icon pickers ── */
+.cm-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+
+.cm-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+.cm-dot:hover     { transform: scale(1.15); }
+.cm-dot--on       { border-color: #fff; transform: scale(1.18); }
+
+.cm-picker-row--icons { gap: 4px; }
+
+.cm-emoji-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--bg-tertiary, rgba(255,255,255,0.06));
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, border-color 0.1s;
+  line-height: 1;
+}
+.cm-emoji-btn:hover  { background: rgba(255,255,255,0.12); }
+.cm-emoji-btn--on    { border-color: var(--accent, #3b82f6); background: rgba(59,130,246,0.18); }
+
+/* ── Add section ── */
+.cm-add {
+  padding: 12px 12px 20px;
+  border-top: 1px solid var(--separator, rgba(255,255,255,0.08));
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cm-add-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary, rgba(255,255,255,0.35));
+  margin: 0;
+}
+
+.cm-add-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cm-add-input {
+  flex: 1;
+  background: var(--bg-tertiary, rgba(255,255,255,0.07));
+  border: 1px solid var(--separator, rgba(255,255,255,0.12));
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  color: var(--text-primary, #fff);
+  outline: none;
+  min-width: 0;
+}
+.cm-add-input::placeholder { color: var(--text-tertiary, rgba(255,255,255,0.3)); }
+.cm-add-input:focus { border-color: var(--accent, #3b82f6); }
+
+.cm-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.cm-add-btn:hover:not(:disabled) { transform: scale(1.06); }
+.cm-add-btn:disabled { opacity: 0.35; cursor: default; }
