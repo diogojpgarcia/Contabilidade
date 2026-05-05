@@ -343,6 +343,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [editingAssetId,      setEditingAssetId]      = useState(null);  // null = add, string = editing existing
   const [stockApiResults,    setStockApiResults]    = useState([]);     // results from Twelve Data /symbol_search
   const [stockApiLoading,    setStockApiLoading]    = useState(false);  // true while debounced fetch is in-flight
+  // Local price cache — keyed by ticker/coin symbol.
+  // Writing here always triggers a re-render inside BudgetTab without
+  // depending on the App callback → DB save → prop update chain.
+  // Shape: { [sym]: { price: number, changePct?: number, changePct24h?: number, lastUpdated: string } }
+  const [livePrices,         setLivePrices]         = useState({});
 
   // Refs so the stock-price effect can read latest values without re-triggering
   const patrimonyRef         = useRef(externalPatrimony);
@@ -422,34 +427,52 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       if (cancelled) return;
 
-      let didUpdate = false;
+      // Build a flat map of all successful price results
+      // { [sym]: { price, changePct?, changePct24h?, lastUpdated } }
+      const priceUpdates = {};
 
-      // Apply stock updates (keeps old values on failure)
-      const updatedStocks = stocks.map(s => {
-        const idx = staleStocks.findIndex(ss => ss.id === s.id);
-        if (idx === -1) return s;
+      staleStocks.forEach((s, idx) => {
         const r = stockResults[idx];
         if (r?.status === 'fulfilled' && r.value !== null) {
-          didUpdate = true;
-          return { ...s, lastPrice: r.value.price, changePct: r.value.changePct, lastUpdated: now };
+          priceUpdates[s.ticker] = {
+            price:      r.value.price,
+            changePct:  r.value.changePct ?? null,
+            lastUpdated: now,
+          };
         }
-        return s;
       });
 
-      // Apply crypto updates (keeps old values on failure)
-      const updatedCrypto = cryptos.map(c => {
-        if (!staleCoins.find(sc => sc.id === c.id)) return c;
+      staleCoins.forEach(c => {
         const data = cryptoPrices[c.coin];
         if (data?.price != null) {
-          didUpdate = true;
-          return { ...c, lastPrice: data.price, change24h: data.changePct24h, lastUpdated: now };
+          priceUpdates[c.coin] = {
+            price:        data.price,
+            changePct24h: data.changePct24h ?? null,
+            lastUpdated:  now,
+          };
         }
-        return c;
       });
 
-      if (didUpdate) {
-        onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks, crypto: updatedCrypto });
+      console.log('[BudgetTab] PRICES STATE:', priceUpdates);
+
+      if (Object.keys(priceUpdates).length === 0) {
+        setRefreshingTickers(new Set());
+        return;
       }
+
+      // ① Update local React state FIRST — guaranteed re-render on all devices
+      setLivePrices(prev => ({ ...prev, ...priceUpdates }));
+
+      // ② Persist back to parent (DB save) — secondary, failures are silent
+      const updatedStocks = stocks.map(s => {
+        const p = priceUpdates[s.ticker];
+        return p ? { ...s, lastPrice: p.price, changePct: p.changePct, lastUpdated: now } : s;
+      });
+      const updatedCrypto = cryptos.map(c => {
+        const p = priceUpdates[c.coin];
+        return p ? { ...c, lastPrice: p.price, change24h: p.changePct24h, lastUpdated: now } : c;
+      });
+      onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks, crypto: updatedCrypto });
 
       setRefreshingTickers(new Set());
     };
@@ -573,11 +596,17 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
     if (key === 'accounts')   return items.reduce((s, x) => s + (parseFloat(x.balance) || 0), 0);
-    if (key === 'stocks')     return items.reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.avgPrice) || 0), 0);
+    if (key === 'stocks')     return items.reduce((s, x) => {
+      const price = livePrices[x.ticker]?.price ?? parseFloat(x.lastPrice ?? x.avgPrice) ?? 0;
+      return s + (parseFloat(x.qty) || 0) * price;
+    }, 0);
     if (key === 'bonds')      return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
     if (key === 'realestate') return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
     if (key === 'vehicles')   return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-    if (key === 'crypto')     return items.reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.price) || 0), 0);
+    if (key === 'crypto')     return items.reduce((s, x) => {
+      const price = livePrices[x.coin]?.price ?? parseFloat(x.lastPrice ?? x.price) ?? 0;
+      return s + (parseFloat(x.qty) || 0) * price;
+    }, 0);
     return 0;
   };
 
@@ -1127,19 +1156,26 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                                        'Portfólio distribuído por múltiplos tipos de ativos.';
 
           // ── Asset alerts (|change| ≥ 5%) ──────────────────────────────────
+          // Prefer livePrices change data (updated this session) over persisted values
           const assetAlerts = [
             ...(patrimony.stocks ?? [])
-              .filter(s => s.changePct != null && Math.abs(parseFloat(s.changePct)) >= 5)
-              .map(s    => ({ sym: s.ticker, pct: parseFloat(s.changePct),  label: 'hoje' })),
+              .map(s => ({ sym: s.ticker, pct: livePrices[s.ticker]?.changePct  ?? (s.changePct  != null ? parseFloat(s.changePct)  : null), label: 'hoje' }))
+              .filter(x => x.pct != null && Math.abs(x.pct) >= 5),
             ...(patrimony.crypto ?? [])
-              .filter(c => c.change24h != null && Math.abs(parseFloat(c.change24h)) >= 5)
-              .map(c    => ({ sym: c.coin,   pct: parseFloat(c.change24h), label: '24h'  })),
+              .map(c => ({ sym: c.coin,   pct: livePrices[c.coin]?.changePct24h ?? (c.change24h  != null ? parseFloat(c.change24h)  : null), label: '24h'  }))
+              .filter(x => x.pct != null && Math.abs(x.pct) >= 5),
           ];
 
           // ── Impact bar scale: normalize by largest single-asset impact ────
           const allLiveVals = [
-            ...(patrimony.stocks ?? []).map(s => (parseFloat(s.qty)||0) * (parseFloat(s.lastPrice ?? s.avgPrice)||0)),
-            ...(patrimony.crypto ?? []).map(c => (parseFloat(c.qty)||0) * (parseFloat(c.lastPrice ?? c.price)||0)),
+            ...(patrimony.stocks ?? []).map(s => {
+              const price = livePrices[s.ticker]?.price ?? parseFloat(s.lastPrice ?? s.avgPrice) ?? 0;
+              return (parseFloat(s.qty) || 0) * price;
+            }),
+            ...(patrimony.crypto ?? []).map(c => {
+              const price = livePrices[c.coin]?.price ?? parseFloat(c.lastPrice ?? c.price) ?? 0;
+              return (parseFloat(c.qty) || 0) * price;
+            }),
           ];
           const maxSingleImpact = totalPatrimony > 0
             ? Math.max(...allLiveVals.map(v => (v / totalPatrimony) * 100), 0.01)
@@ -1168,14 +1204,22 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             const isStock      = assetKey === 'stocks';
             const sym          = isStock ? item.ticker : item.coin;
             const isRefreshing = refreshingTickers.has(sym);
-            const marketPrice  = isStock
-              ? parseFloat(item.lastPrice ?? item.avgPrice) || 0
-              : parseFloat(item.lastPrice ?? item.price)    || 0;
-            const marketVal    = (parseFloat(item.qty) || 0) * marketPrice;
-            const age          = formatAge(item.lastUpdated);
-            const chg          = isStock
-              ? (item.changePct != null ? parseFloat(item.changePct)  : null)
-              : (item.change24h != null ? parseFloat(item.change24h)  : null);
+
+            // livePrices (in-session fetches) take precedence over persisted item values
+            const live        = livePrices[sym];
+            const marketPrice = live?.price
+              ?? (isStock
+                  ? parseFloat(item.lastPrice ?? item.avgPrice) || 0
+                  : parseFloat(item.lastPrice ?? item.price)    || 0);
+            const marketVal   = (parseFloat(item.qty) || 0) * marketPrice;
+            const age         = formatAge(live?.lastUpdated ?? item.lastUpdated);
+            const chg         = live
+              ? (isStock ? live.changePct ?? null : live.changePct24h ?? null)
+              : (isStock
+                  ? (item.changePct != null ? parseFloat(item.changePct) : null)
+                  : (item.change24h != null ? parseFloat(item.change24h) : null));
+            // hasPrice: true if we have any price from any source
+            const hasPrice    = live?.price != null || item.lastPrice != null;
             const sparkPrices  = assetHistory[sym];
             const sparkUp      = sparkPrices?.length >= 2
               ? sparkPrices[sparkPrices.length - 1] >= sparkPrices[0]
@@ -1208,8 +1252,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       <span className="pat-stock-sub">
                         {isRefreshing ? (
                           <span className="pat-stock-loading">A atualizar…</span>
-                        ) : item.lastPrice != null ? (
-                          <>{parseFloat(item.lastPrice).toFixed(2)}€/{priceLabel} · {age}</>
+                        ) : hasPrice ? (
+                          <>{marketPrice.toFixed(2)}€/{priceLabel} · {age}</>
                         ) : (
                           <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
                         )}
