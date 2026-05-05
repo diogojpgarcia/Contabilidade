@@ -983,6 +983,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           transaction={pickerTx}
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
+          categories={categories}
         />
       )}
     </div>

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
 import Overlay from './Overlay';
 import './CategoryPicker.css';
 
@@ -8,10 +7,11 @@ import './CategoryPicker.css';
  *
  * Props:
  *   transaction  { id, type, category, description }
+ *   categories   { expense: [...], income: [...] }  ← REQUIRED (App global state)
  *   onSelect(newCategoryLabel)
  *   onClose()
  */
-const CategoryPicker = ({ transaction, onSelect, onClose, categories: categoriesProp }) => {
+const CategoryPicker = ({ transaction, onSelect, onClose, categories }) => {
   const [search, setSearch] = useState('');
   const inputRef = useRef(null);
 
@@ -21,15 +21,17 @@ const CategoryPicker = ({ transaction, onSelect, onClose, categories: categories
     return () => clearTimeout(t);
   }, []);
 
-  // Use the App-level categories prop when available; fall back to static import.
-  // This ensures custom categories added in Profile appear here too.
-  const categories = categoriesProp
-    ? (transaction.type === 'income' ? categoriesProp.income : categoriesProp.expense)
-    : (transaction.type === 'income' ? CATEGORIES_INCOME : CATEGORIES_EXPENSE);
+  // Enforce single source of truth — no fallback allowed.
+  if (!categories) {
+    console.error('[CategoryPicker] categories prop is required but was not passed. Check the caller.');
+    return null;
+  }
 
-  console.log('[CategoryPicker] source:', categoriesProp ? 'prop' : 'fallback', '| count:', categories.length);
+  const list = transaction.type === 'income' ? categories.income : categories.expense;
 
-  const filtered = categories.filter(c =>
+  console.log('[CategoryPicker] source: prop | count:', list.length);
+
+  const filtered = list.filter(c =>
     c.label.toLowerCase().includes(search.toLowerCase())
   );
 
