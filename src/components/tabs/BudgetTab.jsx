@@ -5,6 +5,7 @@ import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
 import { fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory, fetchCryptoHistoryBatch, fetchStockSearch, getPrice, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
+import { searchAssets } from '../../utils/searchAssets';
 
 /* ─── Sparkline SVG ─────────────────────────────────────────────────────────
    Pure SVG mini line chart from an array of prices (oldest→newest).
@@ -216,122 +217,8 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
   );
 };
 
-/* ─── Internal stock list (no API needed) ───────────────────────────────────
-   ~50 popular stocks + UCITS ETFs. Filtered locally while the user types.   */
-const STOCK_LIST = [
-  // US mega-cap
-  { symbol: 'AAPL',  name: 'Apple Inc.' },
-  { symbol: 'MSFT',  name: 'Microsoft Corporation' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.' },
-  { symbol: 'AMZN',  name: 'Amazon.com Inc.' },
-  { symbol: 'NVDA',  name: 'NVIDIA Corporation' },
-  { symbol: 'META',  name: 'Meta Platforms Inc.' },
-  { symbol: 'TSLA',  name: 'Tesla Inc.' },
-  { symbol: 'BRK/B', name: 'Berkshire Hathaway B' },
-  { symbol: 'JPM',   name: 'JPMorgan Chase & Co.' },
-  { symbol: 'V',     name: 'Visa Inc.' },
-  { symbol: 'MA',    name: 'Mastercard Inc.' },
-  { symbol: 'UNH',   name: 'UnitedHealth Group' },
-  { symbol: 'JNJ',   name: 'Johnson & Johnson' },
-  { symbol: 'XOM',   name: 'Exxon Mobil Corp.' },
-  { symbol: 'PG',    name: 'Procter & Gamble Co.' },
-  { symbol: 'HD',    name: 'Home Depot Inc.' },
-  { symbol: 'COST',  name: 'Costco Wholesale Corp.' },
-  { symbol: 'ADBE',  name: 'Adobe Inc.' },
-  { symbol: 'CRM',   name: 'Salesforce Inc.' },
-  { symbol: 'NFLX',  name: 'Netflix Inc.' },
-  { symbol: 'AMD',   name: 'Advanced Micro Devices' },
-  { symbol: 'INTC',  name: 'Intel Corporation' },
-  { symbol: 'DIS',   name: 'Walt Disney Co.' },
-  { symbol: 'PYPL',  name: 'PayPal Holdings Inc.' },
-  { symbol: 'COIN',  name: 'Coinbase Global Inc.' },
-  // European
-  { symbol: 'ASML',  name: 'ASML Holding N.V.' },
-  { symbol: 'SAP',   name: 'SAP SE' },
-  { symbol: 'NVO',   name: 'Novo Nordisk A/S' },
-  { symbol: 'EDP',   name: 'EDP — Energias de Portugal' },
-  { symbol: 'GALP',  name: 'Galp Energia SGPS' },
-  { symbol: 'BCP',   name: 'Millennium BCP' },
-  { symbol: 'JMT',   name: 'Jerónimo Martins SGPS' },
-  { symbol: 'SON',   name: 'Sonae SGPS' },
-  { symbol: 'NOS',   name: 'NOS SGPS' },
-  { symbol: 'EGL',   name: 'Greenvolt — Energias Renováveis' },
-  // US ETFs
-  { symbol: 'SPY',   name: 'S&P 500 ETF (SPDR)' },
-  { symbol: 'QQQ',   name: 'Nasdaq-100 ETF (Invesco)' },
-  { symbol: 'VOO',   name: 'Vanguard S&P 500 ETF' },
-  { symbol: 'VTI',   name: 'Vanguard Total Market ETF' },
-  { symbol: 'GLD',   name: 'SPDR Gold Shares ETF' },
-  { symbol: 'TLT',   name: 'iShares 20+ Year Treasury ETF' },
-  { symbol: 'VGT',   name: 'Vanguard Info Technology ETF' },
-  { symbol: 'ARKK',  name: 'ARK Innovation ETF' },
-  // UCITS ETFs (popular in PT/EU)
-  { symbol: 'VWCE',  name: 'Vanguard FTSE All-World UCITS ETF' },
-  { symbol: 'IWDA',  name: 'iShares Core MSCI World UCITS ETF' },
-  { symbol: 'CSPX',  name: 'iShares Core S&P 500 UCITS ETF' },
-  { symbol: 'VUSA',  name: 'Vanguard S&P 500 UCITS ETF' },
-  { symbol: 'XDWD',  name: 'Xtrackers MSCI World Swap UCITS ETF' },
-  { symbol: 'SXR8',  name: 'iShares Core S&P 500 (Acc) EUR' },
-  { symbol: 'EUNL',  name: 'iShares Core MSCI World UCITS (EUR)' },
-  { symbol: 'EXSA',  name: 'iShares Core EURO STOXX 50 UCITS ETF' },
-];
-
-/* ─── Internal crypto list (no API needed) ──────────────────────────────────
-   ~50 popular coins. Filtered locally while the user types.                  */
-const CRYPTO_LIST = [
-  // Layer 1
-  { symbol: 'BTC',    name: 'Bitcoin' },
-  { symbol: 'ETH',    name: 'Ethereum' },
-  { symbol: 'BNB',    name: 'BNB (Binance)' },
-  { symbol: 'SOL',    name: 'Solana' },
-  { symbol: 'ADA',    name: 'Cardano' },
-  { symbol: 'AVAX',   name: 'Avalanche' },
-  { symbol: 'DOT',    name: 'Polkadot' },
-  { symbol: 'NEAR',   name: 'NEAR Protocol' },
-  { symbol: 'ICP',    name: 'Internet Computer' },
-  { symbol: 'APT',    name: 'Aptos' },
-  { symbol: 'SUI',    name: 'Sui' },
-  { symbol: 'ALGO',   name: 'Algorand' },
-  { symbol: 'VET',    name: 'VeChain' },
-  { symbol: 'TRX',    name: 'TRON' },
-  { symbol: 'TON',    name: 'Toncoin' },
-  { symbol: 'XLM',    name: 'Stellar' },
-  { symbol: 'XRP',    name: 'XRP (Ripple)' },
-  { symbol: 'LTC',    name: 'Litecoin' },
-  { symbol: 'BCH',    name: 'Bitcoin Cash' },
-  { symbol: 'ETC',    name: 'Ethereum Classic' },
-  { symbol: 'XMR',    name: 'Monero' },
-  // Layer 2 & DeFi
-  { symbol: 'MATIC',  name: 'Polygon' },
-  { symbol: 'OP',     name: 'Optimism' },
-  { symbol: 'ARB',    name: 'Arbitrum' },
-  { symbol: 'LINK',   name: 'Chainlink' },
-  { symbol: 'UNI',    name: 'Uniswap' },
-  { symbol: 'AAVE',   name: 'Aave' },
-  { symbol: 'MKR',    name: 'Maker' },
-  { symbol: 'CRV',    name: 'Curve DAO' },
-  { symbol: 'SNX',    name: 'Synthetix' },
-  { symbol: 'LDO',    name: 'Lido DAO' },
-  { symbol: 'RUNE',   name: 'THORChain' },
-  { symbol: 'GRT',    name: 'The Graph' },
-  { symbol: 'JUP',    name: 'Jupiter' },
-  { symbol: 'ATOM',   name: 'Cosmos' },
-  // AI / Infra
-  { symbol: 'RNDR',   name: 'Render Network' },
-  { symbol: 'FET',    name: 'Fetch.ai' },
-  { symbol: 'INJ',    name: 'Injective' },
-  { symbol: 'FIL',    name: 'Filecoin' },
-  // Meme & culture
-  { symbol: 'DOGE',   name: 'Dogecoin' },
-  { symbol: 'SHIB',   name: 'Shiba Inu' },
-  { symbol: 'PEPE',   name: 'Pepe' },
-  { symbol: 'WIF',    name: 'Dogwifhat' },
-  { symbol: 'BONK',   name: 'Bonk' },
-  // Gaming / Metaverse
-  { symbol: 'SAND',   name: 'The Sandbox' },
-  { symbol: 'MANA',   name: 'Decentraland' },
-  { symbol: 'APE',    name: 'ApeCoin' },
-];
+// STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
+// Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
 const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
@@ -742,19 +629,15 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Stocks ──────────────────────────────────────────────────────────── */
       case 'stocks': {
-        const q = stockSearchQuery.trim().toUpperCase();
-        // Local matches — instant, no network needed
-        const localMatches = q.length >= 1
-          ? STOCK_LIST.filter(s =>
-              s.symbol.includes(q) ||
-              s.name.toLowerCase().includes(stockSearchQuery.trim().toLowerCase())
-            )
+        // Local matches — instant, ranked by relevance (exact > prefix > substring)
+        const localMatches = stockSearchQuery.trim().length >= 1
+          ? searchAssets(stockSearchQuery.trim(), ['stock', 'etf'])
           : [];
         // API-only results: symbols not already covered by local list
         const apiOnly = stockApiResults.filter(r => !localMatches.some(l => l.symbol === r.symbol));
         // Merged list: local first (faster), then API extras — max 8
         const suggestions = [...localMatches, ...apiOnly].slice(0, 8);
-        const showDropdown = q.length >= 1 && (suggestions.length > 0 || stockApiLoading);
+        const showDropdown = stockSearchQuery.trim().length >= 1 && (suggestions.length > 0 || stockApiLoading);
 
         return (
           <div className="pat-asset-form">
@@ -793,7 +676,12 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                         onMouseDown={e => { e.preventDefault(); handleStockSelect(r); }}>
                         <span className="pat-search-sym">{r.symbol}</span>
                         <span className="pat-search-name">{r.name}</span>
-                        {r.exchange && <span className="pat-search-exch">{r.exchange}</span>}
+                        {/* type badge: ETF label for local results; exchange for API results */}
+                        {r.type === 'etf'
+                          ? <span className="pat-search-exch">ETF</span>
+                          : r.exchange
+                            ? <span className="pat-search-exch">{r.exchange}</span>
+                            : null}
                       </div>
                     ))}
                     {stockApiLoading && (
@@ -849,12 +737,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       /* ── Crypto ──────────────────────────────────────────────────────────── */
       case 'crypto': {
-        const q           = cryptoSearchQuery.trim().toUpperCase();
-        const suggestions = q.length >= 1
-          ? CRYPTO_LIST.filter(c =>
-              c.symbol.includes(q) ||
-              c.name.toLowerCase().includes(cryptoSearchQuery.trim().toLowerCase())
-            ).slice(0, 7)
+        const suggestions = cryptoSearchQuery.trim().length >= 1
+          ? searchAssets(cryptoSearchQuery.trim(), ['crypto'])
           : [];
 
         return (
