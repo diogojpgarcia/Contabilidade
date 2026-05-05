@@ -122,8 +122,9 @@ export const fetchStockQuote = async (ticker) => {
       return null;
     }
 
-    const price     = parseFloat(data.close)          || null;
-    const changePct = parseFloat(data.percent_change) ?? null;
+    const price     = parseFloat(data.close)           || null;  // NaN || null → null ✓
+    const _chg      = parseFloat(data.percent_change);
+    const changePct = Number.isFinite(_chg) ? _chg : null;       // NaN → null (never store NaN)
     if (price === null) return null;
 
     const entry = { price, changePct, ts: Date.now() };
@@ -180,9 +181,11 @@ export const fetchCryptoBatch = async (symbols) => {
     for (const { sym, id } of toFetch) {
       const coin = data[id];
       if (!coin) continue;
+      const _p   = Number(coin.eur);
+      const _chg = Number(coin.eur_24h_change);
       const entry = {
-        price:        coin.eur            ?? null,
-        changePct24h: coin.eur_24h_change ?? null,
+        price:        Number.isFinite(_p)   ? _p   : null,   // never store NaN
+        changePct24h: Number.isFinite(_chg) ? _chg : null,
         ts:           Date.now(),
       };
       cryptoCache.set(id, entry);
@@ -470,8 +473,9 @@ export const fetchCryptoTwelveData = async (symbols) => {
         continue;
       }
 
-      const price     = parseFloat(q.close) || null;
-      const changePct = parseFloat(q.percent_change) ?? null;
+      const price     = parseFloat(q.close) || null;               // NaN || null → null ✓
+      const _chg      = parseFloat(q.percent_change);
+      const changePct = Number.isFinite(_chg) ? _chg : null;       // NaN → null (never store NaN)
       if (!price) continue;
 
       const entry = { price, changePct24h: changePct, ts: Date.now() };

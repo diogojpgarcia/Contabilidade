@@ -54,6 +54,19 @@ const PATRIMONY_TYPES = [
 const EMPTY_PATRIMONY = { accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] };
 const EMPTY_GOAL      = { name: '', amount: '', targetDate: '', currentSavings: '' };
 
+/**
+ * Safe numeric conversion used throughout all financial calculations.
+ * Returns 0 for NaN, ±Infinity, null, undefined, "", or any non-finite value.
+ * Unlike `parseFloat(v) || 0`, this correctly handles the case where `??`
+ * would silently pass through a NaN stored in livePrices or localStorage.
+ *   toNum(undefined) → 0
+ *   toNum(null)      → 0
+ *   toNum(NaN)       → 0   ← the critical case ?? misses
+ *   toNum("3.14")    → 3.14
+ *   toNum(0)         → 0
+ */
+const toNum = (v) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
+
 const CAT_COLORS = {
   'Alimentação':'#F59E0B','Habitação':'#3B82F6','Transporte':'#8B5CF6',
   'Saúde':'#10B981','Lazer':'#EC4899','Educação':'#06B6D4',
@@ -595,17 +608,17 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
-    if (key === 'accounts')   return items.reduce((s, x) => s + (parseFloat(x.balance) || 0), 0);
+    if (key === 'accounts')   return items.reduce((s, x) => s + toNum(x.balance), 0);
     if (key === 'stocks')     return items.reduce((s, x) => {
-      const price = livePrices[x.ticker]?.price ?? parseFloat(x.lastPrice ?? x.avgPrice) ?? 0;
-      return s + (parseFloat(x.qty) || 0) * price;
+      const price = toNum(livePrices[x.ticker]?.price ?? x.lastPrice ?? x.avgPrice);
+      return s + toNum(x.qty) * price;
     }, 0);
-    if (key === 'bonds')      return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-    if (key === 'realestate') return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-    if (key === 'vehicles')   return items.reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
+    if (key === 'bonds')      return items.reduce((s, x) => s + toNum(x.value), 0);
+    if (key === 'realestate') return items.reduce((s, x) => s + toNum(x.value), 0);
+    if (key === 'vehicles')   return items.reduce((s, x) => s + toNum(x.value), 0);
     if (key === 'crypto')     return items.reduce((s, x) => {
-      const price = livePrices[x.coin]?.price ?? parseFloat(x.lastPrice ?? x.price) ?? 0;
-      return s + (parseFloat(x.qty) || 0) * price;
+      const price = toNum(livePrices[x.coin]?.price ?? x.lastPrice ?? x.price);
+      return s + toNum(x.qty) * price;
     }, 0);
     return 0;
   };
@@ -1142,7 +1155,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
         {/* ── PATRIMONY ── */}
         {activeView === 'patrimony' && (() => {
-          const fmt = (v) => v.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+          // toNum guards against NaN reaching toLocaleString (would render "NaN" on screen)
+          const fmt = (v) => toNum(v).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
           const typeValues = PATRIMONY_TYPES.map(t => ({ ...t, value: getPatrimonyTypeValue(t.key) }));
 
           // Allocation percentages for insight + bars
@@ -1168,14 +1182,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
           // ── Impact bar scale: normalize by largest single-asset impact ────
           const allLiveVals = [
-            ...(patrimony.stocks ?? []).map(s => {
-              const price = livePrices[s.ticker]?.price ?? parseFloat(s.lastPrice ?? s.avgPrice) ?? 0;
-              return (parseFloat(s.qty) || 0) * price;
-            }),
-            ...(patrimony.crypto ?? []).map(c => {
-              const price = livePrices[c.coin]?.price ?? parseFloat(c.lastPrice ?? c.price) ?? 0;
-              return (parseFloat(c.qty) || 0) * price;
-            }),
+            ...(patrimony.stocks ?? []).map(s =>
+              toNum(livePrices[s.ticker]?.price ?? s.lastPrice ?? s.avgPrice) * toNum(s.qty)),
+            ...(patrimony.crypto ?? []).map(c =>
+              toNum(livePrices[c.coin]?.price  ?? c.lastPrice ?? c.price)    * toNum(c.qty)),
           ];
           const maxSingleImpact = totalPatrimony > 0
             ? Math.max(...allLiveVals.map(v => (v / totalPatrimony) * 100), 0.01)
@@ -1190,11 +1200,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             const exp  = txns.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
             return inc - exp;
           });
-          const avg6       = monthlySavings.reduce((s, v) => s + v, 0) / 6;
-          const avg3       = monthlySavings.slice(3).reduce((s, v) => s + v, 0) / 3;
-          const forecast12 = totalPatrimony + avg6 * 12;
-          const monthlyRate = totalPatrimony > 0 ? (avg6 / totalPatrimony) * 100 : 0;
-          const trendDiff  = avg3 - avg6;
+          const avg6        = toNum(monthlySavings.reduce((s, v) => s + toNum(v), 0) / 6);
+          const avg3        = toNum(monthlySavings.slice(3).reduce((s, v) => s + toNum(v), 0) / 3);
+          const forecast12  = toNum(totalPatrimony) + avg6 * 12;
+          const monthlyRate = totalPatrimony > 0 ? (avg6 / toNum(totalPatrimony)) * 100 : 0;
+          const trendDiff   = avg3 - avg6;
           const trendStatus = Math.abs(trendDiff) < 50 ? 'neutral' : trendDiff > 0 ? 'above' : 'below';
           const hasIntelData = monthlySavings.some(v => v !== 0);
           const maxAbs = Math.max(...monthlySavings.map(Math.abs), 1);
@@ -1207,19 +1217,20 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
             // livePrices (in-session fetches) take precedence over persisted item values
             const live        = livePrices[sym];
-            const marketPrice = live?.price
-              ?? (isStock
-                  ? parseFloat(item.lastPrice ?? item.avgPrice) || 0
-                  : parseFloat(item.lastPrice ?? item.price)    || 0);
-            const marketVal   = (parseFloat(item.qty) || 0) * marketPrice;
+            const marketPrice = toNum(live?.price ?? (isStock
+              ? (item.lastPrice ?? item.avgPrice)
+              : (item.lastPrice ?? item.price)));
+            const marketVal   = toNum(item.qty) * marketPrice;
             const age         = formatAge(live?.lastUpdated ?? item.lastUpdated);
-            const chg         = live
-              ? (isStock ? live.changePct ?? null : live.changePct24h ?? null)
-              : (isStock
-                  ? (item.changePct != null ? parseFloat(item.changePct) : null)
-                  : (item.change24h != null ? parseFloat(item.change24h) : null));
-            // hasPrice: true if we have any price from any source
-            const hasPrice    = live?.price != null || item.lastPrice != null;
+            // changePct: prefer live data; treat NaN as "no data" (null → badge hidden)
+            const _rawChg     = live
+              ? (isStock ? live.changePct : live.changePct24h)
+              : (isStock ? item.changePct : item.change24h);
+            const chg         = _rawChg != null && Number.isFinite(Number(_rawChg))
+              ? Number(_rawChg)
+              : null;
+            // hasPrice: marketPrice is always finite (toNum), so just check > 0
+            const hasPrice    = marketPrice > 0;
             const sparkPrices  = assetHistory[sym];
             const sparkUp      = sparkPrices?.length >= 2
               ? sparkPrices[sparkPrices.length - 1] >= sparkPrices[0]
