@@ -102,7 +102,7 @@ const groupByDate = (txs) => {
 };
 
 /* ── Component ── */
-const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDeleted }) => {
+const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDeleted, categories }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [pickerTx,   setPickerTx]   = useState(null);
 
@@ -215,6 +215,7 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
           transaction={pickerTx}
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
+          categories={categories}
         />
       )}
     </>

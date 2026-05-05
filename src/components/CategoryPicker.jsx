@@ -11,7 +11,7 @@ import './CategoryPicker.css';
  *   onSelect(newCategoryLabel)
  *   onClose()
  */
-const CategoryPicker = ({ transaction, onSelect, onClose }) => {
+const CategoryPicker = ({ transaction, onSelect, onClose, categories: categoriesProp }) => {
   const [search, setSearch] = useState('');
   const inputRef = useRef(null);
 
@@ -21,7 +21,13 @@ const CategoryPicker = ({ transaction, onSelect, onClose }) => {
     return () => clearTimeout(t);
   }, []);
 
-  const categories = transaction.type === 'income' ? CATEGORIES_INCOME : CATEGORIES_EXPENSE;
+  // Use the App-level categories prop when available; fall back to static import.
+  // This ensures custom categories added in Profile appear here too.
+  const categories = categoriesProp
+    ? (transaction.type === 'income' ? categoriesProp.income : categoriesProp.expense)
+    : (transaction.type === 'income' ? CATEGORIES_INCOME : CATEGORIES_EXPENSE);
+
+  console.log('[CategoryPicker] source:', categoriesProp ? 'prop' : 'fallback', '| count:', categories.length);
 
   const filtered = categories.filter(c =>
     c.label.toLowerCase().includes(search.toLowerCase())

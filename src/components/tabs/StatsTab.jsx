@@ -466,6 +466,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       tx={tx}
                       onCategoryChange={onCategoryChange}
                       onDelete={onTransactionDeleted}
+                      categories={categories}
                     />
                   ))}
                 </div>
@@ -474,6 +475,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   transactions={visibleTransactions}
                   onCategoryChange={onCategoryChange}
                   onTransactionDeleted={onTransactionDeleted}
+                  categories={categories}
                 />
               )}
             </div>
@@ -629,6 +631,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             transaction={pickerTx}
             onSelect={handlePickerSelect}
             onClose={() => setPickerTx(null)}
+            categories={categories}
           />
         )}
       </div>

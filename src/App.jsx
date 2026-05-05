@@ -436,6 +436,7 @@ const App = () => {
             onCategoryChange={handleCategoryChange}
             onTransactionDeleted={handleDeleteTransaction}
             onTransactionEdited={handleEditTransaction}
+            categories={categories}
             theme={theme}
           />
         )}

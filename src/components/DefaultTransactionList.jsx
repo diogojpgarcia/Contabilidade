@@ -35,7 +35,7 @@ const ICON_MAP = {
 };
 const icon = (cat) => ICON_MAP[cat] || '◌';
 
-const DefaultTransactionList = ({ transactions, onCategoryChange }) => {
+const DefaultTransactionList = ({ transactions, onCategoryChange, categories }) => {
   const [pickerTx, setPickerTx] = useState(null);
 
   const handlePickerSelect = (newCategory) => {
@@ -103,6 +103,7 @@ const DefaultTransactionList = ({ transactions, onCategoryChange }) => {
           transaction={pickerTx}
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
+          categories={categories}
         />
       )}
     </>

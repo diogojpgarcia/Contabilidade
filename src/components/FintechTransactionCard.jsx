@@ -173,7 +173,7 @@ function formatLong(dateStr) {
 }
 
 /* ── Component ────────────────────────────────────────────────────────────── */
-const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = false }) => {
+const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = false, categories }) => {
   const [open,      setOpen]    = useState(false);
   const [pickerTx,  setPickerTx] = useState(null);
   const [deleting,  setDeleting] = useState(false);
@@ -308,6 +308,7 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
           transaction={pickerTx}
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
+          categories={categories}
         />
       )}
     </>

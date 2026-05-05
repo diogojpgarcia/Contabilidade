@@ -40,6 +40,7 @@ const HomeTab = ({
   patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
   onCategoryChange,
   onTransactionDeleted,
+  categories,
   theme = 'default',
 }) => {
   const goToPreviousMonth = () => {
@@ -165,6 +166,7 @@ const HomeTab = ({
                       tx={tx}
                       onCategoryChange={onCategoryChange}
                       onDelete={onTransactionDeleted}
+                      categories={categories}
                     />
                   ))}
                 </div>
@@ -176,6 +178,7 @@ const HomeTab = ({
                   transactions={transactions}
                   onCategoryChange={onCategoryChange}
                   onTransactionDeleted={onTransactionDeleted}
+                  categories={categories}
                 />
               );
             }
@@ -252,6 +255,7 @@ const HomeTab = ({
         <DefaultTransactionList
           transactions={transactions}
           onCategoryChange={onCategoryChange}
+          categories={categories}
         />
       </div>
     </div>

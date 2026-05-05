@@ -2,28 +2,9 @@
  * Data utilities for transactions and categories
  */
 
-// Categories for expenses
-export const CATEGORIES_EXPENSE = [
-  { id: "alimentacao", label: "Alimentação", icon: "🍽", color: "#E8734A" },
-  { id: "habitacao", label: "Habitação", icon: "🏠", color: "#5B8DEF" },
-  { id: "transporte", label: "Transporte", icon: "🚗", color: "#F5B731" },
-  { id: "saude", label: "Saúde", icon: "💊", color: "#4ECDC4" },
-  { id: "lazer", label: "Lazer", icon: "🎭", color: "#A78BFA" },
-  { id: "educacao", label: "Educação", icon: "📚", color: "#34D399" },
-  { id: "roupa", label: "Roupa", icon: "👕", color: "#F472B6" },
-  { id: "tech", label: "Tecnologia", icon: "💻", color: "#60A5FA" },
-  { id: "subscricoes", label: "Subscrições", icon: "📱", color: "#FBBF24" },
-  { id: "outros", label: "Outros", icon: "📦", color: "#9CA3AF" },
-];
-
-// Categories for income
-export const CATEGORIES_INCOME = [
-  { id: "salario", label: "Salário", icon: "💰", color: "#34D399" },
-  { id: "freelance", label: "Freelance", icon: "💼", color: "#60A5FA" },
-  { id: "investimentos", label: "Investimentos", icon: "📈", color: "#A78BFA" },
-  { id: "bonus", label: "Bónus", icon: "🎁", color: "#F5B731" },
-  { id: "outros", label: "Outros", icon: "💵", color: "#9CA3AF" },
-];
+// Categories — single source of truth lives in categories-professional.js.
+// Re-exported here for backward-compat with any component that imports from data.js.
+export { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from './categories-professional';
 
 // Format currency
 export const formatCurrency = (value) => {
