@@ -389,25 +389,38 @@ export const fetchPrice = async (ticker) => {
 
 /**
  * Primary entry point — resolves a price for any Twelve Data symbol
- * ("AAPL", "BTC/USD", "IWDA.L", …) using a three-tier strategy:
+ * ("AAPL", "BTC", "BTC/USD", "IWDA.L", …) using a three-tier strategy:
  *
  *   1. CACHE HIT     – localStorage entry is fresher than CACHE_TTL → no API call
  *   2. FETCH API     – entry is stale / absent  → fetch, persist, return fresh price
  *   3. FALLBACK CACHE – API failed              → return last known price if available
  *
- * Never throws; returns null only when there is truly no data at all.
+ * Auto-detects crypto symbols: if the ticker is a bare base symbol (e.g. "BTC")
+ * that exists in COIN_IDS, it is automatically converted to the Twelve Data
+ * pair format "BTC/USD" before calling the API.
+ *
+ * Never throws; returns 0 when there is truly no data (never null/NaN).
+ *
+ * @param {string}  ticker    — symbol in any format ("AAPL", "BTC", "BTC/USD")
+ * @param {string?} assetType — optional hint: "crypto" forces USD pair conversion
  */
-export const getPrice = async (ticker) => {
-  if (!ticker) return null;
+export const getPrice = async (ticker, assetType = null) => {
+  if (!ticker) return 0;
 
-  const key   = ticker.toUpperCase();
+  // Normalise: strip any existing pair suffix so we can re-apply consistently
+  const base  = ticker.toUpperCase().split('/')[0];
+  const isCrypto = assetType === 'crypto' || COIN_IDS[base] !== undefined;
+  // Twelve Data /price requires pair format for crypto: "BTC" → "BTC/USD"
+  const key   = isCrypto ? `${base}/USD` : ticker.toUpperCase();
+
   const entry = getCachedPrice(key);
   const age   = entry ? Date.now() - entry.timestamp : Infinity;
 
   // 1 — fresh cache hit
   if (entry && age < CACHE_TTL) {
     console.log(`[assetPrice] CACHE HIT — ${key} (${Math.round(age / 1000)}s old)`);
-    return entry.price;
+    const safePrice = Number(entry.price);
+    return Number.isFinite(safePrice) ? safePrice : 0;
   }
 
   // 2 — fetch from API
@@ -417,10 +430,11 @@ export const getPrice = async (ticker) => {
   // 3 — stale fallback (API down / no key)
   if (entry) {
     console.log(`[assetPrice] FALLBACK CACHE — ${key} (${Math.round(age / 60_000)}m old)`);
-    return entry.price;
+    const safePrice = Number(entry.price);
+    return Number.isFinite(safePrice) ? safePrice : 0;
   }
 
-  return null;
+  return 0;  // never null — callers can safely do arithmetic without ?? guard
 };
 
 // ─── crypto prices via Twelve Data (BTC/USD format) ──────────────────────────

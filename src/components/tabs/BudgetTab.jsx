@@ -68,6 +68,17 @@ const EMPTY_GOAL      = { name: '', amount: '', targetDate: '', currentSavings: 
  */
 const toNum = (v) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
+/**
+ * Normalises a crypto coin symbol to its base ticker.
+ * Strips any exchange-pair suffix so both old ("BTC/USD") and
+ * new ("BTC") stored values map to the same livePrices key.
+ *   normCoin("BTC/USD")  → "BTC"
+ *   normCoin("ETH/USDT") → "ETH"
+ *   normCoin("BTC")      → "BTC"
+ *   normCoin(undefined)  → ""
+ */
+const normCoin = (sym) => sym?.split('/')[0]?.toUpperCase() ?? '';
+
 const CAT_COLORS = {
   'Alimentação':'#F59E0B','Habitação':'#3B82F6','Transporte':'#8B5CF6',
   'Saúde':'#10B981','Lazer':'#EC4899','Educação':'#06B6D4',
@@ -313,16 +324,17 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       if (staleStocks.length === 0 && staleCoins.length === 0) return;
 
       // Mark all stale assets as "refreshing"
+      // normCoin: ensures "BTC/USD" and "BTC" both key to "BTC"
       setRefreshingTickers(new Set([
         ...staleStocks.map(s => s.ticker),
-        ...staleCoins.map(c => c.coin),
+        ...staleCoins.map(c => normCoin(c.coin)),
       ]));
 
       // Fetch stocks + crypto in parallel
-      // Crypto: Twelve Data BTC/USD when key present, CoinGecko fallback otherwise
+      // Crypto: pass normalised base symbols; fetchCryptoTwelveData appends /USD internally
       const [stockResults, cryptoPrices] = await Promise.all([
         Promise.allSettled(staleStocks.map(s => fetchStockQuote(s.ticker))),
-        fetchCryptoTwelveData(staleCoins.map(c => c.coin)),
+        fetchCryptoTwelveData(staleCoins.map(c => normCoin(c.coin))),
       ]);
 
       if (cancelled) return;
@@ -342,10 +354,12 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         }
       });
 
+      // Key by normalised base symbol so livePrices lookups are consistent
       staleCoins.forEach(c => {
-        const data = cryptoPrices[c.coin];
+        const coinKey = normCoin(c.coin);
+        const data    = cryptoPrices[coinKey];
         if (data?.price != null) {
-          priceUpdates[c.coin] = {
+          priceUpdates[coinKey] = {
             price:        data.price,
             changePct24h: data.changePct24h ?? null,
             lastUpdated:  now,
@@ -369,7 +383,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         return p ? { ...s, lastPrice: p.price, changePct: p.changePct, lastUpdated: now } : s;
       });
       const updatedCrypto = cryptos.map(c => {
-        const p = priceUpdates[c.coin];
+        const p = priceUpdates[normCoin(c.coin)];
         return p ? { ...c, lastPrice: p.price, change24h: p.changePct24h, lastUpdated: now } : c;
       });
       onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks, crypto: updatedCrypto });
@@ -400,7 +414,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         Promise.allSettled(
           stocks.map(s => fetchStockHistory(s.ticker).then(prices => ({ ticker: s.ticker, prices })))
         ),
-        fetchCryptoHistoryBatch(cryptos.map(c => c.coin)),
+        // normCoin: CoinGecko also expects base symbols ("BTC" not "BTC/USD")
+        fetchCryptoHistoryBatch(cryptos.map(c => normCoin(c.coin))),
       ]);
       if (cancelled) return;
 
@@ -504,7 +519,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     if (key === 'realestate') return items.reduce((s, x) => s + toNum(x.value), 0);
     if (key === 'vehicles')   return items.reduce((s, x) => s + toNum(x.value), 0);
     if (key === 'crypto')     return items.reduce((s, x) => {
-      const price = toNum(livePrices[x.coin]?.price ?? x.lastPrice ?? x.price);
+      const price = toNum(livePrices[normCoin(x.coin)]?.price ?? x.lastPrice ?? x.price);
       return s + toNum(x.qty) * price;
     }, 0);
     return 0;
@@ -1054,22 +1069,22 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                                        'Portfólio distribuído por múltiplos tipos de ativos.';
 
           // ── Asset alerts (|change| ≥ 5%) ──────────────────────────────────
-          // Prefer livePrices change data (updated this session) over persisted values
+          // Prefer livePrices change data; normCoin handles legacy "BTC/USD" storage
           const assetAlerts = [
             ...(patrimony.stocks ?? [])
               .map(s => ({ sym: s.ticker, pct: livePrices[s.ticker]?.changePct  ?? (s.changePct  != null ? parseFloat(s.changePct)  : null), label: 'hoje' }))
               .filter(x => x.pct != null && Math.abs(x.pct) >= 5),
             ...(patrimony.crypto ?? [])
-              .map(c => ({ sym: c.coin,   pct: livePrices[c.coin]?.changePct24h ?? (c.change24h  != null ? parseFloat(c.change24h)  : null), label: '24h'  }))
+              .map(c => ({ sym: normCoin(c.coin), pct: livePrices[normCoin(c.coin)]?.changePct24h ?? (c.change24h != null ? parseFloat(c.change24h) : null), label: '24h' }))
               .filter(x => x.pct != null && Math.abs(x.pct) >= 5),
           ];
 
           // ── Impact bar scale: normalize by largest single-asset impact ────
           const allLiveVals = [
             ...(patrimony.stocks ?? []).map(s =>
-              toNum(livePrices[s.ticker]?.price ?? s.lastPrice ?? s.avgPrice) * toNum(s.qty)),
+              toNum(livePrices[s.ticker]?.price      ?? s.lastPrice ?? s.avgPrice) * toNum(s.qty)),
             ...(patrimony.crypto ?? []).map(c =>
-              toNum(livePrices[c.coin]?.price  ?? c.lastPrice ?? c.price)    * toNum(c.qty)),
+              toNum(livePrices[normCoin(c.coin)]?.price ?? c.lastPrice ?? c.price) * toNum(c.qty)),
           ];
           const maxSingleImpact = totalPatrimony > 0
             ? Math.max(...allLiveVals.map(v => (v / totalPatrimony) * 100), 0.01)
@@ -1096,7 +1111,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           // ── Asset card renderer — shared by stocks + crypto ──────────────
           const assetCardFor = (item, assetKey) => {
             const isStock      = assetKey === 'stocks';
-            const sym          = isStock ? item.ticker : item.coin;
+            // normCoin: "BTC/USD" (legacy) and "BTC" (new) both resolve to "BTC"
+            const sym          = isStock ? item.ticker : normCoin(item.coin);
             const isRefreshing = refreshingTickers.has(sym);
 
             // livePrices (in-session fetches) take precedence over persisted item values
