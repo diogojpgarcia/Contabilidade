@@ -18,8 +18,6 @@ import ProfileTab from './components/tabs/ProfileTab';
 import './styles/modern.css';
 import './styles/fintech.css';
 
-const categoriesProfessional = { expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME };
-
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +30,7 @@ const App = () => {
   const [learnedRules, setLearnedRules] = useState([]); // [{ pattern, category }]
   const [budgets, setBudgets] = useState({});
   const [theme, setTheme] = useState('default'); // 'default' | 'modern'
+  const [categories, setCategories] = useState({ expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME });
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
@@ -104,6 +103,17 @@ const App = () => {
       if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
       if (settings?.learned_rules) setLearnedRules(settings.learned_rules);
       if (settings?.category_budgets) setBudgets(settings.category_budgets);
+      // Load custom categories — merge saved custom_categories with defaults so
+      // categories added/removed in Profile are reflected everywhere immediately.
+      if (settings?.custom_categories) {
+        const saved = settings.custom_categories;
+        // Use saved if it has content; otherwise keep defaults
+        const merged = {
+          expense: saved.expense?.length ? saved.expense : CATEGORIES_EXPENSE,
+          income:  saved.income?.length  ? saved.income  : CATEGORIES_INCOME,
+        };
+        setCategories(merged);
+      }
       // Load layout theme — guard against old colour values ('dark','light','gray')
       const t = settings?.theme;
       if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
@@ -208,6 +218,11 @@ const App = () => {
     setPatrimony(newPatrimony);
     try { await dbService.updateUserSettings(currentUser.id, { patrimony: newPatrimony }); }
     catch (error) { console.error("Error saving patrimony:", error); }
+  };
+
+  const handleCategoriesChange = (updated) => {
+    // CategoryManager already persists to Supabase — we just keep global state in sync.
+    setCategories(updated);
   };
 
   const handleBudgetsChange = async (newBudgets) => {
@@ -431,7 +446,7 @@ const App = () => {
             filteredTransactions={filteredTransactions}
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
-            categories={categoriesProfessional}
+            categories={categories}
             budgets={budgets}
             onTransactionDeleted={handleDeleteTransaction}
             onCategoryChange={handleCategoryChange}
@@ -442,7 +457,7 @@ const App = () => {
         {activeTab === 'add' && (
           <AddTab
             user={currentUser}
-            categories={categoriesProfessional}
+            categories={categories}
             onTransactionAdded={handleAddTransaction}
             onTransfer={handleTransfer}
             patrimony={patrimony}
@@ -455,7 +470,7 @@ const App = () => {
             user={currentUser}
             transactions={safeTransactions}
             currentMonth={currentMonth}
-            categories={categoriesProfessional}
+            categories={categories}
             budgets={budgets}
             onBudgetsChange={handleBudgetsChange}
             patrimony={patrimony}
@@ -481,6 +496,8 @@ const App = () => {
             onLogout={handleLogout}
             theme={theme}
             setTheme={setTheme}
+            categories={categories}
+            onCategoriesChange={handleCategoriesChange}
             onDataDeleted={() => {
               // Kill any in-flight loadUserTransactions so a stale fetch
               // cannot overwrite this clear after it resolves.

@@ -5,7 +5,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -72,7 +72,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       {showCategoryManager && (
         <Overlay onClose={() => setShowCategoryManager(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <CategoryManager userId={user.id} onClose={() => setShowCategoryManager(false)} onUpdate={(c) => console.log('Categories updated:', c)} />
+            <CategoryManager userId={user.id} onClose={() => setShowCategoryManager(false)} onUpdate={onCategoriesChange} />
           </div>
         </Overlay>
       )}
