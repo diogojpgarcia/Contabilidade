@@ -23,11 +23,18 @@
 
 export const CACHE_TTL    = 5 * 60_000;  // 5 minutes — price refresh interval
 export const HISTORY_TTL  = 5 * 60_000;  // 5 minutes — history changes slowly
-const        FETCH_TIMEOUT = 7_000;   // abort after 7 s
+const        FETCH_TIMEOUT = 12_000;  // 12 s — extra headroom for slow mobile networks
 
 const TWELVE_DATA_KEY = import.meta.env.VITE_TWELVE_DATA_KEY ?? '';
 /** True when a Twelve Data API key is configured. */
 export const HAS_STOCK_KEY = TWELVE_DATA_KEY.length > 0;
+
+// ─── startup diagnostics ─────────────────────────────────────────────────────
+// Logged once on module load — visible in DevTools on any device/platform.
+console.log('[assetPrice] DEVICE:', navigator.userAgent);
+console.log('[assetPrice] API KEY:', HAS_STOCK_KEY
+  ? `set (${TWELVE_DATA_KEY.slice(0, 4)}…${TWELVE_DATA_KEY.slice(-4)})`
+  : 'NOT SET — stock prices disabled, crypto via CoinGecko fallback');
 
 // ─── in-memory caches ────────────────────────────────────────────────────────
 
@@ -99,24 +106,31 @@ export const fetchStockQuote = async (ticker) => {
 
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    const res = await fetch(
-      `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(ticker)}&apikey=${TWELVE_DATA_KEY}`,
-      { signal }
-    );
-    if (!res.ok) return null;
+    const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(ticker)}&apikey=${TWELVE_DATA_KEY}`;
+    const res = await fetch(url, { signal });   // no Content-Type on GET — avoids CORS preflight
+    if (!res.ok) {
+      console.error(`[assetPrice] fetchStockQuote HTTP ${res.status} — ${ticker}`);
+      return null;
+    }
 
     const data = await res.json();
-    // Twelve Data returns { code: 400, ... } for errors
-    if (data.code || data.status === 'error') return null;
+    console.log(`[assetPrice] PRICE RESULT ${ticker}:`, data);
 
-    const price     = parseFloat(data.close)           || null;
-    const changePct = parseFloat(data.percent_change)  ?? null;
+    // Twelve Data returns { code: 400, ... } for errors
+    if (data.code || data.status === 'error') {
+      console.error(`[assetPrice] API ERROR ${ticker}:`, data);
+      return null;
+    }
+
+    const price     = parseFloat(data.close)          || null;
+    const changePct = parseFloat(data.percent_change) ?? null;
     if (price === null) return null;
 
     const entry = { price, changePct, ts: Date.now() };
     stockCache.set(ticker, entry);
     return entry;
-  } catch {
+  } catch (err) {
+    console.error(`[assetPrice] FETCH FAILED ${ticker}:`, err);
     return null;
   } finally {
     clear();
@@ -153,13 +167,15 @@ export const fetchCryptoBatch = async (symbols) => {
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
 
   try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids)}&vs_currencies=eur&include_24hr_change=true`,
-      { signal }
-    );
-    if (!res.ok) return result;
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids)}&vs_currencies=eur&include_24hr_change=true`;
+    const res = await fetch(url, { signal });   // no Content-Type on GET — avoids CORS preflight
+    if (!res.ok) {
+      console.error(`[assetPrice] CoinGecko HTTP ${res.status}`);
+      return result;
+    }
 
     const data = await res.json();
+    console.log('[assetPrice] PRICE RESULT CoinGecko:', data);
 
     for (const { sym, id } of toFetch) {
       const coin = data[id];
@@ -172,7 +188,8 @@ export const fetchCryptoBatch = async (symbols) => {
       cryptoCache.set(id, entry);
       result[sym] = entry;
     }
-  } catch {
+  } catch (err) {
+    console.error('[assetPrice] FETCH FAILED CoinGecko:', err);
     // return whatever was cached
   } finally {
     clear();
@@ -439,17 +456,19 @@ export const fetchCryptoTwelveData = async (symbols) => {
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
 
   try {
-    const res = await fetch(
-      `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${TWELVE_DATA_KEY}`,
-      { signal }
-    );
+    const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${TWELVE_DATA_KEY}`;
+    const res = await fetch(url, { signal });   // no Content-Type on GET — avoids CORS preflight
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    console.log('[assetPrice] PRICE RESULT crypto (TD):', data);
 
     for (const { sym, tdSym } of toFetch) {
       // Single-symbol responses come unwrapped; multi-symbol come as { "BTC/USD": {...}, … }
       const q = toFetch.length === 1 ? data : (data[tdSym] ?? data[sym]);
-      if (!q || q.code || q.status === 'error') continue;
+      if (!q || q.code || q.status === 'error') {
+        console.error(`[assetPrice] API ERROR ${tdSym}:`, q);
+        continue;
+      }
 
       const price     = parseFloat(q.close) || null;
       const changePct = parseFloat(q.percent_change) ?? null;
@@ -460,7 +479,7 @@ export const fetchCryptoTwelveData = async (symbols) => {
       result[sym] = entry;
     }
   } catch (err) {
-    console.error('[assetPrice] fetchCryptoTwelveData error:', err);
+    console.error('[assetPrice] FETCH FAILED crypto (TD):', err);
   } finally {
     clear();
   }

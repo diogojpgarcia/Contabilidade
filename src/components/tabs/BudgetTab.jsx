@@ -135,7 +135,8 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
               {percent.toFixed(0)}%
             </span>
           )}
-          <button className="m-bcc-edit" onClick={onEditToggle}>✏</button>
+          {/* ✎ (U+270E) renders reliably on Android system fonts */}
+          <button className="m-bcc-edit" onClick={onEditToggle} aria-label="Editar limite">✎</button>
         </div>
       </div>
 
@@ -1210,7 +1211,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                     className="pat-asset-edit"
                     onClick={e => { e.stopPropagation(); handlePatrimonyEdit(assetKey, item); }}
                     title="Editar"
-                  >✏</button>
+                    aria-label="Editar ativo"
+                  >✎</button>
                   <button
                     className="m-asset-item-del pat-asset-del"
                     onClick={e => { e.stopPropagation(); handlePatrimonyDelete(assetKey, item.id); }}

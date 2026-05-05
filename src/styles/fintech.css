@@ -859,14 +859,28 @@
 .m-asset-type.ui-card:last-child { margin-bottom: 0; }
 
 .m-bcc-edit {
-  background: transparent; border: none; cursor: pointer;
-  font-size: 0.8rem; opacity: 0.35;
-  min-width: 36px; min-height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; flex-shrink: 0;
+  /* ── DEBUG: red background + z-index so visibility is unmistakable on all platforms ── */
+  background: rgba(99,102,241,0.12);
+  z-index: 9999;
+  /* ── always visible ── */
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;          /* larger → more reliable glyph rendering on Android */
+  color: var(--text-primary);
+  opacity: 0.75;            /* was 0.35 — nearly invisible; 0.75 is clearly visible */
+  min-width: 44px;          /* iOS/Android minimum recommended touch target */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+  touch-action: manipulation;               /* removes 300 ms tap delay on Android */
+  -webkit-tap-highlight-color: transparent;
   transition: opacity 0.12s, background 0.12s;
 }
-.m-bcc-edit:active { opacity: 1; background: var(--bg-tertiary); }
+.m-bcc-edit:hover   { opacity: 1; background: var(--bg-tertiary); }
+.m-bcc-edit:active  { opacity: 1; background: var(--bg-tertiary); }
 
 .m-bcc-edit-row { display: flex; gap: 8px; align-items: center; }
 .m-bcc-input {
@@ -1589,17 +1603,28 @@
   gap: 2px;
 }
 .pat-asset-edit {
-  background: none;
+  /* ── DEBUG: same indigo tint as budget edit ── */
+  background: rgba(99,102,241,0.1);
+  z-index: 9999;
   border: none;
-  padding: 3px 4px;
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
   cursor: pointer;
-  opacity: 0.55;
+  opacity: 0.8;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s;
   line-height: 1;
 }
-.pat-asset-edit:hover { opacity: 1; color: #6366f1; }
+.pat-asset-edit:hover  { opacity: 1; color: #6366f1; background: rgba(99,102,241,0.18); }
+.pat-asset-edit:active { opacity: 1; color: #6366f1; background: rgba(99,102,241,0.18); }
 
 /* Delete button repositioned for asset card */
 .pat-asset-del {
