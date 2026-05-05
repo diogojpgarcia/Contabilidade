@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { dbService } from '../lib/supabase';
 
 const DEFAULT_COLORS = [
@@ -11,142 +11,145 @@ const DEFAULT_ICONS = [
   '🏋️', '🎵', '🐕', '💻', '☕', '🍕', '🚌', '📱', '🎨', '⚡'
 ];
 
-const CategoryManager = ({ userId, onClose, onUpdate }) => {
-  const [categories, setCategories] = useState({ expense: [], income: [] });
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(null);
-  const [newCategory, setNewCategory] = useState({
-    type: 'expense',
-    label: '',
-    id: '',
-    color: DEFAULT_COLORS[0],
-    icon: DEFAULT_ICONS[0]
-  });
+/**
+ * CategoryManager
+ *
+ * Stateless with respect to the category list — it reads `categories` from the
+ * prop (App global state) and writes back via `onUpdate`.  This guarantees
+ * Profile and Budget always show the same list with zero duplication.
+ *
+ * Props:
+ *   userId     — Supabase user id (for DB persistence)
+ *   categories — { expense: [...], income: [...] }  ← single source of truth
+ *   onClose    — close the modal
+ *   onUpdate   — (updated) => void  — called after every successful save
+ */
+const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
+  // UI-only state — never duplicates category data
+  const [saving,          setSaving]          = useState(false);
+  const [editMode,        setEditMode]        = useState(null); // `${type}-${index}` or null
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showIconPicker,  setShowIconPicker]  = useState(false);
+  const [newCategory, setNewCategory] = useState({
+    type:  'expense',
+    label: '',
+    color: DEFAULT_COLORS[0],
+    icon:  DEFAULT_ICONS[0],
+  });
 
-  useEffect(() => {
-    loadCategories();
-  }, [userId]);
+  // Guard: if categories prop not yet loaded, show spinner
+  if (!categories?.expense || !categories?.income) {
+    return (
+      <div className="category-manager-overlay">
+        <div className="category-manager">
+          <p>A carregar categorias...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const loadCategories = async () => {
+  // ── Persistence ────────────────────────────────────────────────────────────
+  // Save to Supabase then call onUpdate so App propagates to all tabs.
+  const persist = async (updated) => {
+    setSaving(true);
     try {
-      setLoading(true);
-      const settings = await dbService.getUserSettings(userId);
-      
-      if (settings?.custom_categories) {
-        setCategories(settings.custom_categories);
-      } else {
-        // Load default categories
-        const { CATEGORIES_EXPENSE, CATEGORIES_INCOME } = await import('../utils/categories-professional');
-        setCategories({
-          expense: CATEGORIES_EXPENSE,
-          income: CATEGORIES_INCOME
-        });
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveCategories = async (newCategories) => {
-    try {
-      await dbService.updateUserSettings(userId, {
-        custom_categories: newCategories
-      });
-      setCategories(newCategories);
-      onUpdate?.(newCategories);
-      return true;
+      await dbService.updateUserSettings(userId, { custom_categories: updated });
+      onUpdate?.(updated);
     } catch (error) {
       console.error('Error saving categories:', error);
       alert('Erro ao guardar categorias: ' + error.message);
-      return false;
+    } finally {
+      setSaving(false);
     }
   };
 
+  // ── CRUD ───────────────────────────────────────────────────────────────────
   const handleAddCategory = async () => {
-    if (!newCategory.label.trim()) {
-      alert('Nome da categoria é obrigatório!');
-      return;
-    }
+    const label = newCategory.label.trim();
+    if (!label) { alert('Nome da categoria é obrigatório!'); return; }
 
-    const id = newCategory.label.toLowerCase().replace(/\s+/g, '_');
-    const categoryObj = {
-      id,
-      label: newCategory.label,
-      color: newCategory.color,
-      icon: newCategory.icon
-    };
+    const id = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const entry = { id, label, color: newCategory.color, icon: newCategory.icon };
 
-    const updated = {
+    await persist({
       ...categories,
-      [newCategory.type]: [...categories[newCategory.type], categoryObj]
-    };
+      [newCategory.type]: [...categories[newCategory.type], entry],
+    });
 
-    const success = await saveCategories(updated);
-    if (success) {
-      setNewCategory({
-        type: 'expense',
-        label: '',
-        id: '',
-        color: DEFAULT_COLORS[0],
-        icon: DEFAULT_ICONS[0]
-      });
-    }
+    setNewCategory({ type: 'expense', label: '', color: DEFAULT_COLORS[0], icon: DEFAULT_ICONS[0] });
+    setShowColorPicker(false);
+    setShowIconPicker(false);
   };
 
   const handleEditCategory = async (type, index, updates) => {
-    const updated = { ...categories };
-    updated[type][index] = { ...updated[type][index], ...updates };
-    await saveCategories(updated);
+    const updated = {
+      ...categories,
+      // immutable update — never mutate the prop array
+      [type]: categories[type].map((cat, i) => i === index ? { ...cat, ...updates } : cat),
+    };
+    await persist(updated);
     setEditMode(null);
   };
 
   const handleDeleteCategory = async (type, index) => {
     if (!confirm('Tens a certeza que queres apagar esta categoria?')) return;
-
-    const updated = { ...categories };
-    updated[type].splice(index, 1);
-    await saveCategories(updated);
+    const updated = {
+      ...categories,
+      [type]: categories[type].filter((_, i) => i !== index),
+    };
+    await persist(updated);
   };
 
+  // ── Category row ───────────────────────────────────────────────────────────
+  // Inner component keeps its own draft for the label input so we don't
+  // call persist on every keypress.
   const CategoryItem = ({ category, type, index }) => {
     const isEditing = editMode === `${type}-${index}`;
+    const [draft, setDraft] = useState(category.label);
 
     if (isEditing) {
       return (
         <div className="category-edit-row">
           <input
             type="text"
-            value={category.label}
-            onChange={(e) => handleEditCategory(type, index, { label: e.target.value })}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
             className="category-edit-input"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleEditCategory(type, index, { label: draft });
+              if (e.key === 'Escape') setEditMode(null);
+            }}
+            autoFocus
           />
           <div className="category-edit-controls">
             <button
               className="btn-color-pick"
               style={{ background: category.color }}
+              title="Mudar cor"
               onClick={() => {
-                const newColor = prompt('Escolhe uma cor (#hex):', category.color);
-                if (newColor) handleEditCategory(type, index, { color: newColor });
+                const c = prompt('Escolhe uma cor (#hex):', category.color);
+                if (c) handleEditCategory(type, index, { label: draft, color: c });
               }}
             />
             <button
               className="btn-icon-pick"
+              title="Mudar ícone"
               onClick={() => {
-                const newIcon = prompt('Escolhe um emoji:', category.icon);
-                if (newIcon) handleEditCategory(type, index, { icon: newIcon });
+                const ic = prompt('Escolhe um emoji:', category.icon);
+                if (ic) handleEditCategory(type, index, { label: draft, icon: ic });
               }}
             >
               {category.icon}
             </button>
             <button
               className="btn-save-edit"
-              onClick={() => setEditMode(null)}
+              onClick={() => handleEditCategory(type, index, { label: draft })}
+              disabled={saving}
             >
               ✓
+            </button>
+            <button className="btn-cancel-edit" onClick={() => setEditMode(null)}>
+              ✕
             </button>
           </div>
         </div>
@@ -158,10 +161,7 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
         <div className="category-display">
           <span className="category-icon">{category.icon}</span>
           <span className="category-label">{category.label}</span>
-          <div
-            className="category-color-dot"
-            style={{ background: category.color }}
-          />
+          <div className="category-color-dot" style={{ background: category.color }} />
         </div>
         <div className="category-actions">
           <button
@@ -181,16 +181,7 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="category-manager-overlay">
-        <div className="category-manager">
-          <p>A carregar categorias...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="category-manager-overlay">
       <div className="category-manager">
@@ -200,7 +191,8 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
         </div>
 
         <div className="category-manager-content">
-          {/* Add New Category */}
+
+          {/* ── Add New Category ─────────────────────────────────────────── */}
           <div className="add-category-section">
             <h3>➕ Adicionar Categoria</h3>
             <div className="add-category-form">
@@ -217,19 +209,22 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
                 placeholder="Nome da categoria"
                 value={newCategory.label}
                 onChange={(e) => setNewCategory({ ...newCategory, label: e.target.value })}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategory(); }}
               />
 
               <button
                 className="btn-color-selector"
                 style={{ background: newCategory.color }}
-                onClick={() => setShowColorPicker(!showColorPicker)}
+                onClick={() => { setShowColorPicker(!showColorPicker); setShowIconPicker(false); }}
+                title="Escolher cor"
               >
                 Cor
               </button>
 
               <button
                 className="btn-icon-selector"
-                onClick={() => setShowIconPicker(!showIconPicker)}
+                onClick={() => { setShowIconPicker(!showIconPicker); setShowColorPicker(false); }}
+                title="Escolher ícone"
               >
                 {newCategory.icon}
               </button>
@@ -237,12 +232,12 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
               <button
                 className="btn-add-category"
                 onClick={handleAddCategory}
+                disabled={saving}
               >
-                ✓ Adicionar
+                {saving ? '...' : '✓ Adicionar'}
               </button>
             </div>
 
-            {/* Color Picker */}
             {showColorPicker && (
               <div className="color-picker">
                 {DEFAULT_COLORS.map(color => (
@@ -250,26 +245,19 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
                     key={color}
                     className="color-option"
                     style={{ background: color }}
-                    onClick={() => {
-                      setNewCategory({ ...newCategory, color });
-                      setShowColorPicker(false);
-                    }}
+                    onClick={() => { setNewCategory({ ...newCategory, color }); setShowColorPicker(false); }}
                   />
                 ))}
               </div>
             )}
 
-            {/* Icon Picker */}
             {showIconPicker && (
               <div className="icon-picker">
                 {DEFAULT_ICONS.map(icon => (
                   <button
                     key={icon}
                     className="icon-option"
-                    onClick={() => {
-                      setNewCategory({ ...newCategory, icon });
-                      setShowIconPicker(false);
-                    }}
+                    onClick={() => { setNewCategory({ ...newCategory, icon }); setShowIconPicker(false); }}
                   >
                     {icon}
                   </button>
@@ -278,13 +266,13 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
             )}
           </div>
 
-          {/* Expense Categories */}
+          {/* ── Expense Categories ────────────────────────────────────────── */}
           <div className="categories-section">
-            <h3>💳 Categorias de Despesas</h3>
+            <h3>💳 Categorias de Despesas ({categories.expense.length})</h3>
             <div className="categories-list">
               {categories.expense.map((cat, index) => (
                 <CategoryItem
-                  key={cat.id}
+                  key={cat.id || index}
                   category={cat}
                   type="expense"
                   index={index}
@@ -293,13 +281,13 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
             </div>
           </div>
 
-          {/* Income Categories */}
+          {/* ── Income Categories ─────────────────────────────────────────── */}
           <div className="categories-section">
-            <h3>💰 Categorias de Receitas</h3>
+            <h3>💰 Categorias de Receitas ({categories.income.length})</h3>
             <div className="categories-list">
               {categories.income.map((cat, index) => (
                 <CategoryItem
-                  key={cat.id}
+                  key={cat.id || index}
                   category={cat}
                   type="income"
                   index={index}
@@ -307,6 +295,7 @@ const CategoryManager = ({ userId, onClose, onUpdate }) => {
               ))}
             </div>
           </div>
+
         </div>
       </div>
     </div>

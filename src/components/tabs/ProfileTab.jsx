@@ -72,7 +72,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       {showCategoryManager && (
         <Overlay onClose={() => setShowCategoryManager(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <CategoryManager userId={user.id} onClose={() => setShowCategoryManager(false)} onUpdate={onCategoriesChange} />
+            <CategoryManager userId={user.id} categories={categories} onClose={() => setShowCategoryManager(false)} onUpdate={onCategoriesChange} />
           </div>
         </Overlay>
       )}

@@ -107,12 +107,12 @@ const App = () => {
       // categories added/removed in Profile are reflected everywhere immediately.
       if (settings?.custom_categories) {
         const saved = settings.custom_categories;
-        // Use saved if it has content; otherwise keep defaults
-        const merged = {
-          expense: saved.expense?.length ? saved.expense : CATEGORIES_EXPENSE,
-          income:  saved.income?.length  ? saved.income  : CATEGORIES_INCOME,
-        };
-        setCategories(merged);
+        // Trust saved state (even empty arrays); only fall back to defaults
+        // if the key is missing entirely (e.g. first-time user).
+        setCategories({
+          expense: Array.isArray(saved.expense) ? saved.expense : CATEGORIES_EXPENSE,
+          income:  Array.isArray(saved.income)  ? saved.income  : CATEGORIES_INCOME,
+        });
       }
       // Load layout theme — guard against old colour values ('dark','light','gray')
       const t = settings?.theme;
