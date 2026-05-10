@@ -4,7 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
-import { isInFinancialMonth, filterByFinancialMonth } from '../../utils/financialMonth';
+import { isInFinancialMonth, filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthRange } from '../../utils/financialMonth';
 import { fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory, fetchCryptoHistoryBatch, fetchStockSearch, getPrice, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
 import { searchAssets } from '../../utils/searchAssets';
 
@@ -522,7 +522,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const getSpentByCategory = (categoryId) => getSpentForMonth(categoryId, selectedMonth);
 
   const sortedItems = useMemo(() => {
-    const prevMonth = shiftMonth(selectedMonth, -1);
+    const prevMonth = shiftFinancialMonth(selectedMonth, -1);
     return categories.expense
       .map(cat => {
         const limit     = budgets[cat.id] || 0;
@@ -969,14 +969,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         {/* Month navigation */}
         {activeView === 'budgets' && (
           <div className="m-month-nav">
-            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}>‹</button>
+            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftFinancialMonth(selectedMonth, -1))}>‹</button>
             <div className="m-month-nav-center">
-              <span className="m-month-nav-label">{formatMonthLabel(selectedMonth)}</span>
+              <span className="m-month-nav-label">{formatMonthLabel(selectedMonth, financialMonthStartDay)}</span>
               {selectedMonth !== currentMonth && (
                 <button className="m-month-nav-today" onClick={() => setSelectedMonth(currentMonth)}>Este mês</button>
               )}
             </div>
-            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, 1))}>›</button>
+            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftFinancialMonth(selectedMonth, 1))}>›</button>
           </div>
         )}
 
@@ -990,7 +990,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               const barColor  = STATUS(totalPct).grad;
               return (
                 <div className="m-bmc">
-                  <span className="m-bmc-label">Orçamento mensal</span>
+                  <span className="m-bmc-label">
+                    {(() => {
+                      if (financialMonthStartDay === 1) return 'Orçamento mensal';
+                      const { start, end } = getFinancialMonthRange(selectedMonth, financialMonthStartDay);
+                      const fmt = (s) => new Date(s + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+                      return `${fmt(start)} → ${fmt(end)}`;
+                    })()}
+                  </span>
                   <div className="m-bmc-big">
                     <span className="m-bmc-amount" style={{ color: isTotalOver ? '#dc2626' : undefined }}>
                       <CountUp value={totalBudget > 0 ? Math.abs(remaining) : totalSpent} />€
@@ -1513,7 +1520,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       {activeView === 'budgets' && (
         <div className="budgets-section">
-          <h3>Limites Mensais</h3>
+          <h3>
+            {financialMonthStartDay === 1 ? 'Limites Mensais' : (() => {
+              const { start, end } = getFinancialMonthRange(selectedMonth, financialMonthStartDay);
+              const fmt = (s) => new Date(s + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+              return `${fmt(start)} → ${fmt(end)}`;
+            })()}
+          </h3>
           {(() => {
             const totalBudget = Object.values(budgets).reduce((sum, val) => sum + (val || 0), 0);
             const totalSpent = categories.expense.reduce((sum, cat) => sum + getSpentByCategory(cat.id), 0);
@@ -1549,7 +1562,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   </div>
                   <div className="budget-input-row">
                     <input type="number" inputMode="decimal" className="budget-input" value={limit || ''} onChange={(e) => handleLimitChange(cat.id, e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { saveBudgetToDb(); e.target.blur(); } }} placeholder="0" step="10" min="0" />
-                    <span className="budget-currency">€/mês</span>
+                    <span className="budget-currency">{financialMonthStartDay === 1 ? '€/mês' : '€/per.'}</span>
                     <button className="budget-save-btn" onClick={saveBudgetToDb} title="Guardar">✓</button>
                   </div>
                   {hasLimit && (
