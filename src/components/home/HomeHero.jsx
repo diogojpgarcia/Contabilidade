@@ -22,6 +22,7 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
 
   return (
     <div className="h-hero">
+      <div className="h-hero-tab-label">Início</div>
       <div className="h-hero-patrimony-label">Património total</div>
       <div className="h-hero-patrimony-value">{fmt(patrimonyTotal)}€</div>
 

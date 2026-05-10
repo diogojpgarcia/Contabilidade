@@ -3,19 +3,12 @@
    All overrides here; default theme is completely untouched.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── SCROLL FIX ─────────────────────────────────────────────────────────── */
-/* The base CSS has overflow:hidden on .main-content-new and its children.
-   Override both so modern tabs can scroll naturally.                        */
+/* ── SCROLL ──────────────────────────────────────────────────────────────── */
+/* All scroll now handled by .main-content-new (App.css).
+   No per-tab overflow overrides needed — tabs use outer scroll.           */
 .modern-ui .main-content-new {
-  overflow-y: auto;
-  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-.modern-ui .main-content-new > div {
-  overflow: visible;
-  flex: unset;
-  min-height: unset;
+  overscroll-behavior-y: contain;
 }
 
 /* ── BOTTOM NAV ─────────────────────────────────────────────────────────── */
@@ -45,7 +38,7 @@
 /* ── PAGE WRAPPER (all modern tab roots) ────────────────────────────────── */
 .m-page {
   overflow-x: hidden;
-  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -124,7 +117,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    HOME TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
-.m-home { overflow-x: hidden; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.m-home { overflow-x: hidden; padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom))); }
 
 /* Month bar */
 .m-month-bar {
@@ -637,7 +630,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    BUDGET TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
-.m-budget-page { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.m-budget-page { padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom))); }
 
 /* Budget summary chips */
 .m-budget-summary {
@@ -2021,7 +2014,7 @@
    PROFILE TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
 .m-profile-page {
-  padding: 0 16px calc(84px + env(safe-area-inset-bottom));
+  padding: 0 16px var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
 }
 
 .m-user-section {

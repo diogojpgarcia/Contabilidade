@@ -3,6 +3,7 @@ import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
+import PageHeader from '../PageHeader';
 import './ProfileTab.css';
 
 const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange }) => {
@@ -158,6 +159,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   if (theme === 'modern') {
     return (
       <div className="m-profile-page">
+        <PageHeader title="Perfil" />
         {/* User info */}
         <div className="m-user-section">
           <div className="m-avatar">
@@ -313,6 +315,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
     <div className="profile-tab">
+      <PageHeader title="Perfil" />
       {/* User Info */}
       <div className="user-info-section">
         <div className="user-avatar-large">

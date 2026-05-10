@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import BulkUpdateModal from './components/BulkUpdateModal';
@@ -20,6 +20,7 @@ import BudgetTab from './components/tabs/BudgetTab';
 import ImportTab from './components/tabs/ImportTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
+import './styles/layout.css';
 import './styles/modern.css';
 import './styles/fintech.css';
 
@@ -28,6 +29,12 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
+
+  // Scroll-reset: always open each tab at the top
+  const mainContentRef = useRef(null);
+  useEffect(() => {
+    if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
+  }, [activeTab]);
   const [transactions, setTransactions] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(getMonthKey(new Date().toISOString()));
   const [patrimony, setPatrimony] = useState({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
@@ -635,7 +642,7 @@ const App = () => {
   return (
     <div className={`app-new ${theme}-ui${theme === 'fintech' ? ' modern-ui' : ''}`}>
       {/* Main Content */}
-      <main className="main-content-new">
+      <main className="main-content-new" ref={mainContentRef}>
       <ErrorBoundary>
         {activeTab === 'home' && (
           <HomeTab

@@ -109,14 +109,20 @@ body {
   font-weight: 500;
 }
 
-/* Main Content */
+/* Main Content — single scroll container for all tabs */
 .main-content-new {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 80px; /* Space for bottom nav */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* Tabs provide their own bottom clearance via --bottom-clearance;
+     keep a baseline here only as a safety net for unported tabs. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
+  scroll-behavior: auto; /* instant — JS resets use scrollTop not scrollTo */
 }
 
 /* Bottom Navigation */

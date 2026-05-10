@@ -1,10 +1,11 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { Bubble, Card } from '../ui';
 import { generateInsights, computeFinancialScore, generateGoals, shiftMonth, formatMonthLabel } from '../../utils/insights';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange } from '../../utils/financialMonth';
+import PageHeader from '../PageHeader';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -44,6 +45,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [pickerTx, setPickerTx] = useState(null);
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
+
+  // Scroll outer container to top when switching between views
+  const statsTabRef = useRef(null);
+  useEffect(() => {
+    const outer = statsTabRef.current?.closest('.main-content-new');
+    if (outer) outer.scrollTop = 0;
+  }, [activeView]);
   const [deleting, setDeleting] = useState(null);
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
@@ -302,11 +310,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   /* ── MODERN / FINTECH BRANCH ───────────────────────────────────────────── */
   if (theme === 'modern' || theme === 'fintech') {
     return (
-      <div className="m-page">
-        {/* Header */}
-        <div className="m-stats-header">
-          <span className="m-stats-title">Estatísticas</span>
-        </div>
+      <div className="m-page" ref={statsTabRef}>
+        <PageHeader title="Estatísticas" />
 
         {/* View toggle */}
         <div className="m-toggle">
@@ -633,11 +638,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
   /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
-    <div className="stats-tab">
-      <div className="stats-header">
-        <h2>Estatísticas</h2>
-        <p>Visão geral das finanças</p>
-      </div>
+    <div className="stats-tab" ref={statsTabRef}>
+      <PageHeader title="Estatísticas" subtitle="Visão geral das finanças" />
 
       {/* View Toggle */}
       <div className="view-toggle view-toggle-3">

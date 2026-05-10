@@ -37,6 +37,7 @@ const Sparkline = ({ prices, color = '#22c55e', width = 68, height = 26 }) => {
     </svg>
   );
 };
+import PageHeader from '../PageHeader';
 import './BudgetTab.css';
 
 const CATEGORY_ICONS = {
@@ -249,6 +250,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const { draft: patrimonyForm, setField: setPatrimonyField, reset: resetPatrimonyForm                     } = useForm({});
 
   const [activeView,          setActiveView]          = useState('budgets');
+
+  // Scroll outer container to top whenever the inner view changes
+  const budgetTabRef = useRef(null);
+  useEffect(() => {
+    const outer = budgetTabRef.current?.closest('.main-content-new');
+    if (outer) outer.scrollTop = 0;
+  }, [activeView]);
   const [goals,               setGoals]               = useState([]);
   const [editingGoalId,       setEditingGoalId]       = useState(null);
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
@@ -958,7 +966,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     const isTotalOver = totalBudget > 0 && totalSpent > totalBudget;
 
     return (
-      <div className="m-budget-page">
+      <div className="m-budget-page" ref={budgetTabRef}>
+        <PageHeader title="Orçamento" />
         {/* View toggle */}
         <div className="m-toggle">
           <button className={`m-toggle-btn ${activeView === 'budgets'   ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamentos</button>
@@ -1500,11 +1509,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
-    <div className="budget-tab">
-      <div className="budget-header">
-        <h2>Orçamento</h2>
-        <p>Gestão financeira</p>
-      </div>
+    <div className="budget-tab" ref={budgetTabRef}>
+      <PageHeader title="Orçamento" subtitle="Gestão financeira" />
 
       <div className="view-toggle view-toggle-3">
         <button className={`toggle-btn ${activeView === 'budgets' ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>
