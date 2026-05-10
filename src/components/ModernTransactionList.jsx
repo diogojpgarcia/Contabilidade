@@ -171,6 +171,9 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange
                         : tx.type === 'adjustment'
                           ? <span style={{ fontSize: '0.7rem', background: '#f97316', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>⚖ Ajuste</span>
                           : tx.category}
+                      {tx.account_name && !isTransfer && tx.type !== 'adjustment' && (
+                        <span className="ft-acct-badge">◈ {tx.account_name}</span>
+                      )}
                     </span>
                   </div>
 

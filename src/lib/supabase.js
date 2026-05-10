@@ -81,6 +81,24 @@ export const dbService = {
     return mapTransaction(data[0]);
   },
 
+  async migrateUnlinkedTransactions(userId, accountId, accountName) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .update({ account_id: accountId, account_name: accountName })
+      .eq('user_id', userId)
+      .is('account_id', null)
+      .neq('type', 'transfer')
+      .select('id');
+    if (error) {
+      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
+        (error.message || '').includes('account_id');
+      if (!isColErr) throw error;
+      console.warn('[supabase] account columns missing — migration skipped');
+      return 0;
+    }
+    return (data || []).length;
+  },
+
   async updateTransaction(transactionId, updates) {
     const { data, error } = await supabase
       .from('transactions')

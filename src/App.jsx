@@ -222,10 +222,34 @@ const App = () => {
     catch (error) { console.error("Error saving patrimony:", error); }
   };
 
-  const handleDefaultAccountChange = (acc) => {
+  const handleDefaultAccountChange = async (acc) => {
     // acc = { id, name } | null
     setDefaultAccount(acc);
     dbService.updateUserSettings(currentUser.id, { defaultTransactionAccount: acc }).catch(console.error);
+
+    if (!acc) return;
+
+    // Offer to link old unlinked transactions (exclude transfers — they pair with each other)
+    const unlinked = transactions.filter(t => !t.account_id && t.type !== 'transfer');
+    if (unlinked.length === 0) return;
+
+    const confirmed = window.confirm(
+      `${unlinked.length} transação(ões) sem conta associada.\n\nAplicar "${acc.name}" a estas transações antigas?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await dbService.migrateUnlinkedTransactions(currentUser.id, acc.id, acc.name);
+      // Mirror in local state — no balance change (the account balance already reflects historical data)
+      setTransactions(prev => prev.map(t =>
+        (!t.account_id && t.type !== 'transfer')
+          ? { ...t, account_id: acc.id, account_name: acc.name }
+          : t
+      ));
+    } catch (err) {
+      console.error('❌ Migration failed:', err);
+      alert('Erro na migração: ' + err.message);
+    }
   };
 
   // Apply a +/- delta to one patrimony account balance and persist.

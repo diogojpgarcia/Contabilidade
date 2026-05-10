@@ -275,6 +275,9 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onAccountChange, onDelet
               ) : (
                 <span className="ftc-cat">{effectiveCat}</span>
               )}
+              {tx.account_name && !isTransfer && !isAdjustment && (
+                <span className="ftc-acct-badge">◈ {tx.account_name}</span>
+              )}
             </span>
           </div>
 
