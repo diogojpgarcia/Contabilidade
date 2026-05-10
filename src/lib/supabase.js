@@ -76,7 +76,13 @@ export const dbService = {
       const base = { user_id: userId, date, description, amount, type, category };
       const { data: d2, error: e2 } = await supabase.from('transactions').insert([base]).select();
       if (e2) throw e2;
-      return mapTransaction(d2[0]);
+      // Preserve account fields the caller passed in — the DB row lacks them but
+      // the in-memory object must carry them so computeCurrentBalance works immediately.
+      return {
+        ...mapTransaction(d2[0]),
+        ...(account_id   != null ? { account_id }   : {}),
+        ...(account_name != null ? { account_name } : {}),
+      };
     }
     return mapTransaction(data[0]);
   },

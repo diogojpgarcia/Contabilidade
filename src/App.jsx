@@ -269,12 +269,24 @@ const App = () => {
     if (!confirmed) return;
 
     try {
+      // DB update (no-op if account columns don't exist — graceful)
       await dbService.migrateUnlinkedTransactions(currentUser.id, acc.id, acc.name);
+
+      // Update in-memory state
       setTransactions(prev => prev.map(t =>
         (!t.account_id && t.type !== 'transfer')
           ? { ...t, account_id: acc.id, account_name: acc.name }
           : t
       ));
+
+      // Persist every migrated transaction to fallback map — this is the guaranteed
+      // storage that survives reload even when DB columns don't exist
+      const updatedMap = { ...transactionAccountMap };
+      unlinked.forEach(t => {
+        updatedMap[t.id] = { account_id: acc.id, account_name: acc.name };
+      });
+      setTransactionAccountMap(updatedMap);
+      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
     } catch (err) {
       console.error('❌ Migration failed:', err);
       alert('Erro na migração: ' + err.message);
@@ -335,19 +347,33 @@ const App = () => {
 
   const handleAddTransaction = async (transaction) => {
     try {
-      console.log('➕ Adding transaction...');
-      // Auto-assign mainAccountId if no account was explicitly chosen
       const accId   = transaction.account_id || mainAccountId || null;
       const accName = transaction.account_name || (accId ? (patrimony.accounts || []).find(a => a.id === accId)?.name || null : null);
-      const newTransaction = await dbService.addTransaction(currentUser.id, {
+      const newTx = await dbService.addTransaction(currentUser.id, {
         ...transaction,
         account_id:   accId,
         account_name: accName,
       });
-      setTransactions(prev => [newTransaction, ...prev]);
-      // No balance mutation — currentBalance is computed live from transactions
+      // Ensure account fields are present (fallback DB path preserves them in the
+      // returned object now, but guard here too for safety)
+      const txWithAccount = {
+        ...newTx,
+        account_id:   newTx.account_id   || accId   || null,
+        account_name: newTx.account_name || accName || null,
+      };
+      setTransactions(prev => [txWithAccount, ...prev]);
+
+      // Persist account link to fallback map — guaranteed even when DB columns absent
+      if (accId && txWithAccount.id) {
+        const updatedMap = {
+          ...transactionAccountMap,
+          [txWithAccount.id]: { account_id: accId, account_name: accName || null },
+        };
+        setTransactionAccountMap(updatedMap);
+        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+      }
+
       setActiveTab('home');
-      console.log('✅ Transaction added!');
     } catch (error) {
       console.error('❌ Error adding transaction:', error);
       alert('Erro ao adicionar transação: ' + error.message);
@@ -379,20 +405,32 @@ const App = () => {
     const fromName = fromAcc?.name || fromId;
     const toName   = toAcc?.name   || toId;
     try {
-      // account_id on transfer records lets computeCurrentBalance include transfer effects
-      const outTx = await dbService.addTransaction(currentUser.id, {
+      const rawOut = await dbService.addTransaction(currentUser.id, {
         description: `Transferência para ${toName}`,
         amount: value, type: 'transfer', category: fromName, date: today,
         account_id: fromId, account_name: fromName,
       });
-      const inTx = await dbService.addTransaction(currentUser.id, {
+      const rawIn = await dbService.addTransaction(currentUser.id, {
         description: `Transferência de ${fromName}`,
         amount: value, type: 'transfer', category: toName, date: today,
         account_id: toId, account_name: toName,
       });
-      const both = [outTx, inTx].filter(Boolean);
+
+      // Guarantee account fields on in-memory objects (addTransaction fallback already
+      // preserves them, but apply defensively so computeCurrentBalance is never wrong)
+      const outTx = { ...rawOut, account_id: rawOut.account_id || fromId, account_name: rawOut.account_name || fromName };
+      const inTx  = { ...rawIn,  account_id: rawIn.account_id  || toId,   account_name: rawIn.account_name  || toName  };
+
+      const both = [outTx, inTx].filter(t => t?.id);
       if (both.length) setTransactions(prev => [...both, ...prev]);
-      // No balance mutation — computed live from transactions
+
+      // Persist both transfer legs to fallback map — survives reload regardless of DB columns
+      const updatedMap = { ...transactionAccountMap };
+      if (outTx.id) updatedMap[outTx.id] = { account_id: fromId, account_name: fromName };
+      if (inTx.id)  updatedMap[inTx.id]  = { account_id: toId,   account_name: toName  };
+      setTransactionAccountMap(updatedMap);
+      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+
       setActiveTab('home');
     } catch (err) {
       console.error('❌ Transfer error:', err);
