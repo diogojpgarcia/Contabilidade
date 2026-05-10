@@ -2,28 +2,12 @@
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
-import { Bubble, Card } from '../ui';
-import { generateInsights, computeFinancialScore, generateGoals, shiftMonth, formatMonthLabel } from '../../utils/insights';
+import { generateInsights, computeFinancialScore, shiftMonth, formatMonthLabel } from '../../utils/insights';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange } from '../../utils/financialMonth';
 import PageHeader from '../PageHeader';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
-const INSIGHT_ICONS = {
-  budget_exceeded:   '⚠',
-  budget_warning:    '⚡',
-  prediction:        '◎',
-  category_increase: '↑',
-  top_category:      '★',
-  trend:             '↗',
-};
-
-const INSIGHT_COLORS = {
-  risk: '#ef4444',
-  warn: '#F59E0B',
-  good: '#22c55e',
-  info: '#6B7280',
-};
 
 /* Transfer flow helper (mirrors ModernTransactionList / DefaultTransactionList) */
 function getTransferFlow(tx) {
@@ -241,11 +225,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     }
   }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
 
-  const goals = useMemo(() => {
-    try { return generateGoals({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay }); }
-    catch (e) { return []; }
-  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
-
   const financialScore = useMemo(() => {
     try {
       return computeFinancialScore({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay });
@@ -305,8 +284,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   };
   const saldoDeltaLabel = (saldoDelta >= 0 ? '↑ +' : '↓ ') + fmt(Math.abs(saldoDelta)) + ' vs mês anterior';
 
-  console.log('INSIGHTS ITEMS:', insights);
-
   /* ── MODERN / FINTECH BRANCH ───────────────────────────────────────────── */
   if (theme === 'modern' || theme === 'fintech') {
     return (
@@ -315,9 +292,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
         {/* View toggle */}
         <div className="m-toggle">
-          <button className={`m-toggle-btn ${activeView === 'overview'  ? 'active' : ''}`} onClick={() => setActiveView('overview')}>Resumo</button>
-          <button className={`m-toggle-btn ${activeView === 'log'       ? 'active' : ''}`} onClick={() => setActiveView('log')}>Histórico</button>
-          <button className={`m-toggle-btn ${activeView === 'insights'  ? 'active' : ''}`} onClick={() => setActiveView('insights')}>Insights</button>
+          <button className={`m-toggle-btn ${activeView === 'overview' ? 'active' : ''}`} onClick={() => setActiveView('overview')}>Visão Geral</button>
+          <button className={`m-toggle-btn ${activeView === 'log'      ? 'active' : ''}`} onClick={() => setActiveView('log')}>Histórico</button>
         </div>
 
         {/* Diário / Património — only shown in Histórico */}
@@ -440,6 +416,109 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               </div>
             </div>
 
+            {/* ── Análise: Score + priority insights ── */}
+            {(() => {
+              const COLOR_TO_FEED = { risk: 'alert', warn: 'warning', good: 'opportunity', info: 'info' };
+              const FEED_STYLE = {
+                alert:       { border: 'rgba(239,68,68,0.3)',    bg: 'rgba(239,68,68,0.08)',  glow: '0 0 16px rgba(239,68,68,0.12)' },
+                warning:     { border: 'rgba(234,179,8,0.3)',    bg: 'rgba(234,179,8,0.08)',  glow: 'none' },
+                opportunity: { border: 'rgba(74,222,128,0.3)',   bg: 'rgba(74,222,128,0.08)', glow: 'none' },
+                info:        { border: 'rgba(255,255,255,0.08)', bg: '#18181b',               glow: 'none' },
+                forecast:    { border: 'rgba(234,179,8,0.3)',    bg: 'rgba(234,179,8,0.07)',  glow: 'none' },
+              };
+              const FEED_ICON  = { alert: '⚠️', warning: '⚡', opportunity: '📈', info: '📊', forecast: '📅' };
+              const RISK_COLOR = { high: '#f87171', medium: '#facc15', low: '#4ade80' };
+              const COLOR_SEV  = { risk: 9, warn: 6, good: 2, info: 3 };
+              const COLOR_REL  = { risk: 9, warn: 7, good: 5, info: 4 };
+              const ps = (s, r) => s * 0.6 + r * 0.4;
+
+              const scoredInsights = insights.map(item => ({
+                kind: 'insight',
+                feedType: COLOR_TO_FEED[item.color] || 'info',
+                priorityScore: ps(COLOR_SEV[item.color] || 3, COLOR_REL[item.color] || 4),
+                ...item,
+              }));
+
+              const forecastEntry = forecast ? (() => {
+                const sev = { high: 9, medium: 6, low: 3 }[forecast.riskLevel] || 5;
+                const rel = { high: 9, medium: 7, low: 5 }[forecast.riskLevel] || 6;
+                return { kind: 'forecast', feedType: forecast.riskLevel === 'high' ? 'alert' : 'forecast', priorityScore: ps(sev, rel), ...forecast };
+              })() : null;
+
+              const feed = [
+                ...scoredInsights,
+                ...(forecastEntry ? [forecastEntry] : []),
+              ].sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 3);
+
+              const renderInsight = (item, i) => {
+                const s = FEED_STYLE[item.feedType] || FEED_STYLE.info;
+                return (
+                  <div key={i} style={{ borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', background: s.bg, border: `1px solid ${s.border}`, boxShadow: s.glow }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1rem', marginTop: 1 }}>
+                      {FEED_ICON[item.feedType]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: 2 }}>{item.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.4 }}>{item.message}</div>
+                      {item.explanation && <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>{item.explanation}</div>}
+                    </div>
+                  </div>
+                );
+              };
+
+              const renderForecast = (fc, i) => {
+                const rc = RISK_COLOR[fc.riskLevel];
+                const s  = FEED_STYLE[fc.riskLevel === 'high' ? 'alert' : 'forecast'];
+                return (
+                  <div key={i} style={{ borderRadius: 14, padding: '14px 16px', background: s.bg, border: `1px solid ${s.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ fontSize: '1rem' }}>📅</span>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>Previsão do mês</div>
+                      </div>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, color: rc, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {{ high: 'Risco alto', medium: 'Atenção', low: 'Controlado' }[fc.riskLevel]}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                      <div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>{fmt(fc.projected)}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#71717a', marginTop: 2 }}>{fmt(Math.round(fc.dailyAvg))}/dia · {fc.daysLeft} dias restantes</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        {fc.vsBudget !== null && <div style={{ fontSize: '0.75rem', fontWeight: 600, color: fc.vsBudget > 0 ? '#f87171' : '#4ade80' }}>{fc.vsBudget > 0 ? `+${fmt(fc.vsBudget)} acima` : `−${fmt(Math.abs(fc.vsBudget))} abaixo`} do orç.</div>}
+                        {fc.vsAvg !== null && <div style={{ fontSize: '0.7rem', color: fc.vsAvg > 0 ? '#fb923c' : '#71717a', marginTop: 2 }}>{fc.vsAvg > 0 ? '+' : '−'}{fmt(Math.abs(Math.round(fc.vsAvg)))} vs média 3m</div>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              };
+
+              return (
+                <div style={{ marginTop: 4, marginBottom: 8 }}>
+                  <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 2 }}>Análise</div>
+                  {/* Financial score ring */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181b', borderRadius: 16, padding: '14px 16px', marginBottom: feed.length > 0 ? 8 : 0 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, #27272a ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 35, height: 35, borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Score Financeiro</div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{financialScore.label}</div>
+                    </div>
+                  </div>
+                  {/* Priority feed — max 3 items, no goals */}
+                  {feed.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {feed.map((item, i) =>
+                        item.kind === 'forecast' ? renderForecast(item, i) : renderInsight(item, i)
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
           </div>
         )}
 
@@ -481,149 +560,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           </>
         )}
 
-        {/* ── INSIGHTS ── */}
-        {activeView === 'insights' && (() => {
-          const COLOR_TO_FEED = { risk: 'alert', warn: 'warning', good: 'opportunity', info: 'info' };
-          const FEED_STYLE    = {
-            alert:       { border: 'rgba(239,68,68,0.3)',    bg: 'rgba(239,68,68,0.08)',   glow: '0 0 16px rgba(239,68,68,0.12)' },
-            warning:     { border: 'rgba(234,179,8,0.3)',    bg: 'rgba(234,179,8,0.08)',   glow: '0 0 16px rgba(234,179,8,0.12)' },
-            opportunity: { border: 'rgba(74,222,128,0.3)',   bg: 'rgba(74,222,128,0.08)',  glow: 'none' },
-            info:        { border: 'rgba(255,255,255,0.08)', bg: '#18181b',                glow: 'none' },
-            goal:        { border: 'rgba(99,102,241,0.25)',  bg: 'rgba(99,102,241,0.07)',  glow: 'none' },
-            forecast:    { border: 'rgba(234,179,8,0.3)',    bg: 'rgba(234,179,8,0.07)',   glow: 'none' },
-          };
-          const FEED_ICON = { alert: '⚠️', warning: '⚡', opportunity: '📈', info: '📊', goal: '🎯', forecast: '📅' };
-          const GOAL_EMOJI = { reduction: '🎯', saving: '💰', balance: '⚖️', improvement: '📉' };
-          const STATUS_LABEL = { done: 'Concluído', on_track: 'No caminho', risk: 'Em risco', behind: 'Atrasado' };
-          const RISK_COLOR = { high: '#f87171', medium: '#facc15', low: '#4ade80' };
-
-          // ── score each item ───────────────────────────────────────────────
-          const COLOR_SEV = { risk: 9, warn: 6, good: 2, info: 3 };
-          const COLOR_REL = { risk: 9, warn: 7, good: 5, info: 4 };
-          const ps = (s, r) => s * 0.6 + r * 0.4;
-
-          const scoredInsights = insights.map(item => ({
-            kind: 'insight',
-            feedType: COLOR_TO_FEED[item.color] || 'info',
-            priorityScore: ps(COLOR_SEV[item.color] || 3, COLOR_REL[item.color] || 4),
-            ...item,
-          }));
-
-          const scoredGoals = goals.map(g => {
-            const sev = { behind: 7, risk: 5, on_track: 3, done: 1 }[g.status] || 3;
-            const rel = { behind: 8, risk: 7, on_track: 5, done: 3 }[g.status] || 5;
-            return { kind: 'goal', feedType: 'goal', priorityScore: ps(sev, rel), ...g };
-          });
-
-          const forecastEntry = forecast ? (() => {
-            const sev = { high: 9, medium: 6, low: 3 }[forecast.riskLevel] || 5;
-            const rel = { high: 9, medium: 7, low: 5 }[forecast.riskLevel] || 6;
-            return { kind: 'forecast', feedType: forecast.riskLevel === 'high' ? 'alert' : 'forecast', priorityScore: ps(sev, rel), ...forecast };
-          })() : null;
-
-          const feed = [
-            ...scoredInsights,
-            ...scoredGoals,
-            ...(forecastEntry ? [forecastEntry] : []),
-          ].sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 4);
-
-          // ── render helpers ────────────────────────────────────────────────
-          const renderInsight = (item, i) => {
-            const s = FEED_STYLE[item.feedType] || FEED_STYLE.info;
-            return (
-              <div key={i} style={{ borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, boxShadow: s.glow, transition: 'transform 0.15s ease' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.1rem' }}>
-                  {FEED_ICON[item.feedType]}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff', marginBottom: 2 }}>{item.title}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.4 }}>{item.message}</div>
-                  {(item.explanation || item.extra) && <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>{item.explanation || item.extra}</div>}
-                </div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', flexShrink: 0, marginLeft: 8 }}>{item.value}</div>
-              </div>
-            );
-          };
-
-          const renderGoal = (g, i) => (
-            <div key={i} style={{ borderRadius: 14, padding: '14px 16px', background: FEED_STYLE.goal.bg, border: `1px solid ${FEED_STYLE.goal.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '1rem', marginTop: 1 }}>{GOAL_EMOJI[g.type] || '🎯'}</span>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{g.title}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#71717a', marginTop: 2 }}>{g.description}</div>
-                  </div>
-                </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: g.barColor, flexShrink: 0, marginLeft: 8 }}>{STATUS_LABEL[g.status]}</span>
-              </div>
-              <div style={{ width: '100%', height: 4, background: '#27272a', borderRadius: 999, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${g.progressPct}%`, background: g.barColor, borderRadius: 999 }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.65rem', color: '#52525b' }}>
-                <span>{g.type === 'saving' ? `${fmt(g.currentAmount)} poupados` : `${fmt(g.currentAmount)} gastos`}</span>
-                <span>{g.progressPct}%</span>
-              </div>
-            </div>
-          );
-
-          const renderForecast = (fc, i) => {
-            const rc = RISK_COLOR[fc.riskLevel];
-            const s  = FEED_STYLE[fc.riskLevel === 'high' ? 'alert' : 'forecast'];
-            return (
-              <div key={i} style={{ borderRadius: 14, padding: '14px 16px', background: s.bg, border: `1px solid ${s.border}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: '1.1rem' }}>📅</span>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>Previsão do mês</div>
-                  </div>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: rc, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {{ high: 'Risco alto', medium: 'Atenção', low: 'Controlado' }[fc.riskLevel]}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                  <div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>{fmt(fc.projected)}</div>
-                    <div style={{ fontSize: '0.72rem', color: '#71717a', marginTop: 2 }}>{fmt(Math.round(fc.dailyAvg))}/dia · {fc.daysLeft} dias restantes</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    {fc.vsBudget !== null && <div style={{ fontSize: '0.75rem', fontWeight: 600, color: fc.vsBudget > 0 ? '#f87171' : '#4ade80' }}>{fc.vsBudget > 0 ? `+${fmt(fc.vsBudget)} acima` : `−${fmt(Math.abs(fc.vsBudget))} abaixo`} do orç.</div>}
-                    {fc.vsAvg !== null && <div style={{ fontSize: '0.7rem', color: fc.vsAvg > 0 ? '#fb923c' : '#71717a', marginTop: 2 }}>{fc.vsAvg > 0 ? '+' : '−'}{fmt(Math.abs(Math.round(fc.vsAvg)))} vs média 3m</div>}
-                  </div>
-                </div>
-              </div>
-            );
-          };
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 16px 16px' }}>
-
-              {/* Score — always pinned at top */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181b', borderRadius: 16, padding: '14px 16px' }}>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, #27272a ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Score Financeiro</div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{financialScore.label}</div>
-                </div>
-              </div>
-
-              {/* Priority feed */}
-              {feed.length === 0
-                ? <div style={{ textAlign: 'center', color: '#52525b', fontSize: '0.875rem', padding: '24px 0' }}>Sem informação relevante neste momento</div>
-                : feed.map((item, i) =>
-                    item.kind === 'goal'     ? renderGoal(item, i)     :
-                    item.kind === 'forecast' ? renderForecast(item, i) :
-                    renderInsight(item, i)
-                  )
-              }
-            </div>
-          );
-        })()}
-
         {pickerTx && (
           <CategoryPicker
             transaction={pickerTx}
@@ -642,13 +578,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       <PageHeader title="Estatísticas" subtitle="Visão geral das finanças" />
 
       {/* View Toggle */}
-      <div className="view-toggle view-toggle-3">
+      <div className="view-toggle">
         <button
           className={`toggle-btn ${activeView === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveView('overview')}
         >
           <span className="sf-icon">◧</span>
-          <span>Resumo</span>
+          <span>Visão Geral</span>
         </button>
         <button
           className={`toggle-btn ${activeView === 'log' ? 'active' : ''}`}
@@ -656,13 +592,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         >
           <span className="sf-icon">◫</span>
           <span>Histórico</span>
-        </button>
-        <button
-          className={`toggle-btn ${activeView === 'insights' ? 'active' : ''}`}
-          onClick={() => setActiveView('insights')}
-        >
-          <span className="sf-icon">◐</span>
-          <span>Insights</span>
         </button>
       </div>
 
@@ -744,8 +673,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     <div className="category-stats">
                       <span className="category-amount">{item.amount.toFixed(2)}€</span>
                       <div className="category-bar-container">
-                        <div 
-                          className="category-bar-fill" 
+                        <div
+                          className="category-bar-fill"
                           style={{ width: `${item.percentage}%` }}
                         />
                       </div>
@@ -753,6 +682,39 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Análise: Score + priority insights ── */}
+          <div className="categories-section" style={{ marginTop: 12 }}>
+            <h3>Análise</h3>
+            {/* Financial score */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--bg-primary)', borderRadius: 12, padding: '14px 16px', marginBottom: insights.length > 0 ? 12 : 0 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, var(--bg-tertiary) ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 35, height: 35, borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Score Financeiro</div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>{financialScore.label}</div>
+              </div>
+            </div>
+            {/* Top 3 priority insights */}
+            {insights.slice(0, 3).map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderTop: '0.5px solid var(--separator)' }}>
+                <div style={{ fontSize: '1.1rem', marginTop: 1, flexShrink: 0 }}>
+                  {item.color === 'risk' ? '⚠️' : item.color === 'warn' ? '⚡' : item.color === 'good' ? '📈' : '📊'}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{item.title}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{item.message}</div>
+                  {item.explanation && <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', marginTop: 3, lineHeight: 1.4 }}>{item.explanation}</div>}
+                </div>
+              </div>
+            ))}
+            {insights.length === 0 && (
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', padding: '12px 0', textAlign: 'center' }}>
+                Sem insights relevantes este mês
               </div>
             )}
           </div>
@@ -951,24 +913,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {activeView === 'insights' && (
-        <div style={{ padding: '0 16px' }}>
-          <div style={{ padding: '8px 0', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>INSIGHTS COUNT: {insights.length}</div>
-          {insights.map(item => (
-            <Card key={item.type} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Bubble color={INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info} icon={INSIGHT_ICONS[item.type] || '◉'} size={38} />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{item.title}</div>
-                  <div style={{ fontWeight: 700, color: INSIGHT_COLORS[item.color] || INSIGHT_COLORS.info }}>{item.value}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{item.message}</div>
-                </div>
-              </div>
-            </Card>
-          ))}
         </div>
       )}
 
