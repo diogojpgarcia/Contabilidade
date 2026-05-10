@@ -823,6 +823,7 @@
 }
 [data-theme="light"] .m-bcc { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
 .m-bcc:active { transform: scale(0.97); }
+.m-bcc.expanded:active { transform: none; }
 
 .m-bcc-row { display: flex; align-items: center; gap: 12px; }
 .m-bcc-bubble {
@@ -920,6 +921,84 @@
   cursor: pointer; transition: opacity 0.12s;
 }
 .m-bcc-save:active { opacity: 0.8; }
+
+/* Chevron expand indicator */
+.m-bcc-chevron {
+  font-size: 1.1rem;
+  color: var(--text-tertiary);
+  display: inline-block;
+  transition: transform 0.22s ease;
+  line-height: 1;
+  padding: 0 2px;
+  user-select: none;
+}
+.m-bcc-chevron.open { transform: rotate(90deg); }
+
+/* Expandable transaction list */
+.m-bcc-txs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--separator);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+.m-bcc-tx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+[data-theme="light"] .m-bcc-tx { border-bottom-color: rgba(0,0,0,0.05); }
+.m-bcc-tx:last-child { border-bottom: none; padding-bottom: 0; }
+.m-bcc-tx-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.m-bcc-tx-title {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-bcc-tx-meta {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-bcc-tx-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.m-bcc-tx-amount {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ef4444;
+  font-variant-numeric: tabular-nums;
+}
+.m-bcc-tx-date {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.m-bcc-txs-empty {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 8px 0 4px;
+}
 
 /* Goals */
 .m-goal-row {

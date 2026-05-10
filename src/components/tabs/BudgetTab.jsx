@@ -122,7 +122,7 @@ const CountUp = ({ value, decimals = 0 }) => {
   return <>{display.toFixed(decimals)}</>;
 };
 
-const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
+const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions }) => {
   const [hovered, setHovered] = useState(false);
   const catColor   = CAT_COLORS[cat.label] || '#6B7280';
   const st         = STATUS(percent);
@@ -137,16 +137,18 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
     return () => clearTimeout(t);
   }, [isEditing]);
 
+  const txs = categoryTransactions || [];
+
   return (
     <div
       ref={cardRef}
-      className="m-bcc"
-      style={hovered ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
+      className={`m-bcc${isExpanded ? ' expanded' : ''}`}
+      style={hovered && !isExpanded ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* top row */}
-      <div className="m-bcc-row">
+      {/* top row — clickable to expand */}
+      <div className="m-bcc-row" onClick={onToggleExpand} style={{ cursor: 'pointer' }}>
         <Bubble color={catColor} icon={getCategoryIcon(cat.label)} size={40} radius="12px" />
         <div className="m-bcc-info">
           <div className="m-bcc-name-row">
@@ -165,15 +167,22 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
             {delta < -0.5 && <span className="m-bcc-delta down">↓ −{Math.abs(delta).toFixed(0)}€</span>}
           </div>
         </div>
-        {/* percentage + edit button */}
+        {/* percentage + chevron + edit button */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, marginLeft: 6, flexShrink: 0 }}>
           {limit > 0 && (
             <span style={{ fontSize: '1rem', fontWeight: 700, color: st.color, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
               {percent.toFixed(0)}%
             </span>
           )}
-          {/* ✎ (U+270E) renders reliably on Android system fonts */}
-          <button className="m-bcc-edit" onClick={onEditToggle} aria-label="Editar limite">✎</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <span className={`m-bcc-chevron${isExpanded ? ' open' : ''}`}>›</span>
+            {/* ✎ (U+270E) renders reliably on Android system fonts */}
+            <button
+              className="m-bcc-edit"
+              onClick={(e) => { e.stopPropagation(); onEditToggle(); }}
+              aria-label="Editar limite"
+            >✎</button>
+          </div>
         </div>
       </div>
 
@@ -214,6 +223,28 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
         <div className={`m-bcc-prediction${willExceed ? ' exceed' : ''}`}>
           <span>Previsto: {predicted}€</span>
           {willExceed && <span className="m-bcc-prediction-warn">Vai ultrapassar</span>}
+        </div>
+      )}
+
+      {/* expandable transaction list */}
+      {isExpanded && (
+        <div className="m-bcc-txs">
+          {txs.length === 0 ? (
+            <div className="m-bcc-txs-empty">Sem transações neste mês</div>
+          ) : (
+            txs.map((tx, i) => (
+              <div key={tx.id || i} className="m-bcc-tx">
+                <div className="m-bcc-tx-left">
+                  <span className="m-bcc-tx-title">{tx.description || tx.title || tx.category}</span>
+                  {tx.account_name && <span className="m-bcc-tx-meta">{tx.account_name}</span>}
+                </div>
+                <div className="m-bcc-tx-right">
+                  <span className="m-bcc-tx-amount">−{parseFloat(tx.amount || 0).toFixed(2)}€</span>
+                  <span className="m-bcc-tx-date">{tx.date ? new Date(tx.date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) : ''}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -262,6 +293,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
+  const [expandedCategoryId,  setExpandedCategoryId]  = useState(null);
   const [animated,            setAnimated]            = useState(false);
   const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
   const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
@@ -543,6 +575,18 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       })
       .sort((a, b) => b.percent - a.percent);
   }, [categories.expense, budgets, transactions, selectedMonth]);
+
+  const txByCategory = useMemo(() => {
+    const map = {};
+    for (const cat of categories.expense) {
+      const categoryName = cat.label;
+      map[cat.id] = transactions
+        .filter(t => t.type === 'expense' && t.category === categoryName && t.date && isInFinancialMonth(t.date, selectedMonth, financialMonthStartDay))
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+    }
+    return map;
+  }, [transactions, categories.expense, selectedMonth, financialMonthStartDay]);
 
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
@@ -1057,6 +1101,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
                   onLimitChange={handleLimitChange}
                   onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
+                  isExpanded={expandedCategoryId === cat.id}
+                  onToggleExpand={() => setExpandedCategoryId(expandedCategoryId === cat.id ? null : cat.id)}
+                  categoryTransactions={txByCategory[cat.id] || []}
                 />
               ))}
             </div>
