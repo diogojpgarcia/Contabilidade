@@ -1,64 +1,21 @@
 import React from 'react';
-import ModernTransactionList      from '../ModernTransactionList';
-import DefaultTransactionList     from '../DefaultTransactionList';
-import FintechTransactionCard     from '../FintechTransactionCard';
-import { getCurrentFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel } from '../../utils/financialMonth';
-import './HomeTab.css';
-
-/* ── Transfer dedup (mirrors StatsTab / ModernTransactionList) ──────────── */
-function getTransferFlow(tx) {
-  const desc = (tx.description || '').trim();
-  const toMatch   = desc.match(/^Transferência para (.+)$/i);
-  const fromMatch = desc.match(/^Transferência de (.+)$/i);
-  if (toMatch)   return `${tx.category} → ${toMatch[1]}`;
-  if (fromMatch) return `${fromMatch[1]} → ${tx.category}`;
-  return desc || tx.category || 'Transferência';
-}
-
-function dedupeTransfers(txs) {
-  if (!Array.isArray(txs)) return [];
-  const seen = new Set();
-  return txs.filter(tx => {
-    if (!tx || typeof tx !== 'object') return false;
-    if (tx.type !== 'transfer') return true;
-    const key = `${tx.date}|${parseFloat(tx.amount || 0).toFixed(2)}|${getTransferFlow(tx)}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-/* ── Formatting helpers ──────────────────────────────────────────────────── */
-function fmtBalance(val) {
-  return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-const VIEW_LABELS = { total: 'Total', accounts: 'Contas', investments: 'Investimentos', realestate: 'Imóveis' };
+import HomeHero      from '../home/HomeHero';
+import HomeCashflow  from '../home/HomeCashflow';
+import HomeInsight   from '../home/HomeInsight';
+import HomeAccounts  from '../home/HomeAccounts';
+import HomeEvolution from '../home/HomeEvolution';
+import '../home/Home.css';
 
 const HomeTab = ({
   balance, income, expenses, totalBalance = 0, transactions,
   currentMonth, onMonthChange,
-  patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
-  onCategoryChange,
-  onAccountChange,
+  patrimony = {},
   financialMonthStartDay = 1,
-  onTransactionDeleted,
-  categories,
   theme = 'default',
 }) => {
-  const goToPreviousMonth = () => onMonthChange(shiftFinancialMonth(currentMonth, -1));
-  const goToNextMonth     = () => onMonthChange(shiftFinancialMonth(currentMonth,  1));
-  const goToToday         = () => onMonthChange(getCurrentFinancialMonth(financialMonthStartDay));
-  const formatMonth       = (monthStr) => getFinancialMonthLabel(monthStr, financialMonthStartDay);
-
-  const getBalanceStatus = () => {
-    if (balance > 0) return 'No verde este mês';
-    if (balance < 0) return 'No vermelho este mês';
-    return 'Equilibrado este mês';
-  };
-
-  // Patrimony totals
   const p = patrimony;
+
+  // Patrimony sub-totals — pure derivation, never stored
   const sumAccounts   = (p.accounts   || []).reduce((s, x) => s + (parseFloat(x.currentBalance ?? x.balance) || 0), 0);
   const sumStocks     = (p.stocks     || []).reduce((s, x) => s + (parseFloat(x.qty)      || 0) * (parseFloat(x.avgPrice) || 0), 0);
   const sumBonds      = (p.bonds      || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
@@ -66,190 +23,38 @@ const HomeTab = ({
   const sumVehicles   = (p.vehicles   || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
   const sumCrypto     = (p.crypto     || []).reduce((s, x) => s + (parseFloat(x.qty)      || 0) * (parseFloat(x.price) || 0), 0);
 
-  const patrimonyTotals = {
-    total:       sumAccounts + sumStocks + sumBonds + sumRealestate + sumVehicles + sumCrypto,
-    accounts:    sumAccounts,
-    investments: sumStocks + sumBonds + sumCrypto,
-    realestate:  sumRealestate + sumVehicles,
-  };
-  const patrimonyValue = patrimonyTotals[homePatrimonyView] || 0;
+  const patrimonyTotal = sumAccounts + sumStocks + sumBonds + sumRealestate + sumVehicles + sumCrypto;
+  const investments    = sumStocks + sumBonds + sumCrypto;
+  const realestate     = sumRealestate + sumVehicles;
 
-  /* ── MODERN / FINTECH BRANCH ─────────────────────────────────────────── */
-  if (theme === 'modern' || theme === 'fintech') {
-    return (
-      <div className="m-home">
-        {/* Month navigation */}
-        <div className="m-month-bar">
-          <button className="m-month-btn" onClick={goToPreviousMonth}>‹</button>
-          <span className="m-month-name">{formatMonth(currentMonth)}</span>
-          <button className="m-month-btn" onClick={goToNextMonth}>›</button>
-          <button className="m-today-btn" onClick={goToToday}>Hoje</button>
-        </div>
+  const isModern = theme === 'modern' || theme === 'fintech';
+  const rootClass = isModern ? 'm-home h-page' : 'home-tab h-page';
 
-        {/* ── Unified summary card ─────────────────────────────────── */}
-        <div className="m-summary-card">
-
-          {/* TOP: lifetime balance */}
-          <div className="m-sc-top">
-            <div className="m-sc-total-value">{fmtBalance(totalBalance)}€</div>
-            <div className="m-sc-total-label">Saldo total</div>
-            <div className="m-sc-total-sub">Desde o início</div>
-          </div>
-
-          <div className="m-sc-divider" />
-
-          {/* MIDDLE: receitas + despesas */}
-          <div className="m-sc-middle">
-            <div className="m-sc-col">
-              <span className="m-sc-amount income">+{income.toFixed(2)}€</span>
-              <span className="m-sc-label">Receitas</span>
-            </div>
-            <div className="m-sc-col-sep" />
-            <div className="m-sc-col">
-              <span className="m-sc-amount expense">−{expenses.toFixed(2)}€</span>
-              <span className="m-sc-label">Despesas</span>
-            </div>
-          </div>
-
-          <div className="m-sc-divider" />
-
-          {/* BOTTOM: monthly balance */}
-          <div className="m-sc-bottom">
-            <span className="m-sc-month-label">Saldo do mês</span>
-            <span className={`m-sc-month-value ${balance >= 0 ? 'positive' : 'negative'}`}>
-              {balance >= 0 ? '+' : ''}{balance.toFixed(2)}€
-            </span>
-          </div>
-
-        </div>
-
-        {/* Patrimony compact row */}
-        <div className="m-patrimony-row">
-          <span className="m-patrimony-label">Património</span>
-          <select
-            className="m-patrimony-select"
-            value={homePatrimonyView}
-            onChange={(e) => onPatrimonyViewChange && onPatrimonyViewChange(e.target.value)}
-          >
-            {Object.entries(VIEW_LABELS).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-          <span className="m-patrimony-value">
-            {fmtBalance(patrimonyValue)}€
-          </span>
-        </div>
-
-        {/* Transaction list */}
-        <div className="m-txs">
-          {theme === 'fintech' ? (() => {
-            try {
-              return (
-                <div className="ftc-list">
-                  {dedupeTransfers(transactions).map(tx => (
-                    <FintechTransactionCard
-                      key={tx.id || Math.random()}
-                      tx={tx}
-                      onCategoryChange={onCategoryChange}
-                      onAccountChange={onAccountChange}
-                      onDelete={onTransactionDeleted}
-                      categories={categories}
-                      accounts={patrimony.accounts || []}
-                    />
-                  ))}
-                </div>
-              );
-            } catch (e) {
-              console.error('[HomeTab] FintechTransactionCard render error:', e);
-              return (
-                <ModernTransactionList
-                  transactions={transactions}
-                  onCategoryChange={onCategoryChange}
-                  onAccountChange={onAccountChange}
-                  onTransactionDeleted={onTransactionDeleted}
-                  categories={categories}
-                  patrimony={patrimony}
-                />
-              );
-            }
-          })() : (
-            <ModernTransactionList
-              transactions={transactions}
-              onCategoryChange={onCategoryChange}
-              onAccountChange={onAccountChange}
-              onTransactionDeleted={onTransactionDeleted}
-              patrimony={patrimony}
-            />
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
-    <div className="home-tab">
-      {/* Hero Cards Row */}
-      <div className="hero-cards">
-        <div className="hero-card hero-card-balance">
-          <div className="hero-label">Saldo do Mês</div>
-          <div className="hero-amount">{balance >= 0 ? '+' : ''}{balance.toFixed(2)}€</div>
-          <div className="hero-status">{getBalanceStatus()}</div>
-        </div>
-
-        <div className="hero-card hero-card-patrimony">
-          <div className="hero-card-top">
-            <div className="hero-label">Património</div>
-            <select
-              className="patrimony-select"
-              value={homePatrimonyView}
-              onChange={(e) => onPatrimonyViewChange && onPatrimonyViewChange(e.target.value)}
-            >
-              {Object.entries(VIEW_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </div>
-          <div className="hero-amount hero-amount-patrimony">
-            {fmtBalance(patrimonyValue)}€
-          </div>
-          <div className="hero-status">{VIEW_LABELS[homePatrimonyView]}</div>
-        </div>
-      </div>
-
-      {/* Total balance + mini cards row */}
-      <div className="mini-cards">
-        <div className="mini-card income">
-          <div className="mini-card-label">Receitas</div>
-          <div className="mini-card-amount">+{income.toFixed(2)}€</div>
-        </div>
-        <div className="mini-card expense">
-          <div className="mini-card-label">Despesas</div>
-          <div className="mini-card-amount">-{expenses.toFixed(2)}€</div>
-        </div>
-        <div className="mini-card total-balance">
-          <div className="mini-card-label">Saldo total</div>
-          <div className="mini-card-amount">{fmtBalance(totalBalance)}€</div>
-        </div>
-      </div>
-
-      {/* Month Navigation */}
-      <div className="month-navigation-compact">
-        <button className="month-btn-compact" onClick={goToPreviousMonth}>&#8249;</button>
-        <div className="month-display-compact">{formatMonth(currentMonth)}</div>
-        <button className="month-btn-compact" onClick={goToNextMonth}>&#8250;</button>
-        <button className="today-btn-compact" onClick={goToToday}>Hoje</button>
-      </div>
-
-      {/* Transaction list */}
-      <div className="transactions-section">
-        <h3 className="section-title">Recentes</h3>
-        <DefaultTransactionList
-          transactions={transactions}
-          onCategoryChange={onCategoryChange}
-          categories={categories}
-        />
-      </div>
+    <div className={rootClass}>
+      <HomeHero
+        patrimonyTotal={patrimonyTotal}
+        monthlyBalance={balance}
+        currentMonth={currentMonth}
+        financialMonthStartDay={financialMonthStartDay}
+      />
+      <HomeCashflow
+        income={income}
+        expenses={expenses}
+        balance={balance}
+        currentMonth={currentMonth}
+        onMonthChange={onMonthChange}
+        financialMonthStartDay={financialMonthStartDay}
+      />
+      <HomeInsight transactions={transactions} />
+      <HomeAccounts accounts={p.accounts || []} />
+      <HomeEvolution
+        patrimonyTotal={patrimonyTotal}
+        income={income}
+        balance={balance}
+        investments={investments}
+        realestate={realestate}
+      />
     </div>
   );
 };
