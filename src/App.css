@@ -116,9 +116,9 @@ body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* Tabs provide their own bottom clearance via --bottom-clearance;
-     keep a baseline here only as a safety net for unported tabs. */
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* 80px baseline matches bottom-nav height; tabs add their own clearance
+     via --bottom-clearance. This guards any tab that hasn't been ported. */
+  padding-bottom: 80px;
   max-width: 600px;
   width: 100%;
   margin: 0 auto;

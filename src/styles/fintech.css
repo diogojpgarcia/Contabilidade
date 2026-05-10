@@ -4,11 +4,17 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── SCROLL ──────────────────────────────────────────────────────────────── */
-/* All scroll now handled by .main-content-new (App.css).
-   No per-tab overflow overrides needed — tabs use outer scroll.           */
+/* modern.css sets display:flex + flex:1/min-height:0 on .main-content-new
+   and its > div children. Reset those for modern-ui so tab roots flow
+   naturally (outer scroll via .main-content-new overflow-y:auto).         */
 .modern-ui .main-content-new {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+}
+.modern-ui .main-content-new > div {
+  flex: unset;
+  min-height: unset;
+  overflow: visible;
 }
 
 /* ── BOTTOM NAV ─────────────────────────────────────────────────────────── */
