@@ -1728,14 +1728,15 @@
 }
 .pat-asset-body:active { opacity: 0.75; }
 
-/* Action buttons — edit ✏ + delete × — absolute top-right */
+/* Action buttons — edit ✏ + delete × — inline strip at bottom of card */
 .pat-asset-actions {
-  position: absolute;
-  top: 8px;
-  right: 6px;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 2px;
+  border-top: 0.5px solid var(--separator);
+  padding-top: 4px;
+  margin-top: 2px;
 }
 .pat-asset-edit {
   background: transparent;
@@ -1774,8 +1775,8 @@
   opacity: 0.75;
 }
 
-/* Bottom row: give room for the actions column (2 buttons) */
-.pat-asset-bottom { padding-right: 52px; }
+/* Bottom row: no padding-right needed (actions now flow below) */
+.pat-asset-bottom { padding-right: 0; }
 
 /* ── Alerts panel ──────────────────────────────────────────────────────────── */
 .pat-alerts-panel {

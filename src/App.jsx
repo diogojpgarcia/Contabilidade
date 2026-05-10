@@ -679,9 +679,10 @@ const App = () => {
             patrimony={patrimonyWithLiveBalances}
             theme={theme}
             financialMonthStartDay={effectiveStartDay}
+            onNavigate={setActiveTab}
           />
         )}
-        
+
         {activeTab === 'add' && (
           <AddTab
             user={currentUser}

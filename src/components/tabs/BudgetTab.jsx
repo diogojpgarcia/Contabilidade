@@ -1532,6 +1532,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                               <div key={item.id} className="pat-cat-item">
                                 <span className="pat-cat-item-name">{renderPatrimonyItemLabel(key, item)}</span>
                                 <span className="pat-cat-item-val">{renderPatrimonyItemValue(key, item)}</span>
+                                <button className="pat-asset-edit" onClick={() => handlePatrimonyEdit(key, item)} title="Editar">✎</button>
                                 <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
                               </div>
                             );

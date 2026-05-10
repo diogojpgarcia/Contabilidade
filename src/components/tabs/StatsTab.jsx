@@ -19,7 +19,7 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, patrimony = {}, theme = 'default', financialMonthStartDay = 1 }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, patrimony = {}, theme = 'default', financialMonthStartDay = 1, onNavigate }) => {
   console.log('REAL STATS TAB LOADED');
   console.log('RENDER STATS');
   console.log('ACTIVE THEME:', theme);
@@ -450,10 +450,29 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 ...(forecastEntry ? [forecastEntry] : []),
               ].sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 3);
 
+              const handleInsightTap = (item) => {
+                if (!item.meta) return;
+                if (item.meta.action === 'openHistory') {
+                  setActiveView('log');
+                } else if (item.meta.action === 'openBudget' && onNavigate) {
+                  onNavigate('budget');
+                }
+              };
+
               const renderInsight = (item, i) => {
                 const s = FEED_STYLE[item.feedType] || FEED_STYLE.info;
+                const isNav = !!item.meta;
                 return (
-                  <div key={i} style={{ borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start', background: s.bg, border: `1px solid ${s.border}`, boxShadow: s.glow }}>
+                  <div
+                    key={i}
+                    onClick={() => handleInsightTap(item)}
+                    style={{
+                      borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start',
+                      background: s.bg, border: `1px solid ${s.border}`, boxShadow: s.glow,
+                      cursor: isNav ? 'pointer' : 'default',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
                     <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1rem', marginTop: 1 }}>
                       {FEED_ICON[item.feedType]}
                     </div>
@@ -462,6 +481,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       <div style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.4 }}>{item.message}</div>
                       {item.explanation && <div style={{ fontSize: '0.7rem', color: '#52525b', marginTop: 3, lineHeight: 1.4 }}>{item.explanation}</div>}
                     </div>
+                    {isNav && <div style={{ fontSize: '0.75rem', color: '#52525b', alignSelf: 'center', flexShrink: 0 }}>›</div>}
                   </div>
                 );
               };
