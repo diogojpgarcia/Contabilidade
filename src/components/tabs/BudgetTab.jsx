@@ -633,21 +633,27 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     clearAssetForms();
   };
 
+  // Adaptive price formatting: stocks get 2–4 decimals, crypto gets 2–8
+  const fmtStockPrice  = (p) => p.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: p < 1 ? 4 : 2 });
+  const fmtCryptoPrice = (p) => p.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: p < 0.001 ? 8 : p < 0.1 ? 6 : p < 1 ? 4 : 2 });
+  const fmtFiat        = (v) => parseFloat(v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   const renderPatrimonyItemValue = (typeKey, item) => {
-    if (typeKey === 'accounts')   return `${computeAccountBalance(item).toFixed(2)}€`;
+    if (typeKey === 'accounts')   return `${fmtFiat(computeAccountBalance(item))}€`;
     if (typeKey === 'stocks') {
       const price = parseFloat(item.lastPrice ?? item.avgPrice) || null;
       if (!price) return `${item.qty || 0} ações · cotação pendente`;
       const total = (parseFloat(item.qty) || 0) * price;
-      return `${item.qty}×${price.toFixed(2)}€ = ${total.toFixed(2)}€`;
+      return `${item.qty}×${fmtStockPrice(price)}€ = ${fmtFiat(total)}€`;
     }
-    if (typeKey === 'bonds')      return `${parseFloat(item.value || 0).toFixed(2)}€`;
-    if (typeKey === 'realestate') return `${parseFloat(item.value || 0).toFixed(2)}€`;
-    if (typeKey === 'vehicles')   return `${parseFloat(item.value || 0).toFixed(2)}€`;
+    if (typeKey === 'bonds')      return `${fmtFiat(item.value)}€`;
+    if (typeKey === 'realestate') return `${fmtFiat(item.value)}€`;
+    if (typeKey === 'vehicles')   return `${fmtFiat(item.value)}€`;
     if (typeKey === 'crypto') {
       const price = parseFloat(item.lastPrice ?? item.price) || null;
       if (!price) return `${item.qty || 0} moedas · cotação pendente`;
-      return `${item.qty}×${price.toFixed(2)}€ = ${(parseFloat(item.qty || 0) * price).toFixed(2)}€`;
+      const total = (parseFloat(item.qty || 0) * price);
+      return `${item.qty}×${fmtCryptoPrice(price)}€ = ${fmtFiat(total)}€`;
     }
     return '';
   };
@@ -1208,7 +1214,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                         {isRefreshing ? (
                           <span className="pat-stock-loading">A atualizar…</span>
                         ) : hasPrice ? (
-                          <>{marketPrice.toFixed(2)}€/{priceLabel} · {age}</>
+                          <>{isStock ? fmtStockPrice(marketPrice) : fmtCryptoPrice(marketPrice)}€/{priceLabel} · {age}</>
                         ) : (
                           <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
                         )}
@@ -1218,7 +1224,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       )}
                     </div>
                     <div className="pat-stock-right">
-                      <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
+                      <span className="pat-cat-item-val">{fmtFiat(marketVal)}€</span>
                       <span className="pat-stock-qty">{qty} {qtyLabel}</span>
                     </div>
                   </div>

@@ -41,7 +41,7 @@ const App = () => {
   const [homePatrimonyView, setHomePatrimonyView] = useState("total");
   const [learnedRules, setLearnedRules] = useState([]); // [{ pattern, category }]
   const [budgets, setBudgets] = useState({});
-  const [theme, setTheme] = useState('default'); // 'default' | 'modern'
+  const [theme, setTheme] = useState('fintech');
   const [categories, setCategories] = useState({ expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME });
   const [mainAccountId, setMainAccountId] = useState(null); // string | null — the "Principal" account
   const [financialMonthStartDay, setFinancialMonthStartDay] = useState(1); // 1 = calendar month
@@ -130,8 +130,7 @@ const App = () => {
           income:  Array.isArray(saved.income)  ? saved.income  : CATEGORIES_INCOME,
         });
       }
-      const t = settings?.theme;
-      if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
+      // Theme is fixed to 'fintech' — ignore any stored preference
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
 

@@ -189,52 +189,6 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           </div>
         </div>
 
-        {/* Layout */}
-        <div className="m-menu-section">
-          <div className="m-menu-section-label">Layout</div>
-          <div className="m-menu-group">
-            <div className="m-seg-wrap">
-              <div className="m-seg-control">
-                <button className={`m-seg-btn ${theme === 'default' ? 'active' : ''}`} onClick={() => handleThemeChange('default')}>
-                  <span>Default</span>
-                </button>
-                <button className={`m-seg-btn ${theme === 'modern'  ? 'active' : ''}`} onClick={() => handleThemeChange('modern')}>
-                  <span>Modern</span>
-                </button>
-                <button className={`m-seg-btn ${theme === 'fintech' ? 'active' : ''}`} onClick={() => handleThemeChange('fintech')}>
-                  <span>Fintech</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Preferências */}
-        {(patrimony.accounts || []).length > 0 && onDefaultAccountChange && (
-          <div className="m-menu-section">
-            <div className="m-menu-section-label">Preferências</div>
-            <div className="m-menu-group">
-              <div className="m-menu-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
-                <span className="m-menu-text" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Conta padrão para transações</span>
-                <select
-                  className="m-field-select"
-                  style={{ width: '100%' }}
-                  value={defaultAccount?.id || ''}
-                  onChange={e => {
-                    const acc = (patrimony.accounts || []).find(a => a.id === e.target.value);
-                    onDefaultAccountChange(acc || null);
-                  }}
-                >
-                  <option value="">Sem conta padrão</option>
-                  {(patrimony.accounts || []).map(a => (
-                    <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Mês Financeiro */}
         {onFinancialMonthChange && (
           <div className="m-menu-section">
@@ -353,57 +307,6 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         </div>
 
       </div>
-
-      {/* Theme */}
-      <div className="profile-section">
-        <h3 className="section-title">Theme</h3>
-        <div className="theme-selector theme-selector-2">
-          <button
-            className={`theme-option ${theme === 'default' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('default')}
-          >
-            <span className="sf-icon">◫</span>
-            <span>Default</span>
-          </button>
-          <button
-            className={`theme-option ${theme === 'modern' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('modern')}
-          >
-            <span className="sf-icon">◧</span>
-            <span>Modern</span>
-          </button>
-          <button
-            className={`theme-option ${theme === 'fintech' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('fintech')}
-          >
-            <span className="sf-icon">◈</span>
-            <span>Fintech</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Default account */}
-      {(patrimony.accounts || []).length > 0 && onDefaultAccountChange && (
-        <div className="profile-section">
-          <h3 className="section-title">Preferências</h3>
-          <div className="form-field" style={{ padding: '0 4px' }}>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Conta padrão para transações</label>
-            <select
-              className="category-select"
-              value={defaultAccount?.id || ''}
-              onChange={e => {
-                const acc = (patrimony.accounts || []).find(a => a.id === e.target.value);
-                onDefaultAccountChange(acc || null);
-              }}
-            >
-              <option value="">Sem conta padrão</option>
-              {(patrimony.accounts || []).map(a => (
-                <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
 
       {/* Mês Financeiro */}
       {onFinancialMonthChange && (
