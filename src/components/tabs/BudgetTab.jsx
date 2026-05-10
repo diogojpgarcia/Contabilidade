@@ -122,6 +122,110 @@ const CountUp = ({ value, decimals = 0 }) => {
   return <>{display.toFixed(decimals)}</>;
 };
 
+/* ─── Swipe-to-reveal action card ───────────────────────────────────────────
+   Wraps any row. Sliding the inner content left by OPEN_PX reveals two action
+   buttons (edit ✎ + delete ×) without any persistent icons cluttering the UI.
+   All gesture state is kept in refs so the effect closure stays stable.      */
+const SWIPE_OPEN_PX = 76;
+const SWIPE_THRESHOLD = 28;
+
+const SwipeRevealCard = ({ onEdit, onDelete, className = '', style, children }) => {
+  const innerRef = useRef(null);
+  const isOpenRef = useRef(false);
+  const gesture = useRef({ startX: 0, startY: 0, baseX: 0, dir: null, active: false });
+
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+
+    const move = (px, animate) => {
+      el.style.transition = animate ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none';
+      el.style.transform  = `translateX(${px}px)`;
+    };
+
+    const onStart = (e) => {
+      gesture.current = {
+        startX: e.touches[0].clientX,
+        startY: e.touches[0].clientY,
+        baseX:  isOpenRef.current ? -SWIPE_OPEN_PX : 0,
+        dir:    null,
+        active: true,
+      };
+      el.style.transition = 'none';
+    };
+
+    const onMove = (e) => {
+      const g = gesture.current;
+      if (!g.active) return;
+      const dx = e.touches[0].clientX - g.startX;
+      const dy = e.touches[0].clientY - g.startY;
+      if (!g.dir) {
+        if (Math.abs(dx) > Math.abs(dy) + 3)      g.dir = 'h';
+        else if (Math.abs(dy) > Math.abs(dx) + 3) g.dir = 'v';
+        else return;
+      }
+      if (g.dir === 'v') return;
+      e.preventDefault();
+      move(Math.min(0, Math.max(-SWIPE_OPEN_PX, g.baseX + dx)), false);
+    };
+
+    const onEnd = (e) => {
+      const g = gesture.current;
+      if (!g.active || g.dir !== 'h') { g.active = false; return; }
+      g.active = false;
+      const dx     = e.changedTouches[0].clientX - g.startX;
+      const finalX = g.baseX + dx;
+      if (finalX < -SWIPE_THRESHOLD) { move(-SWIPE_OPEN_PX, true); isOpenRef.current = true; }
+      else                           { move(0,               true); isOpenRef.current = false; }
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove',  onMove,  { passive: false });
+    el.addEventListener('touchend',   onEnd,   { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove',  onMove);
+      el.removeEventListener('touchend',   onEnd);
+    };
+  }, []);
+
+  const close = () => {
+    const el = innerRef.current;
+    if (!el) return;
+    el.style.transition = 'transform 0.22s cubic-bezier(0.4,0,0.2,1)';
+    el.style.transform  = 'translateX(0)';
+    isOpenRef.current   = false;
+  };
+
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', ...style }}>
+      {/* Action layer — sits behind the sliding content */}
+      <div className="swipe-actions">
+        <button
+          className="swipe-btn swipe-btn-edit"
+          onPointerDown={e => { e.stopPropagation(); close(); setTimeout(onEdit, 30); }}
+          aria-label="Editar"
+        >✎</button>
+        <button
+          className="swipe-btn swipe-btn-delete"
+          onPointerDown={e => { e.stopPropagation(); close(); setTimeout(onDelete, 30); }}
+          aria-label="Remover"
+        >🗑</button>
+      </div>
+      {/* Sliding content layer */}
+      <div
+        ref={innerRef}
+        className={className}
+        onClickCapture={e => {
+          if (isOpenRef.current) { e.stopPropagation(); e.preventDefault(); close(); }
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions }) => {
   const [hovered, setHovered] = useState(false);
   const catColor   = CAT_COLORS[cat.label] || '#6B7280';
@@ -136,6 +240,12 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
     const t = setTimeout(() => inputRef.current?.focus(), 200);
     return () => clearTimeout(t);
   }, [isEditing]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    const t = setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    return () => clearTimeout(t);
+  }, [isExpanded]);
 
   const txs = categoryTransactions || [];
 
@@ -274,7 +384,7 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
 // STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
 // Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1 }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1, pendingNav, onNavConsumed }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
   const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
@@ -294,6 +404,15 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
   const [expandedCategoryId,  setExpandedCategoryId]  = useState(null);
+
+  // Deep navigation from insights: auto-switch to budgets view + expand category
+  useEffect(() => {
+    if (!pendingNav?.categoryLabel) return;
+    setActiveView('budgets');
+    const cat = categories.expense.find(c => c.label === pendingNav.categoryLabel);
+    if (cat) setExpandedCategoryId(cat.id);
+    onNavConsumed?.();
+  }, [pendingNav]);
   const [animated,            setAnimated]            = useState(false);
   const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
   const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
@@ -1239,74 +1358,58 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             const qtyLabel     = isStock ? 'ações' : 'moedas';
             const priceLabel   = isStock ? 'ação'  : 'moeda';
             return (
-              <div key={item.id} className="pat-asset-card">
-                {/* clickable body → opens edit modal */}
-                <div
-                  className="pat-asset-body"
-                  onClick={() => handlePatrimonyEdit(assetKey, item)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="pat-asset-top">
-                    <div className="pat-asset-left">
-                      <div className="pat-stock-name-row">
-                        <span className="pat-cat-item-name">{sym}</span>
-                        {chg != null && (
-                          <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
-                            {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
-                          </span>
-                        )}
-                      </div>
-                      {item.name && <span className="pat-asset-fullname">{item.name}</span>}
-                      <span className="pat-stock-sub">
-                        {isRefreshing ? (
-                          <span className="pat-stock-loading">A atualizar…</span>
-                        ) : hasPrice ? (
-                          <>{isStock ? fmtStockPrice(marketPrice) : fmtCryptoPrice(marketPrice)}€/{priceLabel} · {age}</>
-                        ) : (
-                          <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
-                        )}
-                      </span>
-                      {(item.broker || item.exchange) && (
-                        <span className="pat-asset-broker">{item.broker ?? item.exchange}</span>
+              <SwipeRevealCard
+                key={item.id}
+                className="pat-asset-card"
+                onEdit={() => handlePatrimonyEdit(assetKey, item)}
+                onDelete={() => handlePatrimonyDelete(assetKey, item.id)}
+              >
+                <div className="pat-asset-top">
+                  <div className="pat-asset-left">
+                    <div className="pat-stock-name-row">
+                      <span className="pat-cat-item-name">{sym}</span>
+                      {chg != null && (
+                        <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
+                          {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
+                        </span>
                       )}
                     </div>
-                    <div className="pat-stock-right">
-                      <span className="pat-cat-item-val">{fmtFiat(marketVal)}€</span>
-                      <span className="pat-stock-qty">{qty} {qtyLabel}</span>
-                    </div>
-                  </div>
-                  <div className="pat-asset-bottom">
-                    <div className="pat-sparkline-wrap">
-                      {sparkPrices
-                        ? <Sparkline prices={sparkPrices} color={sparkColor} />
-                        : <div className="pat-sparkline-empty">{HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}</div>
-                      }
-                    </div>
-                    {totalPatrimony > 0 && (
-                      <div className="pat-impact">
-                        <div className="pat-impact-bar-bg">
-                          <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
-                        </div>
-                        <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
-                      </div>
+                    {item.name && <span className="pat-asset-fullname">{item.name}</span>}
+                    <span className="pat-stock-sub">
+                      {isRefreshing ? (
+                        <span className="pat-stock-loading">A atualizar…</span>
+                      ) : hasPrice ? (
+                        <>{isStock ? fmtStockPrice(marketPrice) : fmtCryptoPrice(marketPrice)}€/{priceLabel} · {age}</>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
+                      )}
+                    </span>
+                    {(item.broker || item.exchange) && (
+                      <span className="pat-asset-broker">{item.broker ?? item.exchange}</span>
                     )}
                   </div>
+                  <div className="pat-stock-right">
+                    <span className="pat-cat-item-val">{fmtFiat(marketVal)}€</span>
+                    <span className="pat-stock-qty">{qty} {qtyLabel}</span>
+                  </div>
                 </div>
-                {/* action buttons — stop propagation so card click doesn't fire */}
-                <div className="pat-asset-actions">
-                  <button
-                    className="pat-asset-edit"
-                    onClick={e => { e.stopPropagation(); handlePatrimonyEdit(assetKey, item); }}
-                    title="Editar"
-                    aria-label="Editar ativo"
-                  >✎</button>
-                  <button
-                    className="m-asset-item-del pat-asset-del"
-                    onClick={e => { e.stopPropagation(); handlePatrimonyDelete(assetKey, item.id); }}
-                    title="Remover"
-                  >×</button>
+                <div className="pat-asset-bottom">
+                  <div className="pat-sparkline-wrap">
+                    {sparkPrices
+                      ? <Sparkline prices={sparkPrices} color={sparkColor} />
+                      : <div className="pat-sparkline-empty">{HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}</div>
+                    }
+                  </div>
+                  {totalPatrimony > 0 && (
+                    <div className="pat-impact">
+                      <div className="pat-impact-bar-bg">
+                        <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
+                      </div>
+                      <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </SwipeRevealCard>
             );
           };
 
@@ -1480,7 +1583,12 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                             const currentBal = computeAccountBalance(item);
                             const isMain     = item.id === mainAccountId;
                             return (
-                              <div key={item.id} className={`pat-cat-item pat-account-item${isMain ? ' pat-account-item--main' : ''}`}>
+                              <SwipeRevealCard
+                                key={item.id}
+                                className={`pat-cat-item pat-account-item${isMain ? ' pat-account-item--main' : ''}`}
+                                onEdit={() => handlePatrimonyEdit('accounts', item)}
+                                onDelete={() => handlePatrimonyDelete('accounts', item.id)}
+                              >
                                 <div className="pat-account-left">
                                   <div className="pat-account-name-row">
                                     <span className="pat-cat-item-name">{item.name}{item.bank ? ` · ${item.bank}` : ''}</span>
@@ -1493,18 +1601,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                                     )}
                                   </div>
                                 </div>
-                                <div className="pat-account-actions">
-                                  {onMainAccountChange && (
-                                    <button
-                                      className={`pat-account-btn-main${isMain ? ' active' : ''}`}
-                                      onClick={() => onMainAccountChange(isMain ? null : item.id)}
-                                      title={isMain ? 'Remover como Principal' : 'Definir como Principal'}
-                                    >{isMain ? '★' : '☆'}</button>
-                                  )}
-                                  <button className="pat-asset-edit" onClick={() => handlePatrimonyEdit('accounts', item)} title="Editar">✎</button>
-                                  <button className="m-asset-item-del pat-asset-del" onClick={() => handlePatrimonyDelete('accounts', item.id)}>×</button>
-                                </div>
-                              </div>
+                                {onMainAccountChange && (
+                                  <button
+                                    className={`pat-account-btn-main${isMain ? ' active' : ''}`}
+                                    onClick={() => onMainAccountChange(isMain ? null : item.id)}
+                                    title={isMain ? 'Remover como Principal' : 'Definir como Principal'}
+                                  >{isMain ? '★' : '☆'}</button>
+                                )}
+                              </SwipeRevealCard>
                             );
                           }) : key === 'crypto' ? (() => {
                             /* ── Crypto: group by exchange ── */
@@ -1529,12 +1633,15 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                             if (key === 'stocks') return assetCardFor(item, 'stocks');
                             /* ── Generic row for all other asset types ── */
                             return (
-                              <div key={item.id} className="pat-cat-item">
+                              <SwipeRevealCard
+                                key={item.id}
+                                className="pat-cat-item"
+                                onEdit={() => handlePatrimonyEdit(key, item)}
+                                onDelete={() => handlePatrimonyDelete(key, item.id)}
+                              >
                                 <span className="pat-cat-item-name">{renderPatrimonyItemLabel(key, item)}</span>
                                 <span className="pat-cat-item-val">{renderPatrimonyItemValue(key, item)}</span>
-                                <button className="pat-asset-edit" onClick={() => handlePatrimonyEdit(key, item)} title="Editar">✎</button>
-                                <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
-                              </div>
+                              </SwipeRevealCard>
                             );
                           })}
                         </div>

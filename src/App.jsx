@@ -29,6 +29,15 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
+  const [pendingBudgetNav, setPendingBudgetNav] = useState(null);
+
+  // Cross-tab navigation — called by StatsTab insights
+  const handleNavigateFromStats = (tab, extra = null) => {
+    setActiveTab(tab);
+    if (tab === 'budget' && extra?.categoryLabel) {
+      setPendingBudgetNav({ categoryLabel: extra.categoryLabel, ts: Date.now() });
+    }
+  };
 
   // Scroll-reset: always open each tab at the top
   const mainContentRef = useRef(null);
@@ -679,7 +688,7 @@ const App = () => {
             patrimony={patrimonyWithLiveBalances}
             theme={theme}
             financialMonthStartDay={effectiveStartDay}
-            onNavigate={setActiveTab}
+            onNavigate={handleNavigateFromStats}
           />
         )}
 
@@ -709,6 +718,8 @@ const App = () => {
             onMainAccountChange={handleMainAccountChange}
             theme={theme}
             financialMonthStartDay={effectiveStartDay}
+            pendingNav={pendingBudgetNav}
+            onNavConsumed={() => setPendingBudgetNav(null)}
           />
         )}
 

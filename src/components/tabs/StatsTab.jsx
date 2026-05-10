@@ -455,7 +455,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 if (item.meta.action === 'openHistory') {
                   setActiveView('log');
                 } else if (item.meta.action === 'openBudget' && onNavigate) {
-                  onNavigate('budget');
+                  onNavigate('budget', item.meta.categoryLabel ? { categoryLabel: item.meta.categoryLabel } : null);
                 }
               };
 
