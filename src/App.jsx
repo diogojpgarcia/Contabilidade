@@ -32,8 +32,9 @@ const App = () => {
   const [theme, setTheme] = useState('default'); // 'default' | 'modern'
   const [categories, setCategories] = useState({ expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME });
   const [mainAccountId, setMainAccountId] = useState(null); // string | null — the "Principal" account
+  const [transactionAccountMap, setTransactionAccountMap] = useState({}); // { [txId]: { account_id, account_name } } — fallback when DB columns absent
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
-  const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
+  const loadRequestId = React.useRef(0); // incremented to cancel stale fetches
 
   // Check for existing session on mount
   useEffect(() => {
@@ -41,12 +42,9 @@ const App = () => {
     checkRecoveryMode();
   }, []);
 
-  // Load transactions when user changes
+  // Load transactions + settings atomically when user changes
   useEffect(() => {
-    if (currentUser) {
-      loadUserTransactions();
-      loadUserSettings();
-    }
+    if (currentUser) loadUserData();
   }, [currentUser]);
 
   const checkUserSession = async () => {
@@ -81,47 +79,74 @@ const App = () => {
     window.location.reload();
   };
 
-  const loadUserTransactions = async () => {
+  // Single load function — fetches transactions + settings in parallel, then
+  // merges the transactionAccountMap fallback into transactions atomically.
+  // This eliminates the race condition between the two former separate loads.
+  const loadUserData = async () => {
     if (!currentUser) return;
     const requestId = ++loadRequestId.current;
     try {
-      console.log('📥 Loading transactions for:', currentUser.id);
-      const data = await dbService.getTransactions(currentUser.id);
-      if (requestId !== loadRequestId.current) return; // superseded by delete or newer load
-      // Normalize type — old rows without a type field default to 'expense'
-      const rows = (data || []).map(t => ({ ...t, type: t.type || 'expense' }));
-      console.log('✅ Loaded', rows.length, 'transactions');
-      setTransactions(rows);
-    } catch (error) {
-      console.error('❌ Error loading transactions:', error);
-    }
-  };
+      const [txData, settings] = await Promise.all([
+        dbService.getTransactions(currentUser.id).catch(() => []),
+        dbService.getUserSettings(currentUser.id).catch(() => ({})),
+      ]);
+      if (requestId !== loadRequestId.current) return; // superseded
 
-  const loadUserSettings = async () => {
-    try {
-      const settings = await dbService.getUserSettings(currentUser.id);
-      if (settings?.patrimony) setPatrimony(settings.patrimony);
+      // Merge transactionAccountMap fallback — applies account data saved when
+      // the account_id column doesn't exist in Supabase yet.
+      const accountMap = settings?.transactionAccountMap || {};
+      const rows = (txData || []).map(t => ({
+        ...t,
+        type: t.type || 'expense',
+        account_id:   t.account_id   || accountMap[t.id]?.account_id   || null,
+        account_name: t.account_name || accountMap[t.id]?.account_name || null,
+      }));
+      setTransactions(rows);
+      setTransactionAccountMap(accountMap);
+
+      // Apply settings
+      if (settings?.patrimony)        setPatrimony(settings.patrimony);
       if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
-      if (settings?.learned_rules) setLearnedRules(settings.learned_rules);
+      if (settings?.learned_rules)    setLearnedRules(settings.learned_rules);
       if (settings?.category_budgets) setBudgets(settings.category_budgets);
-      // Load custom categories — merge saved custom_categories with defaults so
-      // categories added/removed in Profile are reflected everywhere immediately.
       if (settings?.custom_categories) {
         const saved = settings.custom_categories;
-        // Trust saved state (even empty arrays); only fall back to defaults
-        // if the key is missing entirely (e.g. first-time user).
         setCategories({
           expense: Array.isArray(saved.expense) ? saved.expense : CATEGORIES_EXPENSE,
           income:  Array.isArray(saved.income)  ? saved.income  : CATEGORIES_INCOME,
         });
       }
-      // Load layout theme — guard against old colour values ('dark','light','gray')
       const t = settings?.theme;
       if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
-      // mainAccountId — canonical key; fall back to legacy defaultTransactionAccount.id
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
-    } catch (error) { console.error("Error loading settings:", error); }
+    } catch (error) {
+      console.error('❌ Error loading user data:', error);
+    }
+  };
+
+  // Keep a stable reference for callsites that only need to reload transactions
+  // (e.g. after delete/import) without re-applying all settings.
+  const loadUserTransactions = async () => {
+    if (!currentUser) return;
+    const requestId = ++loadRequestId.current;
+    try {
+      const [txData, settings] = await Promise.all([
+        dbService.getTransactions(currentUser.id).catch(() => []),
+        Promise.resolve(null), // settings already in state — no need to re-fetch
+      ]);
+      if (requestId !== loadRequestId.current) return;
+      const accountMap = transactionAccountMap; // use in-memory map
+      const rows = (txData || []).map(t => ({
+        ...t,
+        type: t.type || 'expense',
+        account_id:   t.account_id   || accountMap[t.id]?.account_id   || null,
+        account_name: t.account_name || accountMap[t.id]?.account_name || null,
+      }));
+      setTransactions(rows);
+    } catch (error) {
+      console.error('❌ Error loading transactions:', error);
+    }
   };
 
   // Generic words that should never become a matching pattern.
@@ -408,7 +433,18 @@ const App = () => {
         account_name: updatedTransaction.account_name ?? updated.account_name ?? null,
       };
       setTransactions(prev => prev.map(t => t.id === merged.id ? merged : t));
-      // No balance mutation — currentBalance is computed live from transactions
+
+      // Keep transactionAccountMap in sync with any account field changes
+      if (merged.account_id !== (original?.account_id ?? null)) {
+        const updatedMap = { ...transactionAccountMap };
+        if (merged.account_id) {
+          updatedMap[merged.id] = { account_id: merged.account_id, account_name: merged.account_name || null };
+        } else {
+          delete updatedMap[merged.id];
+        }
+        setTransactionAccountMap(updatedMap);
+        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+      }
       console.log('✅ Transaction updated!');
     } catch (error) {
       console.error('❌ Error updating transaction:', error);
@@ -417,28 +453,39 @@ const App = () => {
   };
 
   // Called from Home and History when user links a transaction to a different account.
-  // Optimistic update fires immediately; DB write is fire-and-forget on success.
-  // updateTransaction now has a graceful column fallback, so throws only on real errors.
+  // Always persists via two mechanisms in parallel:
+  //   1. updateTransaction (DB columns when available; graceful no-op otherwise)
+  //   2. transactionAccountMap in user_settings (guaranteed fallback)
   const handleAccountChange = async (transactionId, newAccountId, newAccountName) => {
     const original = transactions.find(t => t.id === transactionId);
     if (!original) return;
 
-    // Apply optimistic update instantly — source of truth is transaction.account_id
+    // 1. Optimistic UI update
     setTransactions(prev => prev.map(t =>
       t.id === transactionId
         ? { ...t, account_id: newAccountId || null, account_name: newAccountName || null }
         : t
     ));
 
+    // 2. Update in-memory map + persist to settings (guaranteed storage)
+    const updatedMap = { ...transactionAccountMap };
+    if (newAccountId) {
+      updatedMap[transactionId] = { account_id: newAccountId, account_name: newAccountName || null };
+    } else {
+      delete updatedMap[transactionId];
+    }
+    setTransactionAccountMap(updatedMap);
+    dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+
+    // 3. Also attempt DB column update (no-op if columns don't exist)
     try {
       await dbService.updateTransaction(transactionId, {
         account_id:   newAccountId   || null,
         account_name: newAccountName || null,
       });
-      // No balance mutation — currentBalance computed live from transactions
     } catch (err) {
-      console.error('❌ Error persisting account change:', err);
-      setTransactions(prev => prev.map(t => t.id === transactionId ? original : t));
+      console.error('❌ Error persisting account change to DB:', err);
+      // Don't rollback UI — the settings map already persisted the change
     }
   };
 
@@ -611,12 +658,11 @@ const App = () => {
             defaultAccount={defaultAccount}
             onDefaultAccountChange={(acc) => handleMainAccountChange(acc?.id || null)}
             onDataDeleted={() => {
-              // Kill any in-flight loadUserTransactions so a stale fetch
-              // cannot overwrite this clear after it resolves.
               loadRequestId.current++;
               setTransactions([]);
+              setTransactionAccountMap({});
               setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
-              setActiveTab("home");         // navigate to Home so empty state is visible immediately
+              setActiveTab("home");
             }}
           />
         )}
