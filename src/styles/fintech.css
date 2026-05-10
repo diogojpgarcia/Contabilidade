@@ -257,6 +257,7 @@
   cursor: pointer;
   transition: background 0.1s;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   background: var(--bg-secondary);
 }
 [data-theme="light"] .ft-row {
@@ -316,10 +317,11 @@
   padding: 0 12px;
   margin-top: -4px;
   margin-bottom: 4px;
+  pointer-events: none;
   transition: max-height 0.22s ease, opacity 0.18s ease, padding 0.15s ease;
 }
 [data-theme="light"] .ft-detail { background: #fff; }
-.ft-detail.open    { max-height: 72px; opacity: 1; padding: 8px 12px 12px; }
+.ft-detail.open    { max-height: 72px; opacity: 1; padding: 8px 12px 12px; pointer-events: auto; }
 
 .ft-detail-date {
   flex: 1;

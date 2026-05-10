@@ -86,6 +86,8 @@
   cursor: pointer;
   text-align: left;
   gap: 12px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.1s;
 }
 

@@ -15,8 +15,10 @@ const CategoryPicker = ({ transaction, onSelect, onClose, categories }) => {
   const [search, setSearch] = useState('');
   const inputRef = useRef(null);
 
-  // Auto-focus search on open
+  // Auto-focus search only on pointer devices — on touch (Android/iOS) the
+  // keyboard popup immediately shifts the sheet and items move under the finger.
   useEffect(() => {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     const t = setTimeout(() => inputRef.current?.focus(), 80);
     return () => clearTimeout(t);
   }, []);

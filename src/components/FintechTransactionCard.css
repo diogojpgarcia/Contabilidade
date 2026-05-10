@@ -194,7 +194,9 @@
   cursor: pointer;
   background: var(--surface-2, rgba(0,0,0,0.06));
   color: var(--text-primary, #111);
-  min-height: 32px;
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: opacity 0.1s;
 }
 .fintech-ui .ftc-action-btn {
