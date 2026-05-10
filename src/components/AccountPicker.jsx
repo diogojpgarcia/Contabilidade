@@ -34,7 +34,7 @@ const AccountPicker = ({ accounts, currentAccountId, onSelect, onClose }) => (
 
         {accounts.map(acc => {
           const isActive = acc.id === currentAccountId;
-          const bal = (parseFloat(acc.balance) || 0).toFixed(2);
+          const bal = (parseFloat(acc.currentBalance ?? acc.balance) || 0).toFixed(2);
           return (
             <button
               key={acc.id}

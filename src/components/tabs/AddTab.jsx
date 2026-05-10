@@ -152,7 +152,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
               ? <p className="helper-text">Sem contas. Adiciona uma em Budget → Património.</p>
               : <select value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} className="category-select">
                   <option value="">Seleciona conta de origem</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€</option>)}
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
                 </select>}
           </div>
           <div className="form-field">
@@ -172,7 +172,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
               ? <span className="m-helper">Sem contas. Adiciona uma em Budget → Património.</span>
               : <select className="m-field-select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
                   <option value="">Seleciona conta de origem</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€</option>)}
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
                 </select>}
           </div>
           <div className="m-field-card">
@@ -250,7 +250,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
                 <option value="">Sem conta específica</option>
                 {accounts.map(a => (
                   <option key={a.id} value={a.id}>
-                    {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(0)}€
+                    {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€
                   </option>
                 ))}
               </select>}
@@ -264,7 +264,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
                 <option value="">Sem conta específica</option>
                 {accounts.map(a => (
                   <option key={a.id} value={a.id}>
-                    {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(0)}€
+                    {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€
                   </option>
                 ))}
               </select>}

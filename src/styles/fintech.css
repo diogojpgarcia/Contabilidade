@@ -1192,6 +1192,39 @@
 .pat-cat-item-val { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pat-cat-empty { padding: 8px 16px 12px 66px; font-size: 0.72rem; color: var(--text-tertiary); }
 
+/* ── Account card (live balance + Principal badge) ──────────────────────── */
+.pat-account-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 10px 10px 66px;
+  border-bottom: 0.5px solid var(--separator);
+  gap: 8px;
+}
+.pat-account-item:last-child { border-bottom: none; }
+.pat-account-item--main { background: rgba(99,102,241,0.05); }
+
+.pat-account-left { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.pat-account-name-row { display: flex; align-items: center; gap: 6px; }
+.pat-account-badge-main {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.03em;
+  color: #818cf8; background: rgba(99,102,241,0.18);
+  border-radius: 4px; padding: 1px 5px; white-space: nowrap; flex-shrink: 0;
+}
+.pat-account-bal-row { display: flex; align-items: baseline; gap: 6px; }
+.pat-account-current-bal { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.pat-account-initial-bal { font-size: 0.68rem; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+
+.pat-account-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.pat-account-btn-main {
+  background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--text-tertiary);
+  min-width: 28px; min-height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent; transition: color 0.1s;
+}
+.pat-account-btn-main.active { color: #f59e0b; }
+.pat-account-btn-main:active { background: var(--border-color); }
+
 /* ── Stock item enhancements ──────────────────────────────────────────────── */
 .pat-stock-item { align-items: flex-start; padding-top: 10px; padding-bottom: 10px; }
 

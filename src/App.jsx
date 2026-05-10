@@ -31,7 +31,7 @@ const App = () => {
   const [budgets, setBudgets] = useState({});
   const [theme, setTheme] = useState('default'); // 'default' | 'modern'
   const [categories, setCategories] = useState({ expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME });
-  const [defaultAccount, setDefaultAccount] = useState(null); // { id, name } | null
+  const [mainAccountId, setMainAccountId] = useState(null); // string | null — the "Principal" account
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
@@ -118,7 +118,9 @@ const App = () => {
       // Load layout theme — guard against old colour values ('dark','light','gray')
       const t = settings?.theme;
       if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
-      if (settings?.defaultTransactionAccount) setDefaultAccount(settings.defaultTransactionAccount);
+      // mainAccountId — canonical key; fall back to legacy defaultTransactionAccount.id
+      const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
+      if (mid) setMainAccountId(mid);
     } catch (error) { console.error("Error loading settings:", error); }
   };
 
@@ -222,14 +224,17 @@ const App = () => {
     catch (error) { console.error("Error saving patrimony:", error); }
   };
 
-  const handleDefaultAccountChange = async (acc) => {
-    // acc = { id, name } | null
-    setDefaultAccount(acc);
-    dbService.updateUserSettings(currentUser.id, { defaultTransactionAccount: acc }).catch(console.error);
+  // Sets mainAccountId as the "Principal" account.
+  // Also offers to migrate unlinked transactions to this account.
+  const handleMainAccountChange = async (accountId) => {
+    setMainAccountId(accountId);
+    dbService.updateUserSettings(currentUser.id, { mainAccountId: accountId }).catch(console.error);
 
+    if (!accountId) return;
+
+    const acc = (patrimony.accounts || []).find(a => a.id === accountId);
     if (!acc) return;
 
-    // Offer to link old unlinked transactions (exclude transfers — they pair with each other)
     const unlinked = transactions.filter(t => !t.account_id && t.type !== 'transfer');
     if (unlinked.length === 0) return;
 
@@ -240,7 +245,6 @@ const App = () => {
 
     try {
       await dbService.migrateUnlinkedTransactions(currentUser.id, acc.id, acc.name);
-      // Mirror in local state — no balance change (the account balance already reflects historical data)
       setTransactions(prev => prev.map(t =>
         (!t.account_id && t.type !== 'transfer')
           ? { ...t, account_id: acc.id, account_name: acc.name }
@@ -252,18 +256,23 @@ const App = () => {
     }
   };
 
-  // Apply a +/- delta to one patrimony account balance and persist.
-  // delta > 0 adds, delta < 0 subtracts.
-  const applyAccountDelta = (accountId, delta, basePatrimony = patrimony) => {
-    if (!accountId || !delta || isNaN(delta)) return basePatrimony;
-    return {
-      ...basePatrimony,
-      accounts: (basePatrimony.accounts || []).map(a =>
-        a.id === accountId
-          ? { ...a, balance: String(((parseFloat(a.balance) || 0) + delta).toFixed(2)) }
-          : a
-      ),
-    };
+  // Pure function: initialBalance (= account.balance) + all linked transaction effects.
+  // Transfers: out = subtract, in = add (detected by description prefix).
+  // Never mutates patrimony — call this in useMemo or render.
+  const computeCurrentBalance = (account, allTransactions) => {
+    const initial = parseFloat(account.balance ?? 0);
+    if (isNaN(initial)) return 0;
+    return (allTransactions || []).reduce((sum, tx) => {
+      if (tx.account_id !== account.id) return sum;
+      const amt = parseFloat(tx.amount) || 0;
+      if (tx.type === 'income')  return sum + amt;
+      if (tx.type === 'expense') return sum - amt;
+      if (tx.type === 'transfer') {
+        const isOut = /^Transferência para/i.test(tx.description || '');
+        return isOut ? sum - amt : sum + amt;
+      }
+      return sum;
+    }, initial);
   };
 
   const handleCategoriesChange = (updated) => {
@@ -302,18 +311,16 @@ const App = () => {
   const handleAddTransaction = async (transaction) => {
     try {
       console.log('➕ Adding transaction...');
-      const newTransaction = await dbService.addTransaction(currentUser.id, transaction);
+      // Auto-assign mainAccountId if no account was explicitly chosen
+      const accId   = transaction.account_id || mainAccountId || null;
+      const accName = transaction.account_name || (accId ? (patrimony.accounts || []).find(a => a.id === accId)?.name || null : null);
+      const newTransaction = await dbService.addTransaction(currentUser.id, {
+        ...transaction,
+        account_id:   accId,
+        account_name: accName,
+      });
       setTransactions(prev => [newTransaction, ...prev]);
-
-      // Update linked account balance (income +, expense -)
-      const accId = transaction.account_id;
-      if (accId && transaction.type !== 'transfer') {
-        const amt   = parseFloat(transaction.amount) || 0;
-        const delta = transaction.type === 'income' ? amt : -amt;
-        const updated = applyAccountDelta(accId, delta);
-        handlePatrimonyChange(updated);
-      }
-
+      // No balance mutation — currentBalance is computed live from transactions
       setActiveTab('home');
       console.log('✅ Transaction added!');
     } catch (error) {
@@ -347,34 +354,20 @@ const App = () => {
     const fromName = fromAcc?.name || fromId;
     const toName   = toAcc?.name   || toId;
     try {
+      // account_id on transfer records lets computeCurrentBalance include transfer effects
       const outTx = await dbService.addTransaction(currentUser.id, {
         description: `Transferência para ${toName}`,
-        amount: value,
-        type: 'transfer',
-        category: fromName,
-        date: today,
+        amount: value, type: 'transfer', category: fromName, date: today,
+        account_id: fromId, account_name: fromName,
       });
       const inTx = await dbService.addTransaction(currentUser.id, {
         description: `Transferência de ${fromName}`,
-        amount: value,
-        type: 'transfer',
-        category: toName,
-        date: today,
+        amount: value, type: 'transfer', category: toName, date: today,
+        account_id: toId, account_name: toName,
       });
       const both = [outTx, inTx].filter(Boolean);
       if (both.length) setTransactions(prev => [...both, ...prev]);
-      // Update patrimony account balances
-      if (fromAcc || toAcc) {
-        const updatedPatrimony = {
-          ...patrimony,
-          accounts: accs.map(a => {
-            if (a.id === fromId) return { ...a, balance: String(((parseFloat(a.balance) || 0) - value).toFixed(2)) };
-            if (a.id === toId)   return { ...a, balance: String(((parseFloat(a.balance) || 0) + value).toFixed(2)) };
-            return a;
-          }),
-        };
-        handlePatrimonyChange(updatedPatrimony);
-      }
+      // No balance mutation — computed live from transactions
       setActiveTab('home');
     } catch (err) {
       console.error('❌ Transfer error:', err);
@@ -407,26 +400,7 @@ const App = () => {
         account_name: updatedTransaction.account_name || null,
       });
       setTransactions(prev => prev.map(t => t.id === updated.id ? updated : t));
-
-      // Adjust account balances if account linkage changed
-      if (original && (original.account_id || updatedTransaction.account_id)) {
-        let pat = { ...patrimony };
-
-        // Reverse old account effect
-        if (original.account_id) {
-          const oldAmt   = parseFloat(original.amount) || 0;
-          const oldDelta = original.type === 'income' ? -oldAmt : oldAmt;
-          pat = applyAccountDelta(original.account_id, oldDelta, pat);
-        }
-        // Apply new account effect
-        if (updatedTransaction.account_id) {
-          const newAmt   = parseFloat(updatedTransaction.amount) || 0;
-          const newDelta = updatedTransaction.type === 'income' ? newAmt : -newAmt;
-          pat = applyAccountDelta(updatedTransaction.account_id, newDelta, pat);
-        }
-        handlePatrimonyChange(pat);
-      }
-
+      // No balance mutation — currentBalance is computed live from transactions
       console.log('✅ Transaction updated!');
     } catch (error) {
       console.error('❌ Error updating transaction:', error);
@@ -452,21 +426,7 @@ const App = () => {
         account_name: newAccountName || null,
       });
 
-      // Adjust balances: reverse old, apply new
-      if (original.account_id || newAccountId) {
-        const amt = parseFloat(original.amount) || 0;
-        let pat   = { ...patrimony };
-
-        if (original.account_id) {
-          const oldDelta = original.type === 'income' ? -amt : amt;
-          pat = applyAccountDelta(original.account_id, oldDelta, pat);
-        }
-        if (newAccountId) {
-          const newDelta = original.type === 'income' ? amt : -amt;
-          pat = applyAccountDelta(newAccountId, newDelta, pat);
-        }
-        handlePatrimonyChange(pat);
-      }
+      // No balance mutation needed — currentBalance is computed from transactions in real time
     } catch (err) {
       console.error('❌ Error updating account:', err);
       // Rollback
@@ -478,6 +438,21 @@ const App = () => {
   // Rules of Hooks: useMemo/useCallback/useState must never appear after a
   // conditional return — doing so causes React error #310.
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
+  // Derive defaultAccount from mainAccountId — no separate state needed
+  const defaultAccount = useMemo(
+    () => (patrimony.accounts || []).find(a => a.id === mainAccountId) || null,
+    [patrimony.accounts, mainAccountId]
+  );
+
+  // Patrimony with live computed balances for accounts (never stored — always fresh)
+  const patrimonyWithLiveBalances = useMemo(() => ({
+    ...patrimony,
+    accounts: (patrimony.accounts || []).map(acc => ({
+      ...acc,
+      currentBalance: computeCurrentBalance(acc, safeTransactions),
+    })),
+  }), [patrimony, safeTransactions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // All-time balance: income adds, expenses subtract, transfers are ignored
   const totalBalance = useMemo(() =>
@@ -549,7 +524,7 @@ const App = () => {
             transactions={filteredTransactions}
             currentMonth={currentMonth}
             onMonthChange={setCurrentMonth}
-            patrimony={patrimony}
+            patrimony={patrimonyWithLiveBalances}
             homePatrimonyView={homePatrimonyView}
             onPatrimonyViewChange={handlePatrimonyViewChange}
             onCategoryChange={handleCategoryChange}
@@ -581,12 +556,12 @@ const App = () => {
             categories={categories}
             onTransactionAdded={handleAddTransaction}
             onTransfer={handleTransfer}
-            patrimony={patrimony}
+            patrimony={patrimonyWithLiveBalances}
             defaultAccount={defaultAccount}
             theme={theme}
           />
         )}
-        
+
         {activeTab === 'budget' && (
           <BudgetTab
             user={currentUser}
@@ -597,10 +572,12 @@ const App = () => {
             onBudgetsChange={handleBudgetsChange}
             patrimony={patrimony}
             onPatrimonyChange={handlePatrimonyChange}
+            mainAccountId={mainAccountId}
+            onMainAccountChange={handleMainAccountChange}
             theme={theme}
           />
         )}
-        
+
         {activeTab === 'import' && (
           <ImportTab
             user={currentUser}
@@ -620,9 +597,9 @@ const App = () => {
             setTheme={setTheme}
             categories={categories}
             onCategoriesChange={handleCategoriesChange}
-            patrimony={patrimony}
+            patrimony={patrimonyWithLiveBalances}
             defaultAccount={defaultAccount}
-            onDefaultAccountChange={handleDefaultAccountChange}
+            onDefaultAccountChange={(acc) => handleMainAccountChange(acc?.id || null)}
             onDataDeleted={() => {
               // Kill any in-flight loadUserTransactions so a stale fetch
               // cannot overwrite this clear after it resolves.

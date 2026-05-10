@@ -241,7 +241,7 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
 // STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
 // Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default' }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
   const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
@@ -444,6 +444,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
+  // initialBalance (account.balance) + all linked transaction effects = live current balance
+  const computeAccountBalance = (acc) => {
+    const initial = parseFloat(acc.balance ?? 0);
+    if (isNaN(initial)) return 0;
+    return (transactions || []).reduce((sum, tx) => {
+      if (tx.account_id !== acc.id) return sum;
+      const amt = parseFloat(tx.amount) || 0;
+      if (tx.type === 'income')  return sum + amt;
+      if (tx.type === 'expense') return sum - amt;
+      if (tx.type === 'transfer') {
+        const isOut = /^Transferência para/i.test(tx.description || '');
+        return isOut ? sum - amt : sum + amt;
+      }
+      return sum;
+    }, initial);
+  };
+
   useEffect(() => { loadData(); }, [user]);
 
   const loadData = async () => {
@@ -520,7 +537,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
-    if (key === 'accounts')   return items.reduce((s, x) => s + toNum(x.balance), 0);
+    if (key === 'accounts')   return items.reduce((s, x) => s + computeAccountBalance(x), 0);
     if (key === 'stocks')     return items.reduce((s, x) => {
       const price = toNum(livePrices[x.ticker]?.price ?? x.lastPrice ?? x.avgPrice);
       return s + toNum(x.qty) * price;
@@ -608,7 +625,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   };
 
   const renderPatrimonyItemValue = (typeKey, item) => {
-    if (typeKey === 'accounts')   return `${parseFloat(item.balance || 0).toFixed(2)}€`;
+    if (typeKey === 'accounts')   return `${computeAccountBalance(item).toFixed(2)}€`;
     if (typeKey === 'stocks') {
       const price = parseFloat(item.lastPrice ?? item.avgPrice) || null;
       if (!price) return `${item.qty || 0} ações · cotação pendente`;
@@ -649,7 +666,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         return (<>
           <input className={cls} placeholder="Nome da conta"    value={f.name    || ''} onChange={e => set('name',    e.target.value)} />
           <input className={cls} placeholder="Banco (opcional)" value={f.bank    || ''} onChange={e => set('bank',    e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Saldo (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
+          <input className={cls} type="number" inputMode="decimal" placeholder="Saldo inicial (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
         </>);
 
       /* ── Stocks ──────────────────────────────────────────────────────────── */
@@ -1388,7 +1405,38 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       </div>
                       {items.length > 0 && (
                         <div className="pat-cat-items">
-                          {key === 'crypto' ? (() => {
+                          {key === 'accounts' ? items.map(item => {
+                            /* ── Account card with live balance + Principal badge ── */
+                            const currentBal = computeAccountBalance(item);
+                            const isMain     = item.id === mainAccountId;
+                            return (
+                              <div key={item.id} className={`pat-cat-item pat-account-item${isMain ? ' pat-account-item--main' : ''}`}>
+                                <div className="pat-account-left">
+                                  <div className="pat-account-name-row">
+                                    <span className="pat-cat-item-name">{item.name}{item.bank ? ` · ${item.bank}` : ''}</span>
+                                    {isMain && <span className="pat-account-badge-main">Principal</span>}
+                                  </div>
+                                  <div className="pat-account-bal-row">
+                                    <span className="pat-account-current-bal">{currentBal.toFixed(2)}€</span>
+                                    {parseFloat(item.balance || 0) !== currentBal && (
+                                      <span className="pat-account-initial-bal">base {parseFloat(item.balance || 0).toFixed(2)}€</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="pat-account-actions">
+                                  {onMainAccountChange && (
+                                    <button
+                                      className={`pat-account-btn-main${isMain ? ' active' : ''}`}
+                                      onClick={() => onMainAccountChange(isMain ? null : item.id)}
+                                      title={isMain ? 'Remover como Principal' : 'Definir como Principal'}
+                                    >{isMain ? '★' : '☆'}</button>
+                                  )}
+                                  <button className="pat-asset-edit" onClick={() => handlePatrimonyEdit('accounts', item)} title="Editar">✎</button>
+                                  <button className="m-asset-item-del pat-asset-del" onClick={() => handlePatrimonyDelete('accounts', item.id)}>×</button>
+                                </div>
+                              </div>
+                            );
+                          }) : key === 'crypto' ? (() => {
                             /* ── Crypto: group by exchange ── */
                             const byExchange = {};
                             items.forEach(item => {

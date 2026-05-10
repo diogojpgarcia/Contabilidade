@@ -74,7 +74,7 @@ const HomeTab = ({
 
   // Patrimony totals
   const p = patrimony;
-  const sumAccounts   = (p.accounts   || []).reduce((s, x) => s + (parseFloat(x.balance)  || 0), 0);
+  const sumAccounts   = (p.accounts   || []).reduce((s, x) => s + (parseFloat(x.currentBalance ?? x.balance) || 0), 0);
   const sumStocks     = (p.stocks     || []).reduce((s, x) => s + (parseFloat(x.qty)      || 0) * (parseFloat(x.avgPrice) || 0), 0);
   const sumBonds      = (p.bonds      || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
   const sumRealestate = (p.realestate || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
