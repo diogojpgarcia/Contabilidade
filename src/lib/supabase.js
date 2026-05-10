@@ -58,13 +58,27 @@ export const dbService = {
   },
 
   async addTransaction(userId, transaction) {
-    const { date, description, amount, type, category } = transaction;
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert([{ user_id: userId, date, description, amount, type, category }])
-      .select()
-    if (error) throw error
-    return mapTransaction(data[0])
+    const { date, description, amount, type, category, account_id, account_name } = transaction;
+    const row = { user_id: userId, date, description, amount, type, category };
+    if (account_id   != null) row.account_id   = account_id;
+    if (account_name != null) row.account_name = account_name;
+
+    const { data, error } = await supabase.from('transactions').insert([row]).select();
+
+    // Graceful fallback: if the account columns don't exist yet in the DB,
+    // retry without them so the insert still succeeds.
+    // Add `account_id text, account_name text` to the transactions table to enable linking.
+    if (error) {
+      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
+        (error.message || '').includes('account_id') || (error.message || '').includes('account_name');
+      if (!isColErr) throw error;
+      console.warn('[supabase] account_id/account_name columns missing — add them to transactions table');
+      const base = { user_id: userId, date, description, amount, type, category };
+      const { data: d2, error: e2 } = await supabase.from('transactions').insert([base]).select();
+      if (e2) throw e2;
+      return mapTransaction(d2[0]);
+    }
+    return mapTransaction(data[0]);
   },
 
   async updateTransaction(transactionId, updates) {

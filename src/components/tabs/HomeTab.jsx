@@ -39,6 +39,7 @@ const HomeTab = ({
   currentMonth, onMonthChange,
   patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
   onCategoryChange,
+  onAccountChange,
   onTransactionDeleted,
   categories,
   theme = 'default',
@@ -165,8 +166,10 @@ const HomeTab = ({
                       key={tx.id || Math.random()}
                       tx={tx}
                       onCategoryChange={onCategoryChange}
+                      onAccountChange={onAccountChange}
                       onDelete={onTransactionDeleted}
                       categories={categories}
+                      accounts={patrimony.accounts || []}
                     />
                   ))}
                 </div>
@@ -177,8 +180,10 @@ const HomeTab = ({
                 <ModernTransactionList
                   transactions={transactions}
                   onCategoryChange={onCategoryChange}
+                  onAccountChange={onAccountChange}
                   onTransactionDeleted={onTransactionDeleted}
                   categories={categories}
+                  patrimony={patrimony}
                 />
               );
             }
@@ -186,7 +191,9 @@ const HomeTab = ({
             <ModernTransactionList
               transactions={transactions}
               onCategoryChange={onCategoryChange}
+              onAccountChange={onAccountChange}
               onTransactionDeleted={onTransactionDeleted}
+              patrimony={patrimony}
             />
           )}
         </div>

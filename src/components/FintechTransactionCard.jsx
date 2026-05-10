@@ -7,6 +7,7 @@ import {
   Tag, Trophy, CreditCard, Scale, Dumbbell,
 } from './icons';
 import CategoryPicker from './CategoryPicker';
+import AccountPicker from './AccountPicker';
 import './FintechTransactionCard.css';
 
 /* ── Merchant map ─────────────────────────────────────────────────────────────
@@ -173,11 +174,12 @@ function formatLong(dateStr) {
 }
 
 /* ── Component ────────────────────────────────────────────────────────────── */
-const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = false, categories }) => {
-  const [open,      setOpen]    = useState(false);
-  const [pickerTx,  setPickerTx] = useState(null);
-  const [deleting,  setDeleting] = useState(false);
-  const [logoErr,   setLogoErr]  = useState(false);
+const FintechTransactionCard = ({ tx, onCategoryChange, onAccountChange, onDelete, isDuplicate = false, categories, accounts = [] }) => {
+  const [open,          setOpen]          = useState(false);
+  const [pickerTx,      setPickerTx]      = useState(null);
+  const [acctPickerOpen, setAcctPickerOpen] = useState(false);
+  const [deleting,      setDeleting]      = useState(false);
+  const [logoErr,       setLogoErr]       = useState(false);
 
   /* ── Guard: never render with missing/invalid data ── */
   if (!tx || typeof tx !== 'object') return null;
@@ -221,6 +223,12 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
       onCategoryChange(pickerTx.id, newCategory, pickerTx.description || '');
     }
     setPickerTx(null);
+    setOpen(false);
+  };
+
+  const handleAccountSelect = (newId, newName) => {
+    if (onAccountChange) onAccountChange(tx.id, newId, newName);
+    setAcctPickerOpen(false);
     setOpen(false);
   };
 
@@ -289,6 +297,11 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
                   ✎ Categoria
                 </button>
               )}
+              {onAccountChange && !isTransfer && !isAdjustment && (
+                <button className="ftc-action-btn" onClick={() => setAcctPickerOpen(true)}>
+                  ◈ {tx.account_name || 'Conta'}
+                </button>
+              )}
               {onDelete && (
                 <button
                   className="ftc-action-btn ftc-action-btn--danger"
@@ -309,6 +322,15 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
           categories={categories}
+        />
+      )}
+
+      {acctPickerOpen && (
+        <AccountPicker
+          accounts={accounts}
+          currentAccountId={tx.account_id || null}
+          onSelect={handleAccountSelect}
+          onClose={() => setAcctPickerOpen(false)}
         />
       )}
     </>

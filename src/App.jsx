@@ -31,6 +31,7 @@ const App = () => {
   const [budgets, setBudgets] = useState({});
   const [theme, setTheme] = useState('default'); // 'default' | 'modern'
   const [categories, setCategories] = useState({ expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME });
+  const [defaultAccount, setDefaultAccount] = useState(null); // { id, name } | null
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const loadRequestId = React.useRef(0); // incremented to cancel stale loadUserTransactions fetches
 
@@ -117,6 +118,7 @@ const App = () => {
       // Load layout theme — guard against old colour values ('dark','light','gray')
       const t = settings?.theme;
       if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
+      if (settings?.defaultTransactionAccount) setDefaultAccount(settings.defaultTransactionAccount);
     } catch (error) { console.error("Error loading settings:", error); }
   };
 
@@ -220,6 +222,26 @@ const App = () => {
     catch (error) { console.error("Error saving patrimony:", error); }
   };
 
+  const handleDefaultAccountChange = (acc) => {
+    // acc = { id, name } | null
+    setDefaultAccount(acc);
+    dbService.updateUserSettings(currentUser.id, { defaultTransactionAccount: acc }).catch(console.error);
+  };
+
+  // Apply a +/- delta to one patrimony account balance and persist.
+  // delta > 0 adds, delta < 0 subtracts.
+  const applyAccountDelta = (accountId, delta, basePatrimony = patrimony) => {
+    if (!accountId || !delta || isNaN(delta)) return basePatrimony;
+    return {
+      ...basePatrimony,
+      accounts: (basePatrimony.accounts || []).map(a =>
+        a.id === accountId
+          ? { ...a, balance: String(((parseFloat(a.balance) || 0) + delta).toFixed(2)) }
+          : a
+      ),
+    };
+  };
+
   const handleCategoriesChange = (updated) => {
     // CategoryManager already persists to Supabase — we just keep global state in sync.
     setCategories(updated);
@@ -257,7 +279,17 @@ const App = () => {
     try {
       console.log('➕ Adding transaction...');
       const newTransaction = await dbService.addTransaction(currentUser.id, transaction);
-      setTransactions([newTransaction, ...transactions]);
+      setTransactions(prev => [newTransaction, ...prev]);
+
+      // Update linked account balance (income +, expense -)
+      const accId = transaction.account_id;
+      if (accId && transaction.type !== 'transfer') {
+        const amt   = parseFloat(transaction.amount) || 0;
+        const delta = transaction.type === 'income' ? amt : -amt;
+        const updated = applyAccountDelta(accId, delta);
+        handlePatrimonyChange(updated);
+      }
+
       setActiveTab('home');
       console.log('✅ Transaction added!');
     } catch (error) {
@@ -337,21 +369,84 @@ const App = () => {
   };
 
   const handleEditTransaction = async (updatedTransaction) => {
+    const original = transactions.find(t => t.id === updatedTransaction.id);
     try {
       console.log('✏️ Updating transaction:', updatedTransaction.id);
       const updated = await dbService.updateTransaction(updatedTransaction.id, {
-        amount: updatedTransaction.amount,
-        type: updatedTransaction.type,
-        category: updatedTransaction.category,
-        subcategory: updatedTransaction.subcategory || null,
-        description: updatedTransaction.description || '',
-        date: updatedTransaction.date
+        amount:       updatedTransaction.amount,
+        type:         updatedTransaction.type,
+        category:     updatedTransaction.category,
+        subcategory:  updatedTransaction.subcategory || null,
+        description:  updatedTransaction.description || '',
+        date:         updatedTransaction.date,
+        account_id:   updatedTransaction.account_id   || null,
+        account_name: updatedTransaction.account_name || null,
       });
-      setTransactions(transactions.map(t => t.id === updated.id ? updated : t));
+      setTransactions(prev => prev.map(t => t.id === updated.id ? updated : t));
+
+      // Adjust account balances if account linkage changed
+      if (original && (original.account_id || updatedTransaction.account_id)) {
+        let pat = { ...patrimony };
+
+        // Reverse old account effect
+        if (original.account_id) {
+          const oldAmt   = parseFloat(original.amount) || 0;
+          const oldDelta = original.type === 'income' ? -oldAmt : oldAmt;
+          pat = applyAccountDelta(original.account_id, oldDelta, pat);
+        }
+        // Apply new account effect
+        if (updatedTransaction.account_id) {
+          const newAmt   = parseFloat(updatedTransaction.amount) || 0;
+          const newDelta = updatedTransaction.type === 'income' ? newAmt : -newAmt;
+          pat = applyAccountDelta(updatedTransaction.account_id, newDelta, pat);
+        }
+        handlePatrimonyChange(pat);
+      }
+
       console.log('✅ Transaction updated!');
     } catch (error) {
       console.error('❌ Error updating transaction:', error);
       alert('Erro ao editar transação: ' + error.message);
+    }
+  };
+
+  // Called from history when user changes the account on an existing transaction.
+  const handleAccountChange = async (transactionId, newAccountId, newAccountName) => {
+    const original = transactions.find(t => t.id === transactionId);
+    if (!original) return;
+
+    // Optimistic UI update
+    setTransactions(prev => prev.map(t =>
+      t.id === transactionId
+        ? { ...t, account_id: newAccountId || null, account_name: newAccountName || null }
+        : t
+    ));
+
+    try {
+      await dbService.updateTransaction(transactionId, {
+        account_id:   newAccountId   || null,
+        account_name: newAccountName || null,
+      });
+
+      // Adjust balances: reverse old, apply new
+      if (original.account_id || newAccountId) {
+        const amt = parseFloat(original.amount) || 0;
+        let pat   = { ...patrimony };
+
+        if (original.account_id) {
+          const oldDelta = original.type === 'income' ? -amt : amt;
+          pat = applyAccountDelta(original.account_id, oldDelta, pat);
+        }
+        if (newAccountId) {
+          const newDelta = original.type === 'income' ? amt : -amt;
+          pat = applyAccountDelta(newAccountId, newDelta, pat);
+        }
+        handlePatrimonyChange(pat);
+      }
+    } catch (err) {
+      console.error('❌ Error updating account:', err);
+      // Rollback
+      setTransactions(prev => prev.map(t => t.id === transactionId ? original : t));
     }
   };
 
@@ -434,6 +529,7 @@ const App = () => {
             homePatrimonyView={homePatrimonyView}
             onPatrimonyViewChange={handlePatrimonyViewChange}
             onCategoryChange={handleCategoryChange}
+            onAccountChange={handleAccountChange}
             onTransactionDeleted={handleDeleteTransaction}
             onTransactionEdited={handleEditTransaction}
             categories={categories}
@@ -462,6 +558,7 @@ const App = () => {
             onTransactionAdded={handleAddTransaction}
             onTransfer={handleTransfer}
             patrimony={patrimony}
+            defaultAccount={defaultAccount}
             theme={theme}
           />
         )}
@@ -499,6 +596,9 @@ const App = () => {
             setTheme={setTheme}
             categories={categories}
             onCategoriesChange={handleCategoriesChange}
+            patrimony={patrimony}
+            defaultAccount={defaultAccount}
+            onDefaultAccountChange={handleDefaultAccountChange}
             onDataDeleted={() => {
               // Kill any in-flight loadUserTransactions so a stale fetch
               // cannot overwrite this clear after it resolves.

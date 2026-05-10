@@ -5,7 +5,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -207,6 +207,32 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           </div>
         </div>
 
+        {/* Preferências */}
+        {(patrimony.accounts || []).length > 0 && onDefaultAccountChange && (
+          <div className="m-menu-section">
+            <div className="m-menu-section-label">Preferências</div>
+            <div className="m-menu-group">
+              <div className="m-menu-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+                <span className="m-menu-text" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Conta padrão para transações</span>
+                <select
+                  className="m-field-select"
+                  style={{ width: '100%' }}
+                  value={defaultAccount?.id || ''}
+                  onChange={e => {
+                    const acc = (patrimony.accounts || []).find(a => a.id === e.target.value);
+                    onDefaultAccountChange(acc || null);
+                  }}
+                >
+                  <option value="">Sem conta padrão</option>
+                  {(patrimony.accounts || []).map(a => (
+                    <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Conta */}
         <div className="m-menu-section">
           <div className="m-menu-section-label">Conta</div>
@@ -311,11 +337,34 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         </div>
       </div>
 
+      {/* Default account */}
+      {(patrimony.accounts || []).length > 0 && onDefaultAccountChange && (
+        <div className="profile-section">
+          <h3 className="section-title">Preferências</h3>
+          <div className="form-field" style={{ padding: '0 4px' }}>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Conta padrão para transações</label>
+            <select
+              className="category-select"
+              value={defaultAccount?.id || ''}
+              onChange={e => {
+                const acc = (patrimony.accounts || []).find(a => a.id === e.target.value);
+                onDefaultAccountChange(acc || null);
+              }}
+            >
+              <option value="">Sem conta padrão</option>
+              {(patrimony.accounts || []).map(a => (
+                <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Account Options */}
       <div className="profile-section">
         <h3 className="section-title">Conta</h3>
-        
-        <button 
+
+        <button
           className="profile-option"
           onClick={() => setShowCategoryManager(true)}
         >
