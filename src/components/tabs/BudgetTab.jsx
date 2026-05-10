@@ -125,9 +125,19 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
   const catColor   = CAT_COLORS[cat.label] || '#6B7280';
   const st         = STATUS(percent);
   const willExceed = predicted !== null && limit > 0 && predicted > limit;
+  const cardRef    = useRef(null);
+  const inputRef   = useRef(null);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const t = setTimeout(() => inputRef.current?.focus(), 200);
+    return () => clearTimeout(t);
+  }, [isEditing]);
 
   return (
     <div
+      ref={cardRef}
       className="m-bcc"
       style={hovered ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
       onMouseEnter={() => setHovered(true)}
@@ -169,6 +179,7 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
       {isEditing && (
         <div className="m-bcc-edit-row">
           <input
+            ref={inputRef}
             type="number"
             inputMode="decimal"
             className="m-bcc-input"
@@ -177,7 +188,6 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
             onKeyDown={(e) => { if (e.key === 'Enter') { onSave(); e.target.blur(); } }}
             onBlur={onSave}
             placeholder="Limite €/mês"
-            autoFocus
           />
           <button className="m-bcc-save" onClick={onSave}>✓</button>
         </div>
@@ -995,7 +1005,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             <div className="m-bcc-list">
               {sortedItems.map(({ cat, limit, spent, percent, delta, predicted }) => (
                 <BudgetCategoryCard
-                  key={`${cat.id}-${Math.round(percent)}`}
+                  key={cat.id}
                   cat={cat}
                   limit={limit}
                   spent={spent}
