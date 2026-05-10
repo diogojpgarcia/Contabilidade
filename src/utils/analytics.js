@@ -1,3 +1,5 @@
+import { isInFinancialMonth } from './financialMonth.js';
+
 export function getMonthKey(date) {
   return String(date).slice(0, 7);
 }
@@ -18,8 +20,8 @@ export function getLastNMonths(fromMonth, n) {
   return result;
 }
 
-export function computeMonthAnalytics(transactions, month) {
-  const txs = transactions.filter(t => getMonthKey(t.date) === month);
+export function computeMonthAnalytics(transactions, month, startDay = 1) {
+  const txs = transactions.filter(t => t.date && isInFinancialMonth(t.date, month, startDay));
   const income   = txs.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0);
   const expenses = txs.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
   const byCategory = {};
@@ -30,12 +32,12 @@ export function computeMonthAnalytics(transactions, month) {
   return { month, income, expenses, balance: income - expenses, byCategory, count: txs.length };
 }
 
-export function getMonthlyHistory(transactions, currentMonth, n = 6) {
-  return getLastNMonths(currentMonth, n).map(m => computeMonthAnalytics(transactions, m));
+export function getMonthlyHistory(transactions, currentMonth, n = 6, startDay = 1) {
+  return getLastNMonths(currentMonth, n).map(m => computeMonthAnalytics(transactions, m, startDay));
 }
 
-export function getTopCategories(transactions, month, n = 3) {
-  const { byCategory, expenses } = computeMonthAnalytics(transactions, month);
+export function getTopCategories(transactions, month, n = 3, startDay = 1) {
+  const { byCategory, expenses } = computeMonthAnalytics(transactions, month, startDay);
   return Object.entries(byCategory)
     .map(([category, amount]) => ({ category, amount, percentage: expenses > 0 ? (amount / expenses) * 100 : 0 }))
     .sort((a, b) => b.amount - a.amount)
@@ -62,13 +64,13 @@ export function detectRecurring(transactions) {
     .slice(0, 10);
 }
 
-export function buildPieData(transactions, month) {
-  const top = getTopCategories(transactions, month, 8);
+export function buildPieData(transactions, month, startDay = 1) {
+  const top = getTopCategories(transactions, month, 8, startDay);
   return top.map(({ category, amount, percentage }) => ({ name: category, value: parseFloat(amount.toFixed(2)), percentage: parseFloat(percentage.toFixed(1)) }));
 }
 
-export function buildBarData(transactions, currentMonth, n = 6) {
-  return getMonthlyHistory(transactions, currentMonth, n).map(h => ({
+export function buildBarData(transactions, currentMonth, n = 6, startDay = 1) {
+  return getMonthlyHistory(transactions, currentMonth, n, startDay).map(h => ({
     month: h.month.slice(5) + '/' + h.month.slice(2, 4),
     income: parseFloat(h.income.toFixed(2)),
     expenses: parseFloat(h.expenses.toFixed(2)),

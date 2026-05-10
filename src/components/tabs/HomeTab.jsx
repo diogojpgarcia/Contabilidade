@@ -2,6 +2,7 @@ import React from 'react';
 import ModernTransactionList      from '../ModernTransactionList';
 import DefaultTransactionList     from '../DefaultTransactionList';
 import FintechTransactionCard     from '../FintechTransactionCard';
+import { getCurrentFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel } from '../../utils/financialMonth';
 import './HomeTab.css';
 
 /* ── Transfer dedup (mirrors StatsTab / ModernTransactionList) ──────────── */
@@ -40,31 +41,15 @@ const HomeTab = ({
   patrimony = {}, homePatrimonyView = 'total', onPatrimonyViewChange,
   onCategoryChange,
   onAccountChange,
+  financialMonthStartDay = 1,
   onTransactionDeleted,
   categories,
   theme = 'default',
 }) => {
-  const goToPreviousMonth = () => {
-    const [year, month] = currentMonth.split('-').map(Number);
-    const d = new Date(year, month - 2, 1);
-    onMonthChange(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  };
-
-  const goToNextMonth = () => {
-    const [year, month] = currentMonth.split('-').map(Number);
-    const d = new Date(year, month, 1);
-    onMonthChange(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  };
-
-  const goToToday = () => {
-    const t = new Date();
-    onMonthChange(`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`);
-  };
-
-  const formatMonth = (monthStr) => {
-    const [year, month] = monthStr.split('-');
-    return new Date(year, parseInt(month) - 1).toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
-  };
+  const goToPreviousMonth = () => onMonthChange(shiftFinancialMonth(currentMonth, -1));
+  const goToNextMonth     = () => onMonthChange(shiftFinancialMonth(currentMonth,  1));
+  const goToToday         = () => onMonthChange(getCurrentFinancialMonth(financialMonthStartDay));
+  const formatMonth       = (monthStr) => getFinancialMonthLabel(monthStr, financialMonthStartDay);
 
   const getBalanceStatus = () => {
     if (balance > 0) return 'No verde este mês';

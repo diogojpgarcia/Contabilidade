@@ -6,6 +6,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { authService, dbService } from './lib/supabase';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from './utils/categories-professional';
 import { getMonthKey } from './utils/data';
+import {
+  getCurrentFinancialMonth,
+  isInFinancialMonth,
+  shiftFinancialMonth,
+} from './utils/financialMonth';
 
 // New Tab Components
 import HomeTab from './components/tabs/HomeTab';
@@ -32,6 +37,8 @@ const App = () => {
   const [theme, setTheme] = useState('default'); // 'default' | 'modern'
   const [categories, setCategories] = useState({ expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME });
   const [mainAccountId, setMainAccountId] = useState(null); // string | null — the "Principal" account
+  const [financialMonthStartDay, setFinancialMonthStartDay] = useState(1); // 1 = calendar month
+  const [useFinancialMonth, setUseFinancialMonth] = useState(false);
   const [transactionAccountMap, setTransactionAccountMap] = useState({}); // { [txId]: { account_id, account_name } } — fallback when DB columns absent
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const loadRequestId = React.useRef(0); // incremented to cancel stale fetches
@@ -120,6 +127,13 @@ const App = () => {
       if (t === 'default' || t === 'modern' || t === 'fintech') setTheme(t);
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
+
+      // Financial month settings — restore and snap currentMonth to the correct period
+      const sd  = settings?.financialMonthStartDay ?? 1;
+      const ufm = settings?.useFinancialMonth      ?? false;
+      setFinancialMonthStartDay(sd);
+      setUseFinancialMonth(ufm);
+      setCurrentMonth(getCurrentFinancialMonth(ufm ? sd : 1));
     } catch (error) {
       console.error('❌ Error loading user data:', error);
     }
@@ -247,6 +261,18 @@ const App = () => {
     setPatrimony(newPatrimony);
     try { await dbService.updateUserSettings(currentUser.id, { patrimony: newPatrimony }); }
     catch (error) { console.error("Error saving patrimony:", error); }
+  };
+
+  const handleFinancialMonthChange = ({ startDay, enabled }) => {
+    const sd  = Math.min(28, Math.max(1, startDay));
+    setFinancialMonthStartDay(sd);
+    setUseFinancialMonth(enabled);
+    // Snap the current view to today's financial period under the new settings
+    setCurrentMonth(getCurrentFinancialMonth(enabled ? sd : 1));
+    dbService.updateUserSettings(currentUser.id, {
+      financialMonthStartDay: sd,
+      useFinancialMonth: enabled,
+    }).catch(console.error);
   };
 
   // Sets mainAccountId as the "Principal" account.
@@ -592,7 +618,10 @@ const App = () => {
   }
 
   // Logged in — derive monthly figures (plain expressions, not hooks)
-  const filteredTransactions = safeTransactions.filter(t => getMonthKey(t.date) === currentMonth);
+  const effectiveStartDay = useFinancialMonth ? financialMonthStartDay : 1;
+  const filteredTransactions = safeTransactions.filter(
+    t => t.date && isInFinancialMonth(t.date, currentMonth, effectiveStartDay)
+  );
   const monthlyIncome = filteredTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
@@ -626,6 +655,7 @@ const App = () => {
             onTransactionEdited={handleEditTransaction}
             categories={categories}
             theme={theme}
+            financialMonthStartDay={effectiveStartDay}
           />
         )}
 
@@ -642,6 +672,7 @@ const App = () => {
             onAccountChange={handleAccountChange}
             patrimony={patrimonyWithLiveBalances}
             theme={theme}
+            financialMonthStartDay={effectiveStartDay}
           />
         )}
         
@@ -670,6 +701,7 @@ const App = () => {
             mainAccountId={mainAccountId}
             onMainAccountChange={handleMainAccountChange}
             theme={theme}
+            financialMonthStartDay={effectiveStartDay}
           />
         )}
 
@@ -695,6 +727,9 @@ const App = () => {
             patrimony={patrimonyWithLiveBalances}
             defaultAccount={defaultAccount}
             onDefaultAccountChange={(acc) => handleMainAccountChange(acc?.id || null)}
+            useFinancialMonth={useFinancialMonth}
+            financialMonthStartDay={financialMonthStartDay}
+            onFinancialMonthChange={handleFinancialMonthChange}
             onDataDeleted={() => {
               loadRequestId.current++;
               setTransactions([]);

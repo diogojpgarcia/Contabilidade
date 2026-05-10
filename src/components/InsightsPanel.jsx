@@ -9,16 +9,17 @@ const CATEGORY_COLORS = [
   '#EC4899','#14B8A6','#F97316','#6366F1','#84CC16',
 ];
 
-const InsightsPanel = ({ transactions, currentMonth }) => {
-  const alerts    = useMemo(() => generateAlerts(transactions, currentMonth), [transactions, currentMonth]);
-  const topCats   = useMemo(() => getTopCategories(transactions, currentMonth, 5), [transactions, currentMonth]);
+const InsightsPanel = ({ transactions, currentMonth, financialMonthStartDay = 1 }) => {
+  const sd = financialMonthStartDay;
+  const alerts    = useMemo(() => generateAlerts(transactions, currentMonth, sd), [transactions, currentMonth, sd]);
+  const topCats   = useMemo(() => getTopCategories(transactions, currentMonth, 5, sd), [transactions, currentMonth, sd]);
   const recurring = useMemo(() => detectRecurring(transactions).slice(0, 5), [transactions]);
   const forecast  = useMemo(() => forecastNextMonth(transactions, currentMonth), [transactions, currentMonth]);
-  const barData   = useMemo(() => buildBarData(transactions, currentMonth, 6), [transactions, currentMonth]);
+  const barData   = useMemo(() => buildBarData(transactions, currentMonth, 6, sd), [transactions, currentMonth, sd]);
 
-  const curAnalytics  = useMemo(() => computeMonthAnalytics(transactions, currentMonth), [transactions, currentMonth]);
+  const curAnalytics  = useMemo(() => computeMonthAnalytics(transactions, currentMonth, sd), [transactions, currentMonth, sd]);
   const prevMonths    = useMemo(() => getLastNMonths(currentMonth, 2), [currentMonth]);
-  const prevAnalytics = useMemo(() => computeMonthAnalytics(transactions, prevMonths[0]), [transactions, prevMonths]);
+  const prevAnalytics = useMemo(() => computeMonthAnalytics(transactions, prevMonths[0], sd), [transactions, prevMonths, sd]);
 
   const maxBar = Math.max(...barData.map(d => Math.max(d.income, d.expenses)), 1);
 

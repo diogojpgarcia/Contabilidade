@@ -1,3 +1,5 @@
+import { isInFinancialMonth, getFinancialMonthRange, getFinancialMonthLabel, getPrediction as _getPrediction } from './financialMonth.js';
+
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 export const shiftMonth = (yyyymm, delta) => {
@@ -6,30 +8,28 @@ export const shiftMonth = (yyyymm, delta) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
-export const formatMonthLabel = (yyyymm) => {
-  const [y, m] = yyyymm.split('-').map(Number);
-  return `${MONTH_NAMES[m - 1]} ${y}`;
+export const formatMonthLabel = (yyyymm, startDay = 1) => {
+  if (startDay === 1) {
+    const [y, m] = yyyymm.split('-').map(Number);
+    return `${MONTH_NAMES[m - 1]} ${y}`;
+  }
+  return getFinancialMonthLabel(yyyymm, startDay);
 };
 
-export const getPrediction = (spent, selectedMonth) => {
-  const today = new Date();
-  const [y, m] = selectedMonth.split('-').map(Number);
-  if (today.getFullYear() !== y || today.getMonth() + 1 !== m) return null;
-  const daysPassed = today.getDate();
-  if (daysPassed === 0 || spent === 0) return null;
-  const daysTotal = new Date(y, m, 0).getDate();
-  return Math.round((spent / daysPassed) * daysTotal);
-};
+// Re-export from financialMonth so callers that import from insights still work.
+// startDay param is now supported — pass it from BudgetTab / StatsTab.
+export const getPrediction = (spent, selectedMonth, startDay = 1) =>
+  _getPrediction(spent, selectedMonth, startDay);
 
-const getSpent = (transactions, catName, month) =>
+const getSpent = (transactions, catName, month, startDay = 1) =>
   transactions
-    .filter(t => t.type === 'expense' && t.category === catName && t.date && t.date.startsWith(month))
+    .filter(t => t.type === 'expense' && t.category === catName && t.date && isInFinancialMonth(t.date, month, startDay))
     .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
 const fmt0 = (n) =>
   Math.abs(n).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-export const generateInsights = ({ transactions, budgets, categories, selectedMonth }) => {
+export const generateInsights = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
   const items = [];
 
   const prevMonth  = shiftMonth(selectedMonth, -1);
@@ -38,19 +38,22 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
   const prev4Month = shiftMonth(selectedMonth, -4);
   const prev5Month = shiftMonth(selectedMonth, -5);
 
-  // Current month timing
-  const today = new Date();
-  const [sy, sm] = selectedMonth.split('-').map(Number);
-  const isCurrentMonth = today.getFullYear() === sy && today.getMonth() + 1 === sm;
-  const daysInMonth  = new Date(sy, sm, 0).getDate();
-  const daysPassed   = isCurrentMonth ? today.getDate() : daysInMonth;
+  // Current period timing (works for both calendar and financial months)
+  const today    = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const { start, end } = getFinancialMonthRange(selectedMonth, startDay);
+  const isCurrentMonth = todayStr >= start && todayStr <= end;
+  const startDate  = new Date(start + 'T00:00:00');
+  const endDate    = new Date(end   + 'T00:00:00');
+  const daysInMonth  = Math.round((endDate - startDate) / 86400000) + 1;
+  const daysPassed   = isCurrentMonth ? Math.round((today - startDate) / 86400000) + 1 : daysInMonth;
   const daysLeft     = isCurrentMonth ? daysInMonth - daysPassed : 0;
 
   // Per-category current + previous month totals
   const catTotals = categories.expense.map(cat => ({
     cat,
-    spent:     getSpent(transactions, cat.label, selectedMonth),
-    prevSpent: getSpent(transactions, cat.label, prevMonth),
+    spent:     getSpent(transactions, cat.label, selectedMonth, startDay),
+    prevSpent: getSpent(transactions, cat.label, prevMonth,     startDay),
   }));
   const totalCurr = catTotals.reduce((s, c) => s + c.spent, 0);
 
@@ -118,7 +121,7 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
   // ── 3. 3-month consecutive increase in a category ─────────────────────────
   for (const { cat } of catTotals) {
     const [m0, m1, m2] = [prev2Month, prevMonth, selectedMonth]
-      .map(m => getSpent(transactions, cat.label, m));
+      .map(m => getSpent(transactions, cat.label, m, startDay));
     // Require non-trivial base and 10%+ increase each step
     if (m0 > 10 && m1 > m0 * 1.1 && m2 > m1 * 1.1) {
       const growth = ((m2 - m0) / m0 * 100).toFixed(0);
@@ -137,7 +140,7 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
   // Coefficient of variation > 0.7 across 6 months signals unpredictability
   for (const { cat } of catTotals) {
     const monthly = [prev5Month, prev4Month, prev3Month, prev2Month, prevMonth, selectedMonth]
-      .map(m => getSpent(transactions, cat.label, m))
+      .map(m => getSpent(transactions, cat.label, m, startDay))
       .filter(v => v > 0);
     if (monthly.length >= 4) {
       const mean   = monthly.reduce((s, v) => s + v, 0) / monthly.length;
@@ -195,7 +198,7 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
   for (const { cat, spent } of catTotals) {
     if (spent < 10) continue;
     const txns = transactions.filter(
-      t => t.type === 'expense' && t.category === cat.label && t.date && t.date.startsWith(selectedMonth)
+      t => t.type === 'expense' && t.category === cat.label && t.date && isInFinancialMonth(t.date, selectedMonth, startDay)
     );
     if (txns.length >= 5) {
       const avg = spent / txns.length;
@@ -218,13 +221,13 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
 };
 
 // ── Financial score (0-100) ─────────────────────────────────────────────────
-export const computeFinancialScore = ({ transactions, budgets, categories, selectedMonth }) => {
+export const computeFinancialScore = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
   const prevMonth  = shiftMonth(selectedMonth, -1);
   const prev2Month = shiftMonth(selectedMonth, -2);
 
   const catSpent = (label, month) =>
     transactions
-      .filter(t => t.type === 'expense' && t.category === label && t.date && t.date.startsWith(month))
+      .filter(t => t.type === 'expense' && t.category === label && t.date && isInFinancialMonth(t.date, month, startDay))
       .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
   const catTotals = categories.expense.map(cat => ({
@@ -280,12 +283,12 @@ export const computeFinancialScore = ({ transactions, budgets, categories, selec
 };
 
 // ── Smart Goals (auto-generated, max 3) ─────────────────────────────────────
-export const generateGoals = ({ transactions, budgets, categories, selectedMonth }) => {
+export const generateGoals = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
   const prevMonth = shiftMonth(selectedMonth, -1);
 
   const monthSpend = (catLabel, month) =>
     transactions
-      .filter(t => t.type === 'expense' && t.category === catLabel && t.date && t.date.startsWith(month))
+      .filter(t => t.type === 'expense' && t.category === catLabel && t.date && isInFinancialMonth(t.date, month, startDay))
       .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
   const catTotals = categories.expense.map(cat => ({
@@ -297,7 +300,7 @@ export const generateGoals = ({ transactions, budgets, categories, selectedMonth
   const totalCurrent = catTotals.reduce((s, c) => s + c.current, 0);
   const totalPrev    = catTotals.reduce((s, c) => s + c.prev, 0);
   const monthIncome  = transactions
-    .filter(t => t.type === 'income' && t.date && t.date.startsWith(selectedMonth))
+    .filter(t => t.type === 'income' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay))
     .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
   const goal = (type, title, description, targetAmount, currentAmount) => {

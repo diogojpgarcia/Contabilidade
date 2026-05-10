@@ -3,7 +3,8 @@ import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { Bubble, Card } from '../ui';
-import { generateInsights, computeFinancialScore, generateGoals, shiftMonth } from '../../utils/insights';
+import { generateInsights, computeFinancialScore, generateGoals, shiftMonth, formatMonthLabel } from '../../utils/insights';
+import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange } from '../../utils/financialMonth';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -33,7 +34,7 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, patrimony = {}, theme = 'default' }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, patrimony = {}, theme = 'default', financialMonthStartDay = 1 }) => {
   console.log('REAL STATS TAB LOADED');
   console.log('RENDER STATS');
   console.log('ACTIVE THEME:', theme);
@@ -135,7 +136,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     const months = getLast6Months();
     
     return months.map(month => {
-      const monthTransactions = transactions.filter(t => t.date && t.date.slice(0, 7) === month);
+      const monthTransactions = filterByFinancialMonth(transactions, month, financialMonthStartDay);
       const income = monthTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + parseFloat(t.amount), 0);
@@ -153,19 +154,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   };
 
   // Navigate months — delegates to App so currentMonth is the single source of truth
-  const goToPreviousMonth = () => {
-    const [year, month] = currentMonth.split('-').map(Number);
-    const prevDate = new Date(year, month - 2, 1);
-    const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
-    onMonthChange(prevMonth);
-  };
-
-  const goToNextMonth = () => {
-    const [year, month] = currentMonth.split('-').map(Number);
-    const nextDate = new Date(year, month, 1);
-    const nextMonth = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
-    onMonthChange(nextMonth);
-  };
+  const goToPreviousMonth = () => onMonthChange(shiftFinancialMonth(currentMonth, -1));
+  const goToNextMonth     = () => onMonthChange(shiftFinancialMonth(currentMonth,  1));
 
   // Format date
   const formatDate = (dateString) => {
@@ -236,44 +226,46 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
   const insights = useMemo(() => {
     try {
-      return generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth });
+      return generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay });
     } catch (e) {
       console.error('[Insights] generateInsights threw:', e);
       return [];
     }
-  }, [transactions, budgets, categories, currentMonth]);
+  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
 
   const goals = useMemo(() => {
-    try { return generateGoals({ transactions, budgets, categories, selectedMonth: currentMonth }); }
+    try { return generateGoals({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay }); }
     catch (e) { return []; }
-  }, [transactions, budgets, categories, currentMonth]);
+  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
 
   const financialScore = useMemo(() => {
     try {
-      return computeFinancialScore({ transactions, budgets, categories, selectedMonth: currentMonth });
+      return computeFinancialScore({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay });
     } catch (e) {
       return { score: 0, color: '#52525b', label: '—' };
     }
-  }, [transactions, budgets, categories, currentMonth]);
+  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
 
   const forecast = useMemo(() => {
-    const [fy, fm] = currentMonth.split('-').map(Number);
-    const today = new Date();
-    if (today.getFullYear() !== fy || today.getMonth() + 1 !== fm) return null;
-    const daysPassed  = today.getDate();
-    const daysInMonth = new Date(fy, fm, 0).getDate();
-    const totalExpenses = transactions
-      .filter(t => t.type === 'expense' && t.date && t.date.startsWith(currentMonth))
+    const today    = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const { start: fmStart, end: fmEnd } = getFinancialMonthRange(currentMonth, financialMonthStartDay);
+    if (todayStr < fmStart || todayStr > fmEnd) return null;
+    const startDate   = new Date(fmStart + 'T00:00:00');
+    const endDate     = new Date(fmEnd   + 'T00:00:00');
+    const daysInMonth = Math.round((endDate - startDate) / 86400000) + 1;
+    const daysPassed  = Math.round((today   - startDate) / 86400000) + 1;
+    const totalExpenses = filterByFinancialMonth(transactions, currentMonth, financialMonthStartDay)
+      .filter(t => t.type === 'expense')
       .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
     if (daysPassed < 3 || totalExpenses === 0) return null;
     const dailyAvg  = totalExpenses / daysPassed;
     const projected = Math.round(dailyAvg * daysInMonth);
     const totalBudget = categories.expense.reduce((s, c) => s + (budgets[c.id] || 0), 0);
-    // 3-month average for comparison
     const threeMonthAvg = [1, 2, 3].reduce((sum, delta) => {
       const m = shiftMonth(currentMonth, -delta);
-      return sum + transactions
-        .filter(t => t.type === 'expense' && t.date && t.date.startsWith(m))
+      return sum + filterByFinancialMonth(transactions, m, financialMonthStartDay)
+        .filter(t => t.type === 'expense')
         .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
     }, 0) / 3;
     const vsAvg     = threeMonthAvg > 0 ? projected - threeMonthAvg : null;
@@ -281,14 +273,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     const riskLevel = (vsBudget !== null && vsBudget > 0) || (vsAvg !== null && vsAvg > threeMonthAvg * 0.15)
       ? 'high' : vsAvg !== null && vsAvg > 0 ? 'medium' : 'low';
     return { projected, dailyAvg, totalBudget, threeMonthAvg, vsAvg, vsBudget, riskLevel, daysLeft: daysInMonth - daysPassed };
-  }, [transactions, budgets, categories, currentMonth]);
+  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
 
-  // Get month name from the global currentMonth
-  const [year, month] = currentMonth.split('-');
-  const monthName = new Date(year, parseInt(month) - 1, 1).toLocaleDateString('pt-PT', {
-    month: 'long',
-    year: 'numeric'
-  });
+  // Month label — shows financial period range when startDay > 1
+  const monthName = getFinancialMonthLabel(currentMonth, financialMonthStartDay);
 
   // ── derived totals for chips ──
   const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
@@ -296,9 +284,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const monthSaldo    = monthIncome - monthExpenses;
 
   // ── previous-month totals for delta ──
-  const prevMonthKey      = shiftMonth(currentMonth, -1);
-  const prevMonthIncome   = transactions.filter(t => t.type === 'income'  && t.date && t.date.startsWith(prevMonthKey)).reduce((s, t) => s + parseFloat(t.amount), 0);
-  const prevMonthExpenses = transactions.filter(t => t.type === 'expense' && t.date && t.date.startsWith(prevMonthKey)).reduce((s, t) => s + parseFloat(t.amount), 0);
+  const prevMonthKey      = shiftFinancialMonth(currentMonth, -1);
+  const prevMonthTxs      = filterByFinancialMonth(transactions, prevMonthKey, financialMonthStartDay);
+  const prevMonthIncome   = prevMonthTxs.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
+  const prevMonthExpenses = prevMonthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
   const prevMonthSaldo    = prevMonthIncome - prevMonthExpenses;
   const saldoDelta        = monthSaldo - prevMonthSaldo;
 

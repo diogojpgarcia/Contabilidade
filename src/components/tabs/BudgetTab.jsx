@@ -4,6 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
+import { isInFinancialMonth, filterByFinancialMonth } from '../../utils/financialMonth';
 import { fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory, fetchCryptoHistoryBatch, fetchStockSearch, getPrice, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
 import { searchAssets } from '../../utils/searchAssets';
 
@@ -241,7 +242,7 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
 // STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
 // Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default' }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1 }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
   const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
@@ -514,7 +515,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const getSpentForMonth = (categoryId, month) => {
     const categoryName = categories.expense.find(c => c.id === categoryId)?.label;
     return transactions
-      .filter(t => t.type === 'expense' && t.category === categoryName && t.date && t.date.startsWith(month))
+      .filter(t => t.type === 'expense' && t.category === categoryName && t.date && isInFinancialMonth(t.date, month, financialMonthStartDay))
       .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   };
 
@@ -529,7 +530,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         const prevSpent = getSpentForMonth(cat.id, prevMonth);
         const percent   = limit > 0 ? (spent / limit) * 100 : 0;
         const delta     = spent - prevSpent;
-        const predicted = getPrediction(spent, selectedMonth);
+        const predicted = getPrediction(spent, selectedMonth, financialMonthStartDay);
         return { cat, limit, spent, percent, delta, predicted };
       })
       .sort((a, b) => b.percent - a.percent);
@@ -1121,7 +1122,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           // Derive monthly net savings from transactions (no snapshot history needed)
           const last6Months = Array.from({ length: 6 }, (_, i) => shiftMonth(currentMonth, -(5 - i)));
           const monthlySavings = last6Months.map(m => {
-            const txns = transactions.filter(t => t.date && t.date.startsWith(m));
+            const txns = filterByFinancialMonth(transactions, m, financialMonthStartDay);
             const inc  = txns.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
             const exp  = txns.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
             return inc - exp;

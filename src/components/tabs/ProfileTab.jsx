@@ -5,7 +5,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -233,6 +233,48 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           </div>
         )}
 
+        {/* Mês Financeiro */}
+        {onFinancialMonthChange && (
+          <div className="m-menu-section">
+            <div className="m-menu-section-label">Mês Financeiro</div>
+            <div className="m-menu-group">
+              <div className="m-menu-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <span className="m-menu-text">Ativar mês financeiro</span>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '6px' }}>
+                    <input
+                      type="checkbox"
+                      checked={useFinancialMonth}
+                      onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                  </label>
+                </div>
+                {useFinancialMonth && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Dia de início do ciclo</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="28"
+                      value={financialMonthStartDay}
+                      onChange={e => onFinancialMonthChange({ startDay: parseInt(e.target.value) || 1, enabled: true })}
+                      className="m-field-input"
+                      style={{ width: '64px', textAlign: 'center' }}
+                    />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>de cada mês</span>
+                  </div>
+                )}
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, var(--text-secondary))' }}>
+                  {useFinancialMonth
+                    ? `Ciclo: dia ${financialMonthStartDay} → dia ${financialMonthStartDay - 1} do mês seguinte`
+                    : 'Agrupa por mês calendário (padrão)'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Conta */}
         <div className="m-menu-section">
           <div className="m-menu-section-label">Conta</div>
@@ -356,6 +398,44 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
                 <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>
               ))}
             </select>
+          </div>
+        </div>
+      )}
+
+      {/* Mês Financeiro */}
+      {onFinancialMonthChange && (
+        <div className="profile-section">
+          <h3 className="section-title">Mês Financeiro</h3>
+          <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ativar mês financeiro</label>
+              <input
+                type="checkbox"
+                checked={useFinancialMonth}
+                onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+            </div>
+            {useFinancialMonth && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Dia de início</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="28"
+                  value={financialMonthStartDay}
+                  onChange={e => onFinancialMonthChange({ startDay: parseInt(e.target.value) || 1, enabled: true })}
+                  className="date-input"
+                  style={{ width: '64px', textAlign: 'center' }}
+                />
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>de cada mês</span>
+              </div>
+            )}
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
+              {useFinancialMonth
+                ? `Ciclo: dia ${financialMonthStartDay} → dia ${financialMonthStartDay - 1} do mês seguinte`
+                : 'Agrupa por mês calendário (padrão)'}
+            </p>
           </div>
         </div>
       )}
