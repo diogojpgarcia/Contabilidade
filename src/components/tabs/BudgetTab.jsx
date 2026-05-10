@@ -199,7 +199,7 @@ const SwipeRevealCard = ({ onEdit, onDelete, className = '', style, children }) 
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden', ...style }}>
-      {/* Action layer — sits behind the sliding content */}
+      {/* Action layer — revealed when content slides left */}
       <div className="swipe-actions">
         <button
           className="swipe-btn swipe-btn-edit"
@@ -212,21 +212,21 @@ const SwipeRevealCard = ({ onEdit, onDelete, className = '', style, children }) 
           aria-label="Remover"
         >🗑</button>
       </div>
-      {/* Sliding content layer */}
+      {/* Sliding layer — solid background so action buttons are never visible at rest */}
       <div
         ref={innerRef}
-        className={className}
+        style={{ background: 'var(--bg-secondary)' }}
         onClickCapture={e => {
           if (isOpenRef.current) { e.stopPropagation(); e.preventDefault(); close(); }
         }}
       >
-        {children}
+        <div className={className}>{children}</div>
       </div>
     </div>
   );
 };
 
-const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions }) => {
+const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions, isNavTarget }) => {
   const [hovered, setHovered] = useState(false);
   const catColor   = CAT_COLORS[cat.label] || '#6B7280';
   const st         = STATUS(percent);
@@ -243,16 +243,17 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
 
   useEffect(() => {
     if (!isExpanded) return;
-    const t = setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    const block = isNavTarget ? 'start' : 'nearest';
+    const t = setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block }), 120);
     return () => clearTimeout(t);
-  }, [isExpanded]);
+  }, [isExpanded, isNavTarget]);
 
   const txs = categoryTransactions || [];
 
   return (
     <div
       ref={cardRef}
-      className={`m-bcc${isExpanded ? ' expanded' : ''}`}
+      className={`m-bcc${isExpanded ? ' expanded' : ''}${isNavTarget && isExpanded ? ' nav-target' : ''}`}
       style={hovered && !isExpanded ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -404,13 +405,17 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
   const [expandedCategoryId,  setExpandedCategoryId]  = useState(null);
+  const [navExpandedId,       setNavExpandedId]       = useState(null);
 
-  // Deep navigation from insights: auto-switch to budgets view + expand category
+  // Deep navigation from insights: switch to budgets, expand + highlight category
   useEffect(() => {
     if (!pendingNav?.categoryLabel) return;
     setActiveView('budgets');
     const cat = categories.expense.find(c => c.label === pendingNav.categoryLabel);
-    if (cat) setExpandedCategoryId(cat.id);
+    if (cat) {
+      setExpandedCategoryId(cat.id);
+      setNavExpandedId(cat.id);
+    }
     onNavConsumed?.();
   }, [pendingNav]);
   const [animated,            setAnimated]            = useState(false);
@@ -1221,7 +1226,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   onLimitChange={handleLimitChange}
                   onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
                   isExpanded={expandedCategoryId === cat.id}
-                  onToggleExpand={() => setExpandedCategoryId(expandedCategoryId === cat.id ? null : cat.id)}
+                  onToggleExpand={() => { setExpandedCategoryId(expandedCategoryId === cat.id ? null : cat.id); setNavExpandedId(null); }}
+                  isNavTarget={navExpandedId === cat.id}
                   categoryTransactions={txByCategory[cat.id] || []}
                 />
               ))}

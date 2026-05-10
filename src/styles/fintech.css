@@ -825,6 +825,16 @@
 .m-bcc:active { transform: scale(0.97); }
 .m-bcc.expanded:active { transform: none; }
 
+/* Insight-navigation target: brief indigo ring pulse */
+.m-bcc.nav-target {
+  animation: bcc-nav-ring 1.6s ease-out both;
+}
+@keyframes bcc-nav-ring {
+  0%   { box-shadow: 0 0 0 3px rgba(99,102,241,0.55), 0 4px 20px rgba(99,102,241,0.15); }
+  60%  { box-shadow: 0 0 0 2px rgba(99,102,241,0.2),  0 4px 16px rgba(99,102,241,0.08); }
+  100% { box-shadow: none; }
+}
+
 .m-bcc-row { display: flex; align-items: center; gap: 12px; }
 .m-bcc-bubble {
   width: 40px; height: 40px;
@@ -1640,7 +1650,6 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px 14px 10px 16px;
-  background: var(--bg-secondary);
   transition: background 0.18s;
 }
 /* border-bottom lives on the outer swipe wrapper so :last-child works correctly */
