@@ -399,7 +399,15 @@ const App = () => {
         account_id:   updatedTransaction.account_id   || null,
         account_name: updatedTransaction.account_name || null,
       });
-      setTransactions(prev => prev.map(t => t.id === updated.id ? updated : t));
+      // Merge DB result with intended account fields: if account columns don't exist
+      // in the DB yet, updateTransaction returns the row without them. We keep the
+      // caller's intent so the optimistic account data is never overwritten by stale DB data.
+      const merged = {
+        ...updated,
+        account_id:   updatedTransaction.account_id   ?? updated.account_id   ?? null,
+        account_name: updatedTransaction.account_name ?? updated.account_name ?? null,
+      };
+      setTransactions(prev => prev.map(t => t.id === merged.id ? merged : t));
       // No balance mutation — currentBalance is computed live from transactions
       console.log('✅ Transaction updated!');
     } catch (error) {
@@ -408,12 +416,14 @@ const App = () => {
     }
   };
 
-  // Called from history when user changes the account on an existing transaction.
+  // Called from Home and History when user links a transaction to a different account.
+  // Optimistic update fires immediately; DB write is fire-and-forget on success.
+  // updateTransaction now has a graceful column fallback, so throws only on real errors.
   const handleAccountChange = async (transactionId, newAccountId, newAccountName) => {
     const original = transactions.find(t => t.id === transactionId);
     if (!original) return;
 
-    // Optimistic UI update
+    // Apply optimistic update instantly — source of truth is transaction.account_id
     setTransactions(prev => prev.map(t =>
       t.id === transactionId
         ? { ...t, account_id: newAccountId || null, account_name: newAccountName || null }
@@ -425,11 +435,9 @@ const App = () => {
         account_id:   newAccountId   || null,
         account_name: newAccountName || null,
       });
-
-      // No balance mutation needed — currentBalance is computed from transactions in real time
+      // No balance mutation — currentBalance computed live from transactions
     } catch (err) {
-      console.error('❌ Error updating account:', err);
-      // Rollback
+      console.error('❌ Error persisting account change:', err);
       setTransactions(prev => prev.map(t => t.id === transactionId ? original : t));
     }
   };
@@ -546,6 +554,8 @@ const App = () => {
             budgets={budgets}
             onTransactionDeleted={handleDeleteTransaction}
             onCategoryChange={handleCategoryChange}
+            onAccountChange={handleAccountChange}
+            patrimony={patrimonyWithLiveBalances}
             theme={theme}
           />
         )}

@@ -104,9 +104,28 @@ export const dbService = {
       .from('transactions')
       .update(updates)
       .eq('id', transactionId)
-      .select()
-    if (error) throw error
-    return mapTransaction(data[0])
+      .select();
+    if (error) {
+      // If account columns don't exist yet, retry without them so other
+      // field updates (amount, category, date…) still succeed.
+      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
+        (error.message || '').includes('account_id') || (error.message || '').includes('account_name');
+      if (!isColErr) throw error;
+      console.warn('[supabase] account columns missing — updating without account fields');
+      const { account_id, account_name, ...baseUpdates } = updates;
+      if (Object.keys(baseUpdates).length === 0) {
+        // Nothing else to update — fetch current row so caller gets a valid object back
+        const { data: cur, error: ce } = await supabase
+          .from('transactions').select('*').eq('id', transactionId).single();
+        if (ce) throw ce;
+        return mapTransaction(cur);
+      }
+      const { data: d2, error: e2 } = await supabase
+        .from('transactions').update(baseUpdates).eq('id', transactionId).select();
+      if (e2) throw e2;
+      return mapTransaction(d2[0]);
+    }
+    return mapTransaction(data[0]);
   },
 
   async deleteTransaction(transactionId) {
