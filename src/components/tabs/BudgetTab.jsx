@@ -41,12 +41,8 @@ import PageHeader from '../PageHeader';
 import SwipeRevealCard from '../SwipeRevealCard';
 import RecurringView from '../budget/RecurringView';
 import { getTotalMonthlyCommitted } from '../../utils/recurringPayments';
+import { getCategoryMeta, PATRIMONY_META } from '../../utils/categoryIcons';
 import './BudgetTab.css';
-
-const CATEGORY_ICONS = {
-  'Alimentação':'⚑','Habitação':'⌂','Transporte':'⚐','Saúde':'✚','Lazer':'◉',
-  'Educação':'⊞','Roupa':'◫','Tecnologia':'◧','Subscrições':'◉','Outros':'◌'
-};
 
 /* ── Asset/Patrimony Sorting Utilities ────────────────────────────────────── */
 
@@ -108,12 +104,12 @@ const sortPatrimonyTypes = (patrimony, types) => {
 };
 
 const PATRIMONY_TYPES = [
-  { key: 'accounts',   label: 'Contas Bancárias', icon: '◈', color: '#D97706' },
-  { key: 'stocks',     label: 'Ações',             icon: '◭', color: '#059669' },
-  { key: 'bonds',      label: 'Cert. Aforro',      icon: '◆', color: '#7C3AED' },
-  { key: 'realestate', label: 'Imóveis',            icon: '⌂', color: '#DC2626' },
-  { key: 'vehicles',   label: 'Veículos',           icon: '⚐', color: '#0891B2' },
-  { key: 'crypto',     label: 'Crypto',             icon: '◉', color: '#F59E0B' },
+  { key: 'accounts',   label: 'Contas Bancárias', ...PATRIMONY_META.accounts   },
+  { key: 'stocks',     label: 'Ações',             ...PATRIMONY_META.stocks     },
+  { key: 'bonds',      label: 'Cert. Aforro',      ...PATRIMONY_META.bonds      },
+  { key: 'realestate', label: 'Imóveis',            ...PATRIMONY_META.realestate },
+  { key: 'vehicles',   label: 'Veículos',           ...PATRIMONY_META.vehicles   },
+  { key: 'crypto',     label: 'Crypto',             ...PATRIMONY_META.crypto     },
 ];
 
 const EMPTY_PATRIMONY = { accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] };
@@ -143,16 +139,6 @@ const toNum = (v) => { const x = Number(v); return Number.isFinite(x) ? x : 0; }
  */
 const normCoin = (sym) => sym?.split('/')[0]?.toUpperCase() ?? '';
 
-const CAT_COLORS = {
-  'Alimentação':'#F59E0B','Habitação':'#3B82F6','Transporte':'#8B5CF6',
-  'Saúde':'#10B981','Lazer':'#EC4899','Educação':'#06B6D4',
-  'Roupa':'#F97316','Tecnologia':'#6366F1','Subscrições':'#84CC16','Outros':'#6B7280',
-};
-
-const getCategoryIcon = (category) => {
-  const label = typeof category === 'string' ? category : category?.label;
-  return CATEGORY_ICONS[label] || '◌';
-};
 
 /* 4-level budget status ─────────────────────────────────────────────────── */
 const STATUS = (pct) => {
@@ -188,7 +174,7 @@ const CountUp = ({ value, decimals = 0 }) => {
 
 const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions, isNavTarget }) => {
   const [hovered, setHovered] = useState(false);
-  const catColor   = CAT_COLORS[cat.label] || '#6B7280';
+  const { Icon: CatIcon, color: catColor } = getCategoryMeta(cat.label);
   const st         = STATUS(percent);
   const willExceed = predicted !== null && limit > 0 && predicted > limit;
   const cardRef    = useRef(null);
@@ -220,7 +206,7 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
     >
       {/* top row — clickable to expand */}
       <div className="m-bcc-row" onClick={onToggleExpand} style={{ cursor: 'pointer' }}>
-        <Bubble color={catColor} icon={getCategoryIcon(cat.label)} size={40} radius="12px" />
+        <Bubble color={catColor} Icon={CatIcon} size={40} radius="12px" />
         <div className="m-bcc-info">
           <div className="m-bcc-name-row">
             <span className="m-bcc-name">{cat.label}</span>
@@ -1061,9 +1047,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               </div>
               {!patrimonyFormType ? (
                 <div className="patrimony-type-selector">
-                  {PATRIMONY_TYPES.map(({ key, label, icon, color }) => (
+                  {PATRIMONY_TYPES.map(({ key, label, Icon: PatIcon, color }) => (
                     <button key={key} className="patrimony-type-btn" onClick={() => { setPatrimonyFormType(key); resetPatrimonyForm({}); }}>
-                      <span style={{ color, fontSize: '1.5rem' }}>{icon}</span>
+                      <div className="patrimony-type-btn-icon" style={{ background: `${color}22` }}>
+                        <PatIcon size={20} color={color} strokeWidth={2} />
+                      </div>
                       <span>{label}</span>
                     </button>
                   ))}
@@ -1554,7 +1542,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
               {/* Category cards */}
               <div className="pat-cards">
-                {sortPatrimonyTypes(patrimony, PATRIMONY_TYPES).map(({ key, label, icon, color }) => {
+                {sortPatrimonyTypes(patrimony, PATRIMONY_TYPES).map(({ key, label, Icon: PatIcon, color }) => {
                   const items     = patrimony[key] || [];
                   const sorted    = sortItemsByType(items, key);
                   const typeTotal = getPatrimonyTypeValue(key);
@@ -1562,7 +1550,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                     <div key={key} className="pat-cat-card">
                       <div className="pat-cat-header">
                         <div className="pat-cat-icon-wrap" style={{ background: `${color}22` }}>
-                          <span style={{ color, fontSize: '1rem' }}>{icon}</span>
+                          <PatIcon size={18} color={color} strokeWidth={2} />
                         </div>
                         <div className="pat-cat-info">
                           <span className="pat-cat-name">{label}</span>
@@ -1718,7 +1706,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               .map(({ cat, limit, spent, hasLimit, percent, barWidth, colorClass }) => (
                 <div key={cat.id} className="budget-category">
                   <div className="category-header">
-                    <span className="category-icon">{getCategoryIcon(cat.label)}</span>
+                    {(() => { const { Icon: CI, color: cc } = getCategoryMeta(cat.label); return <div className="category-icon-bubble" style={{ background: `${cc}22` }}><CI size={14} color={cc} strokeWidth={2} /></div>; })()}
                     <span className="category-name">{cat.label}</span>
                     {percent >= 100 && <span className="budget-alert over">Excedido</span>}
                     {percent >= 80 && percent < 100 && <span className="budget-alert warn">Atenção</span>}
@@ -1806,14 +1794,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             <div className="patrimony-total-amount">{totalPatrimony.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
           </div>
           <div className="patrimony-types-list">
-            {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
+            {PATRIMONY_TYPES.map(({ key, label, Icon: PatIcon, color }) => {
               const items = patrimony[key] || [];
               const typeTotal = getPatrimonyTypeValue(key);
               return (
                 <div key={key} className="patrimony-type-card">
                   <div className="patrimony-type-header">
                     <div className="patrimony-type-left">
-                      <span className="patrimony-type-icon" style={{ color }}>{icon}</span>
+                      <span className="patrimony-type-icon" style={{ color }}><PatIcon size={16} color={color} strokeWidth={2} /></span>
                       <span className="patrimony-type-label">{label}</span>
                     </div>
                     <span className="patrimony-type-total">{typeTotal.toFixed(2)}€</span>

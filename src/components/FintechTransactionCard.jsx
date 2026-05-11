@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Utensils, Car, ShoppingBag, Receipt, Wallet,
-  ArrowRightLeft, Home, Zap, Smartphone, Plane,
-  Heart, BookOpen, Shirt, Gift, Baby,
-  PiggyBank, TrendingUp, Briefcase, RefreshCw,
-  Tag, Trophy, CreditCard, Scale, Dumbbell,
-} from './icons';
 import CategoryPicker from './CategoryPicker';
 import AccountPicker from './AccountPicker';
+import { getCategoryMeta } from '../utils/categoryIcons';
 import './FintechTransactionCard.css';
 
 /* ── Merchant map ─────────────────────────────────────────────────────────────
@@ -98,57 +92,6 @@ function getMerchantVisual(description) {
   return null;
 }
 
-/* ── Category → icon + color ─────────────────────────────────────────────── */
-const CAT_META = {
-  'Alimentação':                { Icon: Utensils,    color: '#3B82F6' },
-  'Habitação':                  { Icon: Home,        color: '#6366F1' },
-  'Transporte':                 { Icon: Car,         color: '#8B5CF6' },
-  'Saúde':                      { Icon: Heart,       color: '#EF4444' },
-  'Lazer':                      { Icon: Dumbbell,    color: '#A855F7' },
-  'Lazer & Entretenimento':     { Icon: Dumbbell,    color: '#A855F7' },
-  'Educação':                   { Icon: BookOpen,    color: '#6366F1' },
-  'Roupa':                      { Icon: Shirt,       color: '#EC4899' },
-  'Roupa & Calçado':            { Icon: Shirt,       color: '#EC4899' },
-  'Tecnologia':                 { Icon: Smartphone,  color: '#6366F1' },
-  'Subscrições':                { Icon: Smartphone,  color: '#6366F1' },
-  'Comunicações':               { Icon: Smartphone,  color: '#0EA5E9' },
-  'Utilities':                  { Icon: Zap,         color: '#F59E0B' },
-  'Serviços Financeiros':       { Icon: CreditCard,  color: '#6366F1' },
-  'Viagens & Férias':           { Icon: Plane,       color: '#0EA5E9' },
-  'Presentes & Doações':        { Icon: Gift,        color: '#EC4899' },
-  'Animais de Estimação':       { Icon: Heart,       color: '#F59E0B' },
-  'Crianças & Família':         { Icon: Baby,        color: '#EC4899' },
-  'Cuidados Pessoais':          { Icon: Dumbbell,    color: '#A855F7' },
-  'Casa & Jardim':              { Icon: Home,        color: '#10B981' },
-  'Impostos & Taxas':           { Icon: Receipt,     color: '#EF4444' },
-  'Emergências':                { Icon: Receipt,     color: '#EF4444' },
-  'Outros':                     { Icon: ShoppingBag, color: '#6B7280' },
-  /* Income */
-  'Salário':                    { Icon: Wallet,      color: '#10B981' },
-  'Salário Principal':          { Icon: Wallet,      color: '#10B981' },
-  'Subsídios':                  { Icon: Wallet,      color: '#10B981' },
-  'Freelance':                  { Icon: Briefcase,   color: '#10B981' },
-  'Trabalho Extra / Freelance': { Icon: Briefcase,   color: '#10B981' },
-  'Investimentos':              { Icon: TrendingUp,  color: '#10B981' },
-  'Rendas Recebidas':           { Icon: Home,        color: '#10B981' },
-  'Reembolsos':                 { Icon: RefreshCw,   color: '#10B981' },
-  'Vendas':                     { Icon: Tag,         color: '#10B981' },
-  'Prémios & Sorteios':         { Icon: Trophy,      color: '#10B981' },
-  'Prendas & Doações Recebidas':{ Icon: Gift,        color: '#10B981' },
-  'Bonus':                      { Icon: PiggyBank,   color: '#10B981' },
-  'Outros Rendimentos':         { Icon: Wallet,      color: '#10B981' },
-};
-
-const TRANSFER_META  = { Icon: ArrowRightLeft, color: '#9CA3AF' };
-const ADJUST_META    = { Icon: Scale,          color: '#F97316' };
-
-function getMeta(cat, type) {
-  if (type === 'transfer')   return TRANSFER_META;
-  if (type === 'adjustment') return ADJUST_META;
-  return CAT_META[cat] || (type === 'income'
-    ? { Icon: Wallet,     color: '#10B981' }
-    : { Icon: CreditCard, color: '#6B7280' });
-}
 
 /* ── Transfer flow helper ─────────────────────────────────────────────────── */
 function getTransferFlow(tx) {
@@ -203,7 +146,7 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onAccountChange, onDelet
   } catch { /* ignore merchant detection errors */ }
 
   const effectiveCat = merchant?.detectedCategory || txCategory;
-  const { Icon, color } = getMeta(effectiveCat, txType);
+  const { Icon, color } = getCategoryMeta(effectiveCat, txType);
 
   const showLogo = !!merchant?.logoUrl && !logoErr;
   const bubbleBg = showLogo

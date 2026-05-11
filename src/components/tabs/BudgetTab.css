@@ -24,6 +24,7 @@
 .budget-category{display:flex;flex-direction:column;gap:0.75rem}
 .category-header{display:flex;align-items:center;gap:0.75rem;width:100%}
 .category-icon{font-size:1.25rem;font-weight:300;width:24px;text-align:center}
+.category-icon-bubble{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .category-name{font-size:0.9375rem;font-weight:500;color:var(--text-primary);letter-spacing:-0.01em}
 .budget-input-row{display:flex;align-items:center;gap:0.5rem}
 .budget-input{flex:1;padding:0.75rem;background:var(--bg-primary);border:1.5px solid var(--separator);border-radius:10px;font-size:1rem;color:var(--text-primary);transition:all 0.2s ease}
@@ -123,6 +124,7 @@
 /* Patrimony form */
 .patrimony-type-selector{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
 .patrimony-type-btn{display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding:1rem 0.75rem;background:var(--bg-primary);border:1.5px solid var(--separator);border-radius:14px;cursor:pointer;transition:all 0.2s ease;font-size:0.875rem;font-weight:500;color:var(--text-primary)}
+.patrimony-type-btn-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .patrimony-type-btn:active{background:var(--bg-tertiary);transform:scale(0.97)}
 .patrimony-form{display:flex;flex-direction:column;gap:0.75rem}
 .patrimony-input{padding:0.875rem 1rem;background:var(--bg-primary);border:1.5px solid var(--separator);border-radius:12px;font-size:1rem;color:var(--text-primary);transition:all 0.2s ease;width:100%;box-sizing:border-box}

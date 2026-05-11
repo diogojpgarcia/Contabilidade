@@ -215,3 +215,50 @@ export const Circle = p => (
     <circle cx="12" cy="12" r="10"/>
   </Svg>
 );
+
+export const Music = p => (
+  <Svg {...p}>
+    <path d="M9 18V5l12-2v13"/>
+    <circle cx="6" cy="18" r="3"/>
+    <circle cx="18" cy="16" r="3"/>
+  </Svg>
+);
+
+export const Building = p => (
+  <Svg {...p}>
+    <rect x="3" y="9" width="18" height="12" rx="1"/>
+    <path d="M8 9V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v4"/>
+    <line x1="9"  y1="13" x2="9.01"  y2="13"/>
+    <line x1="15" y1="13" x2="15.01" y2="13"/>
+    <line x1="9"  y1="17" x2="9.01"  y2="17"/>
+    <line x1="15" y1="17" x2="15.01" y2="17"/>
+  </Svg>
+);
+
+export const Scissors = p => (
+  <Svg {...p}>
+    <circle cx="6"  cy="6"  r="3"/>
+    <circle cx="6"  cy="18" r="3"/>
+    <line x1="20" y1="4"  x2="8.12" y2="15.88"/>
+    <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+    <line x1="8.12"  y1="8.12"  x2="12" y2="12"/>
+  </Svg>
+);
+
+export const PawPrint = p => (
+  <Svg {...p}>
+    <circle cx="11" cy="4"  r="2"/>
+    <circle cx="18" cy="8"  r="2"/>
+    <circle cx="20" cy="16" r="2"/>
+    <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>
+  </Svg>
+);
+
+export const Coins = p => (
+  <Svg {...p}>
+    <circle cx="8" cy="8" r="6"/>
+    <path d="M18.09 10.37A6 6 0 1 1 10.34 18"/>
+    <path d="M7 6h1v4"/>
+    <line x1="9.17" y1="11.03" x2="7" y2="8.99"/>
+  </Svg>
+);
