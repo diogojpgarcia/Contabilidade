@@ -426,15 +426,15 @@
 /* Month / stats text */
 [data-theme="soft-future"] .m-month-name,
 [data-theme="soft-future"] .m-stats-title,
-[data-theme="soft-future"] .m-month-nav-name            { color: rgba(237, 233, 254, 0.88); }
+[data-theme="soft-future"] .m-month-nav-name            { color: var(--text-primary); }
 
 /* Segmented toggle */
 [data-theme="soft-future"] .m-toggle {
-  background: rgba(28, 25, 56, 0.90);
+  background: rgba(17, 19, 23, 0.95);
   border: 0.5px solid rgba(6, 182, 212, 0.11);
-  box-shadow: 0 2px 14px rgba(13, 11, 30, 0.40);
+  box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
 }
-[data-theme="soft-future"] .m-toggle-btn                { color: rgba(237, 233, 254, 0.35); }
+[data-theme="soft-future"] .m-toggle-btn                { color: var(--text-tertiary); }
 [data-theme="soft-future"] .m-toggle-btn.active {
   background: rgba(6, 182, 212, 0.20);
   color: #a0aabb;
@@ -443,12 +443,12 @@
 
 /* Log summary */
 [data-theme="soft-future"] .m-log-summary {
-  background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
+  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.12);
-  box-shadow: 0 2px 16px rgba(13, 11, 30, 0.55), inset 0 0.5px 0 rgba(255,255,255,0.03);
+  box-shadow: 0 2px 16px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255,255,255,0.03);
 }
 [data-theme="soft-future"] .m-summary-label             { color: rgba(6, 182, 212, 0.45); }
-[data-theme="soft-future"] .m-summary-val               { color: rgba(237, 233, 254, 0.88); }
+[data-theme="soft-future"] .m-summary-val               { color: var(--text-primary); }
 [data-theme="soft-future"] .m-summary-val.income        { color: #34d399; }
 [data-theme="soft-future"] .m-summary-val.expense       { color: #f87171; }
 [data-theme="soft-future"] .m-summary-sep               { background: rgba(6, 182, 212, 0.08); }
@@ -505,8 +505,8 @@
 
 /* Budget category nav ring animation */
 @keyframes sf-bcc-ring {
-  0%   { box-shadow: 0 0 0 3px rgba(167,139,250,0.55), 0 4px 20px rgba(109,40,217,0.22); }
-  60%  { box-shadow: 0 0 0 2px rgba(167,139,250,0.20), 0 4px 16px rgba(109,40,217,0.08); }
+  0%   { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.50), 0 4px 20px rgba(6, 182, 212, 0.18); }
+  60%  { box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.18), 0 4px 16px rgba(6, 182, 212, 0.06); }
   100% { box-shadow: none; }
 }
 [data-theme="soft-future"] .m-bcc.nav-target            { animation: sf-bcc-ring 1.6s ease-out both; }
@@ -543,9 +543,9 @@
 
 [data-theme="soft-future"] .rp-cal-btn {
   color: #06b6d4;
-  background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
+  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.14);
-  box-shadow: 0 2px 12px rgba(13, 11, 30, 0.45);
+  box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
 }
 
 
@@ -607,16 +607,16 @@
 
 /* Recurring budget strip */
 [data-theme="soft-future"] .rp-budget-strip {
-  background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
+  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.12);
-  box-shadow: 0 2px 12px rgba(13, 11, 30, 0.45);
+  box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
 }
 
 /* Stock search dropdown */
 [data-theme="soft-future"] .pat-search-dropdown {
-  background: linear-gradient(180deg, #14171d 0%, #141228 100%);
+  background: linear-gradient(180deg, #14171d 0%, #10121a 100%);
   border-color: rgba(6, 182, 212, 0.18);
-  box-shadow: 0 8px 32px rgba(13, 11, 30, 0.70);
+  box-shadow: 0 8px 32px rgba(13, 15, 18, 0.70);
 }
 [data-theme="soft-future"] .pat-search-result:hover,
 [data-theme="soft-future"] .pat-search-result:active    { background: rgba(6, 182, 212, 0.06); }
@@ -651,3 +651,67 @@
   color: rgba(6, 182, 212, 0.92);
   background: rgba(6, 182, 212, 0.12);
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   12 · COMPONENT CSS OVERRIDES
+       (StatsTab.css, BudgetTab.css hardcoded hex values)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* History sub-tabs: Diário / Património */
+[data-theme="soft-future"] .hist-sub-tabs-wrap {
+  background: rgba(17, 19, 23, 0.95);
+  border: 0.5px solid rgba(6, 182, 212, 0.11);
+}
+[data-theme="soft-future"] .hist-sub-btn              { color: var(--text-tertiary); }
+[data-theme="soft-future"] .hist-sub-btn.active {
+  background: rgba(6, 182, 212, 0.20);
+  color: #a0aabb;
+}
+
+/* Category spend bars (StatsTab) */
+[data-theme="soft-future"] .category-bar-fill {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.75) 0%, rgba(6, 182, 212, 0.42) 100%);
+}
+
+/* Goal / budget progress bars (BudgetTab) */
+[data-theme="soft-future"] .progress-bar-fill {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.85) 0%, rgba(6, 182, 212, 0.50) 100%);
+}
+
+/* Budget & patrimony total summary cards (amber → charcoal + cyan depth) */
+[data-theme="soft-future"] .budget-total-card,
+[data-theme="soft-future"] .patrimony-total-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  box-shadow: 0 4px 24px rgba(13, 15, 18, 0.70), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
+}
+[data-theme="soft-future"] .budget-total-card *,
+[data-theme="soft-future"] .patrimony-total-card .patrimony-total-label { color: var(--text-secondary); }
+[data-theme="soft-future"] .patrimony-total-card .patrimony-total-amount { color: var(--text-primary); }
+
+/* Budget input focus ring */
+[data-theme="soft-future"] .budget-input:focus {
+  border-color: rgba(6, 182, 212, 0.50);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.10);
+}
+
+/* Transfer action button (BudgetTab) */
+[data-theme="soft-future"] .btn-transfer {
+  background: rgba(6, 182, 212, 0.18);
+  color: #a0aabb;
+  border: 0.5px solid rgba(6, 182, 212, 0.28);
+}
+[data-theme="soft-future"] .btn-transfer:not(:disabled):active {
+  background: rgba(6, 182, 212, 0.28);
+}
+
+/* Selected transaction row (BudgetTab transfer) */
+[data-theme="soft-future"] .tr-card--sel {
+  border-color: rgba(6, 182, 212, 0.38);
+  background: rgba(6, 182, 212, 0.07);
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.18);
+}
+[data-theme="soft-future"] .tr-card--sel .tr-card-name { color: #a0aabb; }

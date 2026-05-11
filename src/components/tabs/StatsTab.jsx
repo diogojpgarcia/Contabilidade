@@ -299,24 +299,14 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         {/* Diário / Património — only shown in Histórico */}
         {activeView === 'log' && (
           <div style={{ display: 'flex', justifyContent: 'center', margin: '12px 0 0' }}>
-            <div style={{ display: 'inline-flex', gap: 4, background: '#18181b', padding: 4, borderRadius: 12 }}>
+            <div className="hist-sub-tabs-wrap">
               <button
                 onClick={() => setHistoryView('daily')}
-                style={{
-                  padding: '6px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  fontSize: '0.8125rem', fontWeight: 500,
-                  background: historyView === 'daily' ? '#6366f1' : 'transparent',
-                  color:      historyView === 'daily' ? '#fff' : '#71717a',
-                }}
+                className={`hist-sub-btn${historyView === 'daily' ? ' active' : ''}`}
               >Diário</button>
               <button
                 onClick={() => setHistoryView('patrimony')}
-                style={{
-                  padding: '6px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  fontSize: '0.8125rem', fontWeight: 500,
-                  background: historyView === 'patrimony' ? '#6366f1' : 'transparent',
-                  color:      historyView === 'patrimony' ? '#fff' : '#71717a',
-                }}
+                className={`hist-sub-btn${historyView === 'patrimony' ? ' active' : ''}`}
               >Património</button>
             </div>
           </div>
