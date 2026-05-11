@@ -770,3 +770,67 @@
 [data-theme="soft-future"] .stats-saldo-card [style*="color: #a1a1aa"] {
   color: var(--text-secondary) !important;
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   14 · FINTECH TRANSACTION CARD — SOFT FUTURE OVERRIDES
+       Target: FintechTransactionCard.css .fintech-ui rules
+       Specificity: [attr] + 2 classes = 0,3,0  >  .fintech-ui + class = 0,2,0
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Card shell */
+[data-theme="soft-future"] .fintech-ui .ftc-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border-color: rgba(6, 182, 212, 0.12);
+}
+[data-theme="soft-future"] .fintech-ui .ftc-card:active {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 35%, transparent 100%),
+    linear-gradient(175deg, #1a1d23 0%, #15181d 100%);
+}
+
+/* Transfer / adjust badges */
+[data-theme="soft-future"] .ftc-badge--transfer {
+  background: rgba(6, 182, 212, 0.14);
+  color: #a0aabb;
+}
+[data-theme="soft-future"] .ftc-badge--adjust {
+  background: rgba(249, 115, 22, 0.12);
+  color: #fb923c;
+}
+
+/* Text colours */
+[data-theme="soft-future"] .fintech-ui .ftc-title   { color: var(--text-primary); }
+[data-theme="soft-future"] .fintech-ui .ftc-cat      { color: var(--text-tertiary); }
+[data-theme="soft-future"] .fintech-ui .ftc-date     { color: var(--text-tertiary); }
+[data-theme="soft-future"] .fintech-ui .ftc-amt--neutral { color: var(--text-secondary); }
+
+/* Account badge */
+[data-theme="soft-future"] .fintech-ui .ftc-acct-badge {
+  background: rgba(6, 182, 212, 0.08);
+  color: var(--text-tertiary);
+}
+
+/* Expanded action strip */
+[data-theme="soft-future"] .fintech-ui .ftc-actions {
+  border-top-color: rgba(6, 182, 212, 0.10);
+}
+[data-theme="soft-future"] .fintech-ui .ftc-action-date { color: var(--text-tertiary); }
+[data-theme="soft-future"] .fintech-ui .ftc-action-btn {
+  background: rgba(6, 182, 212, 0.08);
+  color: var(--text-primary);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
+}
+[data-theme="soft-future"] .fintech-ui .ftc-action-btn--danger {
+  background: rgba(248, 113, 113, 0.10);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.15);
+}
+
+/* List container gap */
+[data-theme="soft-future"] .fintech-ui .ftc-list { gap: 6px; display: flex; flex-direction: column; }
+
+/* Duplicate indicator */
+[data-theme="soft-future"] .fintech-ui .ftc-card--dupe { opacity: 0.55; }
