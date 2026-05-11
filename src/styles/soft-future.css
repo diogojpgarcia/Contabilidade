@@ -52,13 +52,14 @@
    2 · HOME HERO
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* Hero container — premium elevated material */
+/* Hero container — premium elevated material with bottom depth */
 [data-theme="soft-future"] .h-hero {
   background: linear-gradient(135deg, #0f0e28 0%, #1c1450 100%);
   box-shadow:
     0 8px 36px rgba(109, 40, 217, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -1px 0 rgba(109, 40, 217, 0.08);
+    inset 0 -1px 0 rgba(109, 40, 217, 0.08),
+    inset 0 -20px 28px rgba(167, 139, 250, 0.07);
   border: 0.5px solid rgba(167, 139, 250, 0.16);
 }
 
@@ -125,7 +126,7 @@
    3 · CARD MATERIAL  — layered, elevated, premium
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* ── Shared card recipe ─────────────────────────────────────────────────── */
+/* ── Shared card recipe — with bottom depth nuance ──────────────────────── */
 [data-theme="soft-future"] .h-card,
 [data-theme="soft-future"] .ui-card,
 [data-theme="soft-future"] .m-bcc,
@@ -139,7 +140,8 @@
   border: 0.5px solid rgba(167, 139, 250, 0.13);
   box-shadow:
     0 4px 24px rgba(13, 11, 30, 0.68),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.05);
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -16px 24px rgba(167, 139, 250, 0.06);
 }
 
 /* ── Card overrides for round radius harmony ────────────────────────────── */
@@ -147,11 +149,13 @@
 [data-theme="soft-future"] .pat-cat-card   { border-radius: 18px; }
 [data-theme="soft-future"] .rp-summary     { border-radius: 18px; }
 
-/* ── Transaction rows ───────────────────────────────────────────────────── */
+/* ── Transaction rows — with subtle bottom depth ───────────────────────── */
 [data-theme="soft-future"] .ft-row {
   background: linear-gradient(175deg, #1c1938 0%, #151330 100%);
   border: 0.5px solid rgba(167, 139, 250, 0.09);
-  box-shadow: 0 1px 8px rgba(13, 11, 30, 0.55);
+  box-shadow:
+    0 1px 8px rgba(13, 11, 30, 0.55),
+    inset 0 -12px 16px rgba(167, 139, 250, 0.04);
   border-radius: 14px;
   margin-bottom: 5px;
 }
@@ -170,11 +174,13 @@
 }
 [data-theme="soft-future"] .ft-detail-btn:active { background: rgba(167, 139, 250, 0.20); }
 
-/* ── Recurring rows ─────────────────────────────────────────────────────── */
+/* ── Recurring rows — with subtle bottom depth ──────────────────────────── */
 [data-theme="soft-future"] .rp-row {
   background: linear-gradient(175deg, #1c1938 0%, #151330 100%);
   border: 0.5px solid rgba(167, 139, 250, 0.09);
-  box-shadow: 0 1px 8px rgba(13, 11, 30, 0.55);
+  box-shadow:
+    0 1px 8px rgba(13, 11, 30, 0.55),
+    inset 0 -12px 16px rgba(167, 139, 250, 0.04);
   border-radius: 16px;
 }
 
@@ -206,24 +212,28 @@
   border-radius: 6px;
 }
 
-/* ── Home total-balance card ────────────────────────────────────────────── */
+/* ── Home total-balance card — with bottom depth ───────────────────────── */
 [data-theme="soft-future"] .m-total-balance-inner {
   background: linear-gradient(135deg, rgba(109, 40, 217, 0.22) 0%, rgba(167, 139, 250, 0.10) 100%);
   border: 0.5px solid rgba(167, 139, 250, 0.24);
-  box-shadow: 0 2px 18px rgba(109, 40, 217, 0.16), inset 0 0.5px 0 rgba(255,255,255,0.04);
+  box-shadow:
+    0 2px 18px rgba(109, 40, 217, 0.16),
+    inset 0 0.5px 0 rgba(255,255,255,0.04),
+    inset 0 -16px 24px rgba(167, 139, 250, 0.06);
 }
 [data-theme="soft-future"] .m-total-balance-label       { color: rgba(196, 181, 253, 0.72); }
 [data-theme="soft-future"] .m-total-balance-sub         { color: rgba(237, 233, 254, 0.28); }
 [data-theme="soft-future"] .m-total-balance-value       { color: rgba(237, 233, 254, 0.94); }
 
-/* ── Home summary hero card ─────────────────────────────────────────────── */
+/* ── Home summary hero card — with bottom depth ────────────────────────── */
 [data-theme="soft-future"] .m-summary-card {
   background: linear-gradient(145deg, #0f0e28 0%, #1c1450 100%);
   border: 0.5px solid rgba(167, 139, 250, 0.20);
   box-shadow:
     0 8px 36px rgba(109, 40, 217, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -1px 0 rgba(109, 40, 217, 0.08);
+    inset 0 -1px 0 rgba(109, 40, 217, 0.08),
+    inset 0 -20px 28px rgba(167, 139, 250, 0.07);
 }
 [data-theme="soft-future"] .m-sc-total-value  { color: rgba(237, 233, 254, 0.94); }
 [data-theme="soft-future"] .m-sc-total-label  { color: rgba(196, 181, 253, 0.65); }
@@ -233,11 +243,14 @@
 [data-theme="soft-future"] .m-sc-label        { color: rgba(237, 233, 254, 0.28); }
 [data-theme="soft-future"] .m-sc-month-label  { color: rgba(237, 233, 254, 0.32); }
 
-/* ── Patrimony hero ─────────────────────────────────────────────────────── */
+/* ── Patrimony hero — with bottom depth ──────────────────────────────────── */
 [data-theme="soft-future"] .pat-hero {
   background: linear-gradient(135deg, rgba(109, 40, 217, 0.18) 0%, rgba(124, 58, 237, 0.10) 100%);
   border: 1px solid rgba(167, 139, 250, 0.20);
-  box-shadow: 0 4px 30px rgba(109, 40, 217, 0.18), inset 0 0.5px 0 rgba(255,255,255,0.04);
+  box-shadow:
+    0 4px 30px rgba(109, 40, 217, 0.18),
+    inset 0 0.5px 0 rgba(255,255,255,0.04),
+    inset 0 -16px 24px rgba(167, 139, 250, 0.05);
 }
 [data-theme="soft-future"] .pat-hero-label  { color: #a78bfa; }
 [data-theme="soft-future"] .pat-hero-chip {
@@ -245,21 +258,25 @@
   border-color: rgba(167, 139, 250, 0.20);
 }
 
-/* ── Income/expense chips ───────────────────────────────────────────────── */
+/* ── Income/expense chips — with subtle bottom depth ────────────────────── */
 [data-theme="soft-future"] .m-chip {
   background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
   border: 0.5px solid rgba(167, 139, 250, 0.11);
-  box-shadow: 0 2px 10px rgba(13, 11, 30, 0.50), inset 0 0.5px 0 rgba(255,255,255,0.03);
+  box-shadow:
+    0 2px 10px rgba(13, 11, 30, 0.50),
+    inset 0 0.5px 0 rgba(255,255,255,0.03),
+    inset 0 -10px 12px rgba(167, 139, 250, 0.04);
 }
 [data-theme="soft-future"] .m-chip-label                { color: rgba(167, 139, 250, 0.55); }
 [data-theme="soft-future"] .m-chip-amount               { color: rgba(237, 233, 254, 0.88); }
 [data-theme="soft-future"] .m-chip.income  .m-chip-amount { color: #34d399; }
 [data-theme="soft-future"] .m-chip.expense .m-chip-amount { color: #f87171; }
 
-/* ── Patrimony row ──────────────────────────────────────────────────────── */
+/* ── Patrimony row — with subtle bottom depth ───────────────────────────── */
 [data-theme="soft-future"] .m-patrimony-row {
   background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
   border: 0.5px solid rgba(167, 139, 250, 0.11);
+  box-shadow: inset 0 -12px 16px rgba(167, 139, 250, 0.04);
 }
 [data-theme="soft-future"] .m-patrimony-label           { color: rgba(167, 139, 250, 0.45); }
 [data-theme="soft-future"] .m-patrimony-select          { color: #c4b5fd; }
@@ -278,11 +295,13 @@
 }
 [data-theme="soft-future"] .pat-insight-icon            { color: #c4b5fd; }
 
-/* ── Profile cycle card + seg control ──────────────────────────────────── */
+/* ── Profile cycle card + seg control — with bottom depth ────────────────── */
 [data-theme="soft-future"] .m-cycle-card {
   background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
   border: 0.5px solid rgba(167, 139, 250, 0.12);
-  box-shadow: 0 2px 16px rgba(13, 11, 30, 0.5);
+  box-shadow:
+    0 2px 16px rgba(13, 11, 30, 0.5),
+    inset 0 -14px 18px rgba(167, 139, 250, 0.05);
   border-radius: 18px;
 }
 [data-theme="soft-future"] .m-seg-control {
