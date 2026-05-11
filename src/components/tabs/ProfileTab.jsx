@@ -159,122 +159,114 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   if (theme === 'modern') {
     const accountCount = patrimony?.accounts?.length || 0;
     const catCount = (categories?.income?.length || 0) + (categories?.expense?.length || 0);
-    const contextLine = useFinancialMonth
-      ? `Ciclo: dia ${financialMonthStartDay} de cada mês`
-      : catCount > 0 ? `${catCount} categorias ativas` : null;
+    const endDay = financialMonthStartDay <= 1 ? 28 : financialMonthStartDay - 1;
+    const decDay = () => onFinancialMonthChange({ startDay: Math.max(1, financialMonthStartDay - 1), enabled: true });
+    const incDay = () => onFinancialMonthChange({ startDay: Math.min(28, financialMonthStartDay + 1), enabled: true });
 
     return (
       <div className="m-profile-page">
         <PageHeader title="Perfil" />
 
-        {/* Compact profile header */}
-        <div className="m-profile-header">
-          <div className="m-profile-avatar">
-            {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-          </div>
-          <div className="m-profile-info">
-            <div className="m-profile-name">{userName}</div>
-            <div className="m-profile-email">{user.email}</div>
-            {contextLine && <div className="m-profile-context">{contextLine}</div>}
-          </div>
-        </div>
-
-        {/* Aparência */}
-        <div className="m-menu-section">
-          <div className="m-menu-section-label">Aparência</div>
-          <div className="m-menu-group">
-            <div className="m-seg-wrap">
-              <div className="m-seg-control">
-                <button className={`m-seg-btn ${colorTheme === 'light' ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
-                  <span className="m-seg-icon">☀︎</span><span>Claro</span>
-                </button>
-                <button className={`m-seg-btn ${colorTheme === 'gray'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
-                  <span className="m-seg-icon">◐</span><span>Cinza</span>
-                </button>
-                <button className={`m-seg-btn ${colorTheme === 'dark'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
-                  <span className="m-seg-icon">☾</span><span>Escuro</span>
-                </button>
-              </div>
+        {/* Identity strip */}
+        <div className="m-prof-header">
+          <div className="m-prof-identity">
+            <div className="m-prof-avatar">
+              {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+            </div>
+            <div className="m-prof-id">
+              <span className="m-prof-name">{userName}</span>
+              <span className="m-prof-email">{user.email}</span>
             </div>
           </div>
+          {(accountCount > 0 || catCount > 0 || useFinancialMonth) && (
+            <div className="m-prof-chips">
+              {accountCount > 0 && <span className="m-prof-chip">◈ {accountCount} conta{accountCount !== 1 ? 's' : ''}</span>}
+              {catCount > 0 && <span className="m-prof-chip">☷ {catCount} categori{catCount !== 1 ? 'as' : 'a'}</span>}
+              {useFinancialMonth && <span className="m-prof-chip m-prof-chip--on">◷ Dia {financialMonthStartDay}</span>}
+            </div>
+          )}
         </div>
 
-        {/* Ciclo Financeiro */}
+        {/* Appearance — inline, no heavy card */}
+        <div className="m-appear-wrap">
+          <span className="m-appear-label">Modo de visualização</span>
+          <div className="m-seg-control">
+            <button className={`m-seg-btn ${colorTheme === 'light' ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
+              <span className="m-seg-icon">☀︎</span><span>Claro</span>
+            </button>
+            <button className={`m-seg-btn ${colorTheme === 'gray'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
+              <span className="m-seg-icon">◐</span><span>Cinza</span>
+            </button>
+            <button className={`m-seg-btn ${colorTheme === 'dark'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
+              <span className="m-seg-icon">☾</span><span>Escuro</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Financial cycle widget */}
         {onFinancialMonthChange && (
-          <div className="m-menu-section">
-            <div className="m-menu-section-label">Ciclo Financeiro</div>
-            <div className="m-menu-group">
-              <div className="m-menu-item m-fmonth-row">
-                <div className="m-fmonth-left">
-                  <span className="m-menu-text">Mês financeiro personalizado</span>
-                  <span className="m-fmonth-hint">
-                    {useFinancialMonth
-                      ? `Dia ${financialMonthStartDay} → dia ${financialMonthStartDay - 1} do mês seguinte`
-                      : 'Usa o mês calendário por omissão'}
-                  </span>
-                </div>
-                <label className="m-toggle">
-                  <input
-                    type="checkbox"
-                    checked={useFinancialMonth}
-                    onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
-                  />
-                  <span className="m-toggle-track" />
-                </label>
+          <div className="m-cycle-card">
+            <div className="m-cycle-header">
+              <div className="m-cycle-title">
+                <span className="m-cycle-label">Ciclo Financeiro</span>
+                {useFinancialMonth && (
+                  <span className="m-cycle-badge">dia {financialMonthStartDay} → {endDay}</span>
+                )}
               </div>
-              {useFinancialMonth && (
-                <div className="m-menu-item m-fmonth-day-row">
-                  <span className="m-fmonth-day-label">Início do ciclo</span>
-                  <div className="m-fmonth-day-ctrl">
-                    <input
-                      type="number"
-                      min="1"
-                      max="28"
-                      value={financialMonthStartDay}
-                      onChange={e => onFinancialMonthChange({ startDay: parseInt(e.target.value) || 1, enabled: true })}
-                      className="m-fmonth-day-input"
-                    />
-                    <span className="m-fmonth-day-unit">de cada mês</span>
+              <label className="m-toggle">
+                <input
+                  type="checkbox"
+                  checked={useFinancialMonth}
+                  onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
+                />
+                <span className="m-toggle-track" />
+              </label>
+            </div>
+            {useFinancialMonth ? (
+              <div className="m-cycle-body">
+                <div className="m-cycle-day-row">
+                  <span className="m-cycle-day-label">Início de cada ciclo</span>
+                  <div className="m-cycle-stepper">
+                    <button className="m-cycle-step" onClick={decDay} aria-label="Diminuir">−</button>
+                    <span className="m-cycle-day-val">{financialMonthStartDay}</span>
+                    <button className="m-cycle-step" onClick={incDay} aria-label="Aumentar">+</button>
                   </div>
                 </div>
-              )}
-            </div>
+                <span className="m-cycle-desc">
+                  Cada ciclo: dia {financialMonthStartDay} → dia {endDay} do mês seguinte
+                </span>
+              </div>
+            ) : (
+              <p className="m-cycle-off">Agrupa por mês calendário padrão</p>
+            )}
           </div>
         )}
 
-        {/* Preferências */}
-        <div className="m-menu-section">
-          <div className="m-menu-section-label">Preferências</div>
-          <div className="m-menu-group">
-            <button className="m-menu-item" onClick={() => setShowCategoryManager(true)}>
-              <span className="m-menu-icon">☷</span>
-              <span className="m-menu-text">Gerir Categorias</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
-            <button className="m-menu-item" onClick={() => onNavigateToImport && onNavigateToImport()}>
-              <span className="m-menu-icon">⬆</span>
-              <span className="m-menu-text">Importar Extracto Bancário</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Segurança */}
-        <div className="m-menu-section">
-          <div className="m-menu-section-label">Segurança</div>
-          <div className="m-menu-group">
-            <button className="m-menu-item" onClick={() => setShowResetPassword(true)}>
-              <span className="m-menu-icon">⚿</span>
-              <span className="m-menu-text">Alterar Password</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
-          </div>
+        {/* Flat settings list */}
+        <div className="m-flat-list">
+          <span className="m-flat-label">Preferências</span>
+          <button className="m-flat-row" onClick={() => setShowCategoryManager(true)}>
+            <span className="m-flat-icon">☷</span>
+            <span className="m-flat-text">Gerir Categorias</span>
+            <span className="m-flat-chev">›</span>
+          </button>
+          <button className="m-flat-row" onClick={() => onNavigateToImport && onNavigateToImport()}>
+            <span className="m-flat-icon">⬆</span>
+            <span className="m-flat-text">Importar Extracto Bancário</span>
+            <span className="m-flat-chev">›</span>
+          </button>
+          <span className="m-flat-label">Segurança</span>
+          <button className="m-flat-row m-flat-row--last" onClick={() => setShowResetPassword(true)}>
+            <span className="m-flat-icon">⚿</span>
+            <span className="m-flat-text">Alterar Password</span>
+            <span className="m-flat-chev">›</span>
+          </button>
         </div>
 
         {/* Logout */}
         <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
 
-        {/* Danger zone — isolated, low visual weight */}
+        {/* Danger zone */}
         <div className="m-danger-zone">
           <button
             className="m-danger-item"
