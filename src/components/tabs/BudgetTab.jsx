@@ -227,7 +227,7 @@ const SwipeRevealCard = ({ onEdit, onDelete, className = '', children }) => {
             className="swipe-btn swipe-btn-delete"
             onPointerDown={e => { e.stopPropagation(); closeRef.current?.(); setTimeout(onDelete, 30); }}
             aria-label="Remover"
-          >🗑</button>
+          >✕</button>
         </div>
       </div>
     </div>

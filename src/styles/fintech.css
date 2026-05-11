@@ -1752,18 +1752,40 @@
   border: none;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.1s;
+  transition: filter 0.14s;
 }
-.swipe-btn:active { opacity: 0.75; }
-.swipe-btn-edit   { background: rgba(99,102,241,0.9);  color: #fff; }
-.swipe-btn-delete { background: rgba(220,38,38,0.9);   color: #fff; }
-[data-theme="light"] .swipe-btn-edit   { background: #6366f1; }
-[data-theme="light"] .swipe-btn-delete { background: #dc2626; }
+.swipe-btn:active { filter: brightness(0.8); }
+
+/* Edit — warm amber, calm / tool-like */
+.swipe-btn-edit {
+  background: rgba(178, 95, 14, 0.84);
+  color: rgba(255, 228, 170, 0.96);
+  border-right: 0.5px solid rgba(255, 255, 255, 0.05);
+}
+/* Delete — muted crimson, refined / clear */
+.swipe-btn-delete {
+  background: rgba(162, 38, 38, 0.82);
+  color: rgba(255, 204, 200, 0.95);
+}
+
+/* Light mode */
+[data-theme="light"] .swipe-btn-edit {
+  background: rgba(154, 82, 6, 0.88);
+  color: #fff6e0;
+}
+[data-theme="light"] .swipe-btn-delete {
+  background: rgba(148, 32, 32, 0.88);
+  color: #fff0ee;
+}
 .pat-asset-edit {
   background: transparent;
   border: none;
