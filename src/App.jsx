@@ -23,6 +23,7 @@ import ProfileTab from './components/tabs/ProfileTab';
 import './styles/layout.css';
 import './styles/modern.css';
 import './styles/fintech.css';
+import './styles/soft-future.css';
 
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);

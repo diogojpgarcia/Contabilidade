@@ -127,6 +127,44 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
+/* ─── Soft Future Theme — deep cosmic violet × amethyst ────────────────── */
+[data-theme="soft-future"] {
+  /* Backgrounds — layered violet-tinted darks */
+  --bg-primary:    #0d0b1e;
+  --bg-secondary:  #131228;
+  --bg-tertiary:   #1c1938;
+  --bg-elevated:   #221f42;
+
+  /* Accent — amethyst */
+  --primary:       #a78bfa;
+  --primary-light: #c4b5fd;
+  --success:       #34d399;
+  --warning:       #fbbf24;
+  --danger:        #f87171;
+
+  /* Text — soft lavender hierarchy */
+  --text-primary:   #ede9fe;
+  --text-secondary: #a5b4fc;
+  --text-tertiary:  #6e6a95;
+
+  /* Structure */
+  --separator:  rgba(167, 139, 250, 0.12);
+  --border:     rgba(167, 139, 250, 0.10);
+  --overlay:    rgba(13, 11, 30, 0.72);
+
+  /* Navigation */
+  --header-bg:  rgba(19, 18, 40, 0.90);
+  --header-blur: blur(20px);
+  --nav-bg:     rgba(19, 18, 40, 0.92);
+  --nav-text:   #ede9fe;
+  --nav-text-secondary: #a5b4fc;
+
+  /* Shadows — violet glow */
+  --shadow-sm: 0 1px 4px rgba(124, 58, 237, 0.10);
+  --shadow-md: 0 4px 16px rgba(124, 58, 237, 0.18);
+  --shadow-lg: 0 8px 30px rgba(124, 58, 237, 0.26);
+}
+
 * {
   margin: 0;
   padding: 0;

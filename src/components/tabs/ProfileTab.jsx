@@ -190,14 +190,17 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       <div className="m-appear-wrap">
         <span className="m-appear-label">Modo de visualização</span>
         <div className="m-seg-control">
-          <button className={`m-seg-btn ${colorTheme === 'light' ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
+          <button className={`m-seg-btn ${colorTheme === 'light'       ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
             <span className="m-seg-icon">☀︎</span><span>Claro</span>
           </button>
-          <button className={`m-seg-btn ${colorTheme === 'gray'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
+          <button className={`m-seg-btn ${colorTheme === 'gray'        ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
             <span className="m-seg-icon">◐</span><span>Cinza</span>
           </button>
-          <button className={`m-seg-btn ${colorTheme === 'dark'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
+          <button className={`m-seg-btn ${colorTheme === 'dark'        ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
             <span className="m-seg-icon">☾</span><span>Escuro</span>
+          </button>
+          <button className={`m-seg-btn ${colorTheme === 'soft-future' ? 'active' : ''}`} onClick={() => handleColorThemeChange('soft-future')}>
+            <span className="m-seg-icon">✦</span><span>Cosmos</span>
           </button>
         </div>
       </div>
