@@ -155,264 +155,123 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
     </>
   );
 
-  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
-  if (theme === 'modern') {
-    const accountCount = patrimony?.accounts?.length || 0;
-    const catCount = (categories?.income?.length || 0) + (categories?.expense?.length || 0);
-    const endDay = financialMonthStartDay <= 1 ? 28 : financialMonthStartDay - 1;
-    const decDay = () => onFinancialMonthChange({ startDay: Math.max(1, financialMonthStartDay - 1), enabled: true });
-    const incDay = () => onFinancialMonthChange({ startDay: Math.min(28, financialMonthStartDay + 1), enabled: true });
+  /* ── RENDER (fintech theme — single unified branch) ──────────────────── */
+  const accountCount = patrimony?.accounts?.length || 0;
+  const catCount = (categories?.income?.length || 0) + (categories?.expense?.length || 0);
+  const endDay = financialMonthStartDay <= 1 ? 28 : financialMonthStartDay - 1;
+  const decDay = () => onFinancialMonthChange?.({ startDay: Math.max(1, financialMonthStartDay - 1), enabled: true });
+  const incDay = () => onFinancialMonthChange?.({ startDay: Math.min(28, financialMonthStartDay + 1), enabled: true });
 
-    return (
-      <div className="m-profile-page">
-        <PageHeader title="Perfil" />
+  return (
+    <div className="m-profile-page">
+      <PageHeader title="Perfil" />
 
-        {/* Identity strip */}
-        <div className="m-prof-header">
-          <div className="m-prof-identity">
-            <div className="m-prof-avatar">
-              {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-            </div>
-            <div className="m-prof-id">
-              <span className="m-prof-name">{userName}</span>
-              <span className="m-prof-email">{user.email}</span>
-            </div>
+      {/* Identity strip + context chips */}
+      <div className="m-prof-header">
+        <div className="m-prof-identity">
+          <div className="m-prof-avatar">
+            {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
           </div>
-          {(accountCount > 0 || catCount > 0 || useFinancialMonth) && (
-            <div className="m-prof-chips">
-              {accountCount > 0 && <span className="m-prof-chip">◈ {accountCount} conta{accountCount !== 1 ? 's' : ''}</span>}
-              {catCount > 0 && <span className="m-prof-chip">☷ {catCount} categori{catCount !== 1 ? 'as' : 'a'}</span>}
-              {useFinancialMonth && <span className="m-prof-chip m-prof-chip--on">◷ Dia {financialMonthStartDay}</span>}
-            </div>
-          )}
-        </div>
-
-        {/* Appearance — inline, no heavy card */}
-        <div className="m-appear-wrap">
-          <span className="m-appear-label">Modo de visualização</span>
-          <div className="m-seg-control">
-            <button className={`m-seg-btn ${colorTheme === 'light' ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
-              <span className="m-seg-icon">☀︎</span><span>Claro</span>
-            </button>
-            <button className={`m-seg-btn ${colorTheme === 'gray'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
-              <span className="m-seg-icon">◐</span><span>Cinza</span>
-            </button>
-            <button className={`m-seg-btn ${colorTheme === 'dark'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
-              <span className="m-seg-icon">☾</span><span>Escuro</span>
-            </button>
+          <div className="m-prof-id">
+            <span className="m-prof-name">{userName}</span>
+            <span className="m-prof-email">{user.email}</span>
           </div>
         </div>
-
-        {/* Financial cycle widget */}
-        {onFinancialMonthChange && (
-          <div className="m-cycle-card">
-            <div className="m-cycle-header">
-              <div className="m-cycle-title">
-                <span className="m-cycle-label">Ciclo Financeiro</span>
-                {useFinancialMonth && (
-                  <span className="m-cycle-badge">dia {financialMonthStartDay} → {endDay}</span>
-                )}
-              </div>
-              <label className="m-toggle">
-                <input
-                  type="checkbox"
-                  checked={useFinancialMonth}
-                  onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
-                />
-                <span className="m-toggle-track" />
-              </label>
-            </div>
-            {useFinancialMonth ? (
-              <div className="m-cycle-body">
-                <div className="m-cycle-day-row">
-                  <span className="m-cycle-day-label">Início de cada ciclo</span>
-                  <div className="m-cycle-stepper">
-                    <button className="m-cycle-step" onClick={decDay} aria-label="Diminuir">−</button>
-                    <span className="m-cycle-day-val">{financialMonthStartDay}</span>
-                    <button className="m-cycle-step" onClick={incDay} aria-label="Aumentar">+</button>
-                  </div>
-                </div>
-                <span className="m-cycle-desc">
-                  Cada ciclo: dia {financialMonthStartDay} → dia {endDay} do mês seguinte
-                </span>
-              </div>
-            ) : (
-              <p className="m-cycle-off">Agrupa por mês calendário padrão</p>
-            )}
+        {(accountCount > 0 || catCount > 0 || useFinancialMonth) && (
+          <div className="m-prof-chips">
+            {accountCount > 0 && <span className="m-prof-chip">◈ {accountCount} conta{accountCount !== 1 ? 's' : ''}</span>}
+            {catCount > 0 && <span className="m-prof-chip">☷ {catCount} categori{catCount !== 1 ? 'as' : 'a'}</span>}
+            {useFinancialMonth && <span className="m-prof-chip m-prof-chip--on">◷ Dia {financialMonthStartDay}</span>}
           </div>
         )}
-
-        {/* Flat settings list */}
-        <div className="m-flat-list">
-          <span className="m-flat-label">Preferências</span>
-          <button className="m-flat-row" onClick={() => setShowCategoryManager(true)}>
-            <span className="m-flat-icon">☷</span>
-            <span className="m-flat-text">Gerir Categorias</span>
-            <span className="m-flat-chev">›</span>
-          </button>
-          <button className="m-flat-row" onClick={() => onNavigateToImport && onNavigateToImport()}>
-            <span className="m-flat-icon">⬆</span>
-            <span className="m-flat-text">Importar Extracto Bancário</span>
-            <span className="m-flat-chev">›</span>
-          </button>
-          <span className="m-flat-label">Segurança</span>
-          <button className="m-flat-row m-flat-row--last" onClick={() => setShowResetPassword(true)}>
-            <span className="m-flat-icon">⚿</span>
-            <span className="m-flat-text">Alterar Password</span>
-            <span className="m-flat-chev">›</span>
-          </button>
-        </div>
-
-        {/* Logout */}
-        <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
-
-        {/* Danger zone */}
-        <div className="m-danger-zone">
-          <button
-            className="m-danger-item"
-            onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
-          >
-            <span className="m-danger-text">Apagar todos os dados</span>
-          </button>
-        </div>
-
-        {renderProfileModals()}
-      </div>
-    );
-  }
-
-  /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
-  return (
-    <div className="profile-tab">
-      <PageHeader title="Perfil" />
-      {/* User Info */}
-      <div className="user-info-section">
-        <div className="user-avatar-large">
-          {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-        </div>
-        <h2 className="user-name">{userName}</h2>
-        <p className="user-email">{user.email}</p>
       </div>
 
-      {/* Appearance */}
-      <div className="profile-section">
-        <h3 className="section-title">Aparência</h3>
-        <div className="theme-selector">
-          <button
-            className={`theme-option ${colorTheme === 'light' ? 'active' : ''}`}
-            onClick={() => handleColorThemeChange('light')}
-          >
-            <span className="sf-icon">☀︎</span>
-            <span>Claro</span>
+      {/* Appearance — frameless segmented control */}
+      <div className="m-appear-wrap">
+        <span className="m-appear-label">Modo de visualização</span>
+        <div className="m-seg-control">
+          <button className={`m-seg-btn ${colorTheme === 'light' ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
+            <span className="m-seg-icon">☀︎</span><span>Claro</span>
           </button>
-          <button
-            className={`theme-option ${colorTheme === 'gray' ? 'active' : ''}`}
-            onClick={() => handleColorThemeChange('gray')}
-          >
-            <span className="sf-icon">◐</span>
-            <span>Cinza</span>
+          <button className={`m-seg-btn ${colorTheme === 'gray'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
+            <span className="m-seg-icon">◐</span><span>Cinza</span>
           </button>
-          <button
-            className={`theme-option ${colorTheme === 'dark' ? 'active' : ''}`}
-            onClick={() => handleColorThemeChange('dark')}
-          >
-            <span className="sf-icon">☾</span>
-            <span>Escuro</span>
+          <button className={`m-seg-btn ${colorTheme === 'dark'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
+            <span className="m-seg-icon">☾</span><span>Escuro</span>
           </button>
         </div>
-
       </div>
 
-      {/* Mês Financeiro */}
+      {/* Financial cycle widget */}
       {onFinancialMonthChange && (
-        <div className="profile-section">
-          <h3 className="section-title">Mês Financeiro</h3>
-          <div style={{ padding: '0 4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ativar mês financeiro</label>
+        <div className="m-cycle-card">
+          <div className="m-cycle-header">
+            <div className="m-cycle-title">
+              <span className="m-cycle-label">Ciclo Financeiro</span>
+              {useFinancialMonth && (
+                <span className="m-cycle-badge">dia {financialMonthStartDay} → {endDay}</span>
+              )}
+            </div>
+            <label className="m-toggle">
               <input
                 type="checkbox"
                 checked={useFinancialMonth}
                 onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
               />
-            </div>
-            {useFinancialMonth && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Dia de início</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="28"
-                  value={financialMonthStartDay}
-                  onChange={e => onFinancialMonthChange({ startDay: parseInt(e.target.value) || 1, enabled: true })}
-                  className="date-input"
-                  style={{ width: '64px', textAlign: 'center' }}
-                />
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>de cada mês</span>
-              </div>
-            )}
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
-              {useFinancialMonth
-                ? `Ciclo: dia ${financialMonthStartDay} → dia ${financialMonthStartDay - 1} do mês seguinte`
-                : 'Agrupa por mês calendário (padrão)'}
-            </p>
+              <span className="m-toggle-track" />
+            </label>
           </div>
+          {useFinancialMonth ? (
+            <div className="m-cycle-body">
+              <div className="m-cycle-day-row">
+                <span className="m-cycle-day-label">Início de cada ciclo</span>
+                <div className="m-cycle-stepper">
+                  <button className="m-cycle-step" onClick={decDay} aria-label="Diminuir">−</button>
+                  <span className="m-cycle-day-val">{financialMonthStartDay}</span>
+                  <button className="m-cycle-step" onClick={incDay} aria-label="Aumentar">+</button>
+                </div>
+              </div>
+              <span className="m-cycle-desc">
+                Cada ciclo: dia {financialMonthStartDay} → dia {endDay} do mês seguinte
+              </span>
+            </div>
+          ) : (
+            <p className="m-cycle-off">Agrupa por mês calendário padrão</p>
+          )}
         </div>
       )}
 
-      {/* Account Options */}
-      <div className="profile-section">
-        <h3 className="section-title">Conta</h3>
-
-        <button
-          className="profile-option"
-          onClick={() => setShowCategoryManager(true)}
-        >
-          <span className="option-icon-sf">☷</span>
-          <span className="option-label">Gerir Categorias</span>
-          <span className="option-arrow-sf">›</span>
+      {/* Flat settings list */}
+      <div className="m-flat-list">
+        <span className="m-flat-label">Preferências</span>
+        <button className="m-flat-row" onClick={() => setShowCategoryManager(true)}>
+          <span className="m-flat-icon">☷</span>
+          <span className="m-flat-text">Gerir Categorias</span>
+          <span className="m-flat-chev">›</span>
         </button>
-
-        <div className="option-separator" />
-
-        <button
-          className="profile-option"
-          onClick={() => onNavigateToImport && onNavigateToImport()}
-        >
-          <span className="option-icon-sf">&#11014;</span>
-          <span className="option-label">Importar Extracto Bancário</span>
-          <span className="option-arrow-sf">&#8250;</span>
+        <button className="m-flat-row" onClick={() => onNavigateToImport && onNavigateToImport()}>
+          <span className="m-flat-icon">⬆</span>
+          <span className="m-flat-text">Importar Extracto Bancário</span>
+          <span className="m-flat-chev">›</span>
         </button>
-
-        <div className="option-separator" />
-
-        <button
-          className="profile-option"
-          onClick={() => setShowResetPassword(true)}
-        >
-          <span className="option-icon-sf">⚿</span>
-          <span className="option-label">Alterar Password</span>
-          <span className="option-arrow-sf">›</span>
-        </button>
-
-        <div className="option-separator" />
-
-        <button
-          className="profile-option danger"
-          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
-        >
-          <span className="option-icon-sf">🗑</span>
-          <span className="option-label">Apagar Todos os Dados</span>
-          <span className="option-arrow-sf">›</span>
+        <span className="m-flat-label">Segurança</span>
+        <button className="m-flat-row m-flat-row--last" onClick={() => setShowResetPassword(true)}>
+          <span className="m-flat-icon">⚿</span>
+          <span className="m-flat-text">Alterar Password</span>
+          <span className="m-flat-chev">›</span>
         </button>
       </div>
 
       {/* Logout */}
-      <div className="profile-section">
-        <button className="btn-logout" onClick={onLogout}>
-          <span className="sf-icon">⏻</span>
-          <span>Terminar Sessão</span>
+      <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
+
+      {/* Danger zone — isolated, barely-there */}
+      <div className="m-danger-zone">
+        <button
+          className="m-danger-item"
+          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
+        >
+          <span className="m-danger-text">Apagar todos os dados</span>
         </button>
       </div>
 
