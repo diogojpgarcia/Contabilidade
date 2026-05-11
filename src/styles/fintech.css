@@ -82,6 +82,8 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.14);
 }
 [data-theme="light"] .m-toggle-btn.active { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+/* 4-item toggle: slightly smaller text so labels don't overflow on narrow screens */
+.m-toggle--4 .m-toggle-btn { font-size: 0.72rem; padding: 10px 2px; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CHIPS ROW  (.m-chips / .m-chip)

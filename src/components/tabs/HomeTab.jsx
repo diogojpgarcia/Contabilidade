@@ -1,9 +1,10 @@
 import React from 'react';
-import HomeHero      from '../home/HomeHero';
-import HomeCashflow  from '../home/HomeCashflow';
-import HomeInsight   from '../home/HomeInsight';
-import HomeAccounts  from '../home/HomeAccounts';
-import HomeEvolution from '../home/HomeEvolution';
+import HomeHero        from '../home/HomeHero';
+import HomeCashflow    from '../home/HomeCashflow';
+import HomeInsight     from '../home/HomeInsight';
+import HomeAccounts    from '../home/HomeAccounts';
+import HomeEvolution   from '../home/HomeEvolution';
+import HomeRecurring   from '../home/HomeRecurring';
 import '../home/Home.css';
 
 const HomeTab = ({
@@ -13,6 +14,8 @@ const HomeTab = ({
   financialMonthStartDay = 1,
   theme = 'default',
   onNavigate,
+  recurringPayments,
+  categories,
 }) => {
   const p = patrimony;
 
@@ -48,6 +51,7 @@ const HomeTab = ({
         financialMonthStartDay={financialMonthStartDay}
       />
       <HomeInsight transactions={transactions} onNavigate={onNavigate} />
+      <HomeRecurring recurringPayments={recurringPayments} categories={categories} />
       <HomeAccounts accounts={p.accounts || []} />
       <HomeEvolution
         patrimonyTotal={patrimonyTotal}

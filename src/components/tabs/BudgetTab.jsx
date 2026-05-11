@@ -38,6 +38,9 @@ const Sparkline = ({ prices, color = '#22c55e', width = 68, height = 26 }) => {
   );
 };
 import PageHeader from '../PageHeader';
+import SwipeRevealCard from '../SwipeRevealCard';
+import RecurringView from '../budget/RecurringView';
+import { getTotalMonthlyCommitted } from '../../utils/recurringPayments';
 import './BudgetTab.css';
 
 const CATEGORY_ICONS = {
@@ -181,117 +184,7 @@ const CountUp = ({ value, decimals = 0 }) => {
   return <>{display.toFixed(decimals)}</>;
 };
 
-/* ─── Swipe-to-reveal action card ───────────────────────────────────────────
-   Flex-row approach: content + actions share one row that is wider than the
-   container. At rest (translateX 0) actions are genuinely off-screen right.
-   Swipe left → translateX(-OPEN_PX) → actions appear. No background hacks.  */
-let globalSwipeClose = null;
-const SWIPE_OPEN_PX   = 80;
-const SWIPE_THRESHOLD = 30;
-
-const SwipeRevealCard = ({ onEdit, onDelete, className = '', children }) => {
-  const rowRef    = useRef(null);
-  const closeRef  = useRef(null);
-  const isOpenRef = useRef(false);
-  const gesture   = useRef({ startX: 0, startY: 0, baseX: 0, dir: null, active: false });
-
-  useEffect(() => {
-    const row = rowRef.current;
-    if (!row) return;
-
-    const move = (px, animate) => {
-      row.style.transition = animate ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none';
-      row.style.transform  = `translateX(${px}px)`;
-    };
-
-    const close = () => {
-      move(0, true);
-      isOpenRef.current = false;
-      if (globalSwipeClose === close) globalSwipeClose = null;
-    };
-
-    const open = () => {
-      if (globalSwipeClose && globalSwipeClose !== close) globalSwipeClose();
-      move(-SWIPE_OPEN_PX, true);
-      isOpenRef.current = true;
-      globalSwipeClose  = close;
-    };
-
-    closeRef.current = close;
-
-    const onStart = (e) => {
-      gesture.current = {
-        startX: e.touches[0].clientX,
-        startY: e.touches[0].clientY,
-        baseX:  isOpenRef.current ? -SWIPE_OPEN_PX : 0,
-        dir:    null,
-        active: true,
-      };
-    };
-
-    const onMove = (e) => {
-      const g = gesture.current;
-      if (!g.active) return;
-      const dx = e.touches[0].clientX - g.startX;
-      const dy = e.touches[0].clientY - g.startY;
-      if (!g.dir) {
-        if (Math.abs(dx) > Math.abs(dy) + 3)      g.dir = 'h';
-        else if (Math.abs(dy) > Math.abs(dx) + 3) g.dir = 'v';
-        else return;
-      }
-      if (g.dir === 'v') return;
-      e.preventDefault();
-      row.style.transition = 'none';
-      row.style.transform  = `translateX(${Math.min(0, Math.max(-SWIPE_OPEN_PX, g.baseX + dx))}px)`;
-    };
-
-    const onEnd = (e) => {
-      const g = gesture.current;
-      if (!g.active || g.dir !== 'h') { g.active = false; return; }
-      g.active = false;
-      const dx     = e.changedTouches[0].clientX - g.startX;
-      const finalX = g.baseX + dx;
-      if (finalX < -SWIPE_THRESHOLD) open(); else close();
-    };
-
-    row.addEventListener('touchstart', onStart, { passive: true });
-    row.addEventListener('touchmove',  onMove,  { passive: false });
-    row.addEventListener('touchend',   onEnd,   { passive: true });
-
-    return () => {
-      row.removeEventListener('touchstart', onStart);
-      row.removeEventListener('touchmove',  onMove);
-      row.removeEventListener('touchend',   onEnd);
-      if (globalSwipeClose === close) globalSwipeClose = null;
-    };
-  }, []);
-
-  return (
-    <div className="swipe-reveal">
-      <div
-        ref={rowRef}
-        className="swipe-row"
-        onClickCapture={e => {
-          if (isOpenRef.current) { e.stopPropagation(); e.preventDefault(); closeRef.current?.(); }
-        }}
-      >
-        <div className={className}>{children}</div>
-        <div className="swipe-actions">
-          <button
-            className="swipe-btn swipe-btn-edit"
-            onPointerDown={e => { e.stopPropagation(); closeRef.current?.(); setTimeout(onEdit, 30); }}
-            aria-label="Editar"
-          >✎</button>
-          <button
-            className="swipe-btn swipe-btn-delete"
-            onPointerDown={e => { e.stopPropagation(); closeRef.current?.(); setTimeout(onDelete, 30); }}
-            aria-label="Remover"
-          >✕</button>
-        </div>
-      </div>
-    </div>
-  );
-};
+/* SwipeRevealCard is now imported from ../SwipeRevealCard */
 
 const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions, isNavTarget }) => {
   const [hovered, setHovered] = useState(false);
@@ -452,7 +345,7 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
 // STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
 // Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1, pendingNav, onNavConsumed }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1, pendingNav, onNavConsumed, recurringPayments = [], onRecurringPaymentsChange }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
   const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
@@ -1210,10 +1103,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       <div className="m-budget-page" ref={budgetTabRef}>
         <PageHeader title="Orçamento" />
         {/* View toggle */}
-        <div className="m-toggle">
-          <button className={`m-toggle-btn ${activeView === 'budgets'   ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamentos</button>
-          <button className={`m-toggle-btn ${activeView === 'goals'     ? 'active' : ''}`} onClick={() => setActiveView('goals')}>Objetivos</button>
-          <button className={`m-toggle-btn ${activeView === 'patrimony' ? 'active' : ''}`} onClick={() => setActiveView('patrimony')}>Património</button>
+        <div className="m-toggle m-toggle--4">
+          <button className={`m-toggle-btn ${activeView === 'budgets'    ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamento</button>
+          <button className={`m-toggle-btn ${activeView === 'recurring'  ? 'active' : ''}`} onClick={() => setActiveView('recurring')}>Recorrentes</button>
+          <button className={`m-toggle-btn ${activeView === 'goals'      ? 'active' : ''}`} onClick={() => setActiveView('goals')}>Objetivos</button>
+          <button className={`m-toggle-btn ${activeView === 'patrimony'  ? 'active' : ''}`} onClick={() => setActiveView('patrimony')}>Património</button>
         </div>
 
         {/* Month navigation */}
@@ -1272,6 +1166,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       <div className="m-bmc-bar-fill" style={{ width: animated ? `${totalPct}%` : '0%', background: barColor, boxShadow: animated ? `0 0 12px ${STATUS(totalPct).glow}` : 'none' }} />
                     </div>
                   )}
+                </div>
+              );
+            })()}
+
+            {/* Recurring committed strip */}
+            {recurringPayments.length > 0 && (() => {
+              const committed = getTotalMonthlyCommitted(recurringPayments);
+              return (
+                <div className="rp-budget-strip">
+                  <span className="rp-budget-strip-icon">↻</span>
+                  <div className="rp-budget-strip-body">
+                    <div className="rp-budget-strip-label">Pagamentos recorrentes / mês</div>
+                    <div className="rp-budget-strip-amount">{committed.toFixed(2)}€</div>
+                  </div>
+                  <button className="rp-budget-strip-nav" onClick={() => setActiveView('recurring')}>
+                    Ver →
+                  </button>
                 </div>
               );
             })()}
@@ -1339,6 +1250,17 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               })
             )}
           </div>
+        )}
+
+        {/* ── RECURRING PAYMENTS ── */}
+        {activeView === 'recurring' && (
+          <RecurringView
+            user={user}
+            recurringPayments={recurringPayments}
+            onRecurringPaymentsChange={onRecurringPaymentsChange}
+            categories={categories}
+            patrimony={externalPatrimony}
+          />
         )}
 
         {/* ── PATRIMONY ── */}

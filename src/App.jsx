@@ -57,6 +57,7 @@ const App = () => {
   const [useFinancialMonth, setUseFinancialMonth] = useState(false);
   const [transactionAccountMap, setTransactionAccountMap] = useState({}); // { [txId]: { account_id, account_name } } — fallback when DB columns absent
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
+  const [recurringPayments, setRecurringPayments] = useState([]); // [{ id, title, amount, ... }]
   const loadRequestId = React.useRef(0); // incremented to cancel stale fetches
 
   // Check for existing session on mount
@@ -142,6 +143,9 @@ const App = () => {
       // Theme is fixed to 'fintech' — ignore any stored preference
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
+
+      // Recurring payments
+      if (Array.isArray(settings?.recurring_payments)) setRecurringPayments(settings.recurring_payments);
 
       // Financial month settings — restore and snap currentMonth to the correct period
       const sd  = settings?.financialMonthStartDay ?? 1;
@@ -356,6 +360,11 @@ const App = () => {
   const handleCategoriesChange = (updated) => {
     // CategoryManager already persists to Supabase — we just keep global state in sync.
     setCategories(updated);
+  };
+
+  const handleRecurringPaymentsChange = (updated) => {
+    setRecurringPayments(updated);
+    // Persistence is handled inside RecurringView to give immediate feedback
   };
 
   const handleBudgetsChange = async (newBudgets) => {
@@ -671,6 +680,8 @@ const App = () => {
             categories={categories}
             theme={theme}
             financialMonthStartDay={effectiveStartDay}
+            recurringPayments={recurringPayments}
+            onNavigate={handleNavigateFromStats}
           />
         )}
 
@@ -720,6 +731,8 @@ const App = () => {
             financialMonthStartDay={effectiveStartDay}
             pendingNav={pendingBudgetNav}
             onNavConsumed={() => setPendingBudgetNav(null)}
+            recurringPayments={recurringPayments}
+            onRecurringPaymentsChange={handleRecurringPaymentsChange}
           />
         )}
 
