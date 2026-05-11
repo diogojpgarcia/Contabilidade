@@ -37,11 +37,13 @@ const RecurringView = ({
   categories,
   patrimony,
 }) => {
-  const [showForm,     setShowForm]     = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [editingId,    setEditingId]    = useState(null);
-  const [form,         setForm]         = useState(EMPTY_FORM);
-  const [saving,       setSaving]       = useState(false);
+  const [showForm,          setShowForm]          = useState(false);
+  const [showCalendar,      setShowCalendar]      = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showAccountModal,  setShowAccountModal]  = useState(false);
+  const [editingId,         setEditingId]         = useState(null);
+  const [form,              setForm]              = useState(EMPTY_FORM);
+  const [saving,            setSaving]            = useState(false);
 
   const payments = recurringPayments || [];
   const totalMonthly = getTotalMonthlyCommitted(payments);
@@ -284,38 +286,43 @@ const RecurringView = ({
                 />
               </div>
 
-              {/* Category */}
+              {/* Category selector button */}
               {expCats.length > 0 && (
                 <div className="rp-form-field">
-                  <label className="rp-form-label">Categoria</label>
-                  <div className="rp-cat-chips">
-                    {expCats.map(cat => (
-                      <button
-                        key={cat.id}
-                        className={`rp-cat-chip${form.categoryId === cat.id ? ' active' : ''}`}
-                        onClick={() => setField('categoryId', form.categoryId === cat.id ? '' : cat.id)}
-                      >
-                        {cat.icon ? `${cat.icon} ` : ''}{cat.label}
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    className="rp-selector-btn"
+                    onClick={() => setShowCategoryModal(true)}
+                  >
+                    <span className="rp-selector-label">Categoria</span>
+                    <span className="rp-selector-value">
+                      {form.categoryId
+                        ? expCats.find(c => c.id === form.categoryId)?.icon || ''
+                        : ''}
+                      {' '}
+                      {form.categoryId
+                        ? expCats.find(c => c.id === form.categoryId)?.label
+                        : '— Nenhuma —'}
+                    </span>
+                    <span className="rp-selector-icon">›</span>
+                  </button>
                 </div>
               )}
 
-              {/* Account */}
+              {/* Account selector button */}
               {accounts.length > 0 && (
                 <div className="rp-form-field">
-                  <label className="rp-form-label">Conta</label>
-                  <select
-                    className="rp-form-input"
-                    value={form.accountId}
-                    onChange={e => setField('accountId', e.target.value)}
+                  <button
+                    className="rp-selector-btn"
+                    onClick={() => setShowAccountModal(true)}
                   >
-                    <option value="">— Nenhuma —</option>
-                    {accounts.map(acc => (
-                      <option key={acc.id} value={acc.id}>{acc.name}</option>
-                    ))}
-                  </select>
+                    <span className="rp-selector-label">Conta</span>
+                    <span className="rp-selector-value">
+                      {form.accountId
+                        ? accounts.find(a => a.id === form.accountId)?.name
+                        : '— Nenhuma —'}
+                    </span>
+                    <span className="rp-selector-icon">›</span>
+                  </button>
                 </div>
               )}
 
@@ -344,6 +351,76 @@ const RecurringView = ({
                 </button>
               </div>
             </div>
+
+            {/* Category modal */}
+            {showCategoryModal && (
+              <div className="rp-modal-overlay" onClick={() => setShowCategoryModal(false)}>
+                <div className="rp-modal-panel" onClick={e => e.stopPropagation()}>
+                  <div className="rp-modal-header">
+                    <span>Selecionar Categoria</span>
+                    <button className="rp-modal-close" onClick={() => setShowCategoryModal(false)}>✕</button>
+                  </div>
+                  <div className="rp-modal-list">
+                    <button
+                      className={`rp-modal-item${!form.categoryId ? ' active' : ''}`}
+                      onClick={() => {
+                        setField('categoryId', '');
+                        setShowCategoryModal(false);
+                      }}
+                    >
+                      — Nenhuma —
+                    </button>
+                    {expCats.map(cat => (
+                      <button
+                        key={cat.id}
+                        className={`rp-modal-item${form.categoryId === cat.id ? ' active' : ''}`}
+                        onClick={() => {
+                          setField('categoryId', cat.id);
+                          setShowCategoryModal(false);
+                        }}
+                      >
+                        {cat.icon ? `${cat.icon} ` : ''}{cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Account modal */}
+            {showAccountModal && (
+              <div className="rp-modal-overlay" onClick={() => setShowAccountModal(false)}>
+                <div className="rp-modal-panel" onClick={e => e.stopPropagation()}>
+                  <div className="rp-modal-header">
+                    <span>Selecionar Conta</span>
+                    <button className="rp-modal-close" onClick={() => setShowAccountModal(false)}>✕</button>
+                  </div>
+                  <div className="rp-modal-list">
+                    <button
+                      className={`rp-modal-item${!form.accountId ? ' active' : ''}`}
+                      onClick={() => {
+                        setField('accountId', '');
+                        setShowAccountModal(false);
+                      }}
+                    >
+                      — Nenhuma —
+                    </button>
+                    {accounts.map(acc => (
+                      <button
+                        key={acc.id}
+                        className={`rp-modal-item${form.accountId === acc.id ? ' active' : ''}`}
+                        onClick={() => {
+                          setField('accountId', acc.id);
+                          setShowAccountModal(false);
+                        }}
+                      >
+                        {acc.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </Overlay>
       )}
