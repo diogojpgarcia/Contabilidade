@@ -2143,27 +2143,37 @@
   padding: 0 16px var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
 }
 
-.m-user-section {
+/* ── Compact profile header ─────────────────────────────────────────────── */
+.m-profile-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 20px 0 16px;
-  gap: 5px;
+  gap: 14px;
+  padding: 16px 0 22px;
 }
-.m-avatar {
-  width: 68px; height: 68px;
-  border-radius: 22px;
+.m-profile-avatar {
+  width: 44px; height: 44px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.02em;
+  flex-shrink: 0;
 }
-.m-user-name  { font-size: 1rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
-.m-user-email { font-size: 0.78rem; color: var(--text-tertiary); }
+.m-profile-info  { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.m-profile-name  { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+.m-profile-email { font-size: 0.75rem; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-profile-context {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin-top: 2px;
+  opacity: 0.75;
+}
 
-/* Menu group */
+/* ── Menu group ─────────────────────────────────────────────────────────── */
 .m-menu-section { margin-bottom: 16px; }
 .m-menu-section-label {
   font-size: 0.68rem;
@@ -2192,13 +2202,11 @@
 }
 .m-menu-item + .m-menu-item { border-top: 0.5px solid var(--separator); }
 .m-menu-item:active          { background: var(--bg-tertiary); }
-.m-menu-icon  { font-size: 1rem; width: 22px; text-align: center; color: var(--text-secondary); }
+.m-menu-icon  { font-size: 1rem; width: 22px; text-align: center; color: var(--text-secondary); flex-shrink: 0; }
 .m-menu-text  { flex: 1; font-size: 0.875rem; font-weight: 500; color: var(--text-primary); }
 .m-menu-arrow { color: var(--text-tertiary); font-size: 0.875rem; }
-.m-menu-item.danger .m-menu-text { color: #dc2626; }
-.m-menu-item.danger .m-menu-icon { color: #dc2626; }
 
-/* Segmented control (appearance/layout) */
+/* ── Segmented control (appearance) ────────────────────────────────────── */
 .m-seg-wrap { padding: 10px 14px 14px; }
 .m-seg-control {
   display: flex;
@@ -2210,8 +2218,8 @@
 [data-theme="light"] .m-seg-control { background: #e5e5ea; }
 .m-seg-btn {
   flex: 1;
-  min-height: 44px;
-  padding: 10px 4px;
+  min-height: 40px;
+  padding: 8px 4px;
   border: none;
   border-radius: 8px;
   font-size: 0.75rem;
@@ -2233,24 +2241,115 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
 [data-theme="light"] .m-seg-btn.active { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.m-seg-icon  { font-size: 1rem; }
+.m-seg-icon  { font-size: 0.9rem; }
 
-/* Logout */
+/* ── Financial month controls ───────────────────────────────────────────── */
+.m-fmonth-row { cursor: default; align-items: flex-start; padding-top: 14px; padding-bottom: 14px; }
+.m-fmonth-row:active { background: transparent; }
+.m-fmonth-left { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.m-fmonth-hint {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+/* iOS-style toggle pill */
+.m-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 26px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.m-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.m-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 13px;
+  background: rgba(120, 120, 128, 0.32);
+  transition: background 0.2s;
+}
+.m-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+.m-toggle input:checked + .m-toggle-track { background: #6366f1; }
+.m-toggle input:checked + .m-toggle-track::after { transform: translateX(18px); }
+[data-theme="light"] .m-toggle-track { background: rgba(60,60,67,0.22); }
+
+.m-fmonth-day-row { padding-top: 11px; padding-bottom: 11px; }
+.m-fmonth-day-label { flex: 1; font-size: 0.875rem; color: var(--text-secondary); font-weight: 500; }
+.m-fmonth-day-ctrl  { display: flex; align-items: center; gap: 7px; }
+.m-fmonth-day-input {
+  width: 52px;
+  padding: 5px 8px;
+  text-align: center;
+  background: var(--bg-tertiary);
+  border: 0.5px solid var(--separator);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.m-fmonth-day-input::-webkit-inner-spin-button,
+.m-fmonth-day-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.m-fmonth-day-input:focus { border-color: rgba(99,102,241,0.55); }
+.m-fmonth-day-unit { font-size: 0.78rem; color: var(--text-tertiary); }
+
+/* ── Logout ─────────────────────────────────────────────────────────────── */
 .m-logout-btn {
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   border: none;
   border-radius: 14px;
-  background: rgba(239,68,68,0.08);
-  color: #dc2626;
-  font-weight: 700;
-  font-size: 0.9375rem;
+  background: rgba(239,68,68,0.07);
+  color: rgba(220, 38, 38, 0.9);
+  font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: background 0.12s;
   font-family: inherit;
   margin-top: 4px;
+  letter-spacing: -0.01em;
 }
-.m-logout-btn:active { background: rgba(239,68,68,0.15); }
+.m-logout-btn:active { background: rgba(239,68,68,0.14); }
+
+/* ── Danger zone — isolated, low visual weight ──────────────────────────── */
+.m-danger-zone {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+  margin-top: 6px;
+}
+.m-danger-item {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 8px;
+  transition: opacity 0.1s;
+}
+.m-danger-item:active { opacity: 0.55; }
+.m-danger-text {
+  font-size: 0.8rem;
+  color: rgba(220, 38, 38, 0.5);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FINTECH THEME — additional overrides scoped to .fintech-ui

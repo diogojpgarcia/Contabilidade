@@ -157,16 +157,26 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
 
   /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
   if (theme === 'modern') {
+    const accountCount = patrimony?.accounts?.length || 0;
+    const catCount = (categories?.income?.length || 0) + (categories?.expense?.length || 0);
+    const contextLine = useFinancialMonth
+      ? `Ciclo: dia ${financialMonthStartDay} de cada mês`
+      : catCount > 0 ? `${catCount} categorias ativas` : null;
+
     return (
       <div className="m-profile-page">
         <PageHeader title="Perfil" />
-        {/* User info */}
-        <div className="m-user-section">
-          <div className="m-avatar">
+
+        {/* Compact profile header */}
+        <div className="m-profile-header">
+          <div className="m-profile-avatar">
             {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
           </div>
-          <div className="m-user-name">{userName}</div>
-          <div className="m-user-email">{user.email}</div>
+          <div className="m-profile-info">
+            <div className="m-profile-name">{userName}</div>
+            <div className="m-profile-email">{user.email}</div>
+            {contextLine && <div className="m-profile-context">{contextLine}</div>}
+          </div>
         </div>
 
         {/* Aparência */}
@@ -189,51 +199,52 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           </div>
         </div>
 
-        {/* Mês Financeiro */}
+        {/* Ciclo Financeiro */}
         {onFinancialMonthChange && (
           <div className="m-menu-section">
-            <div className="m-menu-section-label">Mês Financeiro</div>
+            <div className="m-menu-section-label">Ciclo Financeiro</div>
             <div className="m-menu-group">
-              <div className="m-menu-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                  <span className="m-menu-text">Ativar mês financeiro</span>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '6px' }}>
-                    <input
-                      type="checkbox"
-                      checked={useFinancialMonth}
-                      onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
-                  </label>
+              <div className="m-menu-item m-fmonth-row">
+                <div className="m-fmonth-left">
+                  <span className="m-menu-text">Mês financeiro personalizado</span>
+                  <span className="m-fmonth-hint">
+                    {useFinancialMonth
+                      ? `Dia ${financialMonthStartDay} → dia ${financialMonthStartDay - 1} do mês seguinte`
+                      : 'Usa o mês calendário por omissão'}
+                  </span>
                 </div>
-                {useFinancialMonth && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Dia de início do ciclo</span>
+                <label className="m-toggle">
+                  <input
+                    type="checkbox"
+                    checked={useFinancialMonth}
+                    onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
+                  />
+                  <span className="m-toggle-track" />
+                </label>
+              </div>
+              {useFinancialMonth && (
+                <div className="m-menu-item m-fmonth-day-row">
+                  <span className="m-fmonth-day-label">Início do ciclo</span>
+                  <div className="m-fmonth-day-ctrl">
                     <input
                       type="number"
                       min="1"
                       max="28"
                       value={financialMonthStartDay}
                       onChange={e => onFinancialMonthChange({ startDay: parseInt(e.target.value) || 1, enabled: true })}
-                      className="m-field-input"
-                      style={{ width: '64px', textAlign: 'center' }}
+                      className="m-fmonth-day-input"
                     />
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>de cada mês</span>
+                    <span className="m-fmonth-day-unit">de cada mês</span>
                   </div>
-                )}
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, var(--text-secondary))' }}>
-                  {useFinancialMonth
-                    ? `Ciclo: dia ${financialMonthStartDay} → dia ${financialMonthStartDay - 1} do mês seguinte`
-                    : 'Agrupa por mês calendário (padrão)'}
-                </span>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Conta */}
+        {/* Preferências */}
         <div className="m-menu-section">
-          <div className="m-menu-section-label">Conta</div>
+          <div className="m-menu-section-label">Preferências</div>
           <div className="m-menu-group">
             <button className="m-menu-item" onClick={() => setShowCategoryManager(true)}>
               <span className="m-menu-icon">☷</span>
@@ -245,14 +256,16 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
               <span className="m-menu-text">Importar Extracto Bancário</span>
               <span className="m-menu-arrow">›</span>
             </button>
+          </div>
+        </div>
+
+        {/* Segurança */}
+        <div className="m-menu-section">
+          <div className="m-menu-section-label">Segurança</div>
+          <div className="m-menu-group">
             <button className="m-menu-item" onClick={() => setShowResetPassword(true)}>
               <span className="m-menu-icon">⚿</span>
               <span className="m-menu-text">Alterar Password</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
-            <button className="m-menu-item danger" onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}>
-              <span className="m-menu-icon">🗑</span>
-              <span className="m-menu-text">Apagar Todos os Dados</span>
               <span className="m-menu-arrow">›</span>
             </button>
           </div>
@@ -260,6 +273,16 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
 
         {/* Logout */}
         <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
+
+        {/* Danger zone — isolated, low visual weight */}
+        <div className="m-danger-zone">
+          <button
+            className="m-danger-item"
+            onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
+          >
+            <span className="m-danger-text">Apagar todos os dados</span>
+          </button>
+        </div>
 
         {renderProfileModals()}
       </div>
