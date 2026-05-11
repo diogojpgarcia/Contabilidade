@@ -8,10 +8,11 @@ const COLORS = [
   '#14b8a6', '#f43f5e', '#a855f7', '#22c55e', '#0ea5e9',
 ];
 
-const ICONS = [
-  '🏠','🍔','🚗','💊','🎮','👕','✈️','📚','🎬','💰',
-  '🏋️','🎵','🐕','💻','☕','🍕','🚌','📱','🎨','⚡',
-  '🛒','💼','🏦','🎁','🎓','⚽','🌱','🛍️','💅','🎯',
+/* Icon palette is derived at runtime from the live categories prop so it
+   always matches the icons used everywhere else in the app.             */
+const EXTRA_ICONS = [
+  '⚡','🎯','🎁','🌱','✈️','🏋️','🎵','📱','💻','🎨',
+  '🛍️','☕','🐕','🎬','🏦','⚽','💅','🎮','📚','🚌',
 ];
 
 /**
@@ -43,7 +44,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
   // ── New-category form ──────────────────────────────────────────────────────
   const [newLabel,         setNewLabel]         = useState('');
   const [newColor,         setNewColor]         = useState(COLORS[0]);
-  const [newIcon,          setNewIcon]          = useState(ICONS[0]);
+  const [newIcon,          setNewIcon]          = useState('🏠');
   const [showNewColors,    setShowNewColors]    = useState(false);
   const [showNewIcons,     setShowNewIcons]     = useState(false);
 
@@ -51,6 +52,15 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
   if (!categories?.expense || !categories?.income) return null;
 
   const list = categories[activeTab];
+
+  // ── Icon palette — real icons from global state first, then extras ─────────
+  const iconPalette = [
+    ...new Set([
+      ...categories.expense.map(c => c.icon),
+      ...categories.income.map(c => c.icon),
+      ...EXTRA_ICONS,
+    ].filter(Boolean)),
+  ];
 
   // ── Persistence ────────────────────────────────────────────────────────────
   const persist = async (updated) => {
@@ -125,7 +135,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
     });
     setNewLabel('');
     setNewColor(COLORS[0]);
-    setNewIcon(ICONS[0]);
+    setNewIcon(iconPalette[0] ?? '🏠');
     setShowNewColors(false);
     setShowNewIcons(false);
   };
@@ -216,7 +226,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
                 {/* Inline icon picker */}
                 {showEditIcons && (
                   <div className="cm-picker-row cm-picker-row--icons">
-                    {ICONS.map(ic => (
+                    {iconPalette.map(ic => (
                       <button
                         key={ic}
                         className={`cm-emoji-btn${editDraft.icon === ic ? ' cm-emoji-btn--on' : ''}`}
@@ -303,7 +313,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
 
         {showNewIcons && (
           <div className="cm-picker-row cm-picker-row--icons">
-            {ICONS.map(ic => (
+            {iconPalette.map(ic => (
               <button
                 key={ic}
                 className={`cm-emoji-btn${newIcon === ic ? ' cm-emoji-btn--on' : ''}`}
