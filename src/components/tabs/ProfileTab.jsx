@@ -30,6 +30,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       const saved = settings?.color_theme || 'dark';
       setColorTheme(saved);
       document.documentElement.setAttribute('data-theme', saved);
+      console.log('[ProfileTab] ACTIVE THEME loaded:', saved, '| html[data-theme]:', document.documentElement.getAttribute('data-theme'));
     } catch (error) {
       console.error('[ProfileTab] Error loading preferences:', error);
     }
@@ -38,6 +39,7 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const handleColorThemeChange = async (newColor) => {
     setColorTheme(newColor);
     document.documentElement.setAttribute('data-theme', newColor);
+    console.log('[ProfileTab] ACTIVE THEME set:', newColor, '| html[data-theme]:', document.documentElement.getAttribute('data-theme'));
     dbService.updateUserSettings(user.id, { color_theme: newColor }).catch(console.error);
   };
 

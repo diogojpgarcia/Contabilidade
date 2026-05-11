@@ -127,42 +127,42 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-/* ─── Soft Future Theme — deep cosmic violet × amethyst ────────────────── */
+/* ─── Soft Future Theme — premium graphite × cyan ───────────────────────── */
 [data-theme="soft-future"] {
-  /* Backgrounds — layered violet-tinted darks */
-  --bg-primary:    #0d0b1e;
-  --bg-secondary:  #131228;
-  --bg-tertiary:   #1c1938;
-  --bg-elevated:   #221f42;
+  /* Backgrounds — layered charcoal/graphite darks */
+  --bg-primary:    #0d0f12;
+  --bg-secondary:  #111317;
+  --bg-tertiary:   #15181d;
+  --bg-elevated:   #1a1d23;
 
-  /* Accent — amethyst */
-  --primary:       #a78bfa;
-  --primary-light: #c4b5fd;
-  --success:       #34d399;
-  --warning:       #fbbf24;
-  --danger:        #f87171;
+  /* Accent — soft cyan + muted indigo */
+  --primary:       #06b6d4;
+  --primary-light: #a0aabb;
+  --success:       #10b981;
+  --warning:       #f59e0b;
+  --danger:        #ef4444;
 
-  /* Text — soft lavender hierarchy */
-  --text-primary:   #ede9fe;
-  --text-secondary: #a5b4fc;
-  --text-tertiary:  #6e6a95;
+  /* Text — neutral grey hierarchy */
+  --text-primary:   #e8e8e8;
+  --text-secondary: #9ca3af;
+  --text-tertiary:  #6b7280;
 
   /* Structure */
-  --separator:  rgba(167, 139, 250, 0.12);
-  --border:     rgba(167, 139, 250, 0.10);
-  --overlay:    rgba(13, 11, 30, 0.72);
+  --separator:  rgba(6, 182, 212, 0.12);
+  --border:     rgba(6, 182, 212, 0.10);
+  --overlay:    rgba(13, 15, 18, 0.75);
 
   /* Navigation */
-  --header-bg:  rgba(19, 18, 40, 0.90);
+  --header-bg:  rgba(17, 19, 26, 0.92);
   --header-blur: blur(20px);
-  --nav-bg:     rgba(19, 18, 40, 0.92);
-  --nav-text:   #ede9fe;
-  --nav-text-secondary: #a5b4fc;
+  --nav-bg:     rgba(17, 19, 26, 0.94);
+  --nav-text:   #e8e8e8;
+  --nav-text-secondary: #9ca3af;
 
-  /* Shadows — violet glow */
-  --shadow-sm: 0 1px 4px rgba(124, 58, 237, 0.10);
-  --shadow-md: 0 4px 16px rgba(124, 58, 237, 0.18);
-  --shadow-lg: 0 8px 30px rgba(124, 58, 237, 0.26);
+  /* Shadows — ambient depth, not neon */
+  --shadow-sm: 0 1px 4px rgba(13, 15, 18, 0.50);
+  --shadow-md: 0 4px 16px rgba(13, 15, 18, 0.60);
+  --shadow-lg: 0 8px 30px rgba(13, 15, 18, 0.70);
 }
 
 * {
