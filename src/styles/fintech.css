@@ -52,7 +52,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 .m-toggle {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 3px;
   background: var(--bg-secondary);
   border-radius: 12px;
@@ -2337,8 +2337,8 @@
   line-height: 1.4;
 }
 
-/* iOS-style toggle pill */
-.m-toggle {
+/* iOS-style toggle pill — distinct class to avoid colliding with .m-toggle tab bar */
+.m-pill-toggle {
   position: relative;
   display: inline-block;
   width: 44px;
@@ -2346,15 +2346,15 @@
   cursor: pointer;
   flex-shrink: 0;
 }
-.m-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.m-toggle-track {
+.m-pill-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.m-pill-toggle-track {
   position: absolute;
   inset: 0;
   border-radius: 13px;
   background: rgba(120, 120, 128, 0.3);
   transition: background 0.2s;
 }
-.m-toggle-track::after {
+.m-pill-toggle-track::after {
   content: '';
   position: absolute;
   top: 3px; left: 3px;
@@ -2364,9 +2364,9 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
 }
-.m-toggle input:checked + .m-toggle-track { background: #6366f1; }
-.m-toggle input:checked + .m-toggle-track::after { transform: translateX(18px); }
-[data-theme="light"] .m-toggle-track { background: rgba(60,60,67,0.2); }
+.m-pill-toggle input:checked + .m-pill-toggle-track { background: #6366f1; }
+.m-pill-toggle input:checked + .m-pill-toggle-track::after { transform: translateX(18px); }
+[data-theme="light"] .m-pill-toggle-track { background: rgba(60,60,67,0.2); }
 
 /* ── Flat settings list ──────────────────────────────────────────────────── */
 .m-flat-list { margin-bottom: 12px; }

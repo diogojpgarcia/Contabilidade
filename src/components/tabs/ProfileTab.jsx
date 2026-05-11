@@ -212,13 +212,13 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
                 <span className="m-cycle-badge">dia {financialMonthStartDay} → {endDay}</span>
               )}
             </div>
-            <label className="m-toggle">
+            <label className="m-pill-toggle">
               <input
                 type="checkbox"
                 checked={useFinancialMonth}
                 onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
               />
-              <span className="m-toggle-track" />
+              <span className="m-pill-toggle-track" />
             </label>
           </div>
           {useFinancialMonth ? (
