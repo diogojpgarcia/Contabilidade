@@ -226,6 +226,23 @@
 .h-insight-badge.good { background: rgba(16,185,129,0.12); color: #059669; }
 .h-insight-badge.info { background: rgba(99,102,241,0.12); color: #6366f1; }
 
+.h-insight--tappable {
+  cursor: pointer;
+  border-radius: 10px;
+  margin: -6px;
+  padding: 6px;
+  transition: background 0.15s;
+}
+.h-insight--tappable:active { background: var(--bg-tertiary); }
+
+.h-insight-chev {
+  font-size: 1.1rem;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 2px;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    ACCOUNTS LIST
    ═══════════════════════════════════════════════════════════════════════════ */

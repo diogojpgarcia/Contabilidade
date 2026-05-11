@@ -31,6 +31,7 @@ function computeInsight(transactions) {
       desc: `Gastaste ${topAmt.toFixed(0)}€ em ${topCat.toLowerCase()} — mais de metade do total este mês.`,
       badge: `${topAmt.toFixed(0)}€ de ${totalExp.toFixed(0)}€`,
       badgeType: 'warn',
+      categoryLabel: topCat,
     };
   }
 
@@ -40,16 +41,28 @@ function computeInsight(transactions) {
     desc: `${topCat} é a categoria com mais despesa este mês (${pct}% do total de ${totalExp.toFixed(0)}€).`,
     badge: `${topAmt.toFixed(0)}€`,
     badgeType: 'info',
+    categoryLabel: topCat,
   };
 }
 
-const HomeInsight = ({ transactions }) => {
+const HomeInsight = ({ transactions, onNavigate }) => {
   const insight = useMemo(() => computeInsight(transactions), [transactions]);
+
+  const tappable = !!(insight.categoryLabel && onNavigate);
+  const handleTap = tappable
+    ? () => onNavigate('budget', { categoryLabel: insight.categoryLabel })
+    : undefined;
 
   return (
     <div className="h-card">
       <div className="h-section-title">Destaque</div>
-      <div className="h-insight">
+      <div
+        className={`h-insight${tappable ? ' h-insight--tappable' : ''}`}
+        onClick={handleTap}
+        role={tappable ? 'button' : undefined}
+        tabIndex={tappable ? 0 : undefined}
+        onKeyDown={tappable ? (e => e.key === 'Enter' && handleTap()) : undefined}
+      >
         <span className="h-insight-icon">{insight.icon}</span>
         <div className="h-insight-body">
           <div className="h-insight-title">{insight.title}</div>
@@ -58,6 +71,7 @@ const HomeInsight = ({ transactions }) => {
             <span className={`h-insight-badge ${insight.badgeType}`}>{insight.badge}</span>
           )}
         </div>
+        {tappable && <span className="h-insight-chev">›</span>}
       </div>
     </div>
   );

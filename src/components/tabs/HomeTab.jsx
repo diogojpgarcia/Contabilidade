@@ -12,6 +12,7 @@ const HomeTab = ({
   patrimony = {},
   financialMonthStartDay = 1,
   theme = 'default',
+  onNavigate,
 }) => {
   const p = patrimony;
 
@@ -46,7 +47,7 @@ const HomeTab = ({
         onMonthChange={onMonthChange}
         financialMonthStartDay={financialMonthStartDay}
       />
-      <HomeInsight transactions={transactions} />
+      <HomeInsight transactions={transactions} onNavigate={onNavigate} />
       <HomeAccounts accounts={p.accounts || []} />
       <HomeEvolution
         patrimonyTotal={patrimonyTotal}
