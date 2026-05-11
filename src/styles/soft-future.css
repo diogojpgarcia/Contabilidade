@@ -715,3 +715,58 @@
   box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.18);
 }
 [data-theme="soft-future"] .tr-card--sel .tr-card-name { color: #a0aabb; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   13 · STATS OVERVIEW CARD OVERRIDES
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* CSS custom properties consumed by inline template literals in StatsTab.jsx */
+[data-theme="soft-future"] {
+  --stats-bar-base:   rgba(6, 182, 212, 0.80);   /* progress bar low-spend colour */
+  --stats-ring-track: var(--bg-elevated);          /* conic-gradient empty segment  */
+}
+
+/* Saldo do mês — main balance card */
+[data-theme="soft-future"] .stats-saldo-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 40%, transparent 100%),
+    linear-gradient(135deg, #12151a 0%, #0d0f12 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.18);
+  box-shadow: 0 8px 32px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Generic dark surface cards (progress bar, top categories, financial score) */
+[data-theme="soft-future"] .stats-overview-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow: 0 2px 12px rgba(13, 15, 18, 0.55);
+}
+
+/* Progress bar track */
+[data-theme="soft-future"] .stats-bar-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Score ring inner circle */
+[data-theme="soft-future"] .stats-score-inner {
+  background: var(--bg-tertiary);
+}
+
+/* Compact history icon-toggle active state */
+[data-theme="soft-future"] .today-btn-compact.active {
+  background: rgba(6, 182, 212, 0.22);
+  color: #a0aabb;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.18);
+}
+
+/* Muted label text inside overview cards */
+[data-theme="soft-future"] .stats-saldo-card [style*="color: #71717a"],
+[data-theme="soft-future"] .stats-overview-card [style*="color: #71717a"] {
+  color: var(--text-tertiary) !important;
+}
+[data-theme="soft-future"] .stats-saldo-card [style*="color: #a1a1aa"] {
+  color: var(--text-secondary) !important;
+}

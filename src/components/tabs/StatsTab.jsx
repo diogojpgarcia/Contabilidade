@@ -324,13 +324,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           <div style={{ padding: '0 16px' }}>
 
             {/* Main summary card */}
-            <div style={{
-              borderRadius: 20, padding: 20,
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(168,85,247,0.12) 100%)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 8px 32px rgba(99,102,241,0.12)',
-              marginBottom: 16,
-            }}>
+            <div className="stats-saldo-card">
               <div style={{ fontSize: '0.72rem', color: '#a1a1aa', letterSpacing: '0.05em', textTransform: 'uppercase' }}>💰 Saldo do mês</div>
               <div style={{
                 fontSize: '2rem', fontWeight: 700, lineHeight: 1.15, marginTop: 6,
@@ -360,14 +354,14 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               const barColor = pct >= 90 ? '#f87171' : pct >= 70 ? '#fb923c' : '#6366f1';
               const trendUp  = monthExpenses > prevMonthExpenses;
               return (
-                <div style={{ background: '#18181b', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                <div className="stats-overview-card">
                   {/* Spend ratio bar */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#71717a', marginBottom: 6 }}>
                     <span>Gasto mensal</span>
                     <span style={{ color: barColor, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
                   </div>
-                  <div style={{ width: '100%', height: 6, background: '#27272a', borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: `linear-gradient(90deg, #6366f1, ${barColor})`, transition: 'width 0.4s ease' }} />
+                  <div className="stats-bar-track">
+                    <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: `linear-gradient(90deg, var(--stats-bar-base, #6366f1), ${barColor})`, transition: 'width 0.4s ease' }} />
                   </div>
                   {/* Spending trend */}
                   <div style={{ marginTop: 10, fontSize: '0.8125rem', color: trendUp ? '#f87171' : '#4ade80' }}>
@@ -379,7 +373,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
             {/* Top 3 categories */}
             {categoryData.length > 0 && (
-              <div style={{ background: '#18181b', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+              <div className="stats-overview-card">
                 <div style={{ fontSize: '0.68rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Top categorias</div>
                 {categoryData.slice(0, 3).map((cat, i) => (
                   <div key={cat.category} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: i < 2 ? 8 : 0 }}>
@@ -508,9 +502,9 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 <div style={{ marginTop: 4, marginBottom: 8 }}>
                   <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 2 }}>Análise</div>
                   {/* Financial score ring */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#18181b', borderRadius: 16, padding: '14px 16px', marginBottom: feed.length > 0 ? 8 : 0 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, #27272a ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <div style={{ width: 35, height: 35, borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
+                  <div className="stats-overview-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: feed.length > 0 ? 8 : 0 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, var(--stats-ring-track, #27272a) ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div className="stats-score-inner" style={{ width: 35, height: 35, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.6rem', color: '#52525b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Score Financeiro</div>
@@ -758,13 +752,12 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 onClick={() => setHistoryView('daily')}
                 className={`today-btn-compact${historyView === 'daily' ? ' active' : ''}`}
                 title="Transações diárias"
-                style={{ marginLeft: '6px', background: historyView === 'daily' ? '#6366f1' : undefined, color: historyView === 'daily' ? '#fff' : undefined }}
+                style={{ marginLeft: '6px' }}
               >💳</button>
               <button
                 onClick={() => setHistoryView('patrimony')}
                 className={`today-btn-compact${historyView === 'patrimony' ? ' active' : ''}`}
                 title="Transferências e ajustes"
-                style={{ background: historyView === 'patrimony' ? '#6366f1' : undefined, color: historyView === 'patrimony' ? '#fff' : undefined }}
               >🔁</button>
             </div>
           </div>
