@@ -1,24 +1,25 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   SOFT FUTURE — COSMOS THEME
+   SOFT FUTURE — PREMIUM GRAPHITE THEME
    Scoped exclusively to [data-theme="soft-future"].
    Never touches other themes. Zero component changes.
 
-   Palette
+   Palette (Graphite/Charcoal with Cyan Accents)
    ─────────────────────────────────────────────────
-   Page bg:     #0d0b1e  (deep cosmic indigo)
-   Card:        #1e1b3a → #141228  (layered violet-dark)
-   Row:         #1c1938 → #161430
-   Accent:      #a78bfa  (amethyst)
-   Accent light:#c4b5fd  (pale amethyst)
-   Accent deep: #7c3aed  (deep violet)
-   Text:        #ede9fe  (lavender white)
+   Page bg:     #0d0f12  (deep charcoal)
+   Card:        #15181d → #10121a  (layered dark grey)
+   Row:         #14171d → #0f1218  (cool charcoal)
+   Accent:      #06b6d4  (soft cyan)
+   Accent light:#a0aabb  (cool silver-grey)
+   Accent alt:  #6b7adb  (muted indigo)
+   Text:        #e8e8e8  (light grey)
 
    Material language
    ─────────────────────────────────────────────────
-   Cards   : dark gradient + inset top highlight + violet border + deep shadow
+   Cards   : dark gradient + inset top highlight + cyan border + deep shadow
    Icons   : circular containers + soft drop shadow
    Bars    : gradient fill + category glow
-   Active  : amethyst glow ring, no harsh borders
+   Active  : cyan glow ring, no harsh borders
+   Aesthetic : premium dark OS (Arc, Linear) + ambient system lighting
    ══════════════════════════════════════════════════════════════════════════ */
 
 
@@ -32,94 +33,94 @@
 
 /* Bottom nav — lifted dark panel */
 [data-theme="soft-future"] .bottom-nav {
-  background: rgba(19, 18, 40, 0.96);
-  border-top: 0.5px solid rgba(167, 139, 250, 0.10);
-  box-shadow: 0 -4px 28px rgba(13, 11, 30, 0.70);
+  background: rgba(17, 19, 26, 0.96);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.12);
+  box-shadow: 0 -4px 28px rgba(13, 15, 18, 0.80);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 [data-theme="soft-future"] .nav-label,
-[data-theme="soft-future"] .nav-icon                    { color: rgba(196, 181, 253, 0.35); }
+[data-theme="soft-future"] .nav-icon                    { color: rgba(160, 170, 187, 0.40); }
 [data-theme="soft-future"] .nav-item.active {
-  background: rgba(124, 58, 237, 0.15);
-  box-shadow: 0 0 18px rgba(124, 58, 237, 0.18);
+  background: rgba(6, 182, 212, 0.12);
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.15);
 }
 [data-theme="soft-future"] .nav-item.active .nav-icon,
-[data-theme="soft-future"] .nav-item.active .nav-label  { color: #c4b5fd; }
+[data-theme="soft-future"] .nav-item.active .nav-label  { color: #a0aabb; }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
    2 · HOME HERO
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* Hero container — premium elevated material, bottom depth via multi-layer */
+/* Hero container — premium graphite with cyan depth */
 [data-theme="soft-future"] .h-hero {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.14) 0%, rgba(120, 90, 255, 0.05) 30%, transparent 100%),
-    linear-gradient(135deg, #0f0e28 0%, #1c1450 100%);
+    linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
+    linear-gradient(135deg, #0f1218 0%, #0a0d12 100%);
   box-shadow:
-    0 8px 36px rgba(109, 40, 217, 0.28),
+    0 8px 36px rgba(13, 15, 18, 0.40),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -1px 0 rgba(109, 40, 217, 0.08);
-  border: 0.5px solid rgba(167, 139, 250, 0.16);
+    inset 0 -1px 0 rgba(6, 182, 212, 0.08);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
 }
 
-/* Hero text — improved readability on darker background */
-[data-theme="soft-future"] .h-hero-tab-label { color: #ede9fe; opacity: 0.95; }
-[data-theme="soft-future"] .h-hero-patrimony-label { color: rgba(167, 139, 250, 0.68); opacity: 1; }
-[data-theme="soft-future"] .h-hero-patrimony-value { color: #ede9fe; opacity: 0.98; }
-[data-theme="soft-future"] .h-hero-progress-label { color: rgba(196, 181, 253, 0.65); opacity: 1; }
+/* Hero text — excellent contrast on dark charcoal */
+[data-theme="soft-future"] .h-hero-tab-label { color: #f5f5f5; opacity: 0.95; }
+[data-theme="soft-future"] .h-hero-patrimony-label { color: rgba(160, 170, 187, 0.72); opacity: 1; }
+[data-theme="soft-future"] .h-hero-patrimony-value { color: #f5f5f5; opacity: 0.98; }
+[data-theme="soft-future"] .h-hero-progress-label { color: rgba(160, 170, 187, 0.68); opacity: 1; }
 
-/* Balance badge — refined material styling */
+/* Balance badge — cyan accents for premium OS feel */
 [data-theme="soft-future"] .h-hero-balance-badge {
-  background: rgba(167, 139, 250, 0.10);
-  border: 0.5px solid rgba(167, 139, 250, 0.20);
-  color: #c4b5fd;
+  background: rgba(6, 182, 212, 0.10);
+  border: 0.5px solid rgba(6, 182, 212, 0.22);
+  color: #a0aabb;
   backdrop-filter: blur(8px);
 }
 [data-theme="soft-future"] .h-hero-balance-badge.positive {
-  background: rgba(52, 211, 153, 0.14);
-  border-color: rgba(52, 211, 153, 0.25);
-  color: #86efac;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.24);
+  color: #6ee7b7;
 }
 [data-theme="soft-future"] .h-hero-balance-badge.negative {
-  background: rgba(248, 113, 113, 0.14);
-  border-color: rgba(248, 113, 113, 0.25);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.24);
   color: #fca5a5;
 }
 
-/* Progress bar — gradient fill + glow */
+/* Progress bar — cyan gradient + soft glow */
 [data-theme="soft-future"] .h-hero-progress-track {
-  background: rgba(167, 139, 250, 0.13);
+  background: rgba(6, 182, 212, 0.12);
   border-radius: 3px;
 }
 [data-theme="soft-future"] .h-hero-progress-fill {
-  background: linear-gradient(90deg, #a78bfa, #c4b5fd);
-  box-shadow: 0 0 12px rgba(167, 139, 250, 0.45);
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
   border-radius: 3px;
 }
 
-/* Month navigation — integrated material controls */
+/* Month navigation — cyan accent material controls */
 [data-theme="soft-future"] .h-month-btn {
-  background: rgba(167, 139, 250, 0.10);
-  color: #c4b5fd;
-  border: 0.5px solid rgba(167, 139, 250, 0.15);
+  background: rgba(6, 182, 212, 0.10);
+  color: #a0aabb;
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
   transition: all 0.2s ease;
 }
 [data-theme="soft-future"] .h-month-btn:active {
-  background: rgba(167, 139, 250, 0.22);
-  box-shadow: 0 0 12px rgba(167, 139, 250, 0.25);
+  background: rgba(6, 182, 212, 0.18);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.22);
 }
 
 [data-theme="soft-future"] .h-month-name {
-  color: #c4b5fd;
+  color: #a0aabb;
   font-weight: 600;
 }
 
 [data-theme="soft-future"] .h-today-btn {
-  background: rgba(167, 139, 250, 0.12);
-  border: 0.5px solid rgba(167, 139, 250, 0.18);
-  color: #c4b5fd;
+  background: rgba(6, 182, 212, 0.10);
+  border: 0.5px solid rgba(6, 182, 212, 0.16);
+  color: #a0aabb;
 }
 
 
@@ -127,7 +128,7 @@
    3 · CARD MATERIAL  — layered, elevated, premium
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* ── Shared card recipe — bottom depth via multi-layer background ─────────── */
+/* ── Shared card recipe — dark graphite with cyan bottom depth ────────────── */
 [data-theme="soft-future"] .h-card,
 [data-theme="soft-future"] .ui-card,
 [data-theme="soft-future"] .m-bcc,
@@ -138,11 +139,11 @@
 [data-theme="soft-future"] .rp-cal-btn,
 [data-theme="soft-future"] .m-insight-card {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.12) 0%, rgba(120, 90, 255, 0.05) 35%, transparent 100%),
-    linear-gradient(175deg, #1f1c3c 0%, #141228 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.13);
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow:
-    0 4px 24px rgba(13, 11, 30, 0.68),
+    0 4px 24px rgba(13, 15, 18, 0.70),
     inset 0 0.5px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -151,169 +152,169 @@
 [data-theme="soft-future"] .pat-cat-card   { border-radius: 18px; }
 [data-theme="soft-future"] .rp-summary     { border-radius: 18px; }
 
-/* ── Transaction rows — bottom depth via multi-layer background ─────────── */
+/* ── Transaction rows — dark graphite with cyan bottom depth ───────────── */
 [data-theme="soft-future"] .ft-row {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.10) 0%, rgba(120, 90, 255, 0.04) 40%, transparent 100%),
-    linear-gradient(175deg, #1c1938 0%, #151330 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.09);
-  box-shadow: 0 1px 8px rgba(13, 11, 30, 0.55);
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #0f1218 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
   border-radius: 14px;
   margin-bottom: 5px;
 }
-[data-theme="soft-future"] .ft-row:active  { background: #1f1c3c; }
+[data-theme="soft-future"] .ft-row:active  { background: #1a1d23; }
 
 /* Expandable detail row */
 [data-theme="soft-future"] .ft-detail {
-  background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
-  border-top: 0.5px solid rgba(167, 139, 250, 0.08);
+  background: linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.10);
 }
 [data-theme="soft-future"] .ft-detail-btn {
-  background: rgba(167, 139, 250, 0.10);
-  color: #c4b5fd;
+  background: rgba(6, 182, 212, 0.10);
+  color: #a0aabb;
   box-shadow: none;
   border-radius: 9px;
 }
-[data-theme="soft-future"] .ft-detail-btn:active { background: rgba(167, 139, 250, 0.20); }
+[data-theme="soft-future"] .ft-detail-btn:active { background: rgba(6, 182, 212, 0.18); }
 
-/* ── Recurring rows — bottom depth via multi-layer background ───────────── */
+/* ── Recurring rows — dark graphite with cyan bottom depth ────────────── */
 [data-theme="soft-future"] .rp-row {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.10) 0%, rgba(120, 90, 255, 0.04) 40%, transparent 100%),
-    linear-gradient(175deg, #1c1938 0%, #151330 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.09);
-  box-shadow: 0 1px 8px rgba(13, 11, 30, 0.55);
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #0f1218 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
   border-radius: 16px;
 }
 
 /* Calendar / form sheets */
 [data-theme="soft-future"] .rp-form-sheet,
 [data-theme="soft-future"] .rp-cal-sheet   {
-  background: linear-gradient(180deg, #1e1b3a 0%, #0f0e22 100%);
-  border-top: 0.5px solid rgba(167, 139, 250, 0.18);
+  background: linear-gradient(180deg, #14171d 0%, #0a0d12 100%);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.18);
   box-shadow: 0 -8px 40px rgba(13, 11, 30, 0.80);
 }
 [data-theme="soft-future"] .rp-modal-panel {
-  background: linear-gradient(180deg, #1e1b3a 0%, #0f0e22 100%);
-  border-top: 0.5px solid rgba(167, 139, 250, 0.18);
+  background: linear-gradient(180deg, #14171d 0%, #0a0d12 100%);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.18);
   box-shadow: 0 -4px 28px rgba(13, 11, 30, 0.75);
 }
 
 /* Form inputs */
 [data-theme="soft-future"] .rp-form-input {
-  background: rgba(167, 139, 250, 0.06);
-  border-color: rgba(167, 139, 250, 0.18);
+  background: rgba(6, 182, 212, 0.06);
+  border-color: rgba(6, 182, 212, 0.18);
 }
-[data-theme="soft-future"] .rp-form-input:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14); }
+[data-theme="soft-future"] .rp-form-input:focus { border-color: #06b6d4; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.14); }
 
 /* ── Patrimony cards ────────────────────────────────────────────────────── */
-[data-theme="soft-future"] .pat-cat-items   { border-top-color: rgba(167, 139, 250, 0.10); }
-[data-theme="soft-future"] .pat-cat-item    { border-bottom-color: rgba(167, 139, 250, 0.06); }
+[data-theme="soft-future"] .pat-cat-items   { border-top-color: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .pat-cat-item    { border-bottom-color: rgba(6, 182, 212, 0.06); }
 [data-theme="soft-future"] .pat-alloc-bar-bg {
-  background: rgba(167, 139, 250, 0.10);
+  background: rgba(6, 182, 212, 0.10);
   border-radius: 6px;
 }
 
-/* ── Home total-balance card — bottom depth via multi-layer background ──── */
+/* ── Home total-balance card — dark graphite with cyan depth ───────────── */
 [data-theme="soft-future"] .m-total-balance-inner {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.13) 0%, rgba(120, 90, 255, 0.05) 35%, transparent 100%),
-    linear-gradient(135deg, rgba(109, 40, 217, 0.22) 0%, rgba(167, 139, 250, 0.10) 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.24);
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.06) 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.18);
   box-shadow:
-    0 2px 18px rgba(109, 40, 217, 0.16),
+    0 2px 18px rgba(13, 15, 18, 0.50),
     inset 0 0.5px 0 rgba(255,255,255,0.04);
 }
-[data-theme="soft-future"] .m-total-balance-label       { color: rgba(196, 181, 253, 0.72); }
-[data-theme="soft-future"] .m-total-balance-sub         { color: rgba(237, 233, 254, 0.28); }
-[data-theme="soft-future"] .m-total-balance-value       { color: rgba(237, 233, 254, 0.94); }
+[data-theme="soft-future"] .m-total-balance-label       { color: rgba(160, 170, 187, 0.75); }
+[data-theme="soft-future"] .m-total-balance-sub         { color: rgba(220, 220, 230, 0.30); }
+[data-theme="soft-future"] .m-total-balance-value       { color: #f5f5f5; }
 
-/* ── Home summary hero card — bottom depth via multi-layer background ────── */
+/* ── Home summary hero card — dark graphite with cyan depth ───────────── */
 [data-theme="soft-future"] .m-summary-card {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.13) 0%, rgba(120, 90, 255, 0.05) 30%, transparent 100%),
-    linear-gradient(145deg, #0f0e28 0%, #1c1450 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.20);
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
+    linear-gradient(145deg, #0a0d12 0%, #0f1218 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
   box-shadow:
-    0 8px 36px rgba(109, 40, 217, 0.28),
+    0 8px 36px rgba(13, 15, 18, 0.50),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -1px 0 rgba(109, 40, 217, 0.08);
+    inset 0 -1px 0 rgba(6, 182, 212, 0.08);
 }
-[data-theme="soft-future"] .m-sc-total-value  { color: rgba(237, 233, 254, 0.94); }
-[data-theme="soft-future"] .m-sc-total-label  { color: rgba(196, 181, 253, 0.65); }
-[data-theme="soft-future"] .m-sc-total-sub    { color: rgba(237, 233, 254, 0.24); }
-[data-theme="soft-future"] .m-sc-divider      { background: rgba(167, 139, 250, 0.10); }
-[data-theme="soft-future"] .m-sc-col-sep      { background: rgba(167, 139, 250, 0.10); }
-[data-theme="soft-future"] .m-sc-label        { color: rgba(237, 233, 254, 0.28); }
-[data-theme="soft-future"] .m-sc-month-label  { color: rgba(237, 233, 254, 0.32); }
+[data-theme="soft-future"] .m-sc-total-value  { color: #f5f5f5; }
+[data-theme="soft-future"] .m-sc-total-label  { color: rgba(160, 170, 187, 0.72); }
+[data-theme="soft-future"] .m-sc-total-sub    { color: rgba(220, 220, 230, 0.26); }
+[data-theme="soft-future"] .m-sc-divider      { background: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .m-sc-col-sep      { background: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .m-sc-label        { color: rgba(160, 170, 187, 0.32); }
+[data-theme="soft-future"] .m-sc-month-label  { color: rgba(160, 170, 187, 0.36); }
 
-/* ── Patrimony hero — bottom depth via multi-layer background ────────────── */
+/* ── Patrimony hero — dark graphite with cyan depth ───────────────────────*/
 [data-theme="soft-future"] .pat-hero {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.12) 0%, rgba(120, 90, 255, 0.04) 35%, transparent 100%),
-    linear-gradient(135deg, rgba(109, 40, 217, 0.18) 0%, rgba(124, 58, 237, 0.10) 100%);
-  border: 1px solid rgba(167, 139, 250, 0.20);
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.03) 35%, transparent 100%),
+    linear-gradient(135deg, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.18);
   box-shadow:
-    0 4px 30px rgba(109, 40, 217, 0.18),
+    0 4px 30px rgba(13, 15, 18, 0.40),
     inset 0 0.5px 0 rgba(255,255,255,0.04);
 }
-[data-theme="soft-future"] .pat-hero-label  { color: #a78bfa; }
+[data-theme="soft-future"] .pat-hero-label  { color: #06b6d4; }
 [data-theme="soft-future"] .pat-hero-chip {
-  background: rgba(167, 139, 250, 0.09);
-  border-color: rgba(167, 139, 250, 0.20);
+  background: rgba(6, 182, 212, 0.10);
+  border-color: rgba(6, 182, 212, 0.18);
 }
 
-/* ── Income/expense chips — bottom depth via multi-layer background ──────── */
+/* ── Income/expense chips — dark graphite with cyan bottom depth ────────── */
 [data-theme="soft-future"] .m-chip {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.10) 0%, rgba(120, 90, 255, 0.04) 45%, transparent 100%),
-    linear-gradient(175deg, #1c1938 0%, #141228 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.11);
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 45%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
   box-shadow:
-    0 2px 10px rgba(13, 11, 30, 0.50),
+    0 2px 10px rgba(13, 15, 18, 0.55),
     inset 0 0.5px 0 rgba(255,255,255,0.03);
 }
-[data-theme="soft-future"] .m-chip-label                { color: rgba(167, 139, 250, 0.55); }
-[data-theme="soft-future"] .m-chip-amount               { color: rgba(237, 233, 254, 0.88); }
+[data-theme="soft-future"] .m-chip-label                { color: rgba(160, 170, 187, 0.60); }
+[data-theme="soft-future"] .m-chip-amount               { color: #e8e8e8; }
 [data-theme="soft-future"] .m-chip.income  .m-chip-amount { color: #34d399; }
 [data-theme="soft-future"] .m-chip.expense .m-chip-amount { color: #f87171; }
 
-/* ── Patrimony row — bottom depth via multi-layer background ─────────────── */
+/* ── Patrimony row — dark graphite with cyan bottom depth ─────────────── */
 [data-theme="soft-future"] .m-patrimony-row {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.10) 0%, rgba(120, 90, 255, 0.04) 40%, transparent 100%),
-    linear-gradient(175deg, #1c1938 0%, #141228 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.11);
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
 }
-[data-theme="soft-future"] .m-patrimony-label           { color: rgba(167, 139, 250, 0.45); }
-[data-theme="soft-future"] .m-patrimony-select          { color: #c4b5fd; }
-[data-theme="soft-future"] .m-patrimony-value           { color: rgba(237, 233, 254, 0.88); }
-[data-theme="soft-future"] .m-patrimony-select option   { background: #1a1833; }
+[data-theme="soft-future"] .m-patrimony-label           { color: rgba(160, 170, 187, 0.50); }
+[data-theme="soft-future"] .m-patrimony-select          { color: #a0aabb; }
+[data-theme="soft-future"] .m-patrimony-value           { color: #e8e8e8; }
+[data-theme="soft-future"] .m-patrimony-select option   { background: #10121a; }
 
 /* ── Insight cards (Budget) ─────────────────────────────────────────────── */
 [data-theme="soft-future"] .m-insight-card {
-  border-color: rgba(167, 139, 250, 0.10);
+  border-color: rgba(6, 182, 212, 0.12);
 }
 
 /* ── Patrimony insight row ──────────────────────────────────────────────── */
 [data-theme="soft-future"] .pat-insight-row {
-  background: rgba(167, 139, 250, 0.06);
-  border: 0.5px solid rgba(167, 139, 250, 0.15);
+  background: rgba(6, 182, 212, 0.06);
+  border: 0.5px solid rgba(6, 182, 212, 0.13);
 }
-[data-theme="soft-future"] .pat-insight-icon            { color: #c4b5fd; }
+[data-theme="soft-future"] .pat-insight-icon            { color: #a0aabb; }
 
-/* ── Profile cycle card — bottom depth via multi-layer background ──────────*/
+/* ── Profile cycle card — dark graphite with cyan bottom depth ────────────*/
 [data-theme="soft-future"] .m-cycle-card {
   background:
-    linear-gradient(to top, rgba(120, 90, 255, 0.11) 0%, rgba(120, 90, 255, 0.04) 35%, transparent 100%),
-    linear-gradient(175deg, #1c1938 0%, #141228 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.12);
-  box-shadow: 0 2px 16px rgba(13, 11, 30, 0.5);
+    linear-gradient(to top, rgba(6, 182, 212, 0.09) 0%, rgba(6, 182, 212, 0.03) 35%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.11);
+  box-shadow: 0 2px 16px rgba(13, 15, 18, 0.60);
   border-radius: 18px;
 }
 [data-theme="soft-future"] .m-seg-control {
-  background: rgba(167, 139, 250, 0.08);
-  border: 0.5px solid rgba(167, 139, 250, 0.10);
+  background: rgba(6, 182, 212, 0.08);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
 }
 
 
@@ -344,21 +345,21 @@
 /* Recurring payment icons */
 [data-theme="soft-future"] .rp-row-icon {
   border-radius: 50%;
-  background: linear-gradient(135deg, #221f42, #1c1938);
+  background: linear-gradient(135deg, #0f1218, #0a0d12);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
 /* Home recurring widget icons */
 [data-theme="soft-future"] .hrp-icon {
   border-radius: 50%;
-  background: linear-gradient(135deg, #221f42, #1c1938);
+  background: linear-gradient(135deg, #0f1218, #0a0d12);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
 /* Home account dot */
 [data-theme="soft-future"] .h-account-dot {
-  background: #a78bfa;
-  box-shadow: 0 0 8px rgba(167, 139, 250, 0.45);
+  background: #06b6d4;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.40);
 }
 
 
@@ -366,11 +367,11 @@
    5 · PROGRESS BARS — gradient fills + glow
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* Track — faint violet */
+/* Track — subtle cyan */
 [data-theme="soft-future"] .m-bcc-bar-bg,
 [data-theme="soft-future"] .m-bmc-bar-bg,
 [data-theme="soft-future"] .m-budget-bar-bg,
-[data-theme="soft-future"] .m-goal-bar-bg     { background: rgba(167, 139, 250, 0.10); border-radius: 8px; }
+[data-theme="soft-future"] .m-goal-bar-bg     { background: rgba(6, 182, 212, 0.10); border-radius: 8px; }
 
 /* Normal fill — emerald gradient */
 [data-theme="soft-future"] .m-budget-bar-fill {
@@ -386,10 +387,10 @@
   box-shadow: 0 0 10px rgba(248, 113, 113, 0.40);
 }
 
-/* Goal bar */
+/* Goal bar — cyan gradient */
 [data-theme="soft-future"] .m-goal-bar-fill {
-  background: linear-gradient(90deg, #7c3aed, #a78bfa);
-  box-shadow: 0 0 10px rgba(124, 58, 237, 0.40);
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
 }
 
 /* Budget month comparison bar */
@@ -398,7 +399,7 @@
 }
 
 /* Allocation bars */
-[data-theme="soft-future"] .pat-alloc-bar-bg  { background: rgba(167, 139, 250, 0.10); }
+[data-theme="soft-future"] .pat-alloc-bar-bg  { background: rgba(6, 182, 212, 0.10); }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -408,19 +409,19 @@
 /* Month navigation */
 [data-theme="soft-future"] .m-month-btn,
 [data-theme="soft-future"] .m-today-btn,
-[data-theme="soft-future"] .m-month-nav-btn             { color: #c4b5fd; }
+[data-theme="soft-future"] .m-month-nav-btn             { color: #a0aabb; }
 [data-theme="soft-future"] .m-today-btn {
-  background: rgba(124, 58, 237, 0.14);
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.14);
+  background: rgba(6, 182, 212, 0.14);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
 }
 [data-theme="soft-future"] .m-today-btn:active,
-[data-theme="soft-future"] .m-month-btn:active          { background: rgba(167, 139, 250, 0.18); }
+[data-theme="soft-future"] .m-month-btn:active          { background: rgba(6, 182, 212, 0.18); }
 [data-theme="soft-future"] .m-month-nav-today {
-  color: #c4b5fd;
-  background: rgba(124, 58, 237, 0.14);
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.14);
+  color: #a0aabb;
+  background: rgba(6, 182, 212, 0.14);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
 }
-[data-theme="soft-future"] .m-month-nav-today:active    { background: rgba(167, 139, 250, 0.22); }
+[data-theme="soft-future"] .m-month-nav-today:active    { background: rgba(6, 182, 212, 0.22); }
 
 /* Month / stats text */
 [data-theme="soft-future"] .m-month-name,
@@ -430,77 +431,77 @@
 /* Segmented toggle */
 [data-theme="soft-future"] .m-toggle {
   background: rgba(28, 25, 56, 0.90);
-  border: 0.5px solid rgba(167, 139, 250, 0.11);
+  border: 0.5px solid rgba(6, 182, 212, 0.11);
   box-shadow: 0 2px 14px rgba(13, 11, 30, 0.40);
 }
 [data-theme="soft-future"] .m-toggle-btn                { color: rgba(237, 233, 254, 0.35); }
 [data-theme="soft-future"] .m-toggle-btn.active {
-  background: rgba(124, 58, 237, 0.20);
-  color: #c4b5fd;
-  box-shadow: 0 0 14px rgba(124, 58, 237, 0.18), inset 0 0.5px 0 rgba(255,255,255,0.06);
+  background: rgba(6, 182, 212, 0.20);
+  color: #a0aabb;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.18), inset 0 0.5px 0 rgba(255,255,255,0.06);
 }
 
 /* Log summary */
 [data-theme="soft-future"] .m-log-summary {
   background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.12);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow: 0 2px 16px rgba(13, 11, 30, 0.55), inset 0 0.5px 0 rgba(255,255,255,0.03);
 }
-[data-theme="soft-future"] .m-summary-label             { color: rgba(167, 139, 250, 0.45); }
+[data-theme="soft-future"] .m-summary-label             { color: rgba(6, 182, 212, 0.45); }
 [data-theme="soft-future"] .m-summary-val               { color: rgba(237, 233, 254, 0.88); }
 [data-theme="soft-future"] .m-summary-val.income        { color: #34d399; }
 [data-theme="soft-future"] .m-summary-val.expense       { color: #f87171; }
-[data-theme="soft-future"] .m-summary-sep               { background: rgba(167, 139, 250, 0.08); }
+[data-theme="soft-future"] .m-summary-sep               { background: rgba(6, 182, 212, 0.08); }
 
 /* Category bars (Stats) */
-[data-theme="soft-future"] .m-cat-row         { border-bottom-color: rgba(167, 139, 250, 0.06); }
+[data-theme="soft-future"] .m-cat-row         { border-bottom-color: rgba(6, 182, 212, 0.06); }
 [data-theme="soft-future"] .m-cat-name        { color: rgba(237, 233, 254, 0.80); }
 [data-theme="soft-future"] .m-cat-amt         { color: rgba(237, 233, 254, 0.80); }
 [data-theme="soft-future"] .m-cat-pct         { color: rgba(237, 233, 254, 0.30); }
-[data-theme="soft-future"] .m-cat-bar-bg      { background: rgba(167, 139, 250, 0.08); }
+[data-theme="soft-future"] .m-cat-bar-bg      { background: rgba(6, 182, 212, 0.08); }
 [data-theme="soft-future"] .m-cat-bar-fill    { background: #f87171; }
 
 /* Recurring frequency buttons */
 [data-theme="soft-future"] .rp-freq-btn.active {
-  border-color: #a78bfa;
-  background: rgba(124, 58, 237, 0.16);
-  color: #c4b5fd;
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.20);
+  border-color: #06b6d4;
+  background: rgba(6, 182, 212, 0.16);
+  color: #a0aabb;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.20);
 }
 
 /* Recurring selector button */
 [data-theme="soft-future"] .rp-selector-btn:active {
-  border-color: #a78bfa;
-  background: rgba(167, 139, 250, 0.08);
+  border-color: #06b6d4;
+  background: rgba(6, 182, 212, 0.08);
 }
 
 /* Recurring modal selected item */
 [data-theme="soft-future"] .rp-modal-item.active {
-  color: #a78bfa;
-  background: rgba(124, 58, 237, 0.10);
+  color: #06b6d4;
+  background: rgba(6, 182, 212, 0.10);
 }
-[data-theme="soft-future"] .rp-modal-item.active::after { color: #a78bfa; }
+[data-theme="soft-future"] .rp-modal-item.active::after { color: #06b6d4; }
 
 /* Budget nav link */
-[data-theme="soft-future"] .rp-budget-strip-nav         { color: #a78bfa; }
+[data-theme="soft-future"] .rp-budget-strip-nav         { color: #06b6d4; }
 
 /* Patrimony account main badge */
-[data-theme="soft-future"] .pat-account-item--main      { background: rgba(167, 139, 250, 0.06); }
+[data-theme="soft-future"] .pat-account-item--main      { background: rgba(6, 182, 212, 0.06); }
 [data-theme="soft-future"] .pat-account-badge--main,
 [data-theme="soft-future"] .pat-account-badge-main {
-  color: #c4b5fd;
-  background: rgba(124, 58, 237, 0.18);
+  color: #a0aabb;
+  background: rgba(6, 182, 212, 0.18);
 }
 [data-theme="soft-future"] .pat-asset-edit:hover,
-[data-theme="soft-future"] .pat-asset-edit:active       { color: #a78bfa; background: rgba(167, 139, 250, 0.18); }
+[data-theme="soft-future"] .pat-asset-edit:active       { color: #06b6d4; background: rgba(6, 182, 212, 0.18); }
 
 /* Budget save button */
 [data-theme="soft-future"] .m-budget-save {
-  background: rgba(124, 58, 237, 0.14);
-  color: #c4b5fd;
-  box-shadow: 0 0 10px rgba(124, 58, 237, 0.12);
+  background: rgba(6, 182, 212, 0.14);
+  color: #a0aabb;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.12);
 }
-[data-theme="soft-future"] .m-budget-save:active { background: rgba(124, 58, 237, 0.24); }
+[data-theme="soft-future"] .m-budget-save:active { background: rgba(6, 182, 212, 0.24); }
 
 /* Budget category nav ring animation */
 @keyframes sf-bcc-ring {
@@ -516,34 +517,34 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="soft-future"] .m-fab {
-  background: linear-gradient(135deg, #6d28d9, #a78bfa);
-  box-shadow: 0 4px 22px rgba(109, 40, 217, 0.58), 0 0 0 1.5px rgba(167,139,250,0.20);
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 4px 22px rgba(13, 15, 18, 0.58), 0 0 0 1.5px rgba(167,139,250,0.20);
 }
 [data-theme="soft-future"] .m-fab:active {
-  box-shadow: 0 2px 10px rgba(109, 40, 217, 0.40);
+  box-shadow: 0 2px 10px rgba(13, 15, 18, 0.40);
 }
 
 [data-theme="soft-future"] .m-submit-btn.transfer {
-  background: linear-gradient(135deg, #6d28d9, #a78bfa);
-  box-shadow: 0 3px 14px rgba(124, 58, 237, 0.40);
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 3px 14px rgba(6, 182, 212, 0.40);
 }
 
 [data-theme="soft-future"] .m-transfer-btn {
-  background: rgba(124, 58, 237, 0.10);
-  border-color: rgba(167, 139, 250, 0.24);
-  color: #c4b5fd;
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.10);
+  background: rgba(6, 182, 212, 0.10);
+  border-color: rgba(6, 182, 212, 0.24);
+  color: #a0aabb;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.10);
 }
 
 [data-theme="soft-future"] .rp-form-save {
-  background: linear-gradient(135deg, #6d28d9, #a78bfa);
-  box-shadow: 0 3px 14px rgba(109, 40, 217, 0.38);
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 3px 14px rgba(13, 15, 18, 0.38);
 }
 
 [data-theme="soft-future"] .rp-cal-btn {
-  color: #a78bfa;
+  color: #06b6d4;
   background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.14);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
   box-shadow: 0 2px 12px rgba(13, 11, 30, 0.45);
 }
 
@@ -554,10 +555,10 @@
 
 [data-theme="soft-future"] .m-balance-amount.positive   { color: #34d399; }
 [data-theme="soft-future"] .m-balance-amount.negative   { color: #f87171; }
-[data-theme="soft-future"] .m-balance-label             { color: rgba(167, 139, 250, 0.45); }
+[data-theme="soft-future"] .m-balance-label             { color: rgba(6, 182, 212, 0.45); }
 
-[data-theme="soft-future"] .h-insight-badge.info        { background: rgba(167, 139, 250, 0.12); color: #a78bfa; }
-[data-theme="soft-future"] .h-month-btn                 { color: #c4b5fd; }
+[data-theme="soft-future"] .h-insight-badge.info        { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
+[data-theme="soft-future"] .h-month-btn                 { color: #a0aabb; }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -565,19 +566,19 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="soft-future"] .m-prof-avatar {
-  background: linear-gradient(135deg, #6d28d9, #a78bfa);
-  box-shadow: 0 2px 14px rgba(109, 40, 217, 0.40);
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
 }
 [data-theme="soft-future"] .m-prof-chip--on {
-  color: rgba(167, 139, 250, 0.92);
-  background: rgba(124, 58, 237, 0.12);
+  color: rgba(6, 182, 212, 0.92);
+  background: rgba(6, 182, 212, 0.12);
 }
 [data-theme="soft-future"] .m-cycle-badge {
-  color: rgba(167, 139, 250, 0.92);
-  background: rgba(124, 58, 237, 0.12);
+  color: rgba(6, 182, 212, 0.92);
+  background: rgba(6, 182, 212, 0.12);
 }
 [data-theme="soft-future"] .m-pill-toggle input:checked + .m-pill-toggle-track {
-  background: linear-gradient(90deg, #6d28d9, #a78bfa);
+  background: linear-gradient(90deg, #6d28d9, #06b6d4);
 }
 
 
@@ -585,12 +586,12 @@
    10 · RECURRING CALENDAR
    ════════════════════════════════════════════════════════════════════════════ */
 
-[data-theme="soft-future"] .rp-cal-dot                  { background: #a78bfa; box-shadow: 0 0 5px rgba(167,139,250,0.55); }
+[data-theme="soft-future"] .rp-cal-dot                  { background: #06b6d4; box-shadow: 0 0 5px rgba(167,139,250,0.55); }
 [data-theme="soft-future"] .rp-cal-cell.today .rp-cal-day-num {
-  background: linear-gradient(135deg, #6d28d9, #a78bfa);
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
   box-shadow: 0 0 10px rgba(109,40,217,0.45);
 }
-[data-theme="soft-future"] .rp-cal-cell.selected        { background: rgba(124, 58, 237, 0.12); }
+[data-theme="soft-future"] .rp-cal-cell.selected        { background: rgba(6, 182, 212, 0.12); }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -599,30 +600,30 @@
 
 /* Home cashflow "today" quick-jump button */
 [data-theme="soft-future"] .h-today-btn {
-  background: rgba(124, 58, 237, 0.14);
-  color: #c4b5fd;
-  box-shadow: 0 0 10px rgba(124, 58, 237, 0.14);
+  background: rgba(6, 182, 212, 0.14);
+  color: #a0aabb;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.14);
 }
 
 /* Recurring budget strip */
 [data-theme="soft-future"] .rp-budget-strip {
   background: linear-gradient(175deg, #1c1938 0%, #141228 100%);
-  border: 0.5px solid rgba(167, 139, 250, 0.12);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow: 0 2px 12px rgba(13, 11, 30, 0.45);
 }
 
 /* Stock search dropdown */
 [data-theme="soft-future"] .pat-search-dropdown {
-  background: linear-gradient(180deg, #1e1b3a 0%, #141228 100%);
-  border-color: rgba(167, 139, 250, 0.18);
+  background: linear-gradient(180deg, #14171d 0%, #141228 100%);
+  border-color: rgba(6, 182, 212, 0.18);
   box-shadow: 0 8px 32px rgba(13, 11, 30, 0.70);
 }
 [data-theme="soft-future"] .pat-search-result:hover,
-[data-theme="soft-future"] .pat-search-result:active    { background: rgba(167, 139, 250, 0.06); }
-[data-theme="soft-future"] .pat-search-result           { border-bottom-color: rgba(167, 139, 250, 0.06); }
+[data-theme="soft-future"] .pat-search-result:active    { background: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-search-result           { border-bottom-color: rgba(6, 182, 212, 0.06); }
 [data-theme="soft-future"] .pat-search-spinner,
-[data-theme="soft-future"] .pat-stock-loading           { color: #c4b5fd; }
-[data-theme="soft-future"] .pat-search-exch             { background: rgba(167, 139, 250, 0.08); }
+[data-theme="soft-future"] .pat-stock-loading           { color: #a0aabb; }
+[data-theme="soft-future"] .pat-search-exch             { background: rgba(6, 182, 212, 0.08); }
 
 /* Swipe reveal actions — softer, less jarring */
 [data-theme="soft-future"] .swipe-btn-edit              { background: rgba(124, 70, 18, 0.88); }
@@ -630,23 +631,23 @@
 
 /* Account badge in transaction row */
 [data-theme="soft-future"] .ft-acct-badge {
-  background: rgba(167, 139, 250, 0.09);
+  background: rgba(6, 182, 212, 0.09);
   color: rgba(196, 181, 253, 0.60);
 }
 
 /* "Transferência" inline badge in transaction sub */
 [data-theme="soft-future"] .ft-sub [style*="6366f1"],
 [data-theme="soft-future"] .ft-sub [style*="accent"] {
-  background: rgba(124, 58, 237, 0.16) !important;
-  color: #c4b5fd !important;
+  background: rgba(6, 182, 212, 0.16) !important;
+  color: #a0aabb !important;
 }
 
 /* Alerts panel */
-[data-theme="soft-future"] .pat-alerts-panel            { border-color: rgba(167, 139, 250, 0.10); }
-[data-theme="soft-future"] .pat-alerts-title            { background: rgba(167, 139, 250, 0.04); border-bottom-color: rgba(167, 139, 250, 0.08); }
+[data-theme="soft-future"] .pat-alerts-panel            { border-color: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .pat-alerts-title            { background: rgba(6, 182, 212, 0.04); border-bottom-color: rgba(6, 182, 212, 0.08); }
 
 /* Profile chip active (financial cycle, accounts count) */
 [data-theme="soft-future"] .m-prof-chip--on {
-  color: rgba(167, 139, 250, 0.92);
-  background: rgba(124, 58, 237, 0.12);
+  color: rgba(6, 182, 212, 0.92);
+  background: rgba(6, 182, 212, 0.12);
 }
