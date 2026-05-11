@@ -45,6 +45,65 @@ const CATEGORY_ICONS = {
   'Educação':'⊞','Roupa':'◫','Tecnologia':'◧','Subscrições':'◉','Outros':'◌'
 };
 
+/* ── Asset/Patrimony Sorting Utilities ────────────────────────────────────── */
+
+// Compute value of a patrimony item (type-specific)
+const getItemValue = (item, typeKey) => {
+  if (typeKey === 'accounts') return parseFloat(item.currentBalance ?? item.balance) || 0;
+  if (typeKey === 'stocks')   return (parseFloat(item.qty) || 0) * (parseFloat(item.avgPrice) || 0);
+  if (typeKey === 'crypto')   return (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
+  if (typeKey === 'bonds')    return parseFloat(item.value) || 0;
+  if (typeKey === 'vehicles') return parseFloat(item.value) || 0;
+  if (typeKey === 'realestate') return parseFloat(item.value) || 0;
+  return 0;
+};
+
+// Sort items within a patrimony type by relevance
+const sortItemsByType = (items, typeKey) => {
+  const copy = [...items];
+  if (typeKey === 'accounts') {
+    return copy.sort((a, b) => {
+      const balB = getItemValue(b, typeKey);
+      const balA = getItemValue(a, typeKey);
+      if (balB !== balA) return balB - balA;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }
+  if (typeKey === 'stocks' || typeKey === 'crypto') {
+    return copy.sort((a, b) => {
+      const valB = getItemValue(b, typeKey);
+      const valA = getItemValue(a, typeKey);
+      if (valB !== valA) return valB - valA;
+      const nameA = (a.ticker || a.coin || '').toUpperCase();
+      const nameB = (b.ticker || b.coin || '').toUpperCase();
+      return nameA.localeCompare(nameB);
+    });
+  }
+  // bonds, vehicles, realestate: sort alphabetically by name
+  return copy.sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+};
+
+// Dynamically reorder patrimony types: active (with items) first, then empty
+const sortPatrimonyTypes = (patrimony, types) => {
+  const typeValues = types.map(t => {
+    const items = patrimony[t.key] || [];
+    const hasItems = items.length > 0;
+    const totalValue = items.reduce((s, x) => s + getItemValue(x, t.key), 0);
+    return { ...t, hasItems, totalValue };
+  });
+
+  // Active types first (by total value descending), then inactive (alphabetical)
+  return typeValues.sort((a, b) => {
+    if (a.hasItems !== b.hasItems) return a.hasItems ? -1 : 1;
+    if (a.hasItems) return b.totalValue - a.totalValue;
+    return (a.label || '').localeCompare(b.label || '');
+  });
+};
+
 const PATRIMONY_TYPES = [
   { key: 'accounts',   label: 'Contas Bancárias', icon: '◈', color: '#D97706' },
   { key: 'stocks',     label: 'Ações',             icon: '◭', color: '#059669' },
@@ -1573,8 +1632,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
               {/* Category cards */}
               <div className="pat-cards">
-                {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
+                {sortPatrimonyTypes(patrimony, PATRIMONY_TYPES).map(({ key, label, icon, color }) => {
                   const items     = patrimony[key] || [];
+                  const sorted    = sortItemsByType(items, key);
                   const typeTotal = getPatrimonyTypeValue(key);
                   return (
                     <div key={key} className="pat-cat-card">
@@ -1592,7 +1652,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       </div>
                       {items.length > 0 && (
                         <div className="pat-cat-items">
-                          {key === 'accounts' ? items.map(item => {
+                          {key === 'accounts' ? sorted.map(item => {
                             /* ── Account card with live balance + Principal badge ── */
                             const currentBal = computeAccountBalance(item);
                             const isMain     = item.id === mainAccountId;
@@ -1627,7 +1687,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                           }) : key === 'crypto' ? (() => {
                             /* ── Crypto: group by exchange ── */
                             const byExchange = {};
-                            items.forEach(item => {
+                            sorted.forEach(item => {
                               const ex = item.exchange || 'Sem exchange';
                               if (!byExchange[ex]) byExchange[ex] = [];
                               byExchange[ex].push(item);
@@ -1642,7 +1702,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                               ] : []),
                               ...groupItems.map(item => assetCardFor(item, 'crypto')),
                             ]);
-                          })() : items.map(item => {
+                          })() : sorted.map(item => {
                             /* ── Stocks: asset card ── */
                             if (key === 'stocks') return assetCardFor(item, 'stocks');
                             /* ── Generic row for all other asset types ── */

@@ -9,11 +9,19 @@ function fmt(val) {
 const HomeAccounts = ({ accounts = [] }) => {
   if (accounts.length === 0) return null;
 
+  // Sort: by balance descending, then alphabetical by name
+  const sorted = [...accounts].sort((a, b) => {
+    const balA = parseFloat(a.currentBalance ?? a.balance) || 0;
+    const balB = parseFloat(b.currentBalance ?? b.balance) || 0;
+    if (balB !== balA) return balB - balA;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
   return (
     <div className="h-card">
       <div className="h-section-title">Contas</div>
       <div className="h-accounts-list">
-        {accounts.map((acc, i) => {
+        {sorted.map((acc, i) => {
           const bal = parseFloat(acc.currentBalance ?? acc.balance) || 0;
           return (
             <div key={acc.id || i} className="h-account-row">
