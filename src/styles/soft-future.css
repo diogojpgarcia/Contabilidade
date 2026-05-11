@@ -52,15 +52,72 @@
    2 · HOME HERO
    ════════════════════════════════════════════════════════════════════════════ */
 
+/* Hero container — premium elevated material */
 [data-theme="soft-future"] .h-hero {
-  background: linear-gradient(160deg, #3b1f8c 0%, #5b21b6 45%, #7c3aed 100%);
-  box-shadow: 0 8px 36px rgba(90, 33, 182, 0.42);
-  border-bottom: 0.5px solid rgba(167, 139, 250, 0.18);
+  background: linear-gradient(135deg, #0f0e28 0%, #1c1450 100%);
+  box-shadow:
+    0 8px 36px rgba(109, 40, 217, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(109, 40, 217, 0.08);
+  border: 0.5px solid rgba(167, 139, 250, 0.16);
 }
-[data-theme="soft-future"] .h-hero-progress-track       { background: rgba(167, 139, 250, 0.22); }
+
+/* Hero text — improved readability on darker background */
+[data-theme="soft-future"] .h-hero-tab-label { color: #ede9fe; opacity: 0.95; }
+[data-theme="soft-future"] .h-hero-patrimony-label { color: rgba(167, 139, 250, 0.68); opacity: 1; }
+[data-theme="soft-future"] .h-hero-patrimony-value { color: #ede9fe; opacity: 0.98; }
+[data-theme="soft-future"] .h-hero-progress-label { color: rgba(196, 181, 253, 0.65); opacity: 1; }
+
+/* Balance badge — refined material styling */
+[data-theme="soft-future"] .h-hero-balance-badge {
+  background: rgba(167, 139, 250, 0.10);
+  border: 0.5px solid rgba(167, 139, 250, 0.20);
+  color: #c4b5fd;
+  backdrop-filter: blur(8px);
+}
+[data-theme="soft-future"] .h-hero-balance-badge.positive {
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.25);
+  color: #86efac;
+}
+[data-theme="soft-future"] .h-hero-balance-badge.negative {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.25);
+  color: #fca5a5;
+}
+
+/* Progress bar — gradient fill + glow */
+[data-theme="soft-future"] .h-hero-progress-track {
+  background: rgba(167, 139, 250, 0.13);
+  border-radius: 3px;
+}
 [data-theme="soft-future"] .h-hero-progress-fill {
-  background: linear-gradient(90deg, rgba(255,255,255,0.72), rgba(196, 181, 253, 0.88));
-  box-shadow: 0 0 10px rgba(196, 181, 253, 0.50);
+  background: linear-gradient(90deg, #a78bfa, #c4b5fd);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.45);
+  border-radius: 3px;
+}
+
+/* Month navigation — integrated material controls */
+[data-theme="soft-future"] .h-month-btn {
+  background: rgba(167, 139, 250, 0.10);
+  color: #c4b5fd;
+  border: 0.5px solid rgba(167, 139, 250, 0.15);
+  transition: all 0.2s ease;
+}
+[data-theme="soft-future"] .h-month-btn:active {
+  background: rgba(167, 139, 250, 0.22);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.25);
+}
+
+[data-theme="soft-future"] .h-month-name {
+  color: #c4b5fd;
+  font-weight: 600;
+}
+
+[data-theme="soft-future"] .h-today-btn {
+  background: rgba(167, 139, 250, 0.12);
+  border: 0.5px solid rgba(167, 139, 250, 0.18);
+  color: #c4b5fd;
 }
 
 
