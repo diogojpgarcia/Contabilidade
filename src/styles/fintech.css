@@ -1267,9 +1267,7 @@
   align-items: center;
   gap: 8px;
   padding: 9px 10px 9px 66px;
-  border-bottom: 0.5px solid var(--separator);
 }
-.pat-cat-item:last-child { border-bottom: none; }
 .pat-cat-item-name {
   flex: 1; font-size: 0.8rem; color: var(--text-secondary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1282,10 +1280,8 @@
   display: flex;
   align-items: center;
   padding: 10px 10px 10px 66px;
-  border-bottom: 0.5px solid var(--separator);
   gap: 8px;
 }
-.pat-account-item:last-child { border-bottom: none; }
 .pat-account-item--main { background: rgba(99,102,241,0.05); }
 
 .pat-account-left { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
@@ -1652,9 +1648,9 @@
   padding: 10px 14px 10px 16px;
   transition: background 0.18s;
 }
-/* border-bottom lives on the outer swipe wrapper so :last-child works correctly */
-.pat-cat-items > div { border-bottom: 0.5px solid var(--border-subtle, rgba(255,255,255,0.06)); }
-.pat-cat-items > div:last-child { border-bottom: none; }
+/* border-bottom on outer swipe wrapper so :last-child works correctly */
+.pat-cat-items .swipe-reveal { border-bottom: 0.5px solid var(--border-subtle, rgba(255,255,255,0.06)); }
+.pat-cat-items .swipe-reveal:last-child { border-bottom: none; }
 .pat-asset-card:hover { background: rgba(255,255,255,0.02); }
 [data-theme="light"] .pat-asset-card:hover { background: rgba(0,0,0,0.015); }
 
@@ -1738,17 +1734,18 @@
 }
 
 /* ── Swipe-to-reveal action buttons ────────────────────────────────────────
-   Width must match SWIPE_OPEN_PX (76px) in SwipeRevealCard.                */
+   Flex-row approach: .swipe-row is calc(100%+80px) wide inside an
+   overflow:hidden container — actions are genuinely off-screen at rest.     */
+.swipe-reveal { overflow: hidden; }
+.swipe-row {
+  display: flex;
+  width: calc(100% + 80px);
+}
+.swipe-row > :first-child { flex: 1; min-width: 0; }
 .swipe-actions {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 76px;
+  flex: 0 0 80px;
   display: flex;
   align-items: stretch;
-  border-radius: 0 0 0 0;
-  overflow: hidden;
 }
 .swipe-btn {
   flex: 1;

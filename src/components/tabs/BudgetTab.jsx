@@ -123,25 +123,42 @@ const CountUp = ({ value, decimals = 0 }) => {
 };
 
 /* ─── Swipe-to-reveal action card ───────────────────────────────────────────
-   Wraps any row. Sliding the inner content left by OPEN_PX reveals two action
-   buttons (edit ✎ + delete ×) without any persistent icons cluttering the UI.
-   All gesture state is kept in refs so the effect closure stays stable.      */
-const SWIPE_OPEN_PX = 76;
-const SWIPE_THRESHOLD = 28;
+   Flex-row approach: content + actions share one row that is wider than the
+   container. At rest (translateX 0) actions are genuinely off-screen right.
+   Swipe left → translateX(-OPEN_PX) → actions appear. No background hacks.  */
+let globalSwipeClose = null;
+const SWIPE_OPEN_PX   = 80;
+const SWIPE_THRESHOLD = 30;
 
-const SwipeRevealCard = ({ onEdit, onDelete, className = '', style, children }) => {
-  const innerRef = useRef(null);
+const SwipeRevealCard = ({ onEdit, onDelete, className = '', children }) => {
+  const rowRef    = useRef(null);
+  const closeRef  = useRef(null);
   const isOpenRef = useRef(false);
-  const gesture = useRef({ startX: 0, startY: 0, baseX: 0, dir: null, active: false });
+  const gesture   = useRef({ startX: 0, startY: 0, baseX: 0, dir: null, active: false });
 
   useEffect(() => {
-    const el = innerRef.current;
-    if (!el) return;
+    const row = rowRef.current;
+    if (!row) return;
 
     const move = (px, animate) => {
-      el.style.transition = animate ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none';
-      el.style.transform  = `translateX(${px}px)`;
+      row.style.transition = animate ? 'transform 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none';
+      row.style.transform  = `translateX(${px}px)`;
     };
+
+    const close = () => {
+      move(0, true);
+      isOpenRef.current = false;
+      if (globalSwipeClose === close) globalSwipeClose = null;
+    };
+
+    const open = () => {
+      if (globalSwipeClose && globalSwipeClose !== close) globalSwipeClose();
+      move(-SWIPE_OPEN_PX, true);
+      isOpenRef.current = true;
+      globalSwipeClose  = close;
+    };
+
+    closeRef.current = close;
 
     const onStart = (e) => {
       gesture.current = {
@@ -151,7 +168,6 @@ const SwipeRevealCard = ({ onEdit, onDelete, className = '', style, children }) 
         dir:    null,
         active: true,
       };
-      el.style.transition = 'none';
     };
 
     const onMove = (e) => {
@@ -166,7 +182,8 @@ const SwipeRevealCard = ({ onEdit, onDelete, className = '', style, children }) 
       }
       if (g.dir === 'v') return;
       e.preventDefault();
-      move(Math.min(0, Math.max(-SWIPE_OPEN_PX, g.baseX + dx)), false);
+      row.style.transition = 'none';
+      row.style.transform  = `translateX(${Math.min(0, Math.max(-SWIPE_OPEN_PX, g.baseX + dx))}px)`;
     };
 
     const onEnd = (e) => {
@@ -175,52 +192,43 @@ const SwipeRevealCard = ({ onEdit, onDelete, className = '', style, children }) 
       g.active = false;
       const dx     = e.changedTouches[0].clientX - g.startX;
       const finalX = g.baseX + dx;
-      if (finalX < -SWIPE_THRESHOLD) { move(-SWIPE_OPEN_PX, true); isOpenRef.current = true; }
-      else                           { move(0,               true); isOpenRef.current = false; }
+      if (finalX < -SWIPE_THRESHOLD) open(); else close();
     };
 
-    el.addEventListener('touchstart', onStart, { passive: true });
-    el.addEventListener('touchmove',  onMove,  { passive: false });
-    el.addEventListener('touchend',   onEnd,   { passive: true });
+    row.addEventListener('touchstart', onStart, { passive: true });
+    row.addEventListener('touchmove',  onMove,  { passive: false });
+    row.addEventListener('touchend',   onEnd,   { passive: true });
+
     return () => {
-      el.removeEventListener('touchstart', onStart);
-      el.removeEventListener('touchmove',  onMove);
-      el.removeEventListener('touchend',   onEnd);
+      row.removeEventListener('touchstart', onStart);
+      row.removeEventListener('touchmove',  onMove);
+      row.removeEventListener('touchend',   onEnd);
+      if (globalSwipeClose === close) globalSwipeClose = null;
     };
   }, []);
 
-  const close = () => {
-    const el = innerRef.current;
-    if (!el) return;
-    el.style.transition = 'transform 0.22s cubic-bezier(0.4,0,0.2,1)';
-    el.style.transform  = 'translateX(0)';
-    isOpenRef.current   = false;
-  };
-
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', ...style }}>
-      {/* Action layer — revealed when content slides left */}
-      <div className="swipe-actions">
-        <button
-          className="swipe-btn swipe-btn-edit"
-          onPointerDown={e => { e.stopPropagation(); close(); setTimeout(onEdit, 30); }}
-          aria-label="Editar"
-        >✎</button>
-        <button
-          className="swipe-btn swipe-btn-delete"
-          onPointerDown={e => { e.stopPropagation(); close(); setTimeout(onDelete, 30); }}
-          aria-label="Remover"
-        >🗑</button>
-      </div>
-      {/* Sliding layer — solid background so action buttons are never visible at rest */}
+    <div className="swipe-reveal">
       <div
-        ref={innerRef}
-        style={{ background: 'var(--bg-secondary)' }}
+        ref={rowRef}
+        className="swipe-row"
         onClickCapture={e => {
-          if (isOpenRef.current) { e.stopPropagation(); e.preventDefault(); close(); }
+          if (isOpenRef.current) { e.stopPropagation(); e.preventDefault(); closeRef.current?.(); }
         }}
       >
         <div className={className}>{children}</div>
+        <div className="swipe-actions">
+          <button
+            className="swipe-btn swipe-btn-edit"
+            onPointerDown={e => { e.stopPropagation(); closeRef.current?.(); setTimeout(onEdit, 30); }}
+            aria-label="Editar"
+          >✎</button>
+          <button
+            className="swipe-btn swipe-btn-delete"
+            onPointerDown={e => { e.stopPropagation(); closeRef.current?.(); setTimeout(onDelete, 30); }}
+            aria-label="Remover"
+          >🗑</button>
+        </div>
       </div>
     </div>
   );
