@@ -48,6 +48,11 @@
 [data-theme="soft-future"] .nav-item.active .nav-icon,
 [data-theme="soft-future"] .nav-item.active .nav-label  { color: #a0aabb; }
 
+/* Higher specificity (0,4,1 vs fintech.css 0,4,0) — guarantees Cosmos nav beats purple */
+html[data-theme="soft-future"] .nav-item.active            { background: rgba(6, 182, 212, 0.12); box-shadow: 0 0 18px rgba(6, 182, 212, 0.15); }
+html[data-theme="soft-future"] .nav-item.active .nav-icon,
+html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
+
 
 /* ════════════════════════════════════════════════════════════════════════════
    2 · HOME HERO
@@ -98,6 +103,20 @@
   background: linear-gradient(90deg, #06b6d4, #0ea5e9);
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
   border-radius: 3px;
+}
+
+/* ── Cosmos card guaranteed overrides ───────────────────────────────────────
+   CosmosCard.css loads before global CSS in the Vite bundle (component
+   imports precede direct CSS imports in App.jsx). These rules, scoped to
+   [data-theme="soft-future"] which loads last, ensure the dark-charcoal
+   hero and standard card backgrounds always win any legacy class conflict. */
+[data-theme="soft-future"] .cosmos-card--hero {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(145deg, #111520 0%, #0a0d14 100%);
+}
+[data-theme="soft-future"] .cosmos-card--standard {
+  background: linear-gradient(145deg, var(--cosmos-surface-2) 0%, var(--cosmos-surface-1) 100%);
 }
 
 /* Month navigation — cyan accent material controls */
