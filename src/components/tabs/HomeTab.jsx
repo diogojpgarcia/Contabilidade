@@ -33,6 +33,10 @@ const HomeTab = ({
 
   return (
     <div className="h-page">
+      {/* DEBUG — remove after confirming active path */}
+      <div style={{ background: '#06b6d4', color: '#000', fontWeight: 700, fontSize: 13, padding: '6px 16px', letterSpacing: '0.05em' }}>
+        HOME COSMOS MIGRATION ACTIVE — temp-clone
+      </div>
       <div className="h-sections">
 
         {/* 1 — Flagship balance hero */}
