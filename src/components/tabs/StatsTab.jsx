@@ -51,6 +51,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
   const [historyView, setHistoryView] = useState('daily'); // 'daily' | 'patrimony'
+  const [selectedAccountId, setSelectedAccountId] = useState(null); // null = all accounts
 
 
   // Compute expenses by category from already-filtered transactions
@@ -163,23 +164,39 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const categoryData      = useMemo(() => computeExpensesByCategory(filteredTransactions),  [filteredTransactions]);
   const monthTransactions = useMemo(() => computeMonthTransactions(filteredTransactions),   [filteredTransactions, filterDate]);
   // Further filter the log list by historyView (daily = expense+income, patrimony = transfer+adjustment)
-  // Transfer pairs (out + in) share the same date/amount/flow — dedupe keeps only the first.
+  // and optionally by account. Transfer pairs (out + in) share the same date/amount/flow — dedupe keeps only the first.
   const visibleTransactions = useMemo(() => {
     const filtered = monthTransactions.filter(t =>
       historyView === 'daily'
         ? (t.type === 'expense' || t.type === 'income' || !t.type)
         : (t.type === 'transfer' || t.type === 'adjustment')
     );
+
+    // Apply account filter: if selected, only show transactions for that account
+    const accountFiltered = selectedAccountId
+      ? filtered.filter(t => {
+          // For transfers, show if either source or destination matches the selected account
+          if (t.type === 'transfer') {
+            // Check description for source/dest account names
+            const desc = (t.description || '').toLowerCase();
+            // Also check account_id field
+            return t.account_id === selectedAccountId;
+          }
+          // For regular transactions (expense/income), check account_id
+          return t.account_id === selectedAccountId;
+        })
+      : filtered;
+
     // Deduplicate paired transfer records
     const seen = new Set();
-    return filtered.filter(t => {
+    return accountFiltered.filter(t => {
       if (t.type !== 'transfer') return true;
       const key = `${t.date}|${t.amount}|${getTransferFlow(t)}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-  }, [monthTransactions, historyView]);
+  }, [monthTransactions, historyView, selectedAccountId]);
   // 6-month chart still needs all transactions so it can look at past months
   const monthlyData       = useMemo(() => getMonthlyData(),                                 [transactions, currentMonth]);
   const maxAmount         = useMemo(
@@ -279,6 +296,29 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 onClick={() => setHistoryView('patrimony')}
                 className={`hist-sub-btn${historyView === 'patrimony' ? ' active' : ''}`}
               >Património</button>
+            </div>
+          </div>
+        )}
+
+        {/* Account filter — only shown in log view and when there are accounts */}
+        {activeView === 'log' && (patrimony.accounts || []).length > 0 && (
+          <div className="account-filter-wrap">
+            <div className="account-filter-scroll">
+              <button
+                className={`account-filter-btn${selectedAccountId === null ? ' active' : ''}`}
+                onClick={() => setSelectedAccountId(null)}
+              >
+                Todas
+              </button>
+              {(patrimony.accounts || []).map(acc => (
+                <button
+                  key={acc.id}
+                  className={`account-filter-btn${selectedAccountId === acc.id ? ' active' : ''}`}
+                  onClick={() => setSelectedAccountId(acc.id)}
+                >
+                  {acc.name}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -742,10 +782,40 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               >🔁</button>
             </div>
           </div>
+
+          {/* Account filter — only shown when there are accounts */}
+          {(patrimony.accounts || []).length > 0 && (
+            <div className="account-filter-wrap">
+              <div className="account-filter-scroll">
+                <button
+                  className={`account-filter-btn${selectedAccountId === null ? ' active' : ''}`}
+                  onClick={() => setSelectedAccountId(null)}
+                >
+                  Todas
+                </button>
+                {(patrimony.accounts || []).map(acc => (
+                  <button
+                    key={acc.id}
+                    className={`account-filter-btn${selectedAccountId === acc.id ? ' active' : ''}`}
+                    onClick={() => setSelectedAccountId(acc.id)}
+                  >
+                    {acc.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {visibleTransactions.length === 0 ? (
             <div className="empty-state">
               <span className="sf-icon-large">◌</span>
-              <p>{filterDate ? 'Sem transações neste dia' : 'Sem transações neste mês'}</p>
+              <p>
+                {selectedAccountId
+                  ? 'Sem transações para esta conta'
+                  : filterDate
+                  ? 'Sem transações neste dia'
+                  : 'Sem transações neste mês'}
+              </p>
             </div>
           ) : theme === 'modern' ? (
             /* ── Modern expandable cards ── */

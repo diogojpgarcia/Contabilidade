@@ -95,3 +95,13 @@
 .stats-score-inner{border-radius:50%;background:#18181b}
 /* Compact history view-toggle icon buttons */
 .today-btn-compact.active{background:#6366f1;color:#fff}
+
+/* Account filter */
+.account-filter-wrap{margin-bottom:1rem;width:100%}
+.account-filter-scroll{display:flex;gap:0.5rem;overflow-x:auto;padding-bottom:0.5rem}
+.account-filter-scroll::-webkit-scrollbar{height:3px}
+.account-filter-scroll::-webkit-scrollbar-track{background:transparent}
+.account-filter-scroll::-webkit-scrollbar-thumb{background:var(--text-tertiary,#888);border-radius:2px}
+.account-filter-btn{display:inline-flex;align-items:center;justify-content:center;padding:0.5rem 1rem;min-height:32px;background:var(--bg-primary);border:0.5px solid var(--separator);border-radius:8px;font-size:0.8125rem;font-weight:500;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all 0.15s ease}
+.account-filter-btn:active{background:var(--bg-tertiary)}
+.account-filter-btn.active{background:#6366f1;color:#fff;border-color:#6366f1}

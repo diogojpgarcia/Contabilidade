@@ -189,3 +189,60 @@
 [data-theme="light"] .modern-ui .modern-tx-card.expanded {
   box-shadow: var(--shadow-md);
 }
+
+/* Account filter for modern theme */
+.modern-ui .account-filter-wrap {
+  margin-bottom: 12px;
+  padding: 0 16px;
+}
+
+.modern-ui .account-filter-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modern-ui .account-filter-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+
+.modern-ui .account-filter-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modern-ui .account-filter-scroll::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 2px;
+}
+
+.modern-ui .account-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  min-height: 32px;
+  background: var(--bg-tertiary);
+  border: 0.5px solid var(--separator);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  text-transform: capitalize;
+}
+
+.modern-ui .account-filter-btn:active {
+  opacity: 0.8;
+}
+
+.modern-ui .account-filter-btn.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0.2) 100%);
+  color: var(--text-primary);
+  border-color: rgba(99, 102, 241, 0.4);
+  font-weight: 600;
+}
