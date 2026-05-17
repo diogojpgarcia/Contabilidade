@@ -5,6 +5,7 @@ import FintechTransactionCard from '../FintechTransactionCard';
 import { generateInsights, computeFinancialScore, shiftMonth, formatMonthLabel } from '../../utils/insights';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange } from '../../utils/financialMonth';
 import PageHeader from '../PageHeader';
+import { AlertTriangle, Zap, TrendingUp, TrendingDown, BarChart2, Calendar } from '../icons';
 import './StatsTab.css';
 import './HomeTab.modern.css';
 
@@ -41,46 +42,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
   const [historyView, setHistoryView] = useState('daily'); // 'daily' | 'patrimony'
 
-  // Complete icon mapping for all categories
-  const getCategoryIcon = (categoryName) => {
-    const iconMap = {
-      // Despesas
-      'Habitação': '⌂',
-      'Alimentação': '⚑',
-      'Transporte': '⚐',
-      'Saúde': '✚',
-      'Educação': '⊞',
-      'Comunicações': '◎',
-      'Utilities': '⚡',
-      'Roupa & Calçado': '◫',
-      'Tecnologia': '◧',
-      'Subscrições': '◉',
-      'Lazer & Entretenimento': '◐',
-      'Viagens & Férias': '✈︎',
-      'Presentes & Doações': '◆',
-      'Serviços Financeiros': '◈',
-      'Animais de Estimação': '◧',
-      'Crianças & Família': '◎',
-      'Cuidados Pessoais': '◐',
-      'Casa & Jardim': '⌂',
-      'Impostos & Taxas': '◫',
-      'Emergências': '⚠',
-      'Outros': '◌',
-      
-      // Receitas
-      'Salário Principal': '◈',
-      'Subsídios': '◐',
-      'Trabalho Extra / Freelance': '◧',
-      'Investimentos': '◭',
-      'Rendas Recebidas': '⌂',
-      'Reembolsos': '◎',
-      'Vendas': '◫',
-      'Prémios & Sorteios': '◆',
-      'Prendas & Doações Recebidas': '◆',
-      'Outros Rendimentos': '◌'
-    };
-    return iconMap[categoryName] || '◌';
-  };
 
   // Compute expenses by category from already-filtered transactions
   const computeExpensesByCategory = (txns) => {
@@ -364,8 +325,11 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: `linear-gradient(90deg, var(--stats-bar-base, #6366f1), ${barColor})`, transition: 'width 0.4s ease' }} />
                   </div>
                   {/* Spending trend */}
-                  <div style={{ marginTop: 10, fontSize: '0.8125rem', color: trendUp ? '#f87171' : '#4ade80' }}>
-                    {trendUp ? '↑ A gastar mais que o mês passado' : '↓ A gastar menos que o mês passado'}
+                  <div style={{ marginTop: 10, fontSize: '0.8125rem', color: trendUp ? '#f87171' : '#4ade80', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    {trendUp
+                      ? <><TrendingUp size={14} strokeWidth={2} color="#f87171" /> A gastar mais que o mês passado</>
+                      : <><TrendingDown size={14} strokeWidth={2} color="#4ade80" /> A gastar menos que o mês passado</>
+                    }
                   </div>
                 </div>
               );
@@ -410,7 +374,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 info:        { border: 'rgba(255,255,255,0.08)', bg: '#18181b',               glow: 'none' },
                 forecast:    { border: 'rgba(234,179,8,0.3)',    bg: 'rgba(234,179,8,0.07)',  glow: 'none' },
               };
-              const FEED_ICON  = { alert: '⚠️', warning: '⚡', opportunity: '📈', info: '📊', forecast: '📅' };
+              const FEED_ICON  = {
+                alert:       <AlertTriangle size={17} color="#f87171" strokeWidth={2} />,
+                warning:     <Zap size={17} color="#facc15" strokeWidth={2} />,
+                opportunity: <TrendingUp size={17} color="#4ade80" strokeWidth={2} />,
+                info:        <BarChart2 size={17} color="#a0aabb" strokeWidth={2} />,
+                forecast:    <Calendar size={17} color="#a0aabb" strokeWidth={2} />,
+              };
               const RISK_COLOR = { high: '#f87171', medium: '#facc15', low: '#4ade80' };
               const COLOR_SEV  = { risk: 9, warn: 6, good: 2, info: 3 };
               const COLOR_REL  = { risk: 9, warn: 7, good: 5, info: 4 };
@@ -477,7 +447,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   <div key={i} style={{ borderRadius: 14, padding: '14px 16px', background: s.bg, border: `1px solid ${s.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <span style={{ fontSize: '1rem' }}>📅</span>
+                        <Calendar size={17} color="#a0aabb" strokeWidth={2} />
                         <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>Previsão do mês</div>
                       </div>
                       <span style={{ fontSize: '0.65rem', fontWeight: 700, color: rc, textTransform: 'uppercase', letterSpacing: '0.05em' }}>

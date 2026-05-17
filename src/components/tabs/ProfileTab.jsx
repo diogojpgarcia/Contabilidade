@@ -4,6 +4,7 @@ import CategoryManager from '../CategoryManager';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import PageHeader from '../PageHeader';
+import { Sun, Moon, Sliders, Sparkles, CreditCard, Tag, Clock } from '../icons';
 import './ProfileTab.css';
 
 const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange }) => {
@@ -181,9 +182,9 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         </div>
         {(accountCount > 0 || catCount > 0 || useFinancialMonth) && (
           <div className="m-prof-chips">
-            {accountCount > 0 && <span className="m-prof-chip">◈ {accountCount} conta{accountCount !== 1 ? 's' : ''}</span>}
-            {catCount > 0 && <span className="m-prof-chip">☷ {catCount} categori{catCount !== 1 ? 'as' : 'a'}</span>}
-            {useFinancialMonth && <span className="m-prof-chip m-prof-chip--on">◷ Dia {financialMonthStartDay}</span>}
+            {accountCount > 0 && <span className="m-prof-chip"><CreditCard size={11} strokeWidth={2.5} /> {accountCount} conta{accountCount !== 1 ? 's' : ''}</span>}
+            {catCount > 0 && <span className="m-prof-chip"><Tag size={11} strokeWidth={2.5} /> {catCount} categori{catCount !== 1 ? 'as' : 'a'}</span>}
+            {useFinancialMonth && <span className="m-prof-chip m-prof-chip--on"><Clock size={11} strokeWidth={2.5} /> Dia {financialMonthStartDay}</span>}
           </div>
         )}
       </div>
@@ -193,16 +194,16 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
         <span className="m-appear-label">Modo de visualização</span>
         <div className="m-seg-control">
           <button className={`m-seg-btn ${colorTheme === 'light'       ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
-            <span className="m-seg-icon">☀︎</span><span>Claro</span>
+            <Sun size={15} strokeWidth={1.75} /><span>Claro</span>
           </button>
           <button className={`m-seg-btn ${colorTheme === 'gray'        ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
-            <span className="m-seg-icon">◐</span><span>Cinza</span>
+            <Sliders size={15} strokeWidth={1.75} /><span>Cinza</span>
           </button>
           <button className={`m-seg-btn ${colorTheme === 'dark'        ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
-            <span className="m-seg-icon">☾</span><span>Escuro</span>
+            <Moon size={15} strokeWidth={1.75} /><span>Escuro</span>
           </button>
           <button className={`m-seg-btn ${colorTheme === 'soft-future' ? 'active' : ''}`} onClick={() => handleColorThemeChange('soft-future')}>
-            <span className="m-seg-icon">✦</span><span>Cosmos</span>
+            <Sparkles size={15} strokeWidth={1.75} /><span>Cosmos</span>
           </button>
         </div>
       </div>

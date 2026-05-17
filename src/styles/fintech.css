@@ -2174,6 +2174,9 @@
 
 .m-prof-chips { display: flex; gap: 5px; flex-wrap: wrap; }
 .m-prof-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.67rem;
   font-weight: 600;
   color: var(--text-tertiary);
@@ -2239,7 +2242,13 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.14);
 }
 [data-theme="light"] .m-seg-btn.active { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.m-seg-icon { font-size: 0.85rem; }
+.m-seg-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
 
 /* ── Financial cycle widget ─────────────────────────────────────────────── */
 .m-cycle-card {

@@ -3,6 +3,8 @@ import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import SwipeRevealCard from '../SwipeRevealCard';
 import RecurringCalendar from './RecurringCalendar';
+import { Repeat, Calendar } from '../icons';
+import { CategoryIconBubble } from '../../utils/categoryIcons';
 import {
   safeNum,
   computeNextDueDate,
@@ -122,8 +124,6 @@ const RecurringView = ({
   // ── Category + account label helpers ──────────────────────────────────────
   const catLabel = (p) =>
     expCats.find(c => c.id === p.categoryId)?.label || p.categoryId || '';
-  const catIcon  = (p) =>
-    expCats.find(c => c.id === p.categoryId)?.icon || '↻';
 
   const dueClass = (due) => {
     const today = new Date().toISOString().split('T')[0];
@@ -140,7 +140,7 @@ const RecurringView = ({
     <>
       {/* Summary card */}
       <div className="rp-summary">
-        <span className="rp-summary-icon">↻</span>
+        <span className="rp-summary-icon"><Repeat size={20} strokeWidth={1.75} /></span>
         <div className="rp-summary-body">
           <div className="rp-summary-amount">{totalMonthly.toFixed(2)}€</div>
           <div className="rp-summary-label">comprometido / mês</div>
@@ -152,7 +152,7 @@ const RecurringView = ({
 
       {/* Calendar button */}
       <button className="rp-cal-btn" onClick={() => setShowCalendar(true)}>
-        <span className="rp-cal-btn-icon">◫</span>
+        <span className="rp-cal-btn-icon"><Calendar size={17} strokeWidth={1.75} /></span>
         <span>Ver calendário</span>
         <span className="rp-cal-btn-chev">›</span>
       </button>
@@ -174,7 +174,7 @@ const RecurringView = ({
                 onEdit={() => openEdit(p)}
                 onDelete={() => handleDelete(p.id)}
               >
-                <div className="rp-row-icon">{catIcon(p)}</div>
+                <CategoryIconBubble name={catLabel(p)} type="expense" size={32} radius="9px" />
                 <div className="rp-row-body">
                   <div className="rp-row-title">{p.title}</div>
                   <div className="rp-row-meta">

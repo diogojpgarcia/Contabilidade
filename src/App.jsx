@@ -20,6 +20,8 @@ import BudgetTab from './components/tabs/BudgetTab';
 import ImportTab from './components/tabs/ImportTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
+import { Home, BarChart2, Plus, LayoutGrid, User } from './components/icons';
+
 import './styles/layout.css';
 import './styles/modern.css';
 import './styles/fintech.css';
@@ -779,7 +781,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
           onClick={() => setActiveTab('home')}
         >
-          <span className="nav-icon">&#8962;</span>
+          <span className="nav-icon"><Home size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Home</span>
         </button>
 
@@ -787,7 +789,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveTab('stats')}
         >
-          <span className="nav-icon">&#9671;</span>
+          <span className="nav-icon"><BarChart2 size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Stats</span>
         </button>
 
@@ -795,7 +797,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => setActiveTab('add')}
         >
-          <span className="nav-icon nav-icon-add">+</span>
+          <span className="nav-icon"><Plus size={24} strokeWidth={2} /></span>
           <span className="nav-label">Adicionar</span>
         </button>
 
@@ -803,7 +805,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`}
           onClick={() => setActiveTab('budget')}
         >
-          <span className="nav-icon">&#9672;</span>
+          <span className="nav-icon"><LayoutGrid size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Budget</span>
         </button>
 
@@ -811,7 +813,7 @@ const App = () => {
           className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
-          <span className="nav-icon">&#9689;</span>
+          <span className="nav-icon"><User size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Perfil</span>
         </button>
       </nav>

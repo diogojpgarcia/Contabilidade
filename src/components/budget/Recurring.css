@@ -17,8 +17,15 @@
   gap: 12px;
 }
 .rp-summary-icon {
-  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
   flex-shrink: 0;
+  color: var(--text-tertiary);
 }
 .rp-summary-body { flex: 1; min-width: 0; }
 .rp-summary-amount {
@@ -60,7 +67,12 @@
   transition: opacity 0.15s;
 }
 .rp-cal-btn:active { opacity: 0.7; }
-.rp-cal-btn-icon { font-size: 1rem; }
+.rp-cal-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 .rp-cal-btn-chev { margin-left: auto; color: var(--text-tertiary); }
 
 /* ── List ─────────────────────────────────────────────────────────────────── */
@@ -86,15 +98,14 @@
   align-items: center;
   gap: 10px;
 }
+/* rp-row-icon replaced by <CategoryIconBubble> — kept as safety fallback */
 .rp-row-icon {
-  font-size: 1.1rem;
   width: 32px;
   height: 32px;
   border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-tertiary);
   flex-shrink: 0;
 }
 .rp-row-body { flex: 1; min-width: 0; }
@@ -638,15 +649,15 @@
   border-bottom: 0.5px solid var(--separator);
 }
 .hrp-row:last-child { border-bottom: none; }
+/* .hrp-icon replaced by <CategoryIconBubble> inline — class kept for
+   soft-future.css shadow override which targets .hrp-icon selector */
 .hrp-icon {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: var(--bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
   flex-shrink: 0;
 }
 .hrp-body { flex: 1; min-width: 0; }

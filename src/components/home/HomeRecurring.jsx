@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { getUpcomingPayments, relativeDueDate, safeNum } from '../../utils/recurringPayments';
+import { CategoryIconBubble } from '../../utils/categoryIcons';
 import '../budget/Recurring.css';
 
 const HomeRecurring = ({ recurringPayments, categories }) => {
@@ -11,9 +12,6 @@ const HomeRecurring = ({ recurringPayments, categories }) => {
   );
 
   if (!upcoming.length) return null;
-
-  const catIcon = (p) =>
-    expCats.find(c => c.id === p.categoryId)?.icon || '↻';
 
   const catLabel = (p) =>
     expCats.find(c => c.id === p.categoryId)?.label || '';
@@ -37,7 +35,7 @@ const HomeRecurring = ({ recurringPayments, categories }) => {
         const dc  = dueClass(due);
         return (
           <div key={p.id} className="hrp-row">
-            <div className="hrp-icon">{catIcon(p)}</div>
+            <CategoryIconBubble name={catLabel(p)} type="expense" size={30} radius="8px" />
             <div className="hrp-body">
               <div className="hrp-title">{p.title}</div>
               <div className="hrp-sub">{catLabel(p) || '—'}</div>
