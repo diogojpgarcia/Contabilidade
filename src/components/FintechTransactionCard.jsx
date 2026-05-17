@@ -117,12 +117,26 @@ function formatLong(dateStr) {
 }
 
 /* ── Component ────────────────────────────────────────────────────────────── */
-const FintechTransactionCard = ({ tx, onCategoryChange, onAccountChange, onDelete, isDuplicate = false, categories, accounts = [] }) => {
-  const [open,          setOpen]          = useState(false);
-  const [pickerTx,      setPickerTx]      = useState(null);
+const FintechTransactionCard = ({
+  tx,
+  onCategoryChange,
+  onAccountChange,
+  onDelete,
+  onEditTransaction,
+  isDuplicate = false,
+  categories,
+  accounts = [],
+}) => {
+  const [open,           setOpen]           = useState(false);
+  const [pickerTx,       setPickerTx]       = useState(null);
   const [acctPickerOpen, setAcctPickerOpen] = useState(false);
-  const [deleting,      setDeleting]      = useState(false);
-  const [logoErr,       setLogoErr]       = useState(false);
+  const [deleting,       setDeleting]       = useState(false);
+  const [logoErr,        setLogoErr]        = useState(false);
+
+  // ── Inline edit state ──────────────────────────────────────────────────────
+  const [editMode,  setEditMode]  = useState(false);
+  const [editDraft, setEditDraft] = useState({ description: '', amount: '', date: '' });
+  const [saving,    setSaving]    = useState(false);
 
   /* ── Guard: never render with missing/invalid data ── */
   if (!tx || typeof tx !== 'object') return null;
@@ -161,6 +175,7 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onAccountChange, onDelet
     ? `${txAmount.toFixed(2)}€`
     : `${isIncome ? '+' : '−'}${txAmount.toFixed(2)}€`;
 
+  /* ── Handlers ─────────────────────────────────────────────────────────────── */
   const handlePickerSelect = (newCategory) => {
     if (pickerTx && onCategoryChange) {
       onCategoryChange(pickerTx.id, newCategory, pickerTx.description || '');
@@ -186,9 +201,46 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onAccountChange, onDelet
     }
   };
 
+  /* ── Edit handlers ─────────────────────────────────────────────────────────── */
+  const startEdit = (e) => {
+    e.stopPropagation();
+    setEditDraft({
+      description: txDesc,
+      amount:      txAmount > 0 ? txAmount.toFixed(2) : '',
+      date:        txDate,
+    });
+    setEditMode(true);
+  };
+
+  const cancelEdit = (e) => {
+    e?.stopPropagation();
+    setEditMode(false);
+  };
+
+  const handleEditSave = async (e) => {
+    e?.stopPropagation();
+    const amount = parseFloat(editDraft.amount);
+    if (isNaN(amount) || amount <= 0) return;
+    setSaving(true);
+    try {
+      if (onEditTransaction) {
+        await onEditTransaction({
+          ...tx,
+          description: editDraft.description.trim(),
+          amount,
+          date: editDraft.date || txDate,
+        });
+      }
+      setEditMode(false);
+      setOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <>
-      <div className={`ftc-card${isDuplicate ? ' ftc-card--dupe' : ''}`} onClick={() => setOpen(o => !o)}>
+      <div className={`ftc-card${isDuplicate ? ' ftc-card--dupe' : ''}`} onClick={() => { if (!editMode) setOpen(o => !o); }}>
         {isDuplicate && <div className="ftc-dupe-bar">duplicado</div>}
 
         {/* ── Main row ── */}
@@ -233,31 +285,89 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onAccountChange, onDelet
           </div>
         </div>
 
-        {/* ── Expanded actions ── */}
+        {/* ── Expanded area ── */}
         {open && (
           <div className="ftc-actions" onClick={e => e.stopPropagation()}>
-            <span className="ftc-action-date">{formatLong(txDate)}</span>
-            <div className="ftc-action-btns">
-              {onCategoryChange && !isTransfer && !isAdjustment && (
-                <button className="ftc-action-btn" onClick={() => setPickerTx(tx)}>
-                  ✎ Categoria
-                </button>
-              )}
-              {onAccountChange && !isTransfer && !isAdjustment && (
-                <button className="ftc-action-btn" onClick={() => setAcctPickerOpen(true)}>
-                  ◈ {tx.account_name || 'Conta'}
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  className="ftc-action-btn ftc-action-btn--danger"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
-                  {deleting ? '⏳' : '🗑 Apagar'}
-                </button>
-              )}
-            </div>
+
+            {editMode ? (
+              /* ── Inline edit form ── */
+              <div className="ftc-edit-form">
+                <input
+                  className="ftc-edit-input"
+                  type="text"
+                  placeholder="Descrição"
+                  value={editDraft.description}
+                  onChange={e => setEditDraft(d => ({ ...d, description: e.target.value }))}
+                  autoFocus
+                />
+                <div className="ftc-edit-row">
+                  <input
+                    className="ftc-edit-input ftc-edit-input--amt"
+                    type="number"
+                    inputMode="decimal"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Valor"
+                    value={editDraft.amount}
+                    onChange={e => setEditDraft(d => ({ ...d, amount: e.target.value }))}
+                  />
+                  <input
+                    className="ftc-edit-input ftc-edit-input--date"
+                    type="date"
+                    value={editDraft.date}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={e => setEditDraft(d => ({ ...d, date: e.target.value }))}
+                  />
+                </div>
+                <div className="ftc-edit-btns">
+                  <button
+                    className="ftc-action-btn"
+                    onClick={cancelEdit}
+                    disabled={saving}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="ftc-action-btn ftc-action-btn--save"
+                    onClick={handleEditSave}
+                    disabled={saving || !editDraft.amount || parseFloat(editDraft.amount) <= 0}
+                  >
+                    {saving ? '…' : 'Guardar'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ── Normal action strip ── */
+              <>
+                <span className="ftc-action-date">{formatLong(txDate)}</span>
+                <div className="ftc-action-btns">
+                  {onEditTransaction && !isTransfer && !isAdjustment && (
+                    <button className="ftc-action-btn ftc-action-btn--edit" onClick={startEdit}>
+                      ✎ Editar
+                    </button>
+                  )}
+                  {onCategoryChange && !isTransfer && !isAdjustment && (
+                    <button className="ftc-action-btn" onClick={() => setPickerTx(tx)}>
+                      ✎ Categoria
+                    </button>
+                  )}
+                  {onAccountChange && !isTransfer && !isAdjustment && (
+                    <button className="ftc-action-btn" onClick={() => setAcctPickerOpen(true)}>
+                      ◈ {tx.account_name || 'Conta'}
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      className="ftc-action-btn ftc-action-btn--danger"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                    >
+                      {deleting ? '⏳' : '🗑 Apagar'}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

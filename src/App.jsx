@@ -503,6 +503,12 @@ const App = () => {
 
   const handleEditTransaction = async (updatedTransaction) => {
     const original = transactions.find(t => t.id === updatedTransaction.id);
+
+    // Optimistic update — UI reflects immediately; rolled back on DB error
+    setTransactions(prev => prev.map(t =>
+      t.id === updatedTransaction.id ? { ...t, ...updatedTransaction } : t
+    ));
+
     try {
       console.log('✏️ Updating transaction:', updatedTransaction.id);
       const updated = await dbService.updateTransaction(updatedTransaction.id, {
@@ -539,6 +545,8 @@ const App = () => {
       console.log('✅ Transaction updated!');
     } catch (error) {
       console.error('❌ Error updating transaction:', error);
+      // Rollback optimistic update
+      if (original) setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? original : t));
       alert('Erro ao editar transação: ' + error.message);
     }
   };
@@ -699,6 +707,7 @@ const App = () => {
             onTransactionDeleted={handleDeleteTransaction}
             onCategoryChange={handleCategoryChange}
             onAccountChange={handleAccountChange}
+            onTransactionEdited={handleEditTransaction}
             patrimony={patrimonyWithLiveBalances}
             theme={theme}
             financialMonthStartDay={effectiveStartDay}

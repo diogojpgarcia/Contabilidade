@@ -30,7 +30,7 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, patrimony = {}, theme = 'default', financialMonthStartDay = 1, onNavigate }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, theme = 'default', financialMonthStartDay = 1, onNavigate }) => {
   console.log('REAL STATS TAB LOADED');
   console.log('RENDER STATS');
   console.log('ACTIVE THEME:', theme);
@@ -524,6 +524,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       onCategoryChange={onCategoryChange}
                       onAccountChange={onAccountChange}
                       onDelete={onTransactionDeleted}
+                      onEditTransaction={onTransactionEdited}
                       categories={categories}
                       accounts={patrimony.accounts || []}
                     />
