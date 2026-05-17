@@ -1,0 +1,83 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   COSMOS DESIGN TOKENS
+   Single source of truth for the Cosmos design language.
+   Import once in App.jsx — all cosmos components consume these variables.
+
+   Visual language: premium financial OS · dark charcoal · soft cyan glow
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  --cosmos-bg:          #0d0f12;   /* page background */
+  --cosmos-surface-1:   #13161d;   /* base card */
+  --cosmos-surface-2:   #191d27;   /* elevated card */
+  --cosmos-surface-3:   #1f2330;   /* top-most / active surface */
+
+  /* ── Accent ───────────────────────────────────────────────────────────── */
+  --cosmos-accent:          #06b6d4;
+  --cosmos-accent-dim:      rgba(6, 182, 212, 0.10);
+  --cosmos-accent-hover:    rgba(6, 182, 212, 0.16);
+  --cosmos-accent-border:   rgba(6, 182, 212, 0.14);
+  --cosmos-accent-glow:     rgba(6, 182, 212, 0.22);
+  --cosmos-accent-soft:     rgba(6, 182, 212, 0.06);
+
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --cosmos-text-1:  #e8eaed;                     /* primary — high contrast */
+  --cosmos-text-2:  rgba(160, 170, 187, 0.80);   /* secondary */
+  --cosmos-text-3:  rgba(160, 170, 187, 0.45);   /* tertiary / placeholder */
+  --cosmos-text-accent: #06b6d4;                 /* accent label */
+
+  /* ── Semantic ─────────────────────────────────────────────────────────── */
+  --cosmos-income:      #34d399;
+  --cosmos-expense:     #f87171;
+  --cosmos-income-dim:  rgba(52, 211, 153, 0.12);
+  --cosmos-expense-dim: rgba(248, 113, 113, 0.12);
+  --cosmos-neutral-dim: rgba(160, 170, 187, 0.10);
+
+  /* ── Borders ──────────────────────────────────────────────────────────── */
+  --cosmos-border-subtle:  rgba(255, 255, 255, 0.04);
+  --cosmos-border-card:    rgba(6, 182, 212, 0.10);
+  --cosmos-border-hero:    rgba(6, 182, 212, 0.16);
+  --cosmos-border-divider: rgba(255, 255, 255, 0.05);
+
+  /* ── Radius ───────────────────────────────────────────────────────────── */
+  --cosmos-r-xs:      6px;
+  --cosmos-r-sm:      10px;
+  --cosmos-r-md:      14px;   /* compact card / pill */
+  --cosmos-r-card:    18px;   /* standard card */
+  --cosmos-r-hero:    22px;   /* hero card */
+  --cosmos-r-pill:    999px;
+
+  /* ── Spacing ──────────────────────────────────────────────────────────── */
+  --cosmos-pad-hero:    20px 20px;
+  --cosmos-pad-card:    16px;
+  --cosmos-pad-compact: 12px;
+  --cosmos-pad-xs:      8px;
+  --cosmos-gap-section: 12px;
+  --cosmos-gap-row:     10px;
+
+  /* ── Shadows ──────────────────────────────────────────────────────────── */
+  --cosmos-shadow-card:
+    0 4px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --cosmos-shadow-hero:
+    0 10px 40px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(6, 182, 212, 0.08);
+  --cosmos-shadow-sheet:
+    0 -8px 40px rgba(0, 0, 0, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --cosmos-glow-accent:
+    0 0 24px rgba(6, 182, 212, 0.18);
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  --cosmos-ease:     cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --cosmos-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --cosmos-dur-fast: 0.15s;
+  --cosmos-dur:      0.22s;
+  --cosmos-dur-slow: 0.35s;
+
+  /* ── Bottom nav ───────────────────────────────────────────────────────── */
+  --cosmos-nav-h:      60px;
+  --cosmos-nav-safe:   calc(var(--cosmos-nav-h) + env(safe-area-inset-bottom));
+}

@@ -15,6 +15,7 @@ import BudgetTab from './components/tabs/BudgetTab';
 import ImportTab from './components/tabs/ImportTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
+import './styles/cosmos-tokens.css';
 import './styles/modern.css';
 import './styles/fintech.css';
 

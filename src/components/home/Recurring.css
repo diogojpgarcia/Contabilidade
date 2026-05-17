@@ -1,0 +1,75 @@
+/* ── Home Recurring Payment rows ────────────────────────────────────────── */
+
+.hrp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 0.5px solid var(--separator, rgba(255,255,255,0.06));
+}
+.hrp-row:last-child { border-bottom: none; }
+
+.hrp-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hrp-body { flex: 1; min-width: 0; }
+.hrp-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cosmos-text-1, var(--text-primary));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hrp-sub {
+  font-size: 0.7rem;
+  color: var(--cosmos-text-3, var(--text-tertiary));
+  margin-top: 1px;
+}
+.hrp-right { text-align: right; flex-shrink: 0; }
+.hrp-amount {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--cosmos-text-1, var(--text-primary));
+}
+.hrp-due {
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-top: 1px;
+  color: var(--cosmos-text-3, var(--text-tertiary));
+}
+.hrp-due.today  { color: #10b981; }
+.hrp-due.soon   { color: #f59e0b; }
+.hrp-due.urgent { color: #ef4444; }
+
+.hrp-row--pending { border-left: 2px solid #f59e0b; padding-left: 8px; }
+.hrp-pending-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.hrp-confirmed-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #10b981;
+  background: rgba(16,185,129,0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
