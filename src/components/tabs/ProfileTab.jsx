@@ -4,7 +4,7 @@ import CategoryManager from '../CategoryManager';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import PageHeader from '../PageHeader';
-import { Sun, Moon, Sliders, Sparkles, CreditCard, Tag, Clock } from '../icons';
+import { CreditCard, Tag, Clock } from '../icons';
 import './ProfileTab.css';
 
 const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange }) => {
@@ -14,35 +14,24 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const [deleteStatus, setDeleteStatus]           = useState('');
   const [deleting, setDeleting]                   = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [colorTheme, setColorTheme]               = useState('dark');
   const [resetStatus, setResetStatus]             = useState('');
 
   // Modal form drafts — onChange → local only; DB/auth called on submit
   const { draft: deleteDraft, setField: setDeleteField, reset: resetDeleteDraft } = useForm({ confirmText: '' });
   const { draft: resetDraft,  setField: setResetField,  reset: resetResetDraft  } = useForm({ email: '' });
 
+  // Cosmos is the only theme — always enforce soft-future on mount
   useEffect(() => {
-    loadUserPreferences();
-  }, [user]);
-
-  const loadUserPreferences = async () => {
-    try {
-      const settings = await dbService.getUserSettings(user.id);
-      const saved = settings?.color_theme || 'dark';
-      setColorTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-      console.log('[ProfileTab] ACTIVE THEME loaded:', saved, '| html[data-theme]:', document.documentElement.getAttribute('data-theme'));
-    } catch (error) {
-      console.error('[ProfileTab] Error loading preferences:', error);
+    document.documentElement.setAttribute('data-theme', 'soft-future');
+    // Migrate any stored stale value so the DB stays in sync
+    if (user?.id) {
+      dbService.getUserSettings(user.id).then(settings => {
+        if (settings?.color_theme !== 'soft-future') {
+          dbService.updateUserSettings(user.id, { color_theme: 'soft-future' }).catch(console.error);
+        }
+      }).catch(console.error);
     }
-  };
-
-  const handleColorThemeChange = async (newColor) => {
-    setColorTheme(newColor);
-    document.documentElement.setAttribute('data-theme', newColor);
-    console.log('[ProfileTab] ACTIVE THEME set:', newColor, '| html[data-theme]:', document.documentElement.getAttribute('data-theme'));
-    dbService.updateUserSettings(user.id, { color_theme: newColor }).catch(console.error);
-  };
+  }, [user]);
 
   // Plain function — synchronous state update, fire-and-forget DB save
   const handleThemeChange = (newTheme) => {
@@ -187,25 +176,6 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
             {useFinancialMonth && <span className="m-prof-chip m-prof-chip--on"><Clock size={11} strokeWidth={2.5} /> Dia {financialMonthStartDay}</span>}
           </div>
         )}
-      </div>
-
-      {/* Appearance — frameless segmented control */}
-      <div className="m-appear-wrap">
-        <span className="m-appear-label">Modo de visualização</span>
-        <div className="m-seg-control">
-          <button className={`m-seg-btn ${colorTheme === 'light'       ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
-            <Sun size={15} strokeWidth={1.75} /><span>Claro</span>
-          </button>
-          <button className={`m-seg-btn ${colorTheme === 'gray'        ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
-            <Sliders size={15} strokeWidth={1.75} /><span>Cinza</span>
-          </button>
-          <button className={`m-seg-btn ${colorTheme === 'dark'        ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
-            <Moon size={15} strokeWidth={1.75} /><span>Escuro</span>
-          </button>
-          <button className={`m-seg-btn ${colorTheme === 'soft-future' ? 'active' : ''}`} onClick={() => handleColorThemeChange('soft-future')}>
-            <Sparkles size={15} strokeWidth={1.75} /><span>Cosmos</span>
-          </button>
-        </div>
       </div>
 
       {/* Financial cycle widget */}

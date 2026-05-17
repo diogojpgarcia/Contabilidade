@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
+import { CategoryIconBubble } from '../../utils/categoryIcons';
+import CategoryPicker from '../CategoryPicker';
 import './AddTab.css';
 
 const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, defaultAccount, theme = 'default' }) => {
@@ -15,6 +17,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
   const [transferTo, setTransferTo]     = useState('');
   const [accountId,   setAccountId]     = useState(defaultAccount?.id   || '');
   const [accountName, setAccountName]   = useState(defaultAccount?.name || '');
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   const accounts = (patrimony?.accounts || []);
 
@@ -219,10 +222,30 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
         ) : (
           <div className="m-field-card">
             <span className="m-field-label">Categoria</span>
-            <select className="m-field-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">Seleciona uma categoria</option>
-              {currentCategories.map(cat => <option key={cat.id} value={cat.label}>{getCategoryIcon(cat.label)} {cat.label}</option>)}
-            </select>
+            <button
+              type="button"
+              className="m-field-cat-btn"
+              onClick={() => setShowCategoryPicker(true)}
+            >
+              {category ? (
+                <>
+                  <CategoryIconBubble name={category} type={type} size={28} radius="7px" />
+                  <span className="m-field-cat-label">{category}</span>
+                </>
+              ) : (
+                <span className="m-field-cat-placeholder">Seleciona uma categoria</span>
+              )}
+              <span className="m-field-cat-chevron">›</span>
+            </button>
+            {showCategoryPicker && (
+              <CategoryPicker
+                transaction={{ id: null, type, category, description }}
+                categories={categories}
+                title="Selecionar Categoria"
+                onSelect={(label) => { setCategory(label); setShowCategoryPicker(false); }}
+                onClose={() => setShowCategoryPicker(false)}
+              />
+            )}
           </div>
         )
       ))}

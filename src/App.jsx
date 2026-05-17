@@ -143,7 +143,8 @@ const App = () => {
           income:  Array.isArray(saved.income)  ? saved.income  : CATEGORIES_INCOME,
         });
       }
-      // Theme is fixed to 'fintech' — ignore any stored preference
+      // Cosmos is the only visual theme — always enforce soft-future regardless of stored value
+      document.documentElement.setAttribute('data-theme', 'soft-future');
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
 

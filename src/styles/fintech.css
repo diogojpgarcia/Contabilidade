@@ -615,6 +615,43 @@
 .m-field-select option { background: var(--bg-secondary); }
 .m-helper { font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px; }
 
+/* Category picker button (replaces native select in fintech theme) */
+.m-field-cat-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 2px 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-field-cat-label {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-field-cat-placeholder {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--text-tertiary);
+}
+.m-field-cat-chevron {
+  font-size: 1.1rem;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
 /* Submit button */
 .m-submit-btn {
   border: none;

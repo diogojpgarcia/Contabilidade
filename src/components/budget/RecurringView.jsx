@@ -295,13 +295,16 @@ const RecurringView = ({
                   >
                     <span className="rp-selector-label">Categoria</span>
                     <span className="rp-selector-value">
-                      {form.categoryId
-                        ? expCats.find(c => c.id === form.categoryId)?.icon || ''
-                        : ''}
-                      {' '}
-                      {form.categoryId
-                        ? expCats.find(c => c.id === form.categoryId)?.label
-                        : '— Nenhuma —'}
+                      {form.categoryId && (() => {
+                        const cat = expCats.find(c => c.id === form.categoryId);
+                        return cat ? (
+                          <>
+                            <CategoryIconBubble name={cat.label} type="expense" size={22} radius="6px" />
+                            {' '}{cat.label}
+                          </>
+                        ) : '— Nenhuma —';
+                      })()}
+                      {!form.categoryId && '— Nenhuma —'}
                     </span>
                     <span className="rp-selector-icon">›</span>
                   </button>
@@ -379,7 +382,8 @@ const RecurringView = ({
                           setShowCategoryModal(false);
                         }}
                       >
-                        {cat.icon ? `${cat.icon} ` : ''}{cat.label}
+                        <CategoryIconBubble name={cat.label} type="expense" size={24} radius="6px" />
+                        {' '}{cat.label}
                       </button>
                     ))}
                   </div>

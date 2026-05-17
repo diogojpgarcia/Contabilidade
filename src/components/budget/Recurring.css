@@ -286,6 +286,9 @@
 .rp-selector-value {
   flex: 1;
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--text-primary);
   font-size: 0.95rem;
   font-weight: 500;
@@ -398,6 +401,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
 .rp-modal-item:last-child { border-bottom: none; }
 .rp-modal-item:active { background: var(--bg-tertiary); }
