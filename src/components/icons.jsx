@@ -301,3 +301,35 @@ export const Repeat = p => (
     <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
   </Svg>
 );
+
+/* ── Navigation / App shell ─────────────────────────────────────────────── */
+
+export const Plus = p => (
+  <Svg {...p}>
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </Svg>
+);
+
+export const LayoutGrid = p => (
+  <Svg {...p}>
+    <rect x="3"  y="3"  width="7" height="7" rx="1"/>
+    <rect x="14" y="3"  width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+    <rect x="3"  y="14" width="7" height="7" rx="1"/>
+  </Svg>
+);
+
+export const User = p => (
+  <Svg {...p}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </Svg>
+);
+
+export const Clock = p => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </Svg>
+);

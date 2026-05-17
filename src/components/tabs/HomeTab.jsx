@@ -33,20 +33,7 @@ const HomeTab = ({
 
   return (
     <div className="h-page">
-      {/* DEBUG: NEW COSMOS HOME LAYOUT ACTIVE */}
-      <div style={{
-        background: '#06b6d4',
-        color: '#000',
-        textAlign: 'center',
-        padding: '6px',
-        fontSize: '11px',
-        fontWeight: 700,
-        letterSpacing: '0.05em',
-      }}>
-        NEW COSMOS HOME LAYOUT ACTIVE
-      </div>
-
-      <div className="h-sections">
+<div className="h-sections">
 
         {/* 1 — Flagship balance hero */}
         <HomeHero
