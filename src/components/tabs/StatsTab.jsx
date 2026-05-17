@@ -6,8 +6,18 @@ import { generateInsights, computeFinancialScore, shiftMonth, formatMonthLabel }
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange } from '../../utils/financialMonth';
 import PageHeader from '../PageHeader';
 import { AlertTriangle, Zap, TrendingUp, TrendingDown, BarChart2, Calendar } from '../icons';
+import { getCategoryMeta } from '../../utils/categoryIcons';
 import './StatsTab.css';
 import './HomeTab.modern.css';
+
+/* ── getCategoryIconEl ────────────────────────────────────────────────────────
+   Replaces the old getCategoryIcon() string map.
+   Used only by the legacy (non-fintech) branches that are never active in
+   production — kept alive so the module compiles without errors.            */
+function getCategoryIconEl(categoryName, type = 'expense') {
+  const { Icon, color } = getCategoryMeta(categoryName, type);
+  return <Icon size={16} color={color} strokeWidth={2} />;
+}
 
 
 /* Transfer flow helper (mirrors ModernTransactionList / DefaultTransactionList) */
@@ -641,7 +651,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 {categoryData.map((item, index) => (
                   <div key={index} className="category-item">
                     <div className="category-info">
-                      <span className="category-icon">{getCategoryIcon(item.category)}</span>
+                      <span className="category-icon">{getCategoryIconEl(item.category, 'expense')}</span>
                       <span className="category-name">{item.category}</span>
                     </div>
                     <div className="category-stats">
@@ -748,7 +758,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     onClick={() => setExpandedId(isExpanded ? null : tx.id)}
                   >
                     <div className="modern-tx-row">
-                      <div className={`modern-tx-icon ${tx.type}`}>{getCategoryIcon(tx.category)}</div>
+                      <div className={`modern-tx-icon ${tx.type}`}>{getCategoryIconEl(tx.category, tx.type)}</div>
                       <div className="modern-tx-main">
                         <span className="modern-tx-desc">{tx.description || tx.category}</span>
                         <span className="modern-tx-cat">{tx.category}</span>
@@ -793,7 +803,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 >
                   <div className="transaction-left">
                     <span className="transaction-icon">
-                      {isTr ? '↔' : getCategoryIcon(transaction.category)}
+                      {isTr ? '↔' : getCategoryIconEl(transaction.category, transaction.type)}
                     </span>
                     <div className="transaction-details">
                       {isTr ? (
