@@ -34,7 +34,6 @@ const HomeTab = ({
   return (
     <div className="h-page">
 <div className="h-sections">
-        <div style={{background:'red',color:'#fff',padding:'8px',textAlign:'center',fontWeight:'bold'}}>CURRENT HOME FILE</div>
 
         {/* 1 — Flagship balance hero */}
         <HomeHero
