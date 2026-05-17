@@ -61,6 +61,7 @@ const App = () => {
   const [transactionAccountMap, setTransactionAccountMap] = useState({}); // { [txId]: { account_id, account_name } } — fallback when DB columns absent
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const [recurringPayments, setRecurringPayments] = useState([]); // [{ id, title, amount, ... }]
+  const [financialFocus, setFinancialFocus] = useState(null); // 'savings' | 'budgets' | 'tracking' | 'growth' | null
   const loadRequestId = React.useRef(0); // incremented to cancel stale fetches
 
   // Check for existing session on mount
@@ -145,6 +146,7 @@ const App = () => {
       }
       // Cosmos is the only visual theme — always enforce soft-future regardless of stored value
       document.documentElement.setAttribute('data-theme', 'soft-future');
+      if (settings?.financial_focus) setFinancialFocus(settings.financial_focus);
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
 
@@ -364,6 +366,11 @@ const App = () => {
   const handleCategoriesChange = (updated) => {
     // CategoryManager already persists to Supabase — we just keep global state in sync.
     setCategories(updated);
+  };
+
+  const handleFocusChange = (focus) => {
+    setFinancialFocus(focus);
+    dbService.updateUserSettings(currentUser.id, { financial_focus: focus }).catch(console.error);
   };
 
   const handleRecurringPaymentsChange = (updated) => {
@@ -694,6 +701,7 @@ const App = () => {
             financialMonthStartDay={effectiveStartDay}
             recurringPayments={recurringPayments}
             onNavigate={handleNavigateFromStats}
+            financialFocus={financialFocus}
           />
         )}
 
@@ -713,6 +721,7 @@ const App = () => {
             theme={theme}
             financialMonthStartDay={effectiveStartDay}
             onNavigate={handleNavigateFromStats}
+            financialFocus={financialFocus}
           />
         )}
 
@@ -774,6 +783,8 @@ const App = () => {
             useFinancialMonth={useFinancialMonth}
             financialMonthStartDay={financialMonthStartDay}
             onFinancialMonthChange={handleFinancialMonthChange}
+            financialFocus={financialFocus}
+            onFocusChange={handleFocusChange}
             onDataDeleted={() => {
               loadRequestId.current++;
               setTransactions([]);

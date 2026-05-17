@@ -5,9 +5,10 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import PageHeader from '../PageHeader';
 import { CreditCard, Tag, Clock } from '../icons';
+import { FOCUS_OPTIONS } from '../../utils/financialFocus';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -213,6 +214,37 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
             </div>
           ) : (
             <p className="m-cycle-off">Agrupa por mês calendário padrão</p>
+          )}
+        </div>
+      )}
+
+      {/* Financial Focus */}
+      {onFocusChange && (
+        <div className="m-focus-card">
+          <div className="m-focus-header">
+            <span className="m-focus-label">Foco Financeiro</span>
+            {financialFocus && (
+              <button className="m-focus-clear" onClick={() => onFocusChange(null)}>
+                Remover
+              </button>
+            )}
+          </div>
+          <div className="m-focus-grid">
+            {FOCUS_OPTIONS.map(opt => (
+              <button
+                key={opt.id}
+                className={`m-focus-btn${financialFocus === opt.id ? ' m-focus-btn--on' : ''}`}
+                onClick={() => onFocusChange(financialFocus === opt.id ? null : opt.id)}
+              >
+                <span className="m-focus-btn-icon">{opt.icon}</span>
+                <span className="m-focus-btn-label">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+          {financialFocus && (
+            <p className="m-focus-desc">
+              {FOCUS_OPTIONS.find(o => o.id === financialFocus)?.desc}
+            </p>
           )}
         </div>
       )}

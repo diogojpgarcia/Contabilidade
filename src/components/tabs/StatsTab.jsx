@@ -30,7 +30,7 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, theme = 'default', financialMonthStartDay = 1, onNavigate }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, theme = 'default', financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
   console.log('REAL STATS TAB LOADED');
   console.log('RENDER STATS');
   console.log('ACTIVE THEME:', theme);
@@ -189,12 +189,12 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
   const insights = useMemo(() => {
     try {
-      return generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay });
+      return generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay, focus: financialFocus });
     } catch (e) {
       console.error('[Insights] generateInsights threw:', e);
       return [];
     }
-  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
+  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay, financialFocus]);
 
   const financialScore = useMemo(() => {
     try {

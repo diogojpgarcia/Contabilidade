@@ -1,4 +1,5 @@
 import { isInFinancialMonth, getFinancialMonthRange, getFinancialMonthLabel, getPrediction as _getPrediction } from './financialMonth.js';
+import { applyFocusBoost } from './financialFocus.js';
 
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -29,7 +30,7 @@ const getSpent = (transactions, catName, month, startDay = 1) =>
 const fmt0 = (n) =>
   Math.abs(n).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-export const generateInsights = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
+export const generateInsights = ({ transactions, budgets, categories, selectedMonth, startDay = 1, focus = null }) => {
   const items = [];
 
   const prevMonth  = shiftMonth(selectedMonth, -1);
@@ -265,7 +266,7 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
     }
   }
 
-  return items
+  return applyFocusBoost(items, focus)
     .sort((a, b) => b.priority - a.priority)
     .slice(0, 4);
 };

@@ -16,6 +16,7 @@ const HomeTab = ({
   onNavigate,
   recurringPayments,
   categories,
+  financialFocus = null,
 }) => {
   const p = patrimony;
 
@@ -50,7 +51,7 @@ const HomeTab = ({
         onMonthChange={onMonthChange}
         financialMonthStartDay={financialMonthStartDay}
       />
-      <HomeInsight transactions={transactions} onNavigate={onNavigate} />
+      <HomeInsight transactions={transactions} onNavigate={onNavigate} financialFocus={financialFocus} />
       <HomeRecurring recurringPayments={recurringPayments} categories={categories} />
       <HomeAccounts accounts={p.accounts || []} />
       <HomeEvolution

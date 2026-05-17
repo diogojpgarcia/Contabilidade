@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { getFocusLine } from '../../utils/financialFocus';
 
 function computeInsight(transactions) {
   const expenses = (transactions || []).filter(t => t.type === 'expense');
@@ -45,8 +46,9 @@ function computeInsight(transactions) {
   };
 }
 
-const HomeInsight = ({ transactions, onNavigate }) => {
+const HomeInsight = ({ transactions, onNavigate, financialFocus = null }) => {
   const insight = useMemo(() => computeInsight(transactions), [transactions]);
+  const focusLine = useMemo(() => getFocusLine(financialFocus, insight), [financialFocus, insight]);
 
   const tappable = !!(insight.categoryLabel && onNavigate);
   const handleTap = tappable
@@ -73,6 +75,9 @@ const HomeInsight = ({ transactions, onNavigate }) => {
         </div>
         {tappable && <span className="h-insight-chev">›</span>}
       </div>
+      {focusLine && (
+        <div className="h-focus-line">{focusLine}</div>
+      )}
     </div>
   );
 };
