@@ -1,19 +1,20 @@
 import { computeMonthAnalytics, getLastNMonths } from './analytics.js';
+import { isInFinancialMonth } from './financialMonth.js';
 
 function pctChange(current, previous) {
   if (!previous || previous === 0) return null;
   return ((current - previous) / previous) * 100;
 }
 
-export function generateAlerts(transactions, currentMonth) {
+export function generateAlerts(transactions, currentMonth, startDay = 1) {
   const alerts = [];
   if (!transactions.length) return alerts;
 
-  const cur  = computeMonthAnalytics(transactions, currentMonth);
+  const cur  = computeMonthAnalytics(transactions, currentMonth, startDay);
   const prevM = getLastNMonths(currentMonth, 2)[0];
-  const prev = computeMonthAnalytics(transactions, prevM);
+  const prev = computeMonthAnalytics(transactions, prevM, startDay);
 
-  const last3 = getLastNMonths(currentMonth, 4).slice(0, 3).map(m => computeMonthAnalytics(transactions, m));
+  const last3 = getLastNMonths(currentMonth, 4).slice(0, 3).map(m => computeMonthAnalytics(transactions, m, startDay));
   const avgExpenses = last3.reduce((s, h) => s + h.expenses, 0) / Math.max(last3.filter(h => h.count > 0).length, 1);
 
   // Total expenses vs average
@@ -57,7 +58,7 @@ export function generateAlerts(transactions, currentMonth) {
   }
 
   // Outlier transactions (amount > mean + 2*stddev)
-  const expTxs = transactions.filter(t => t.type === 'expense' && getMonthKey(t.date) === currentMonth);
+  const expTxs = transactions.filter(t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, currentMonth, startDay));
   if (expTxs.length >= 3) {
     const amounts = expTxs.map(t => parseFloat(t.amount));
     const mean = amounts.reduce((s, v) => s + v, 0) / amounts.length;
@@ -74,5 +75,3 @@ export function generateAlerts(transactions, currentMonth) {
 
   return alerts.slice(0, 8);
 }
-
-function getMonthKey(date) { return String(date).slice(0, 7); }

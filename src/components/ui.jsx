@@ -11,12 +11,15 @@ export const Card = ({ children, className = '', style }) => (
   <div className={`ui-card ${className}`} style={style}>{children}</div>
 );
 
-export const Bubble = ({ color, icon, size = 40, radius = '50%' }) => (
+export const Bubble = ({ color, icon, Icon: SvgIcon, size = 40, radius = '50%' }) => (
   <div
     className="ui-bubble"
     style={{ width: size, height: size, background: `${color}26`, borderRadius: radius }}
   >
-    <span style={{ color, fontSize: Math.round(size * 0.42) + 'px' }}>{icon}</span>
+    {SvgIcon
+      ? <SvgIcon size={Math.round(size * 0.48)} color={color} strokeWidth={2} />
+      : <span style={{ color, fontSize: Math.round(size * 0.42) + 'px' }}>{icon}</span>
+    }
   </div>
 );
 

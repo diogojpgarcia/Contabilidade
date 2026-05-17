@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import CategoryPicker from './CategoryPicker';
+import AccountPicker from './AccountPicker';
 
 /* ── Category icon + colour map ── */
 const CAT_ICON = {
@@ -102,15 +103,25 @@ const groupByDate = (txs) => {
 };
 
 /* ── Component ── */
-const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDeleted, categories }) => {
-  const [expandedId, setExpandedId] = useState(null);
-  const [pickerTx,   setPickerTx]   = useState(null);
+const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange, onTransactionDeleted, categories, patrimony }) => {
+  const [expandedId,    setExpandedId]    = useState(null);
+  const [pickerTx,      setPickerTx]      = useState(null);
+  const [acctPickerTx,  setAcctPickerTx]  = useState(null);
+
+  const accounts = patrimony?.accounts || [];
 
   const handlePickerSelect = (newCategory) => {
     if (pickerTx && onCategoryChange) {
       onCategoryChange(pickerTx.id, newCategory, pickerTx.description);
     }
     setPickerTx(null);
+  };
+
+  const handleAccountSelect = (newId, newName) => {
+    if (acctPickerTx && onAccountChange) {
+      onAccountChange(acctPickerTx.id, newId, newName);
+    }
+    setAcctPickerTx(null);
   };
 
   const dedupedTxs = dedupeTransfers(transactions);
@@ -160,6 +171,9 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
                         : tx.type === 'adjustment'
                           ? <span style={{ fontSize: '0.7rem', background: '#f97316', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>⚖ Ajuste</span>
                           : tx.category}
+                      {tx.account_name && !isTransfer && tx.type !== 'adjustment' && (
+                        <span className="ft-acct-badge">◈ {tx.account_name}</span>
+                      )}
                     </span>
                   </div>
 
@@ -191,6 +205,15 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
                     </button>
                   )}
 
+                  {onAccountChange && !isTransfer && (
+                    <button
+                      className="ft-detail-btn"
+                      onClick={() => { setAcctPickerTx(tx); setExpandedId(null); }}
+                    >
+                      ◈ {tx.account_name || 'Conta'}
+                    </button>
+                  )}
+
                   {onTransactionDeleted && (
                     <button
                       className="ft-detail-del"
@@ -216,6 +239,15 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onTransactionDe
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
           categories={categories}
+        />
+      )}
+
+      {acctPickerTx && (
+        <AccountPicker
+          accounts={accounts}
+          currentAccountId={acctPickerTx.account_id || null}
+          onSelect={handleAccountSelect}
+          onClose={() => setAcctPickerTx(null)}
         />
       )}
     </>

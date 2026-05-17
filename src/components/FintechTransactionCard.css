@@ -118,6 +118,23 @@
 .fintech-ui .ftc-cat {
   color: rgba(255,255,255,0.40);
 }
+.ftc-acct-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-tertiary, #666);
+  background: var(--bg-secondary, rgba(99,102,241,0.07));
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
 
 /* ── Right column ── */
 .ftc-right {
@@ -194,7 +211,9 @@
   cursor: pointer;
   background: var(--surface-2, rgba(0,0,0,0.06));
   color: var(--text-primary, #111);
-  min-height: 32px;
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: opacity 0.1s;
 }
 .fintech-ui .ftc-action-btn {
@@ -211,6 +230,85 @@
 .fintech-ui .ftc-action-btn--danger {
   background: rgba(248,113,113,0.12);
   color: #f87171;
+}
+
+/* ── Edit button variant ── */
+.ftc-action-btn--edit {
+  background: rgba(99,102,241,0.10);
+  color: #6366f1;
+}
+.fintech-ui .ftc-action-btn--edit {
+  background: rgba(99,102,241,0.16);
+  color: #a5b4fc;
+}
+
+/* ── Save button variant ── */
+.ftc-action-btn--save {
+  background: #6366f1;
+  color: #fff;
+}
+.ftc-action-btn--save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Inline edit form ── */
+.ftc-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ftc-edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface-2, rgba(0,0,0,0.05));
+  border: 1px solid var(--separator, rgba(0,0,0,0.10));
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 0.875rem;
+  color: var(--text-primary, #111);
+  outline: none;
+  min-height: 42px;
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: light;
+}
+.fintech-ui .ftc-edit-input {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.92);
+  color-scheme: dark;
+}
+.ftc-edit-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.18);
+}
+.ftc-edit-input::placeholder {
+  color: var(--text-tertiary, #aaa);
+}
+.fintech-ui .ftc-edit-input::placeholder {
+  color: rgba(255,255,255,0.30);
+}
+
+.ftc-edit-row {
+  display: flex;
+  gap: 8px;
+}
+.ftc-edit-input--amt {
+  flex: 0 0 38%;
+}
+.ftc-edit-input--date {
+  flex: 1;
+}
+
+.ftc-edit-btns {
+  display: flex;
+  gap: 8px;
+}
+.ftc-edit-btns .ftc-action-btn {
+  flex: 1;
+  justify-content: center;
 }
 
 /* ── Duplicate card tint ── */

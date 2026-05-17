@@ -4,6 +4,7 @@ import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import { Card, Bubble } from '../ui';
 import { shiftMonth, formatMonthLabel, getPrediction } from '../../utils/insights';
+import { isInFinancialMonth, filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthRange } from '../../utils/financialMonth';
 import { fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory, fetchCryptoHistoryBatch, fetchStockSearch, getPrice, isStale, formatAge, HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL } from '../../utils/assetPrice';
 import { searchAssets } from '../../utils/searchAssets';
 
@@ -36,20 +37,79 @@ const Sparkline = ({ prices, color = '#22c55e', width = 68, height = 26 }) => {
     </svg>
   );
 };
+import PageHeader from '../PageHeader';
+import SwipeRevealCard from '../SwipeRevealCard';
+import RecurringView from '../budget/RecurringView';
+import { getTotalMonthlyCommitted } from '../../utils/recurringPayments';
+import { getCategoryMeta, PATRIMONY_META } from '../../utils/categoryIcons';
 import './BudgetTab.css';
 
-const CATEGORY_ICONS = {
-  'Alimentação':'⚑','Habitação':'⌂','Transporte':'⚐','Saúde':'✚','Lazer':'◉',
-  'Educação':'⊞','Roupa':'◫','Tecnologia':'◧','Subscrições':'◉','Outros':'◌'
+/* ── Asset/Patrimony Sorting Utilities ────────────────────────────────────── */
+
+// Compute value of a patrimony item (type-specific)
+const getItemValue = (item, typeKey) => {
+  if (typeKey === 'accounts') return parseFloat(item.currentBalance ?? item.balance) || 0;
+  if (typeKey === 'stocks')   return (parseFloat(item.qty) || 0) * (parseFloat(item.avgPrice) || 0);
+  if (typeKey === 'crypto')   return (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
+  if (typeKey === 'bonds')    return parseFloat(item.value) || 0;
+  if (typeKey === 'vehicles') return parseFloat(item.value) || 0;
+  if (typeKey === 'realestate') return parseFloat(item.value) || 0;
+  return 0;
+};
+
+// Sort items within a patrimony type by relevance
+const sortItemsByType = (items, typeKey) => {
+  const copy = [...items];
+  if (typeKey === 'accounts') {
+    return copy.sort((a, b) => {
+      const balB = getItemValue(b, typeKey);
+      const balA = getItemValue(a, typeKey);
+      if (balB !== balA) return balB - balA;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }
+  if (typeKey === 'stocks' || typeKey === 'crypto') {
+    return copy.sort((a, b) => {
+      const valB = getItemValue(b, typeKey);
+      const valA = getItemValue(a, typeKey);
+      if (valB !== valA) return valB - valA;
+      const nameA = (a.ticker || a.coin || '').toUpperCase();
+      const nameB = (b.ticker || b.coin || '').toUpperCase();
+      return nameA.localeCompare(nameB);
+    });
+  }
+  // bonds, vehicles, realestate: sort alphabetically by name
+  return copy.sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+};
+
+// Dynamically reorder patrimony types: active (with items) first, then empty
+const sortPatrimonyTypes = (patrimony, types) => {
+  const typeValues = types.map(t => {
+    const items = patrimony[t.key] || [];
+    const hasItems = items.length > 0;
+    const totalValue = items.reduce((s, x) => s + getItemValue(x, t.key), 0);
+    return { ...t, hasItems, totalValue };
+  });
+
+  // Active types first (by total value descending), then inactive (alphabetical)
+  return typeValues.sort((a, b) => {
+    if (a.hasItems !== b.hasItems) return a.hasItems ? -1 : 1;
+    if (a.hasItems) return b.totalValue - a.totalValue;
+    return (a.label || '').localeCompare(b.label || '');
+  });
 };
 
 const PATRIMONY_TYPES = [
-  { key: 'accounts',   label: 'Contas Bancárias', icon: '◈', color: '#D97706' },
-  { key: 'stocks',     label: 'Ações',             icon: '◭', color: '#059669' },
-  { key: 'bonds',      label: 'Cert. Aforro',      icon: '◆', color: '#7C3AED' },
-  { key: 'realestate', label: 'Imóveis',            icon: '⌂', color: '#DC2626' },
-  { key: 'vehicles',   label: 'Veículos',           icon: '⚐', color: '#0891B2' },
-  { key: 'crypto',     label: 'Crypto',             icon: '◉', color: '#F59E0B' },
+  { key: 'accounts',   label: 'Contas Bancárias', ...PATRIMONY_META.accounts   },
+  { key: 'stocks',     label: 'Ações',             ...PATRIMONY_META.stocks     },
+  { key: 'bonds',      label: 'Cert. Aforro',      ...PATRIMONY_META.bonds      },
+  { key: 'realestate', label: 'Imóveis',            ...PATRIMONY_META.realestate },
+  { key: 'vehicles',   label: 'Veículos',           ...PATRIMONY_META.vehicles   },
+  { key: 'crypto',     label: 'Crypto',             ...PATRIMONY_META.crypto     },
 ];
 
 const EMPTY_PATRIMONY = { accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] };
@@ -79,16 +139,6 @@ const toNum = (v) => { const x = Number(v); return Number.isFinite(x) ? x : 0; }
  */
 const normCoin = (sym) => sym?.split('/')[0]?.toUpperCase() ?? '';
 
-const CAT_COLORS = {
-  'Alimentação':'#F59E0B','Habitação':'#3B82F6','Transporte':'#8B5CF6',
-  'Saúde':'#10B981','Lazer':'#EC4899','Educação':'#06B6D4',
-  'Roupa':'#F97316','Tecnologia':'#6366F1','Subscrições':'#84CC16','Outros':'#6B7280',
-};
-
-const getCategoryIcon = (category) => {
-  const label = typeof category === 'string' ? category : category?.label;
-  return CATEGORY_ICONS[label] || '◌';
-};
 
 /* 4-level budget status ─────────────────────────────────────────────────── */
 const STATUS = (pct) => {
@@ -120,22 +170,43 @@ const CountUp = ({ value, decimals = 0 }) => {
   return <>{display.toFixed(decimals)}</>;
 };
 
-const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave }) => {
+/* SwipeRevealCard is now imported from ../SwipeRevealCard */
+
+const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions, isNavTarget }) => {
   const [hovered, setHovered] = useState(false);
-  const catColor   = CAT_COLORS[cat.label] || '#6B7280';
+  const { Icon: CatIcon, color: catColor } = getCategoryMeta(cat.label);
   const st         = STATUS(percent);
   const willExceed = predicted !== null && limit > 0 && predicted > limit;
+  const cardRef    = useRef(null);
+  const inputRef   = useRef(null);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const t = setTimeout(() => inputRef.current?.focus(), 200);
+    return () => clearTimeout(t);
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    const block = isNavTarget ? 'start' : 'nearest';
+    const t = setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block }), 120);
+    return () => clearTimeout(t);
+  }, [isExpanded, isNavTarget]);
+
+  const txs = categoryTransactions || [];
 
   return (
     <div
-      className="m-bcc"
-      style={hovered ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
+      ref={cardRef}
+      className={`m-bcc${isExpanded ? ' expanded' : ''}${isNavTarget && isExpanded ? ' nav-target' : ''}`}
+      style={hovered && !isExpanded ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* top row */}
-      <div className="m-bcc-row">
-        <Bubble color={catColor} icon={getCategoryIcon(cat.label)} size={40} radius="12px" />
+      {/* top row — clickable to expand */}
+      <div className="m-bcc-row" onClick={onToggleExpand} style={{ cursor: 'pointer' }}>
+        <Bubble color={catColor} Icon={CatIcon} size={40} radius="12px" />
         <div className="m-bcc-info">
           <div className="m-bcc-name-row">
             <span className="m-bcc-name">{cat.label}</span>
@@ -153,15 +224,22 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
             {delta < -0.5 && <span className="m-bcc-delta down">↓ −{Math.abs(delta).toFixed(0)}€</span>}
           </div>
         </div>
-        {/* percentage + edit button */}
+        {/* percentage + chevron + edit button */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, marginLeft: 6, flexShrink: 0 }}>
           {limit > 0 && (
             <span style={{ fontSize: '1rem', fontWeight: 700, color: st.color, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
               {percent.toFixed(0)}%
             </span>
           )}
-          {/* ✎ (U+270E) renders reliably on Android system fonts */}
-          <button className="m-bcc-edit" onClick={onEditToggle} aria-label="Editar limite">✎</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <span className={`m-bcc-chevron${isExpanded ? ' open' : ''}`}>›</span>
+            {/* ✎ (U+270E) renders reliably on Android system fonts */}
+            <button
+              className="m-bcc-edit"
+              onClick={(e) => { e.stopPropagation(); onEditToggle(); }}
+              aria-label="Editar limite"
+            >✎</button>
+          </div>
         </div>
       </div>
 
@@ -169,6 +247,7 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
       {isEditing && (
         <div className="m-bcc-edit-row">
           <input
+            ref={inputRef}
             type="number"
             inputMode="decimal"
             className="m-bcc-input"
@@ -177,7 +256,6 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
             onKeyDown={(e) => { if (e.key === 'Enter') { onSave(); e.target.blur(); } }}
             onBlur={onSave}
             placeholder="Limite €/mês"
-            autoFocus
           />
           <button className="m-bcc-save" onClick={onSave}>✓</button>
         </div>
@@ -202,6 +280,28 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, anim
         <div className={`m-bcc-prediction${willExceed ? ' exceed' : ''}`}>
           <span>Previsto: {predicted}€</span>
           {willExceed && <span className="m-bcc-prediction-warn">Vai ultrapassar</span>}
+        </div>
+      )}
+
+      {/* expandable transaction list */}
+      {isExpanded && (
+        <div className="m-bcc-txs">
+          {txs.length === 0 ? (
+            <div className="m-bcc-txs-empty">Sem transações neste mês</div>
+          ) : (
+            txs.map((tx, i) => (
+              <div key={tx.id || i} className="m-bcc-tx">
+                <div className="m-bcc-tx-left">
+                  <span className="m-bcc-tx-title">{tx.description || tx.title || tx.category}</span>
+                  {tx.account_name && <span className="m-bcc-tx-meta">{tx.account_name}</span>}
+                </div>
+                <div className="m-bcc-tx-right">
+                  <span className="m-bcc-tx-amount">−{parseFloat(tx.amount || 0).toFixed(2)}€</span>
+                  <span className="m-bcc-tx-date">{tx.date ? new Date(tx.date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) : ''}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -231,18 +331,39 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
 // STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
 // Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, theme = 'default' }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1, pendingNav, onNavConsumed, recurringPayments = [], onRecurringPaymentsChange, confirmedRecurring = {}, onConfirmRecurring }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
   const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
   const { draft: patrimonyForm, setField: setPatrimonyField, reset: resetPatrimonyForm                     } = useForm({});
 
   const [activeView,          setActiveView]          = useState('budgets');
+
+  // Scroll outer container to top whenever the inner view changes
+  const budgetTabRef = useRef(null);
+  useEffect(() => {
+    const outer = budgetTabRef.current?.closest('.main-content-new');
+    if (outer) outer.scrollTop = 0;
+  }, [activeView]);
   const [goals,               setGoals]               = useState([]);
   const [editingGoalId,       setEditingGoalId]       = useState(null);
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
+  const [expandedCategoryId,  setExpandedCategoryId]  = useState(null);
+  const [navExpandedId,       setNavExpandedId]       = useState(null);
+
+  // Deep navigation from insights: switch to budgets, expand + highlight category
+  useEffect(() => {
+    if (!pendingNav?.categoryLabel) return;
+    setActiveView('budgets');
+    const cat = categories.expense.find(c => c.label === pendingNav.categoryLabel);
+    if (cat) {
+      setExpandedCategoryId(cat.id);
+      setNavExpandedId(cat.id);
+    }
+    onNavConsumed?.();
+  }, [pendingNav]);
   const [animated,            setAnimated]            = useState(false);
   const [selectedMonth,       setSelectedMonth]       = useState(currentMonth);
   const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
@@ -434,6 +555,23 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
+  // initialBalance (account.balance) + all linked transaction effects = live current balance
+  const computeAccountBalance = (acc) => {
+    const initial = parseFloat(acc.balance ?? 0);
+    if (isNaN(initial)) return 0;
+    return (transactions || []).reduce((sum, tx) => {
+      if (tx.account_id !== acc.id) return sum;
+      const amt = parseFloat(tx.amount) || 0;
+      if (tx.type === 'income')  return sum + amt;
+      if (tx.type === 'expense') return sum - amt;
+      if (tx.type === 'transfer') {
+        const isOut = /^Transferência para/i.test(tx.description || '');
+        return isOut ? sum - amt : sum + amt;
+      }
+      return sum;
+    }, initial);
+  };
+
   useEffect(() => { loadData(); }, [user]);
 
   const loadData = async () => {
@@ -487,14 +625,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const getSpentForMonth = (categoryId, month) => {
     const categoryName = categories.expense.find(c => c.id === categoryId)?.label;
     return transactions
-      .filter(t => t.type === 'expense' && t.category === categoryName && t.date && t.date.startsWith(month))
+      .filter(t => t.type === 'expense' && t.category === categoryName && t.date && isInFinancialMonth(t.date, month, financialMonthStartDay))
       .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   };
 
   const getSpentByCategory = (categoryId) => getSpentForMonth(categoryId, selectedMonth);
 
   const sortedItems = useMemo(() => {
-    const prevMonth = shiftMonth(selectedMonth, -1);
+    const prevMonth = shiftFinancialMonth(selectedMonth, -1);
     return categories.expense
       .map(cat => {
         const limit     = budgets[cat.id] || 0;
@@ -502,15 +640,27 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         const prevSpent = getSpentForMonth(cat.id, prevMonth);
         const percent   = limit > 0 ? (spent / limit) * 100 : 0;
         const delta     = spent - prevSpent;
-        const predicted = getPrediction(spent, selectedMonth);
+        const predicted = getPrediction(spent, selectedMonth, financialMonthStartDay);
         return { cat, limit, spent, percent, delta, predicted };
       })
       .sort((a, b) => b.percent - a.percent);
   }, [categories.expense, budgets, transactions, selectedMonth]);
 
+  const txByCategory = useMemo(() => {
+    const map = {};
+    for (const cat of categories.expense) {
+      const categoryName = cat.label;
+      map[cat.id] = transactions
+        .filter(t => t.type === 'expense' && t.category === categoryName && t.date && isInFinancialMonth(t.date, selectedMonth, financialMonthStartDay))
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+    }
+    return map;
+  }, [transactions, categories.expense, selectedMonth, financialMonthStartDay]);
+
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
-    if (key === 'accounts')   return items.reduce((s, x) => s + toNum(x.balance), 0);
+    if (key === 'accounts')   return items.reduce((s, x) => s + computeAccountBalance(x), 0);
     if (key === 'stocks')     return items.reduce((s, x) => {
       const price = toNum(livePrices[x.ticker]?.price ?? x.lastPrice ?? x.avgPrice);
       return s + toNum(x.qty) * price;
@@ -597,21 +747,27 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     clearAssetForms();
   };
 
+  // Adaptive price formatting: stocks get 2–4 decimals, crypto gets 2–8
+  const fmtStockPrice  = (p) => p.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: p < 1 ? 4 : 2 });
+  const fmtCryptoPrice = (p) => p.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: p < 0.001 ? 8 : p < 0.1 ? 6 : p < 1 ? 4 : 2 });
+  const fmtFiat        = (v) => parseFloat(v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   const renderPatrimonyItemValue = (typeKey, item) => {
-    if (typeKey === 'accounts')   return `${parseFloat(item.balance || 0).toFixed(2)}€`;
+    if (typeKey === 'accounts')   return `${fmtFiat(computeAccountBalance(item))}€`;
     if (typeKey === 'stocks') {
       const price = parseFloat(item.lastPrice ?? item.avgPrice) || null;
       if (!price) return `${item.qty || 0} ações · cotação pendente`;
       const total = (parseFloat(item.qty) || 0) * price;
-      return `${item.qty}×${price.toFixed(2)}€ = ${total.toFixed(2)}€`;
+      return `${item.qty}×${fmtStockPrice(price)}€ = ${fmtFiat(total)}€`;
     }
-    if (typeKey === 'bonds')      return `${parseFloat(item.value || 0).toFixed(2)}€`;
-    if (typeKey === 'realestate') return `${parseFloat(item.value || 0).toFixed(2)}€`;
-    if (typeKey === 'vehicles')   return `${parseFloat(item.value || 0).toFixed(2)}€`;
+    if (typeKey === 'bonds')      return `${fmtFiat(item.value)}€`;
+    if (typeKey === 'realestate') return `${fmtFiat(item.value)}€`;
+    if (typeKey === 'vehicles')   return `${fmtFiat(item.value)}€`;
     if (typeKey === 'crypto') {
       const price = parseFloat(item.lastPrice ?? item.price) || null;
       if (!price) return `${item.qty || 0} moedas · cotação pendente`;
-      return `${item.qty}×${price.toFixed(2)}€ = ${(parseFloat(item.qty || 0) * price).toFixed(2)}€`;
+      const total = (parseFloat(item.qty || 0) * price);
+      return `${item.qty}×${fmtCryptoPrice(price)}€ = ${fmtFiat(total)}€`;
     }
     return '';
   };
@@ -639,7 +795,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         return (<>
           <input className={cls} placeholder="Nome da conta"    value={f.name    || ''} onChange={e => set('name',    e.target.value)} />
           <input className={cls} placeholder="Banco (opcional)" value={f.bank    || ''} onChange={e => set('bank',    e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Saldo (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
+          <input className={cls} type="number" inputMode="decimal" placeholder="Saldo inicial (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
         </>);
 
       /* ── Stocks ──────────────────────────────────────────────────────────── */
@@ -891,9 +1047,11 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               </div>
               {!patrimonyFormType ? (
                 <div className="patrimony-type-selector">
-                  {PATRIMONY_TYPES.map(({ key, label, icon, color }) => (
+                  {PATRIMONY_TYPES.map(({ key, label, Icon: PatIcon, color }) => (
                     <button key={key} className="patrimony-type-btn" onClick={() => { setPatrimonyFormType(key); resetPatrimonyForm({}); }}>
-                      <span style={{ color, fontSize: '1.5rem' }}>{icon}</span>
+                      <div className="patrimony-type-btn-icon" style={{ background: `${color}22` }}>
+                        <PatIcon size={20} color={color} strokeWidth={2} />
+                      </div>
                       <span>{label}</span>
                     </button>
                   ))}
@@ -930,25 +1088,27 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     const isTotalOver = totalBudget > 0 && totalSpent > totalBudget;
 
     return (
-      <div className="m-budget-page">
+      <div className="m-budget-page" ref={budgetTabRef}>
+        <PageHeader title="Orçamento" />
         {/* View toggle */}
-        <div className="m-toggle">
-          <button className={`m-toggle-btn ${activeView === 'budgets'   ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamentos</button>
-          <button className={`m-toggle-btn ${activeView === 'goals'     ? 'active' : ''}`} onClick={() => setActiveView('goals')}>Objetivos</button>
-          <button className={`m-toggle-btn ${activeView === 'patrimony' ? 'active' : ''}`} onClick={() => setActiveView('patrimony')}>Património</button>
+        <div className="m-toggle m-toggle--4">
+          <button className={`m-toggle-btn ${activeView === 'budgets'    ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamento</button>
+          <button className={`m-toggle-btn ${activeView === 'recurring'  ? 'active' : ''}`} onClick={() => setActiveView('recurring')}>Recorrentes</button>
+          <button className={`m-toggle-btn ${activeView === 'goals'      ? 'active' : ''}`} onClick={() => setActiveView('goals')}>Objetivos</button>
+          <button className={`m-toggle-btn ${activeView === 'patrimony'  ? 'active' : ''}`} onClick={() => setActiveView('patrimony')}>Património</button>
         </div>
 
         {/* Month navigation */}
         {activeView === 'budgets' && (
           <div className="m-month-nav">
-            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}>‹</button>
+            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftFinancialMonth(selectedMonth, -1))}>‹</button>
             <div className="m-month-nav-center">
-              <span className="m-month-nav-label">{formatMonthLabel(selectedMonth)}</span>
+              <span className="m-month-nav-label">{formatMonthLabel(selectedMonth, financialMonthStartDay)}</span>
               {selectedMonth !== currentMonth && (
                 <button className="m-month-nav-today" onClick={() => setSelectedMonth(currentMonth)}>Este mês</button>
               )}
             </div>
-            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, 1))}>›</button>
+            <button className="m-month-nav-btn" onClick={() => setSelectedMonth(shiftFinancialMonth(selectedMonth, 1))}>›</button>
           </div>
         )}
 
@@ -962,7 +1122,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               const barColor  = STATUS(totalPct).grad;
               return (
                 <div className="m-bmc">
-                  <span className="m-bmc-label">Orçamento mensal</span>
+                  <span className="m-bmc-label">
+                    {(() => {
+                      if (financialMonthStartDay === 1) return 'Orçamento mensal';
+                      const { start, end } = getFinancialMonthRange(selectedMonth, financialMonthStartDay);
+                      const fmt = (s) => new Date(s + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+                      return `${fmt(start)} → ${fmt(end)}`;
+                    })()}
+                  </span>
                   <div className="m-bmc-big">
                     <span className="m-bmc-amount" style={{ color: isTotalOver ? '#dc2626' : undefined }}>
                       <CountUp value={totalBudget > 0 ? Math.abs(remaining) : totalSpent} />€
@@ -991,11 +1158,28 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               );
             })()}
 
+            {/* Recurring committed strip */}
+            {recurringPayments.length > 0 && (() => {
+              const committed = getTotalMonthlyCommitted(recurringPayments);
+              return (
+                <div className="rp-budget-strip">
+                  <span className="rp-budget-strip-icon">↻</span>
+                  <div className="rp-budget-strip-body">
+                    <div className="rp-budget-strip-label">Pagamentos recorrentes / mês</div>
+                    <div className="rp-budget-strip-amount">{committed.toFixed(2)}€</div>
+                  </div>
+                  <button className="rp-budget-strip-nav" onClick={() => setActiveView('recurring')}>
+                    Ver →
+                  </button>
+                </div>
+              );
+            })()}
+
             {/* Category cards */}
             <div className="m-bcc-list">
               {sortedItems.map(({ cat, limit, spent, percent, delta, predicted }) => (
                 <BudgetCategoryCard
-                  key={`${cat.id}-${Math.round(percent)}`}
+                  key={cat.id}
                   cat={cat}
                   limit={limit}
                   spent={spent}
@@ -1007,6 +1191,10 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
                   onLimitChange={handleLimitChange}
                   onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
+                  isExpanded={expandedCategoryId === cat.id}
+                  onToggleExpand={() => { setExpandedCategoryId(expandedCategoryId === cat.id ? null : cat.id); setNavExpandedId(null); }}
+                  isNavTarget={navExpandedId === cat.id}
+                  categoryTransactions={txByCategory[cat.id] || []}
                 />
               ))}
             </div>
@@ -1052,6 +1240,19 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           </div>
         )}
 
+        {/* ── RECURRING PAYMENTS ── */}
+        {activeView === 'recurring' && (
+          <RecurringView
+            user={user}
+            recurringPayments={recurringPayments}
+            onRecurringPaymentsChange={onRecurringPaymentsChange}
+            confirmedRecurring={confirmedRecurring}
+            onConfirmRecurring={onConfirmRecurring}
+            categories={categories}
+            patrimony={externalPatrimony}
+          />
+        )}
+
         {/* ── PATRIMONY ── */}
         {activeView === 'patrimony' && (() => {
           // toNum guards against NaN reaching toLocaleString (would render "NaN" on screen)
@@ -1094,7 +1295,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
           // Derive monthly net savings from transactions (no snapshot history needed)
           const last6Months = Array.from({ length: 6 }, (_, i) => shiftMonth(currentMonth, -(5 - i)));
           const monthlySavings = last6Months.map(m => {
-            const txns = transactions.filter(t => t.date && t.date.startsWith(m));
+            const txns = filterByFinancialMonth(transactions, m, financialMonthStartDay);
             const inc  = txns.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
             const exp  = txns.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
             return inc - exp;
@@ -1142,74 +1343,58 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             const qtyLabel     = isStock ? 'ações' : 'moedas';
             const priceLabel   = isStock ? 'ação'  : 'moeda';
             return (
-              <div key={item.id} className="pat-asset-card">
-                {/* clickable body → opens edit modal */}
-                <div
-                  className="pat-asset-body"
-                  onClick={() => handlePatrimonyEdit(assetKey, item)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="pat-asset-top">
-                    <div className="pat-asset-left">
-                      <div className="pat-stock-name-row">
-                        <span className="pat-cat-item-name">{sym}</span>
-                        {chg != null && (
-                          <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
-                            {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
-                          </span>
-                        )}
-                      </div>
-                      {item.name && <span className="pat-asset-fullname">{item.name}</span>}
-                      <span className="pat-stock-sub">
-                        {isRefreshing ? (
-                          <span className="pat-stock-loading">A atualizar…</span>
-                        ) : hasPrice ? (
-                          <>{marketPrice.toFixed(2)}€/{priceLabel} · {age}</>
-                        ) : (
-                          <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
-                        )}
-                      </span>
-                      {(item.broker || item.exchange) && (
-                        <span className="pat-asset-broker">{item.broker ?? item.exchange}</span>
+              <SwipeRevealCard
+                key={item.id}
+                className="pat-asset-card"
+                onEdit={() => handlePatrimonyEdit(assetKey, item)}
+                onDelete={() => handlePatrimonyDelete(assetKey, item.id)}
+              >
+                <div className="pat-asset-top">
+                  <div className="pat-asset-left">
+                    <div className="pat-stock-name-row">
+                      <span className="pat-cat-item-name">{sym}</span>
+                      {chg != null && (
+                        <span className={`pat-change-badge ${chg >= 0 ? 'pos' : 'neg'}`}>
+                          {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
+                        </span>
                       )}
                     </div>
-                    <div className="pat-stock-right">
-                      <span className="pat-cat-item-val">{marketVal.toFixed(2)}€</span>
-                      <span className="pat-stock-qty">{qty} {qtyLabel}</span>
-                    </div>
-                  </div>
-                  <div className="pat-asset-bottom">
-                    <div className="pat-sparkline-wrap">
-                      {sparkPrices
-                        ? <Sparkline prices={sparkPrices} color={sparkColor} />
-                        : <div className="pat-sparkline-empty">{HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}</div>
-                      }
-                    </div>
-                    {totalPatrimony > 0 && (
-                      <div className="pat-impact">
-                        <div className="pat-impact-bar-bg">
-                          <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
-                        </div>
-                        <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
-                      </div>
+                    {item.name && <span className="pat-asset-fullname">{item.name}</span>}
+                    <span className="pat-stock-sub">
+                      {isRefreshing ? (
+                        <span className="pat-stock-loading">A atualizar…</span>
+                      ) : hasPrice ? (
+                        <>{isStock ? fmtStockPrice(marketPrice) : fmtCryptoPrice(marketPrice)}€/{priceLabel} · {age}</>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
+                      )}
+                    </span>
+                    {(item.broker || item.exchange) && (
+                      <span className="pat-asset-broker">{item.broker ?? item.exchange}</span>
                     )}
                   </div>
+                  <div className="pat-stock-right">
+                    <span className="pat-cat-item-val">{fmtFiat(marketVal)}€</span>
+                    <span className="pat-stock-qty">{qty} {qtyLabel}</span>
+                  </div>
                 </div>
-                {/* action buttons — stop propagation so card click doesn't fire */}
-                <div className="pat-asset-actions">
-                  <button
-                    className="pat-asset-edit"
-                    onClick={e => { e.stopPropagation(); handlePatrimonyEdit(assetKey, item); }}
-                    title="Editar"
-                    aria-label="Editar ativo"
-                  >✎</button>
-                  <button
-                    className="m-asset-item-del pat-asset-del"
-                    onClick={e => { e.stopPropagation(); handlePatrimonyDelete(assetKey, item.id); }}
-                    title="Remover"
-                  >×</button>
+                <div className="pat-asset-bottom">
+                  <div className="pat-sparkline-wrap">
+                    {sparkPrices
+                      ? <Sparkline prices={sparkPrices} color={sparkColor} />
+                      : <div className="pat-sparkline-empty">{HAS_STOCK_KEY || !isStock ? '— sem histórico —' : ''}</div>
+                    }
+                  </div>
+                  {totalPatrimony > 0 && (
+                    <div className="pat-impact">
+                      <div className="pat-impact-bar-bg">
+                        <div className="pat-impact-bar-fill" style={{ width: `${barWidth}%`, background: sparkColor }} />
+                      </div>
+                      <span className="pat-impact-pct">{impact.toFixed(1)}%</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </SwipeRevealCard>
             );
           };
 
@@ -1359,14 +1544,15 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
               {/* Category cards */}
               <div className="pat-cards">
-                {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
+                {sortPatrimonyTypes(patrimony, PATRIMONY_TYPES).map(({ key, label, Icon: PatIcon, color }) => {
                   const items     = patrimony[key] || [];
+                  const sorted    = sortItemsByType(items, key);
                   const typeTotal = getPatrimonyTypeValue(key);
                   return (
                     <div key={key} className="pat-cat-card">
                       <div className="pat-cat-header">
                         <div className="pat-cat-icon-wrap" style={{ background: `${color}22` }}>
-                          <span style={{ color, fontSize: '1rem' }}>{icon}</span>
+                          <PatIcon size={18} color={color} strokeWidth={2} />
                         </div>
                         <div className="pat-cat-info">
                           <span className="pat-cat-name">{label}</span>
@@ -1378,10 +1564,42 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                       </div>
                       {items.length > 0 && (
                         <div className="pat-cat-items">
-                          {key === 'crypto' ? (() => {
+                          {key === 'accounts' ? sorted.map(item => {
+                            /* ── Account card with live balance + Principal badge ── */
+                            const currentBal = computeAccountBalance(item);
+                            const isMain     = item.id === mainAccountId;
+                            return (
+                              <SwipeRevealCard
+                                key={item.id}
+                                className={`pat-cat-item pat-account-item${isMain ? ' pat-account-item--main' : ''}`}
+                                onEdit={() => handlePatrimonyEdit('accounts', item)}
+                                onDelete={() => handlePatrimonyDelete('accounts', item.id)}
+                              >
+                                <div className="pat-account-left">
+                                  <div className="pat-account-name-row">
+                                    <span className="pat-cat-item-name">{item.name}{item.bank ? ` · ${item.bank}` : ''}</span>
+                                    {isMain && <span className="pat-account-badge-main">Principal</span>}
+                                  </div>
+                                  <div className="pat-account-bal-row">
+                                    <span className="pat-account-current-bal">{currentBal.toFixed(2)}€</span>
+                                    {parseFloat(item.balance || 0) !== currentBal && (
+                                      <span className="pat-account-initial-bal">base {parseFloat(item.balance || 0).toFixed(2)}€</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {onMainAccountChange && (
+                                  <button
+                                    className={`pat-account-btn-main${isMain ? ' active' : ''}`}
+                                    onClick={() => onMainAccountChange(isMain ? null : item.id)}
+                                    title={isMain ? 'Remover como Principal' : 'Definir como Principal'}
+                                  >{isMain ? '★' : '☆'}</button>
+                                )}
+                              </SwipeRevealCard>
+                            );
+                          }) : key === 'crypto' ? (() => {
                             /* ── Crypto: group by exchange ── */
                             const byExchange = {};
-                            items.forEach(item => {
+                            sorted.forEach(item => {
                               const ex = item.exchange || 'Sem exchange';
                               if (!byExchange[ex]) byExchange[ex] = [];
                               byExchange[ex].push(item);
@@ -1396,16 +1614,20 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                               ] : []),
                               ...groupItems.map(item => assetCardFor(item, 'crypto')),
                             ]);
-                          })() : items.map(item => {
+                          })() : sorted.map(item => {
                             /* ── Stocks: asset card ── */
                             if (key === 'stocks') return assetCardFor(item, 'stocks');
                             /* ── Generic row for all other asset types ── */
                             return (
-                              <div key={item.id} className="pat-cat-item">
+                              <SwipeRevealCard
+                                key={item.id}
+                                className="pat-cat-item"
+                                onEdit={() => handlePatrimonyEdit(key, item)}
+                                onDelete={() => handlePatrimonyDelete(key, item.id)}
+                              >
                                 <span className="pat-cat-item-name">{renderPatrimonyItemLabel(key, item)}</span>
                                 <span className="pat-cat-item-val">{renderPatrimonyItemValue(key, item)}</span>
-                                <button className="m-asset-item-del" onClick={() => handlePatrimonyDelete(key, item.id)}>×</button>
-                              </div>
+                              </SwipeRevealCard>
                             );
                           })}
                         </div>
@@ -1434,11 +1656,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
   return (
-    <div className="budget-tab">
-      <div className="budget-header">
-        <h2>Orçamento</h2>
-        <p>Gestão financeira</p>
-      </div>
+    <div className="budget-tab" ref={budgetTabRef}>
+      <PageHeader title="Orçamento" subtitle="Gestão financeira" />
 
       <div className="view-toggle view-toggle-3">
         <button className={`toggle-btn ${activeView === 'budgets' ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>
@@ -1454,7 +1673,13 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
       {activeView === 'budgets' && (
         <div className="budgets-section">
-          <h3>Limites Mensais</h3>
+          <h3>
+            {financialMonthStartDay === 1 ? 'Limites Mensais' : (() => {
+              const { start, end } = getFinancialMonthRange(selectedMonth, financialMonthStartDay);
+              const fmt = (s) => new Date(s + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+              return `${fmt(start)} → ${fmt(end)}`;
+            })()}
+          </h3>
           {(() => {
             const totalBudget = Object.values(budgets).reduce((sum, val) => sum + (val || 0), 0);
             const totalSpent = categories.expense.reduce((sum, cat) => sum + getSpentByCategory(cat.id), 0);
@@ -1483,14 +1708,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
               .map(({ cat, limit, spent, hasLimit, percent, barWidth, colorClass }) => (
                 <div key={cat.id} className="budget-category">
                   <div className="category-header">
-                    <span className="category-icon">{getCategoryIcon(cat.label)}</span>
+                    {(() => { const { Icon: CI, color: cc } = getCategoryMeta(cat.label); return <div className="category-icon-bubble" style={{ background: `${cc}22` }}><CI size={14} color={cc} strokeWidth={2} /></div>; })()}
                     <span className="category-name">{cat.label}</span>
                     {percent >= 100 && <span className="budget-alert over">Excedido</span>}
                     {percent >= 80 && percent < 100 && <span className="budget-alert warn">Atenção</span>}
                   </div>
                   <div className="budget-input-row">
                     <input type="number" inputMode="decimal" className="budget-input" value={limit || ''} onChange={(e) => handleLimitChange(cat.id, e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { saveBudgetToDb(); e.target.blur(); } }} placeholder="0" step="10" min="0" />
-                    <span className="budget-currency">€/mês</span>
+                    <span className="budget-currency">{financialMonthStartDay === 1 ? '€/mês' : '€/per.'}</span>
                     <button className="budget-save-btn" onClick={saveBudgetToDb} title="Guardar">✓</button>
                   </div>
                   {hasLimit && (
@@ -1571,14 +1796,14 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             <div className="patrimony-total-amount">{totalPatrimony.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
           </div>
           <div className="patrimony-types-list">
-            {PATRIMONY_TYPES.map(({ key, label, icon, color }) => {
+            {PATRIMONY_TYPES.map(({ key, label, Icon: PatIcon, color }) => {
               const items = patrimony[key] || [];
               const typeTotal = getPatrimonyTypeValue(key);
               return (
                 <div key={key} className="patrimony-type-card">
                   <div className="patrimony-type-header">
                     <div className="patrimony-type-left">
-                      <span className="patrimony-type-icon" style={{ color }}>{icon}</span>
+                      <span className="patrimony-type-icon" style={{ color }}><PatIcon size={16} color={color} strokeWidth={2} /></span>
                       <span className="patrimony-type-label">{label}</span>
                     </div>
                     <span className="patrimony-type-total">{typeTotal.toFixed(2)}€</span>

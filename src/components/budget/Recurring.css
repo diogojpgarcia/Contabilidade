@@ -1,0 +1,821 @@
+/* ── Recurring Payments ─────────────────────────────────────────────────── */
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Summary card ─────────────────────────────────────────────────────────── */
+.rp-summary {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 0 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rp-summary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+.rp-summary-body { flex: 1; min-width: 0; }
+.rp-summary-amount {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.rp-summary-label {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.rp-summary-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+}
+
+/* ── Calendar button ──────────────────────────────────────────────────────── */
+.rp-cal-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 16px 14px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: none;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent, #6366f1);
+  cursor: pointer;
+  width: calc(100% - 32px);
+  transition: opacity 0.15s;
+}
+.rp-cal-btn:active { opacity: 0.7; }
+.rp-cal-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rp-cal-btn-chev { margin-left: auto; color: var(--text-tertiary); }
+
+/* ── List ─────────────────────────────────────────────────────────────────── */
+.rp-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rp-empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  padding: 32px 16px;
+}
+
+/* ── Payment row ──────────────────────────────────────────────────────────── */
+.rp-row {
+  background: var(--bg-secondary);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* rp-row-icon replaced by <CategoryIconBubble> — kept as safety fallback */
+.rp-row-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rp-row-body { flex: 1; min-width: 0; }
+.rp-row-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+.rp-row-freq {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+.rp-row-due {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+}
+.rp-row-due.soon { color: #f59e0b; }
+.rp-row-due.today { color: #10b981; font-weight: 700; }
+.rp-row-right { flex-shrink: 0; text-align: right; }
+.rp-row-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.rp-row-cat {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+/* swipe-reveal inside rp-list */
+.rp-list .swipe-reveal { border-radius: 14px; }
+.rp-list .swipe-row { border-radius: 14px; }
+
+/* ── Add form ─────────────────────────────────────────────────────────────── */
+.rp-form-sheet {
+  background: var(--bg-secondary);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: 0 0 env(safe-area-inset-bottom, 16px);
+  animation: slideUp 0.25s ease;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+.rp-form-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--separator);
+  margin: 10px auto 0;
+}
+.rp-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+}
+.rp-form-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.rp-form-close {
+  background: var(--bg-tertiary);
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rp-form-body {
+  padding: 4px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rp-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.rp-form-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+.rp-form-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--separator);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.18s;
+}
+.rp-form-input:focus { border-color: #6366f1; }
+.rp-form-input::placeholder { color: var(--text-tertiary); }
+
+/* Frequency toggle */
+.rp-freq-row {
+  display: flex;
+  gap: 6px;
+}
+.rp-freq-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border: 1.5px solid var(--separator);
+  border-radius: 9px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.rp-freq-btn.active {
+  border-color: #6366f1;
+  background: rgba(99,102,241,0.12);
+  color: #a5b4fc;
+}
+
+/* Selector button (category, account) */
+.rp-selector-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--separator);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.12s;
+  box-sizing: border-box;
+  text-align: left;
+  gap: 8px;
+}
+.rp-selector-btn:active {
+  border-color: #6366f1;
+  background: rgba(99,102,241,0.08);
+}
+.rp-selector-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  min-width: fit-content;
+}
+.rp-selector-value {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-selector-icon {
+  font-size: 1rem;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* Form actions */
+.rp-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.rp-form-cancel {
+  flex: 1;
+  padding: 11px;
+  border-radius: 12px;
+  border: none;
+  background: var(--bg-tertiary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.rp-form-save {
+  flex: 2;
+  padding: 11px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.rp-form-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Modal overlay & panel */
+.rp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-end;
+  z-index: 999;
+  animation: fadeIn 0.15s ease;
+}
+.rp-modal-panel {
+  background: var(--bg-secondary);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.25s ease;
+}
+.rp-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--separator);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.rp-modal-close {
+  background: var(--bg-tertiary);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+.rp-modal-close:active { opacity: 0.6; }
+.rp-modal-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.rp-modal-item {
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid var(--separator);
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.rp-modal-item:last-child { border-bottom: none; }
+.rp-modal-item:active { background: var(--bg-tertiary); }
+.rp-modal-item.active {
+  color: #6366f1;
+  font-weight: 600;
+  background: rgba(99,102,241,0.08);
+}
+.rp-modal-item.active::after {
+  content: '✓';
+  font-size: 0.9rem;
+  color: #6366f1;
+}
+
+/* ── Calendar ─────────────────────────────────────────────────────────────── */
+.rp-cal-sheet {
+  background: var(--bg-secondary);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: 0 0 env(safe-area-inset-bottom, 16px);
+  animation: slideUp 0.25s ease;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+.rp-cal-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--separator);
+  margin: 10px auto 0;
+}
+.rp-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+.rp-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rp-cal-nav-btn {
+  background: var(--bg-tertiary);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+.rp-cal-nav-btn:active { opacity: 0.6; }
+.rp-cal-month-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 110px;
+  text-align: center;
+}
+.rp-cal-close {
+  background: var(--bg-tertiary);
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Grid */
+.rp-cal-grid {
+  padding: 4px 10px 10px;
+}
+.rp-cal-day-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.rp-cal-day-header {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  padding: 4px 0;
+  text-transform: uppercase;
+}
+.rp-cal-weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rp-cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.rp-cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+  padding: 3px 0 0;
+  min-height: 36px;
+}
+.rp-cal-cell:active { background: var(--bg-tertiary); }
+.rp-cal-cell.empty { cursor: default; }
+.rp-cal-cell.today .rp-cal-day-num {
+  background: #6366f1;
+  color: #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rp-cal-cell.selected { background: rgba(99,102,241,0.1); }
+.rp-cal-day-num {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.rp-cal-cell.other-month .rp-cal-day-num { color: var(--text-tertiary); opacity: 0.4; }
+.rp-cal-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 28px;
+}
+.rp-cal-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #6366f1;
+  flex-shrink: 0;
+}
+
+/* Day detail panel */
+.rp-cal-detail {
+  padding: 10px 16px 4px;
+  border-top: 0.5px solid var(--separator);
+}
+.rp-cal-detail-date {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.rp-cal-detail-empty {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  padding: 8px 0;
+}
+.rp-cal-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 0.5px solid var(--separator);
+}
+.rp-cal-detail-item:last-child { border-bottom: none; }
+.rp-cal-detail-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.rp-cal-detail-body { flex: 1; min-width: 0; }
+.rp-cal-detail-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.rp-cal-detail-sub {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.rp-cal-detail-amt {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+/* ── Budget view — recurring committed strip ──────────────────────────────── */
+.rp-budget-strip {
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rp-budget-strip-icon { font-size: 0.9rem; }
+.rp-budget-strip-body { flex: 1; }
+.rp-budget-strip-label {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+.rp-budget-strip-amount {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.rp-budget-strip-nav {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6366f1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Home widget ──────────────────────────────────────────────────────────── */
+.hrp-card {}
+.hrp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 0.5px solid var(--separator);
+}
+.hrp-row:last-child { border-bottom: none; }
+/* .hrp-icon replaced by <CategoryIconBubble> inline — class kept for
+   soft-future.css shadow override which targets .hrp-icon selector */
+.hrp-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hrp-body { flex: 1; min-width: 0; }
+.hrp-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hrp-sub {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+.hrp-right { text-align: right; flex-shrink: 0; }
+.hrp-amount {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.hrp-due {
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-top: 1px;
+  color: var(--text-tertiary);
+}
+.hrp-due.today  { color: #10b981; }
+.hrp-due.soon   { color: #f59e0b; }
+.hrp-due.urgent { color: #ef4444; }
+
+/* Pending / confirmed badges on HomeRecurring rows */
+.hrp-row--pending { border-left: 2px solid #f59e0b; padding-left: 8px; }
+.hrp-pending-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.hrp-confirmed-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #10b981;
+  background: rgba(16,185,129,0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+
+/* ── Pending confirmations section ─────────────────────────────────────────── */
+.rp-pending-section {
+  margin: 4px 16px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(245,158,11,0.25);
+  background: rgba(245,158,11,0.05);
+  overflow: hidden;
+}
+.rp-pending-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f59e0b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.rp-pending-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+}
+.rp-pending-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(245,158,11,0.12);
+}
+.rp-pending-body { flex: 1; min-width: 0; }
+.rp-pending-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-pending-meta {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.rp-pending-due { color: #f59e0b; }
+.rp-pending-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.rp-pending-amount {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.rp-confirm-btn {
+  background: #f59e0b;
+  color: #000;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s;
+}
+.rp-confirm-btn:active { opacity: 0.75; }
+
+/* Confirm modal info bar */
+.rp-confirm-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+}
+.rp-confirm-info strong { color: var(--text-primary); font-weight: 700; }
+.rp-confirm-info span   { color: var(--text-tertiary); font-size: 0.78rem; }
+
+/* Payment type hint */
+.rp-form-hint {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}

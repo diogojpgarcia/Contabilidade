@@ -1,3 +1,6 @@
+import { isInFinancialMonth, getFinancialMonthRange, getFinancialMonthLabel, getPrediction as _getPrediction } from './financialMonth.js';
+import { applyFocusBoost } from './financialFocus.js';
+
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 export const shiftMonth = (yyyymm, delta) => {
@@ -6,30 +9,28 @@ export const shiftMonth = (yyyymm, delta) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
-export const formatMonthLabel = (yyyymm) => {
-  const [y, m] = yyyymm.split('-').map(Number);
-  return `${MONTH_NAMES[m - 1]} ${y}`;
+export const formatMonthLabel = (yyyymm, startDay = 1) => {
+  if (startDay === 1) {
+    const [y, m] = yyyymm.split('-').map(Number);
+    return `${MONTH_NAMES[m - 1]} ${y}`;
+  }
+  return getFinancialMonthLabel(yyyymm, startDay);
 };
 
-export const getPrediction = (spent, selectedMonth) => {
-  const today = new Date();
-  const [y, m] = selectedMonth.split('-').map(Number);
-  if (today.getFullYear() !== y || today.getMonth() + 1 !== m) return null;
-  const daysPassed = today.getDate();
-  if (daysPassed === 0 || spent === 0) return null;
-  const daysTotal = new Date(y, m, 0).getDate();
-  return Math.round((spent / daysPassed) * daysTotal);
-};
+// Re-export from financialMonth so callers that import from insights still work.
+// startDay param is now supported — pass it from BudgetTab / StatsTab.
+export const getPrediction = (spent, selectedMonth, startDay = 1) =>
+  _getPrediction(spent, selectedMonth, startDay);
 
-const getSpent = (transactions, catName, month) =>
+const getSpent = (transactions, catName, month, startDay = 1) =>
   transactions
-    .filter(t => t.type === 'expense' && t.category === catName && t.date && t.date.startsWith(month))
+    .filter(t => t.type === 'expense' && t.category === catName && t.date && isInFinancialMonth(t.date, month, startDay))
     .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
 const fmt0 = (n) =>
   Math.abs(n).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-export const generateInsights = ({ transactions, budgets, categories, selectedMonth }) => {
+export const generateInsights = ({ transactions, budgets, categories, selectedMonth, startDay = 1, focus = null }) => {
   const items = [];
 
   const prevMonth  = shiftMonth(selectedMonth, -1);
@@ -38,19 +39,22 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
   const prev4Month = shiftMonth(selectedMonth, -4);
   const prev5Month = shiftMonth(selectedMonth, -5);
 
-  // Current month timing
-  const today = new Date();
-  const [sy, sm] = selectedMonth.split('-').map(Number);
-  const isCurrentMonth = today.getFullYear() === sy && today.getMonth() + 1 === sm;
-  const daysInMonth  = new Date(sy, sm, 0).getDate();
-  const daysPassed   = isCurrentMonth ? today.getDate() : daysInMonth;
+  // Current period timing (works for both calendar and financial months)
+  const today    = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const { start, end } = getFinancialMonthRange(selectedMonth, startDay);
+  const isCurrentMonth = todayStr >= start && todayStr <= end;
+  const startDate  = new Date(start + 'T00:00:00');
+  const endDate    = new Date(end   + 'T00:00:00');
+  const daysInMonth  = Math.round((endDate - startDate) / 86400000) + 1;
+  const daysPassed   = isCurrentMonth ? Math.round((today - startDate) / 86400000) + 1 : daysInMonth;
   const daysLeft     = isCurrentMonth ? daysInMonth - daysPassed : 0;
 
   // Per-category current + previous month totals
   const catTotals = categories.expense.map(cat => ({
     cat,
-    spent:     getSpent(transactions, cat.label, selectedMonth),
-    prevSpent: getSpent(transactions, cat.label, prevMonth),
+    spent:     getSpent(transactions, cat.label, selectedMonth, startDay),
+    prevSpent: getSpent(transactions, cat.label, prevMonth,     startDay),
   }));
   const totalCurr = catTotals.reduce((s, c) => s + c.spent, 0);
 
@@ -62,22 +66,25 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
     if (limit > 0 && percent >= 100) {
       items.push({
         type: 'alert',
-        title: `Limite ultrapassado em ${cat.label}`,
-        message: `${fmt0(spent)}€ de ${fmt0(limit)}€ usados`,
-        explanation: `Excedeste em ${fmt0(spent - limit)}€${daysLeft > 0 ? ` — ainda faltam ${daysLeft} dias` : ''}`,
+        title: `${cat.label}: limite ultrapassado`,
+        message: `Excedeste em ${fmt0(spent - limit)}€${daysLeft > 0 ? ` — ainda faltam ${daysLeft} dias` : ''}`,
+        explanation: `${fmt0(spent)}€ gastos de um limite de ${fmt0(limit)}€`,
         priority: 100,
         color: 'risk',
+        meta: { action: 'openBudget', categoryLabel: cat.label },
       });
     } else if (limit > 0 && percent >= 80) {
+      const remaining = limit - spent;
       items.push({
         type: 'risk',
-        title: `Estás perto do limite em ${cat.label}`,
-        message: `${fmt0(spent)}€ de ${fmt0(limit)}€ usados (${percent.toFixed(0)}%)`,
-        explanation: daysLeft > 0
-          ? `Faltam ${fmt0(limit - spent)}€ para o limite e ainda ${daysLeft} dias no mês`
-          : `Faltam ${fmt0(limit - spent)}€ para o limite`,
+        title: `${cat.label}: só restam ${fmt0(remaining)}€`,
+        message: daysLeft > 0
+          ? `${percent.toFixed(0)}% usado — ${daysLeft} dias ainda por decorrer`
+          : `${percent.toFixed(0)}% do orçamento consumido`,
+        explanation: `${fmt0(spent)}€ de ${fmt0(limit)}€`,
         priority: 90,
         color: 'warn',
+        meta: { action: 'openBudget', categoryLabel: cat.label },
       });
     }
 
@@ -87,11 +94,12 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
       if (projected > limit) {
         items.push({
           type: 'alert',
-          title: `Projeção: vais ultrapassar ${cat.label}`,
-          message: `Ao ritmo atual: ${fmt0(projected)}€ previsto (limite: ${fmt0(limit)}€)`,
-          explanation: `Já usaste ${percent.toFixed(0)}% em ${daysPassed} dias — reduz o ritmo`,
+          title: `${cat.label}: vai ultrapassar ao ritmo atual`,
+          message: `Projeção: ${fmt0(projected)}€ para um limite de ${fmt0(limit)}€`,
+          explanation: `${fmt0(spent)}€ em ${daysPassed} dias — ritmo de ${fmt0(Math.round(spent / daysPassed))}€/dia`,
           priority: 85,
           color: 'risk',
+          meta: { action: 'openBudget', categoryLabel: cat.label },
         });
       }
     }
@@ -105,11 +113,14 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
       if (share >= 50) {
         items.push({
           type: 'risk',
-          title: 'Concentração elevada de despesas',
-          message: `${topCat.cat.label} representa ${share.toFixed(0)}% do total`,
-          explanation: `${fmt0(topCat.spent)}€ de ${fmt0(totalCurr)}€ totais — rever pode gerar poupança`,
+          title: `${topCat.cat.label} concentra ${share.toFixed(0)}% das despesas`,
+          message: `${fmt0(topCat.spent)}€ de ${fmt0(totalCurr)}€ totais`,
+          explanation: share >= 70
+            ? 'Concentração muito elevada — uma única categoria domina o orçamento'
+            : 'Reduzir aqui tem o maior impacto nas poupanças totais',
           priority: 80,
           color: share >= 70 ? 'risk' : 'warn',
+          meta: { action: 'openBudget', categoryLabel: topCat.cat.label },
         });
       }
     }
@@ -118,26 +129,68 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
   // ── 3. 3-month consecutive increase in a category ─────────────────────────
   for (const { cat } of catTotals) {
     const [m0, m1, m2] = [prev2Month, prevMonth, selectedMonth]
-      .map(m => getSpent(transactions, cat.label, m));
-    // Require non-trivial base and 10%+ increase each step
+      .map(m => getSpent(transactions, cat.label, m, startDay));
     if (m0 > 10 && m1 > m0 * 1.1 && m2 > m1 * 1.1) {
       const growth = ((m2 - m0) / m0 * 100).toFixed(0);
       items.push({
         type: 'trend',
-        title: `${cat.label} cresce há 3 meses seguidos`,
-        message: `${fmt0(m0)}€ → ${fmt0(m1)}€ → ${fmt0(m2)}€`,
-        explanation: `+${growth}% em 3 meses — tendência de aumento consistente`,
+        title: `${cat.label} sobe há 3 meses seguidos`,
+        message: `${fmt0(m0)}€ → ${fmt0(m1)}€ → ${fmt0(m2)}€  (+${growth}%)`,
+        explanation: 'Tendência de aumento consistente — vale a pena definir um limite',
         priority: 75,
         color: 'warn',
+        meta: { action: 'openBudget', categoryLabel: cat.label },
       });
     }
   }
 
-  // ── 4. Spending volatility ─────────────────────────────────────────────────
-  // Coefficient of variation > 0.7 across 6 months signals unpredictability
+  // ── 4. Savings opportunity — spending above 2-month average by > 30% ───────
+  for (const { cat } of catTotals) {
+    const [m0, m1, m2] = [prev2Month, prevMonth, selectedMonth]
+      .map(m => getSpent(transactions, cat.label, m, startDay));
+    const avg2 = (m0 + m1) / 2;
+    if (avg2 > 20 && m2 > avg2 * 1.3) {
+      const excess = Math.round(m2 - avg2);
+      items.push({
+        type: 'opportunity',
+        title: `Poupança potencial em ${cat.label}`,
+        message: `${fmt0(excess)}€ acima da tua média habitual de ${fmt0(Math.round(avg2))}€`,
+        explanation: 'Voltares ao teu ritmo anterior pouparia este valor todo o mês',
+        priority: 70,
+        color: 'good',
+        meta: { action: 'openBudget', categoryLabel: cat.label },
+      });
+    }
+  }
+
+  // ── 5. Biggest single expense this month ──────────────────────────────────
+  if (totalCurr > 50) {
+    const thisMonthExpenses = transactions.filter(
+      t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay)
+    ).sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+    const bigTx = thisMonthExpenses[0];
+    if (bigTx) {
+      const amt = parseFloat(bigTx.amount) || 0;
+      const share = amt / totalCurr;
+      if (amt >= 50 && share >= 0.20) {
+        const label = bigTx.description?.trim() || bigTx.category;
+        items.push({
+          type: 'info',
+          title: `Maior despesa: ${fmt0(amt)}€`,
+          message: `"${label}" — ${(share * 100).toFixed(0)}% do total deste mês`,
+          explanation: null,
+          priority: 55,
+          color: 'info',
+          meta: { action: 'openHistory' },
+        });
+      }
+    }
+  }
+
+  // ── 6. Spending volatility ─────────────────────────────────────────────────
   for (const { cat } of catTotals) {
     const monthly = [prev5Month, prev4Month, prev3Month, prev2Month, prevMonth, selectedMonth]
-      .map(m => getSpent(transactions, cat.label, m))
+      .map(m => getSpent(transactions, cat.label, m, startDay))
       .filter(v => v > 0);
     if (monthly.length >= 4) {
       const mean   = monthly.reduce((s, v) => s + v, 0) / monthly.length;
@@ -148,18 +201,18 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
         const max = fmt0(Math.max(...monthly));
         items.push({
           type: 'pattern',
-          title: `Gastos irregulares em ${cat.label}`,
-          message: `Variação de ${min}€ a ${max}€ nos últimos meses`,
-          explanation: `Padrão imprevisível dificulta planeamento — considera definir um orçamento fixo`,
+          title: `${cat.label}: gastos muito irregulares`,
+          message: `De ${min}€ a ${max}€ nos últimos meses`,
+          explanation: 'Padrão imprevisível — um orçamento fixo ajudaria a estabilizar',
           priority: 65,
           color: 'info',
+          meta: { action: 'openBudget', categoryLabel: cat.label },
         });
       }
     }
   }
 
-  // ── 5. Weekend vs weekday spending pattern ─────────────────────────────────
-  // Look at last 3 months of expenses
+  // ── 7. Weekend vs weekday spending pattern ─────────────────────────────────
   const windowStart = prev2Month + '-01';
   const recentExpenses = transactions.filter(
     t => t.type === 'expense' && t.date && t.date >= windowStart
@@ -168,7 +221,7 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
     let weekendTotal = 0; const weekendDays = new Set();
     let weekdayTotal = 0; const weekdayDays = new Set();
     for (const t of recentExpenses) {
-      const dow    = new Date(t.date + 'T12:00:00').getDay(); // midday avoids DST issues
+      const dow    = new Date(t.date + 'T12:00:00').getDay();
       const amount = parseFloat(t.amount) || 0;
       if (dow === 0 || dow === 6) { weekendTotal += amount; weekendDays.add(t.date); }
       else                        { weekdayTotal += amount; weekdayDays.add(t.date); }
@@ -180,51 +233,60 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
         const ratio = (wkendAvg / wkdayAvg).toFixed(1);
         items.push({
           type: 'pattern',
-          title: 'Gastas mais ao fim de semana',
-          message: `Média: ${fmt0(wkendAvg)}€/dia (fim de semana) vs ${fmt0(wkdayAvg)}€/dia (semana)`,
-          explanation: `${ratio}× mais por dia — padrão detetado nos últimos 3 meses`,
+          title: `Gastas ${ratio}× mais ao fim de semana`,
+          message: `${fmt0(wkendAvg)}€/dia (fim de semana) vs ${fmt0(wkdayAvg)}€/dia (semana)`,
+          explanation: 'Padrão detetado nos últimos 3 meses',
           priority: 60,
           color: 'info',
+          meta: { action: 'openHistory' },
         });
       }
     }
   }
 
-  // ── 6. Recurring micro-transactions ───────────────────────────────────────
-  // 5+ transactions in a category averaging < €15 this month
+  // ── 8. Recurring micro-transactions ───────────────────────────────────────
   for (const { cat, spent } of catTotals) {
     if (spent < 10) continue;
     const txns = transactions.filter(
-      t => t.type === 'expense' && t.category === cat.label && t.date && t.date.startsWith(selectedMonth)
+      t => t.type === 'expense' && t.category === cat.label && t.date && isInFinancialMonth(t.date, selectedMonth, startDay)
     );
     if (txns.length >= 5) {
       const avg = spent / txns.length;
       if (avg < 15) {
         items.push({
           type: 'pattern',
-          title: `Micropagamentos frequentes em ${cat.label}`,
-          message: `${txns.length} transações com média de ${avg.toFixed(1)}€`,
-          explanation: `Total acumulado: ${fmt0(spent)}€ — pequenos gastos regulares somam`,
+          title: `${txns.length} pequenas compras em ${cat.label}`,
+          message: `Média de ${avg.toFixed(1)}€ cada — total acumulado: ${fmt0(spent)}€`,
+          explanation: 'Pequenos gastos frequentes somam mais do que parece',
           priority: 50,
           color: 'info',
+          meta: { action: 'openBudget', categoryLabel: cat.label },
         });
       }
     }
   }
 
-  return items
-    .sort((a, b) => b.priority - a.priority)
-    .slice(0, 4);
+  const ranked = applyFocusBoost(items, focus)
+    .sort((a, b) => b.priority - a.priority);
+
+  console.log(
+    '[Insights] focus:', focus ?? 'none',
+    '| raw count:', items.length,
+    '| top 4:',
+    ranked.slice(0, 4).map(i => `${i.type}(${i.priority})`).join(', ')
+  );
+
+  return ranked.slice(0, 4);
 };
 
 // ── Financial score (0-100) ─────────────────────────────────────────────────
-export const computeFinancialScore = ({ transactions, budgets, categories, selectedMonth }) => {
+export const computeFinancialScore = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
   const prevMonth  = shiftMonth(selectedMonth, -1);
   const prev2Month = shiftMonth(selectedMonth, -2);
 
   const catSpent = (label, month) =>
     transactions
-      .filter(t => t.type === 'expense' && t.category === label && t.date && t.date.startsWith(month))
+      .filter(t => t.type === 'expense' && t.category === label && t.date && isInFinancialMonth(t.date, month, startDay))
       .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
   const catTotals = categories.expense.map(cat => ({
@@ -280,12 +342,12 @@ export const computeFinancialScore = ({ transactions, budgets, categories, selec
 };
 
 // ── Smart Goals (auto-generated, max 3) ─────────────────────────────────────
-export const generateGoals = ({ transactions, budgets, categories, selectedMonth }) => {
+export const generateGoals = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
   const prevMonth = shiftMonth(selectedMonth, -1);
 
   const monthSpend = (catLabel, month) =>
     transactions
-      .filter(t => t.type === 'expense' && t.category === catLabel && t.date && t.date.startsWith(month))
+      .filter(t => t.type === 'expense' && t.category === catLabel && t.date && isInFinancialMonth(t.date, month, startDay))
       .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
   const catTotals = categories.expense.map(cat => ({
@@ -297,7 +359,7 @@ export const generateGoals = ({ transactions, budgets, categories, selectedMonth
   const totalCurrent = catTotals.reduce((s, c) => s + c.current, 0);
   const totalPrev    = catTotals.reduce((s, c) => s + c.prev, 0);
   const monthIncome  = transactions
-    .filter(t => t.type === 'income' && t.date && t.date.startsWith(selectedMonth))
+    .filter(t => t.type === 'income' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay))
     .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
   const goal = (type, title, description, targetAmount, currentAmount) => {

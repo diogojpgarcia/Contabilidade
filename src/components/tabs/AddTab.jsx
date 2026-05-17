@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
+import { CategoryIconBubble } from '../../utils/categoryIcons';
+import CategoryPicker from '../CategoryPicker';
 import './AddTab.css';
 
-const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, theme = 'default' }) => {
+const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, defaultAccount, theme = 'default' }) => {
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -13,6 +15,9 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
   const [selectedGoal, setSelectedGoal] = useState('');
   const [transferFrom, setTransferFrom] = useState('');
   const [transferTo, setTransferTo]     = useState('');
+  const [accountId,   setAccountId]     = useState(defaultAccount?.id   || '');
+  const [accountName, setAccountName]   = useState(defaultAccount?.name || '');
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   const accounts = (patrimony?.accounts || []);
 
@@ -69,12 +74,18 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
         );
         await dbService.updateUserSettings(user.id, { goals: updatedGoals });
       } else {
-        const transaction = { type, amount: amountValue, category, description: description.trim() || null, date };
+        const transaction = {
+          type, amount: amountValue, category,
+          description: description.trim() || null, date,
+          account_id:   accountId   || null,
+          account_name: accountName || null,
+        };
         if (onTransactionAdded) await onTransactionAdded(transaction);
       }
       if (type !== 'transfer') {
         setAmount(''); setCategory(''); setSelectedGoal(''); setDescription('');
         setDate(new Date().toISOString().split('T')[0]);
+        // Preserve account selection — user usually pays from the same account
         loadGoals();
       }
     } catch (error) {
@@ -88,6 +99,13 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
   const switchType = (newType) => {
     setType(newType);
     setCategory(''); setSelectedGoal(''); setTransferFrom(''); setTransferTo('');
+  };
+
+  const handleAccountSelect = (e) => {
+    const id = e.target.value;
+    const acc = accounts.find(a => a.id === id);
+    setAccountId(id);
+    setAccountName(acc?.name || '');
   };
 
   /* ── Shared form fields (rendered in both branches) ─────────────────────── */
@@ -137,7 +155,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
               ? <p className="helper-text">Sem contas. Adiciona uma em Budget → Património.</p>
               : <select value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)} className="category-select">
                   <option value="">Seleciona conta de origem</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€</option>)}
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
                 </select>}
           </div>
           <div className="form-field">
@@ -157,7 +175,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
               ? <span className="m-helper">Sem contas. Adiciona uma em Budget → Património.</span>
               : <select className="m-field-select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
                   <option value="">Seleciona conta de origem</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.balance) || 0).toFixed(2)}€</option>)}
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
                 </select>}
           </div>
           <div className="m-field-card">
@@ -204,10 +222,30 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
         ) : (
           <div className="m-field-card">
             <span className="m-field-label">Categoria</span>
-            <select className="m-field-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">Seleciona uma categoria</option>
-              {currentCategories.map(cat => <option key={cat.id} value={cat.label}>{getCategoryIcon(cat.label)} {cat.label}</option>)}
-            </select>
+            <button
+              type="button"
+              className="m-field-cat-btn"
+              onClick={() => setShowCategoryPicker(true)}
+            >
+              {category ? (
+                <>
+                  <CategoryIconBubble name={category} type={type} size={28} radius="7px" />
+                  <span className="m-field-cat-label">{category}</span>
+                </>
+              ) : (
+                <span className="m-field-cat-placeholder">Seleciona uma categoria</span>
+              )}
+              <span className="m-field-cat-chevron">›</span>
+            </button>
+            {showCategoryPicker && (
+              <CategoryPicker
+                transaction={{ id: null, type, category, description }}
+                categories={categories}
+                title="Selecionar Categoria"
+                onSelect={(label) => { setCategory(label); setShowCategoryPicker(false); }}
+                onClose={() => setShowCategoryPicker(false)}
+              />
+            )}
           </div>
         )
       ))}
@@ -224,6 +262,37 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, t
           <input type="text" className="m-field-input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex: Compras supermercado" maxLength={100} />
         </div>
       )}
+
+      {/* Account — expense/income only (transfer already has from/to selectors) */}
+      {type !== 'transfer' && type !== 'goal' && (theme === 'default' ? (
+        <div className="form-field">
+          <label>Conta</label>
+          {accounts.length === 0
+            ? <p className="helper-text">Sem contas. Adiciona em Budget → Património.</p>
+            : <select value={accountId} onChange={handleAccountSelect} className="category-select">
+                <option value="">Sem conta específica</option>
+                {accounts.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€
+                  </option>
+                ))}
+              </select>}
+        </div>
+      ) : (
+        <div className="m-field-card">
+          <span className="m-field-label">Conta</span>
+          {accounts.length === 0
+            ? <span className="m-helper">Sem contas. Adiciona em Budget → Património.</span>
+            : <select className="m-field-select" value={accountId} onChange={handleAccountSelect}>
+                <option value="">Sem conta específica</option>
+                {accounts.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€
+                  </option>
+                ))}
+              </select>}
+        </div>
+      ))}
 
       {/* Date */}
       {theme === 'default' ? (

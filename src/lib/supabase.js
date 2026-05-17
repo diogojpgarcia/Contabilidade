@@ -43,6 +43,7 @@ export const authService = {
 // Normalise a raw Supabase row so amount is always a Number.
 // Apply this to every row that comes back from the transactions table.
 function mapTransaction(raw) {
+  if (!raw) throw new Error('updateTransaction: no row returned — transaction may not exist or RLS blocked the update');
   return { ...raw, amount: Number(raw.amount) };
 }
 
@@ -58,13 +59,51 @@ export const dbService = {
   },
 
   async addTransaction(userId, transaction) {
-    const { date, description, amount, type, category } = transaction;
+    const { date, description, amount, type, category, account_id, account_name } = transaction;
+    const row = { user_id: userId, date, description, amount, type, category };
+    if (account_id   != null) row.account_id   = account_id;
+    if (account_name != null) row.account_name = account_name;
+
+    const { data, error } = await supabase.from('transactions').insert([row]).select();
+
+    // Graceful fallback: if the account columns don't exist yet in the DB,
+    // retry without them so the insert still succeeds.
+    // Add `account_id text, account_name text` to the transactions table to enable linking.
+    if (error) {
+      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
+        (error.message || '').includes('account_id') || (error.message || '').includes('account_name');
+      if (!isColErr) throw error;
+      console.warn('[supabase] account_id/account_name columns missing — add them to transactions table');
+      const base = { user_id: userId, date, description, amount, type, category };
+      const { data: d2, error: e2 } = await supabase.from('transactions').insert([base]).select();
+      if (e2) throw e2;
+      // Preserve account fields the caller passed in — the DB row lacks them but
+      // the in-memory object must carry them so computeCurrentBalance works immediately.
+      return {
+        ...mapTransaction(d2[0]),
+        ...(account_id   != null ? { account_id }   : {}),
+        ...(account_name != null ? { account_name } : {}),
+      };
+    }
+    return mapTransaction(data[0]);
+  },
+
+  async migrateUnlinkedTransactions(userId, accountId, accountName) {
     const { data, error } = await supabase
       .from('transactions')
-      .insert([{ user_id: userId, date, description, amount, type, category }])
-      .select()
-    if (error) throw error
-    return mapTransaction(data[0])
+      .update({ account_id: accountId, account_name: accountName })
+      .eq('user_id', userId)
+      .is('account_id', null)
+      .neq('type', 'transfer')
+      .select('id');
+    if (error) {
+      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
+        (error.message || '').includes('account_id');
+      if (!isColErr) throw error;
+      console.warn('[supabase] account columns missing — migration skipped');
+      return 0;
+    }
+    return (data || []).length;
   },
 
   async updateTransaction(transactionId, updates) {
@@ -72,9 +111,31 @@ export const dbService = {
       .from('transactions')
       .update(updates)
       .eq('id', transactionId)
-      .select()
-    if (error) throw error
-    return mapTransaction(data[0])
+      .select();
+    if (error) {
+      // If optional columns (account_id, account_name, subcategory…) don't exist yet,
+      // retry with only the core fields that are guaranteed to be in the schema.
+      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
+        (error.message || '').includes('account_id') ||
+        (error.message || '').includes('account_name') ||
+        (error.message || '').includes('subcategory');
+      if (!isColErr) throw error;
+      console.warn('[supabase] optional column missing — retrying with core fields only');
+      // Strip all optional/possibly-missing columns; keep only guaranteed core schema fields
+      const { account_id, account_name, subcategory, ...baseUpdates } = updates;
+      if (Object.keys(baseUpdates).length === 0) {
+        // Nothing core to update — fetch current row so caller gets a valid object back
+        const { data: cur, error: ce } = await supabase
+          .from('transactions').select('*').eq('id', transactionId).single();
+        if (ce) throw ce;
+        return mapTransaction(cur);
+      }
+      const { data: d2, error: e2 } = await supabase
+        .from('transactions').update(baseUpdates).eq('id', transactionId).select();
+      if (e2) throw e2;
+      return mapTransaction(d2?.[0]);
+    }
+    return mapTransaction(data?.[0]);
   },
 
   async deleteTransaction(transactionId) {

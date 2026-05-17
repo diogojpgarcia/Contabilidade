@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Overlay from './Overlay';
+import { CategoryIconBubble } from '../utils/categoryIcons';
 import './CategoryPicker.css';
 
 /**
@@ -11,12 +12,14 @@ import './CategoryPicker.css';
  *   onSelect(newCategoryLabel)
  *   onClose()
  */
-const CategoryPicker = ({ transaction, onSelect, onClose, categories }) => {
+const CategoryPicker = ({ transaction, onSelect, onClose, categories, title = 'Alterar Categoria' }) => {
   const [search, setSearch] = useState('');
   const inputRef = useRef(null);
 
-  // Auto-focus search on open
+  // Auto-focus search only on pointer devices — on touch (Android/iOS) the
+  // keyboard popup immediately shifts the sheet and items move under the finger.
   useEffect(() => {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     const t = setTimeout(() => inputRef.current?.focus(), 80);
     return () => clearTimeout(t);
   }, []);
@@ -46,7 +49,7 @@ const CategoryPicker = ({ transaction, onSelect, onClose, categories }) => {
         <div className="cp-handle" />
 
         <div className="cp-header">
-          <span className="cp-title">Alterar Categoria</span>
+          <span className="cp-title">{title}</span>
           <button className="cp-close" onClick={onClose}>&#215;</button>
         </div>
 
@@ -68,7 +71,9 @@ const CategoryPicker = ({ transaction, onSelect, onClose, categories }) => {
                 className={`cp-item${isActive ? ' cp-item--active' : ''}`}
                 onClick={() => handleSelect(cat.label)}
               >
-                <span className="cp-item-icon">{cat.icon}</span>
+                <span className="cp-item-icon">
+                  <CategoryIconBubble name={cat.label} type={transaction.type === 'income' ? 'income' : 'expense'} size={30} radius="8px" />
+                </span>
                 <span className="cp-item-label">{cat.label}</span>
                 {isActive && <span className="cp-item-check">&#10003;</span>}
               </button>

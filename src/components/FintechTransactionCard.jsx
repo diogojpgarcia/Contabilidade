@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Utensils, Car, ShoppingBag, Receipt, Wallet,
-  ArrowRightLeft, Home, Zap, Smartphone, Plane,
-  Heart, BookOpen, Shirt, Gift, Baby,
-  PiggyBank, TrendingUp, Briefcase, RefreshCw,
-  Tag, Trophy, CreditCard, Scale, Dumbbell,
-} from './icons';
 import CategoryPicker from './CategoryPicker';
+import AccountPicker from './AccountPicker';
+import { getCategoryMeta } from '../utils/categoryIcons';
 import './FintechTransactionCard.css';
 
 /* ── Merchant map ─────────────────────────────────────────────────────────────
@@ -97,57 +92,6 @@ function getMerchantVisual(description) {
   return null;
 }
 
-/* ── Category → icon + color ─────────────────────────────────────────────── */
-const CAT_META = {
-  'Alimentação':                { Icon: Utensils,    color: '#3B82F6' },
-  'Habitação':                  { Icon: Home,        color: '#6366F1' },
-  'Transporte':                 { Icon: Car,         color: '#8B5CF6' },
-  'Saúde':                      { Icon: Heart,       color: '#EF4444' },
-  'Lazer':                      { Icon: Dumbbell,    color: '#A855F7' },
-  'Lazer & Entretenimento':     { Icon: Dumbbell,    color: '#A855F7' },
-  'Educação':                   { Icon: BookOpen,    color: '#6366F1' },
-  'Roupa':                      { Icon: Shirt,       color: '#EC4899' },
-  'Roupa & Calçado':            { Icon: Shirt,       color: '#EC4899' },
-  'Tecnologia':                 { Icon: Smartphone,  color: '#6366F1' },
-  'Subscrições':                { Icon: Smartphone,  color: '#6366F1' },
-  'Comunicações':               { Icon: Smartphone,  color: '#0EA5E9' },
-  'Utilities':                  { Icon: Zap,         color: '#F59E0B' },
-  'Serviços Financeiros':       { Icon: CreditCard,  color: '#6366F1' },
-  'Viagens & Férias':           { Icon: Plane,       color: '#0EA5E9' },
-  'Presentes & Doações':        { Icon: Gift,        color: '#EC4899' },
-  'Animais de Estimação':       { Icon: Heart,       color: '#F59E0B' },
-  'Crianças & Família':         { Icon: Baby,        color: '#EC4899' },
-  'Cuidados Pessoais':          { Icon: Dumbbell,    color: '#A855F7' },
-  'Casa & Jardim':              { Icon: Home,        color: '#10B981' },
-  'Impostos & Taxas':           { Icon: Receipt,     color: '#EF4444' },
-  'Emergências':                { Icon: Receipt,     color: '#EF4444' },
-  'Outros':                     { Icon: ShoppingBag, color: '#6B7280' },
-  /* Income */
-  'Salário':                    { Icon: Wallet,      color: '#10B981' },
-  'Salário Principal':          { Icon: Wallet,      color: '#10B981' },
-  'Subsídios':                  { Icon: Wallet,      color: '#10B981' },
-  'Freelance':                  { Icon: Briefcase,   color: '#10B981' },
-  'Trabalho Extra / Freelance': { Icon: Briefcase,   color: '#10B981' },
-  'Investimentos':              { Icon: TrendingUp,  color: '#10B981' },
-  'Rendas Recebidas':           { Icon: Home,        color: '#10B981' },
-  'Reembolsos':                 { Icon: RefreshCw,   color: '#10B981' },
-  'Vendas':                     { Icon: Tag,         color: '#10B981' },
-  'Prémios & Sorteios':         { Icon: Trophy,      color: '#10B981' },
-  'Prendas & Doações Recebidas':{ Icon: Gift,        color: '#10B981' },
-  'Bonus':                      { Icon: PiggyBank,   color: '#10B981' },
-  'Outros Rendimentos':         { Icon: Wallet,      color: '#10B981' },
-};
-
-const TRANSFER_META  = { Icon: ArrowRightLeft, color: '#9CA3AF' };
-const ADJUST_META    = { Icon: Scale,          color: '#F97316' };
-
-function getMeta(cat, type) {
-  if (type === 'transfer')   return TRANSFER_META;
-  if (type === 'adjustment') return ADJUST_META;
-  return CAT_META[cat] || (type === 'income'
-    ? { Icon: Wallet,     color: '#10B981' }
-    : { Icon: CreditCard, color: '#6B7280' });
-}
 
 /* ── Transfer flow helper ─────────────────────────────────────────────────── */
 function getTransferFlow(tx) {
@@ -173,11 +117,26 @@ function formatLong(dateStr) {
 }
 
 /* ── Component ────────────────────────────────────────────────────────────── */
-const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = false, categories }) => {
-  const [open,      setOpen]    = useState(false);
-  const [pickerTx,  setPickerTx] = useState(null);
-  const [deleting,  setDeleting] = useState(false);
-  const [logoErr,   setLogoErr]  = useState(false);
+const FintechTransactionCard = ({
+  tx,
+  onCategoryChange,
+  onAccountChange,
+  onDelete,
+  onEditTransaction,
+  isDuplicate = false,
+  categories,
+  accounts = [],
+}) => {
+  const [open,           setOpen]           = useState(false);
+  const [pickerTx,       setPickerTx]       = useState(null);
+  const [acctPickerOpen, setAcctPickerOpen] = useState(false);
+  const [deleting,       setDeleting]       = useState(false);
+  const [logoErr,        setLogoErr]        = useState(false);
+
+  // ── Inline edit state ──────────────────────────────────────────────────────
+  const [editMode,  setEditMode]  = useState(false);
+  const [editDraft, setEditDraft] = useState({ description: '', amount: '', date: '' });
+  const [saving,    setSaving]    = useState(false);
 
   /* ── Guard: never render with missing/invalid data ── */
   if (!tx || typeof tx !== 'object') return null;
@@ -201,7 +160,7 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
   } catch { /* ignore merchant detection errors */ }
 
   const effectiveCat = merchant?.detectedCategory || txCategory;
-  const { Icon, color } = getMeta(effectiveCat, txType);
+  const { Icon, color } = getCategoryMeta(effectiveCat, txType);
 
   const showLogo = !!merchant?.logoUrl && !logoErr;
   const bubbleBg = showLogo
@@ -216,11 +175,18 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
     ? `${txAmount.toFixed(2)}€`
     : `${isIncome ? '+' : '−'}${txAmount.toFixed(2)}€`;
 
+  /* ── Handlers ─────────────────────────────────────────────────────────────── */
   const handlePickerSelect = (newCategory) => {
     if (pickerTx && onCategoryChange) {
       onCategoryChange(pickerTx.id, newCategory, pickerTx.description || '');
     }
     setPickerTx(null);
+    setOpen(false);
+  };
+
+  const handleAccountSelect = (newId, newName) => {
+    if (onAccountChange) onAccountChange(tx.id, newId, newName);
+    setAcctPickerOpen(false);
     setOpen(false);
   };
 
@@ -235,9 +201,46 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
     }
   };
 
+  /* ── Edit handlers ─────────────────────────────────────────────────────────── */
+  const startEdit = (e) => {
+    e.stopPropagation();
+    setEditDraft({
+      description: txDesc,
+      amount:      txAmount > 0 ? txAmount.toFixed(2) : '',
+      date:        txDate,
+    });
+    setEditMode(true);
+  };
+
+  const cancelEdit = (e) => {
+    e?.stopPropagation();
+    setEditMode(false);
+  };
+
+  const handleEditSave = async (e) => {
+    e?.stopPropagation();
+    const amount = parseFloat(editDraft.amount);
+    if (isNaN(amount) || amount <= 0) return;
+    setSaving(true);
+    try {
+      if (onEditTransaction) {
+        await onEditTransaction({
+          ...tx,
+          description: editDraft.description.trim(),
+          amount,
+          date: editDraft.date || txDate,
+        });
+      }
+      setEditMode(false);
+      setOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <>
-      <div className={`ftc-card${isDuplicate ? ' ftc-card--dupe' : ''}`} onClick={() => setOpen(o => !o)}>
+      <div className={`ftc-card${isDuplicate ? ' ftc-card--dupe' : ''}`} onClick={() => { if (!editMode) setOpen(o => !o); }}>
         {isDuplicate && <div className="ftc-dupe-bar">duplicado</div>}
 
         {/* ── Main row ── */}
@@ -267,6 +270,9 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
               ) : (
                 <span className="ftc-cat">{effectiveCat}</span>
               )}
+              {tx.account_name && !isTransfer && !isAdjustment && (
+                <span className="ftc-acct-badge">◈ {tx.account_name}</span>
+              )}
             </span>
           </div>
 
@@ -279,26 +285,89 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
           </div>
         </div>
 
-        {/* ── Expanded actions ── */}
+        {/* ── Expanded area ── */}
         {open && (
           <div className="ftc-actions" onClick={e => e.stopPropagation()}>
-            <span className="ftc-action-date">{formatLong(txDate)}</span>
-            <div className="ftc-action-btns">
-              {onCategoryChange && !isTransfer && !isAdjustment && (
-                <button className="ftc-action-btn" onClick={() => setPickerTx(tx)}>
-                  ✎ Categoria
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  className="ftc-action-btn ftc-action-btn--danger"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
-                  {deleting ? '⏳' : '🗑 Apagar'}
-                </button>
-              )}
-            </div>
+
+            {editMode ? (
+              /* ── Inline edit form ── */
+              <div className="ftc-edit-form">
+                <input
+                  className="ftc-edit-input"
+                  type="text"
+                  placeholder="Descrição"
+                  value={editDraft.description}
+                  onChange={e => setEditDraft(d => ({ ...d, description: e.target.value }))}
+                  autoFocus
+                />
+                <div className="ftc-edit-row">
+                  <input
+                    className="ftc-edit-input ftc-edit-input--amt"
+                    type="number"
+                    inputMode="decimal"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Valor"
+                    value={editDraft.amount}
+                    onChange={e => setEditDraft(d => ({ ...d, amount: e.target.value }))}
+                  />
+                  <input
+                    className="ftc-edit-input ftc-edit-input--date"
+                    type="date"
+                    value={editDraft.date}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={e => setEditDraft(d => ({ ...d, date: e.target.value }))}
+                  />
+                </div>
+                <div className="ftc-edit-btns">
+                  <button
+                    className="ftc-action-btn"
+                    onClick={cancelEdit}
+                    disabled={saving}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="ftc-action-btn ftc-action-btn--save"
+                    onClick={handleEditSave}
+                    disabled={saving || !editDraft.amount || parseFloat(editDraft.amount) <= 0}
+                  >
+                    {saving ? '…' : 'Guardar'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ── Normal action strip ── */
+              <>
+                <span className="ftc-action-date">{formatLong(txDate)}</span>
+                <div className="ftc-action-btns">
+                  {onEditTransaction && !isTransfer && !isAdjustment && (
+                    <button className="ftc-action-btn ftc-action-btn--edit" onClick={startEdit}>
+                      ✎ Editar
+                    </button>
+                  )}
+                  {onCategoryChange && !isTransfer && !isAdjustment && (
+                    <button className="ftc-action-btn" onClick={() => setPickerTx(tx)}>
+                      ✎ Categoria
+                    </button>
+                  )}
+                  {onAccountChange && !isTransfer && !isAdjustment && (
+                    <button className="ftc-action-btn" onClick={() => setAcctPickerOpen(true)}>
+                      ◈ {tx.account_name || 'Conta'}
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      className="ftc-action-btn ftc-action-btn--danger"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                    >
+                      {deleting ? '⏳' : '🗑 Apagar'}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -309,6 +378,15 @@ const FintechTransactionCard = ({ tx, onCategoryChange, onDelete, isDuplicate = 
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
           categories={categories}
+        />
+      )}
+
+      {acctPickerOpen && (
+        <AccountPicker
+          accounts={accounts}
+          currentAccountId={tx.account_id || null}
+          onSelect={handleAccountSelect}
+          onClose={() => setAcctPickerOpen(false)}
         />
       )}
     </>

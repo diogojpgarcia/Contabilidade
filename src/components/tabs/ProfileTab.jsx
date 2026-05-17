@@ -3,42 +3,36 @@ import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
+import PageHeader from '../PageHeader';
+import { CreditCard, Tag, Clock } from '../icons';
+import { FOCUS_OPTIONS } from '../../utils/financialFocus';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
   const [deleteStatus, setDeleteStatus]           = useState('');
   const [deleting, setDeleting]                   = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [colorTheme, setColorTheme]               = useState('dark');
   const [resetStatus, setResetStatus]             = useState('');
 
   // Modal form drafts — onChange → local only; DB/auth called on submit
   const { draft: deleteDraft, setField: setDeleteField, reset: resetDeleteDraft } = useForm({ confirmText: '' });
   const { draft: resetDraft,  setField: setResetField,  reset: resetResetDraft  } = useForm({ email: '' });
 
+  // Cosmos is the only theme — always enforce soft-future on mount
   useEffect(() => {
-    loadUserPreferences();
-  }, [user]);
-
-  const loadUserPreferences = async () => {
-    try {
-      const settings = await dbService.getUserSettings(user.id);
-      const saved = settings?.color_theme || 'dark';
-      setColorTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-    } catch (error) {
-      console.error('[ProfileTab] Error loading preferences:', error);
+    document.documentElement.setAttribute('data-theme', 'soft-future');
+    // Migrate any stored stale value so the DB stays in sync
+    if (user?.id) {
+      dbService.getUserSettings(user.id).then(settings => {
+        if (settings?.color_theme !== 'soft-future') {
+          dbService.updateUserSettings(user.id, { color_theme: 'soft-future' }).catch(console.error);
+        }
+      }).catch(console.error);
     }
-  };
-
-  const handleColorThemeChange = async (newColor) => {
-    setColorTheme(newColor);
-    document.documentElement.setAttribute('data-theme', newColor);
-    dbService.updateUserSettings(user.id, { color_theme: newColor }).catch(console.error);
-  };
+  }, [user]);
 
   // Plain function — synchronous state update, fire-and-forget DB save
   const handleThemeChange = (newTheme) => {
@@ -154,215 +148,138 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
     </>
   );
 
-  /* ── MODERN BRANCH ─────────────────────────────────────────────────────── */
-  if (theme === 'modern') {
-    return (
-      <div className="m-profile-page">
-        {/* User info */}
-        <div className="m-user-section">
-          <div className="m-avatar">
+  /* ── RENDER (fintech theme — single unified branch) ──────────────────── */
+  const accountCount = patrimony?.accounts?.length || 0;
+  const catCount = (categories?.income?.length || 0) + (categories?.expense?.length || 0);
+  const endDay = financialMonthStartDay <= 1 ? 28 : financialMonthStartDay - 1;
+  const decDay = () => onFinancialMonthChange?.({ startDay: Math.max(1, financialMonthStartDay - 1), enabled: true });
+  const incDay = () => onFinancialMonthChange?.({ startDay: Math.min(28, financialMonthStartDay + 1), enabled: true });
+
+  return (
+    <div className="m-profile-page">
+      <PageHeader title="Perfil" />
+
+      {/* Identity strip + context chips */}
+      <div className="m-prof-header">
+        <div className="m-prof-identity">
+          <div className="m-prof-avatar">
             {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
           </div>
-          <div className="m-user-name">{userName}</div>
-          <div className="m-user-email">{user.email}</div>
+          <div className="m-prof-id">
+            <span className="m-prof-name">{userName}</span>
+            <span className="m-prof-email">{user.email}</span>
+          </div>
         </div>
+        {(accountCount > 0 || catCount > 0 || useFinancialMonth) && (
+          <div className="m-prof-chips">
+            {accountCount > 0 && <span className="m-prof-chip"><CreditCard size={11} strokeWidth={2.5} /> {accountCount} conta{accountCount !== 1 ? 's' : ''}</span>}
+            {catCount > 0 && <span className="m-prof-chip"><Tag size={11} strokeWidth={2.5} /> {catCount} categori{catCount !== 1 ? 'as' : 'a'}</span>}
+            {useFinancialMonth && <span className="m-prof-chip m-prof-chip--on"><Clock size={11} strokeWidth={2.5} /> Dia {financialMonthStartDay}</span>}
+          </div>
+        )}
+      </div>
 
-        {/* Aparência */}
-        <div className="m-menu-section">
-          <div className="m-menu-section-label">Aparência</div>
-          <div className="m-menu-group">
-            <div className="m-seg-wrap">
-              <div className="m-seg-control">
-                <button className={`m-seg-btn ${colorTheme === 'light' ? 'active' : ''}`} onClick={() => handleColorThemeChange('light')}>
-                  <span className="m-seg-icon">☀︎</span><span>Claro</span>
-                </button>
-                <button className={`m-seg-btn ${colorTheme === 'gray'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('gray')}>
-                  <span className="m-seg-icon">◐</span><span>Cinza</span>
-                </button>
-                <button className={`m-seg-btn ${colorTheme === 'dark'  ? 'active' : ''}`} onClick={() => handleColorThemeChange('dark')}>
-                  <span className="m-seg-icon">☾</span><span>Escuro</span>
-                </button>
-              </div>
+      {/* Financial cycle widget */}
+      {onFinancialMonthChange && (
+        <div className="m-cycle-card">
+          <div className="m-cycle-header">
+            <div className="m-cycle-title">
+              <span className="m-cycle-label">Ciclo Financeiro</span>
+              {useFinancialMonth && (
+                <span className="m-cycle-badge">dia {financialMonthStartDay} → {endDay}</span>
+              )}
             </div>
+            <label className="m-pill-toggle">
+              <input
+                type="checkbox"
+                checked={useFinancialMonth}
+                onChange={e => onFinancialMonthChange({ startDay: financialMonthStartDay, enabled: e.target.checked })}
+              />
+              <span className="m-pill-toggle-track" />
+            </label>
           </div>
-        </div>
-
-        {/* Layout */}
-        <div className="m-menu-section">
-          <div className="m-menu-section-label">Layout</div>
-          <div className="m-menu-group">
-            <div className="m-seg-wrap">
-              <div className="m-seg-control">
-                <button className={`m-seg-btn ${theme === 'default' ? 'active' : ''}`} onClick={() => handleThemeChange('default')}>
-                  <span>Default</span>
-                </button>
-                <button className={`m-seg-btn ${theme === 'modern'  ? 'active' : ''}`} onClick={() => handleThemeChange('modern')}>
-                  <span>Modern</span>
-                </button>
-                <button className={`m-seg-btn ${theme === 'fintech' ? 'active' : ''}`} onClick={() => handleThemeChange('fintech')}>
-                  <span>Fintech</span>
-                </button>
+          {useFinancialMonth ? (
+            <div className="m-cycle-body">
+              <div className="m-cycle-day-row">
+                <span className="m-cycle-day-label">Início de cada ciclo</span>
+                <div className="m-cycle-stepper">
+                  <button className="m-cycle-step" onClick={decDay} aria-label="Diminuir">−</button>
+                  <span className="m-cycle-day-val">{financialMonthStartDay}</span>
+                  <button className="m-cycle-step" onClick={incDay} aria-label="Aumentar">+</button>
+                </div>
               </div>
+              <span className="m-cycle-desc">
+                Cada ciclo: dia {financialMonthStartDay} → dia {endDay} do mês seguinte
+              </span>
             </div>
+          ) : (
+            <p className="m-cycle-off">Agrupa por mês calendário padrão</p>
+          )}
+        </div>
+      )}
+
+      {/* Financial Focus */}
+      {onFocusChange && (
+        <div className="m-focus-card">
+          <div className="m-focus-header">
+            <span className="m-focus-label">Foco Financeiro</span>
+            {financialFocus && (
+              <button className="m-focus-clear" onClick={() => onFocusChange(null)}>
+                Remover
+              </button>
+            )}
           </div>
-        </div>
-
-        {/* Conta */}
-        <div className="m-menu-section">
-          <div className="m-menu-section-label">Conta</div>
-          <div className="m-menu-group">
-            <button className="m-menu-item" onClick={() => setShowCategoryManager(true)}>
-              <span className="m-menu-icon">☷</span>
-              <span className="m-menu-text">Gerir Categorias</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
-            <button className="m-menu-item" onClick={() => onNavigateToImport && onNavigateToImport()}>
-              <span className="m-menu-icon">⬆</span>
-              <span className="m-menu-text">Importar Extracto Bancário</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
-            <button className="m-menu-item" onClick={() => setShowResetPassword(true)}>
-              <span className="m-menu-icon">⚿</span>
-              <span className="m-menu-text">Alterar Password</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
-            <button className="m-menu-item danger" onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}>
-              <span className="m-menu-icon">🗑</span>
-              <span className="m-menu-text">Apagar Todos os Dados</span>
-              <span className="m-menu-arrow">›</span>
-            </button>
+          <div className="m-focus-grid">
+            {FOCUS_OPTIONS.map(opt => (
+              <button
+                key={opt.id}
+                className={`m-focus-btn${financialFocus === opt.id ? ' m-focus-btn--on' : ''}`}
+                onClick={() => onFocusChange(financialFocus === opt.id ? null : opt.id)}
+              >
+                <span className="m-focus-btn-icon">{opt.icon}</span>
+                <span className="m-focus-btn-label">{opt.label}</span>
+              </button>
+            ))}
           </div>
+          {financialFocus && (
+            <p className="m-focus-desc">
+              {FOCUS_OPTIONS.find(o => o.id === financialFocus)?.desc}
+            </p>
+          )}
         </div>
+      )}
 
-        {/* Logout */}
-        <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
-
-        {renderProfileModals()}
-      </div>
-    );
-  }
-
-  /* ── DEFAULT BRANCH ──────────────────────────────────────────────────── */
-  return (
-    <div className="profile-tab">
-      {/* User Info */}
-      <div className="user-info-section">
-        <div className="user-avatar-large">
-          {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-        </div>
-        <h2 className="user-name">{userName}</h2>
-        <p className="user-email">{user.email}</p>
-      </div>
-
-      {/* Appearance */}
-      <div className="profile-section">
-        <h3 className="section-title">Aparência</h3>
-        <div className="theme-selector">
-          <button
-            className={`theme-option ${colorTheme === 'light' ? 'active' : ''}`}
-            onClick={() => handleColorThemeChange('light')}
-          >
-            <span className="sf-icon">☀︎</span>
-            <span>Claro</span>
-          </button>
-          <button
-            className={`theme-option ${colorTheme === 'gray' ? 'active' : ''}`}
-            onClick={() => handleColorThemeChange('gray')}
-          >
-            <span className="sf-icon">◐</span>
-            <span>Cinza</span>
-          </button>
-          <button
-            className={`theme-option ${colorTheme === 'dark' ? 'active' : ''}`}
-            onClick={() => handleColorThemeChange('dark')}
-          >
-            <span className="sf-icon">☾</span>
-            <span>Escuro</span>
-          </button>
-        </div>
-
-      </div>
-
-      {/* Theme */}
-      <div className="profile-section">
-        <h3 className="section-title">Theme</h3>
-        <div className="theme-selector theme-selector-2">
-          <button
-            className={`theme-option ${theme === 'default' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('default')}
-          >
-            <span className="sf-icon">◫</span>
-            <span>Default</span>
-          </button>
-          <button
-            className={`theme-option ${theme === 'modern' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('modern')}
-          >
-            <span className="sf-icon">◧</span>
-            <span>Modern</span>
-          </button>
-          <button
-            className={`theme-option ${theme === 'fintech' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('fintech')}
-          >
-            <span className="sf-icon">◈</span>
-            <span>Fintech</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Account Options */}
-      <div className="profile-section">
-        <h3 className="section-title">Conta</h3>
-        
-        <button 
-          className="profile-option"
-          onClick={() => setShowCategoryManager(true)}
-        >
-          <span className="option-icon-sf">☷</span>
-          <span className="option-label">Gerir Categorias</span>
-          <span className="option-arrow-sf">›</span>
+      {/* Flat settings list */}
+      <div className="m-flat-list">
+        <span className="m-flat-label">Preferências</span>
+        <button className="m-flat-row" onClick={() => setShowCategoryManager(true)}>
+          <span className="m-flat-icon">☷</span>
+          <span className="m-flat-text">Gerir Categorias</span>
+          <span className="m-flat-chev">›</span>
         </button>
-
-        <div className="option-separator" />
-
-        <button
-          className="profile-option"
-          onClick={() => onNavigateToImport && onNavigateToImport()}
-        >
-          <span className="option-icon-sf">&#11014;</span>
-          <span className="option-label">Importar Extracto Bancário</span>
-          <span className="option-arrow-sf">&#8250;</span>
+        <button className="m-flat-row" onClick={() => onNavigateToImport && onNavigateToImport()}>
+          <span className="m-flat-icon">⬆</span>
+          <span className="m-flat-text">Importar Extracto Bancário</span>
+          <span className="m-flat-chev">›</span>
         </button>
-
-        <div className="option-separator" />
-
-        <button
-          className="profile-option"
-          onClick={() => setShowResetPassword(true)}
-        >
-          <span className="option-icon-sf">⚿</span>
-          <span className="option-label">Alterar Password</span>
-          <span className="option-arrow-sf">›</span>
-        </button>
-
-        <div className="option-separator" />
-
-        <button
-          className="profile-option danger"
-          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
-        >
-          <span className="option-icon-sf">🗑</span>
-          <span className="option-label">Apagar Todos os Dados</span>
-          <span className="option-arrow-sf">›</span>
+        <span className="m-flat-label">Segurança</span>
+        <button className="m-flat-row m-flat-row--last" onClick={() => setShowResetPassword(true)}>
+          <span className="m-flat-icon">⚿</span>
+          <span className="m-flat-text">Alterar Password</span>
+          <span className="m-flat-chev">›</span>
         </button>
       </div>
 
       {/* Logout */}
-      <div className="profile-section">
-        <button className="btn-logout" onClick={onLogout}>
-          <span className="sf-icon">⏻</span>
-          <span>Terminar Sessão</span>
+      <button className="m-logout-btn" onClick={onLogout}>Terminar Sessão</button>
+
+      {/* Danger zone — isolated, barely-there */}
+      <div className="m-danger-zone">
+        <button
+          className="m-danger-item"
+          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
+        >
+          <span className="m-danger-text">Apagar todos os dados</span>
         </button>
       </div>
 

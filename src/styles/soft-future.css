@@ -1,0 +1,840 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SOFT FUTURE — PREMIUM GRAPHITE THEME
+   Scoped exclusively to [data-theme="soft-future"].
+   Never touches other themes. Zero component changes.
+
+   Palette (Graphite/Charcoal with Cyan Accents)
+   ─────────────────────────────────────────────────
+   Page bg:     #0d0f12  (deep charcoal)
+   Card:        #15181d → #10121a  (layered dark grey)
+   Row:         #14171d → #0f1218  (cool charcoal)
+   Accent:      #06b6d4  (soft cyan)
+   Accent light:#a0aabb  (cool silver-grey)
+   Accent alt:  #6b7adb  (muted indigo)
+   Text:        #e8e8e8  (light grey)
+
+   Material language
+   ─────────────────────────────────────────────────
+   Cards   : dark gradient + inset top highlight + cyan border + deep shadow
+   Icons   : circular containers + soft drop shadow
+   Bars    : gradient fill + category glow
+   Active  : cyan glow ring, no harsh borders
+   Aesthetic : premium dark OS (Arc, Linear) + ambient system lighting
+   ══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   1 · FOUNDATION — backgrounds, nav
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="soft-future"] .main-content-new {
+  background: var(--bg-primary); /* #0d0f12 — deep charcoal */
+}
+
+/* Bottom nav — lifted dark panel */
+[data-theme="soft-future"] .bottom-nav {
+  background: rgba(17, 19, 26, 0.96);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.12);
+  box-shadow: 0 -4px 28px rgba(13, 15, 18, 0.80);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+[data-theme="soft-future"] .nav-label,
+[data-theme="soft-future"] .nav-icon                    { color: rgba(160, 170, 187, 0.40); }
+[data-theme="soft-future"] .nav-item.active {
+  background: rgba(6, 182, 212, 0.12);
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.15);
+}
+[data-theme="soft-future"] .nav-item.active .nav-icon,
+[data-theme="soft-future"] .nav-item.active .nav-label  { color: #a0aabb; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   2 · HOME HERO
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Hero container — premium graphite with cyan depth */
+[data-theme="soft-future"] .h-hero {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
+    linear-gradient(135deg, #0f1218 0%, #0a0d12 100%);
+  box-shadow:
+    0 8px 36px rgba(13, 15, 18, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(6, 182, 212, 0.08);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
+}
+
+/* Hero text — excellent contrast on dark charcoal */
+[data-theme="soft-future"] .h-hero-tab-label { color: #f5f5f5; opacity: 0.95; }
+[data-theme="soft-future"] .h-hero-patrimony-label { color: rgba(160, 170, 187, 0.72); opacity: 1; }
+[data-theme="soft-future"] .h-hero-patrimony-value { color: #f5f5f5; opacity: 0.98; }
+[data-theme="soft-future"] .h-hero-progress-label { color: rgba(160, 170, 187, 0.68); opacity: 1; }
+
+/* Balance badge — cyan accents for premium OS feel */
+[data-theme="soft-future"] .h-hero-balance-badge {
+  background: rgba(6, 182, 212, 0.10);
+  border: 0.5px solid rgba(6, 182, 212, 0.22);
+  color: #a0aabb;
+  backdrop-filter: blur(8px);
+}
+[data-theme="soft-future"] .h-hero-balance-badge.positive {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.24);
+  color: #6ee7b7;
+}
+[data-theme="soft-future"] .h-hero-balance-badge.negative {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.24);
+  color: #fca5a5;
+}
+
+/* Progress bar — cyan gradient + soft glow */
+[data-theme="soft-future"] .h-hero-progress-track {
+  background: rgba(6, 182, 212, 0.12);
+  border-radius: 3px;
+}
+[data-theme="soft-future"] .h-hero-progress-fill {
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
+  border-radius: 3px;
+}
+
+/* Month navigation — cyan accent material controls */
+[data-theme="soft-future"] .h-month-btn {
+  background: rgba(6, 182, 212, 0.10);
+  color: #a0aabb;
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  transition: all 0.2s ease;
+}
+[data-theme="soft-future"] .h-month-btn:active {
+  background: rgba(6, 182, 212, 0.18);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.22);
+}
+
+[data-theme="soft-future"] .h-month-name {
+  color: #a0aabb;
+  font-weight: 600;
+}
+
+[data-theme="soft-future"] .h-today-btn {
+  background: rgba(6, 182, 212, 0.10);
+  border: 0.5px solid rgba(6, 182, 212, 0.16);
+  color: #a0aabb;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   3 · CARD MATERIAL  — layered, elevated, premium
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shared card recipe — dark graphite with cyan bottom depth ────────────── */
+[data-theme="soft-future"] .h-card,
+[data-theme="soft-future"] .ui-card,
+[data-theme="soft-future"] .m-bcc,
+[data-theme="soft-future"] .pat-cat-card,
+[data-theme="soft-future"] .pat-alloc,
+[data-theme="soft-future"] .m-log-summary,
+[data-theme="soft-future"] .rp-summary,
+[data-theme="soft-future"] .rp-cal-btn,
+[data-theme="soft-future"] .m-insight-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  box-shadow:
+    0 4px 24px rgba(13, 15, 18, 0.70),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ── Card overrides for round radius harmony ────────────────────────────── */
+[data-theme="soft-future"] .m-bcc          { border-radius: 20px; }
+[data-theme="soft-future"] .pat-cat-card   { border-radius: 18px; }
+[data-theme="soft-future"] .rp-summary     { border-radius: 18px; }
+
+/* ── Transaction rows — dark graphite with cyan bottom depth ───────────── */
+[data-theme="soft-future"] .ft-row {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #0f1218 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
+  border-radius: 14px;
+  margin-bottom: 5px;
+}
+[data-theme="soft-future"] .ft-row:active  { background: #1a1d23; }
+
+/* Expandable detail row */
+[data-theme="soft-future"] .ft-detail {
+  background: linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.10);
+}
+[data-theme="soft-future"] .ft-detail-btn {
+  background: rgba(6, 182, 212, 0.10);
+  color: #a0aabb;
+  box-shadow: none;
+  border-radius: 9px;
+}
+[data-theme="soft-future"] .ft-detail-btn:active { background: rgba(6, 182, 212, 0.18); }
+
+/* ── Recurring rows — dark graphite with cyan bottom depth ────────────── */
+[data-theme="soft-future"] .rp-row {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #0f1218 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
+  border-radius: 16px;
+}
+
+/* Calendar / form sheets */
+[data-theme="soft-future"] .rp-form-sheet,
+[data-theme="soft-future"] .rp-cal-sheet   {
+  background: linear-gradient(180deg, #14171d 0%, #0a0d12 100%);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.18);
+  box-shadow: 0 -8px 40px rgba(13, 11, 30, 0.80);
+}
+[data-theme="soft-future"] .rp-modal-panel {
+  background: linear-gradient(180deg, #14171d 0%, #0a0d12 100%);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.18);
+  box-shadow: 0 -4px 28px rgba(13, 11, 30, 0.75);
+}
+
+/* Form inputs */
+[data-theme="soft-future"] .rp-form-input {
+  background: rgba(6, 182, 212, 0.06);
+  border-color: rgba(6, 182, 212, 0.18);
+}
+[data-theme="soft-future"] .rp-form-input:focus { border-color: #06b6d4; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.14); }
+
+/* ── Patrimony cards ────────────────────────────────────────────────────── */
+[data-theme="soft-future"] .pat-cat-items   { border-top-color: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .pat-cat-item    { border-bottom-color: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-alloc-bar-bg {
+  background: rgba(6, 182, 212, 0.10);
+  border-radius: 6px;
+}
+
+/* ── Home total-balance card — dark graphite with cyan depth ───────────── */
+[data-theme="soft-future"] .m-total-balance-inner {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.06) 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.18);
+  box-shadow:
+    0 2px 18px rgba(13, 15, 18, 0.50),
+    inset 0 0.5px 0 rgba(255,255,255,0.04);
+}
+[data-theme="soft-future"] .m-total-balance-label       { color: rgba(160, 170, 187, 0.75); }
+[data-theme="soft-future"] .m-total-balance-sub         { color: rgba(220, 220, 230, 0.30); }
+[data-theme="soft-future"] .m-total-balance-value       { color: #f5f5f5; }
+
+/* ── Home summary hero card — dark graphite with cyan depth ───────────── */
+[data-theme="soft-future"] .m-summary-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
+    linear-gradient(145deg, #0a0d12 0%, #0f1218 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  box-shadow:
+    0 8px 36px rgba(13, 15, 18, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(6, 182, 212, 0.08);
+}
+[data-theme="soft-future"] .m-sc-total-value  { color: #f5f5f5; }
+[data-theme="soft-future"] .m-sc-total-label  { color: rgba(160, 170, 187, 0.72); }
+[data-theme="soft-future"] .m-sc-total-sub    { color: rgba(220, 220, 230, 0.26); }
+[data-theme="soft-future"] .m-sc-divider      { background: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .m-sc-col-sep      { background: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .m-sc-label        { color: rgba(160, 170, 187, 0.32); }
+[data-theme="soft-future"] .m-sc-month-label  { color: rgba(160, 170, 187, 0.36); }
+
+/* ── Patrimony hero — dark graphite with cyan depth ───────────────────────*/
+[data-theme="soft-future"] .pat-hero {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.03) 35%, transparent 100%),
+    linear-gradient(135deg, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.18);
+  box-shadow:
+    0 4px 30px rgba(13, 15, 18, 0.40),
+    inset 0 0.5px 0 rgba(255,255,255,0.04);
+}
+[data-theme="soft-future"] .pat-hero-label  { color: #06b6d4; }
+[data-theme="soft-future"] .pat-hero-chip {
+  background: rgba(6, 182, 212, 0.10);
+  border-color: rgba(6, 182, 212, 0.18);
+}
+
+/* ── Income/expense chips — dark graphite with cyan bottom depth ────────── */
+[data-theme="soft-future"] .m-chip {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 45%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow:
+    0 2px 10px rgba(13, 15, 18, 0.55),
+    inset 0 0.5px 0 rgba(255,255,255,0.03);
+}
+[data-theme="soft-future"] .m-chip-label                { color: rgba(160, 170, 187, 0.60); }
+[data-theme="soft-future"] .m-chip-amount               { color: #e8e8e8; }
+[data-theme="soft-future"] .m-chip.income  .m-chip-amount { color: #34d399; }
+[data-theme="soft-future"] .m-chip.expense .m-chip-amount { color: #f87171; }
+
+/* ── Patrimony row — dark graphite with cyan bottom depth ─────────────── */
+[data-theme="soft-future"] .m-patrimony-row {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+}
+[data-theme="soft-future"] .m-patrimony-label           { color: rgba(160, 170, 187, 0.50); }
+[data-theme="soft-future"] .m-patrimony-select          { color: #a0aabb; }
+[data-theme="soft-future"] .m-patrimony-value           { color: #e8e8e8; }
+[data-theme="soft-future"] .m-patrimony-select option   { background: #10121a; }
+
+/* ── Insight cards (Budget) ─────────────────────────────────────────────── */
+[data-theme="soft-future"] .m-insight-card {
+  border-color: rgba(6, 182, 212, 0.12);
+}
+
+/* ── Patrimony insight row ──────────────────────────────────────────────── */
+[data-theme="soft-future"] .pat-insight-row {
+  background: rgba(6, 182, 212, 0.06);
+  border: 0.5px solid rgba(6, 182, 212, 0.13);
+}
+[data-theme="soft-future"] .pat-insight-icon            { color: #a0aabb; }
+
+/* ── Profile cycle card — dark graphite with cyan bottom depth ────────────*/
+[data-theme="soft-future"] .m-cycle-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.09) 0%, rgba(6, 182, 212, 0.03) 35%, transparent 100%),
+    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.11);
+  box-shadow: 0 2px 16px rgba(13, 15, 18, 0.60);
+  border-radius: 18px;
+}
+[data-theme="soft-future"] .m-seg-control {
+  background: rgba(6, 182, 212, 0.08);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   4 · ICON CONTAINERS  — circular, soft shadow
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Transaction list icons — circular with depth */
+[data-theme="soft-future"] .ft-icon {
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.50);
+  width: 36px;
+  height: 36px;
+}
+
+/* Category bubbles (Budget / Patrimony) */
+[data-theme="soft-future"] .ui-bubble {
+  border-radius: 50% !important;  /* override React inline borderRadius */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* Patrimony category icon wrap */
+[data-theme="soft-future"] .pat-cat-icon-wrap {
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* Recurring payment icons — CategoryIconBubble handles bg; add depth shadow */
+[data-theme="soft-future"] .rp-row-icon,
+[data-theme="soft-future"] .cat-icon-bubble {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+/* Home recurring widget icons */
+[data-theme="soft-future"] .hrp-icon {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+/* Recurring summary icon container */
+[data-theme="soft-future"] .rp-summary-icon {
+  background: rgba(6, 182, 212, 0.10);
+  color: #a0aabb;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.40);
+}
+
+/* Home account dot */
+[data-theme="soft-future"] .h-account-dot {
+  background: #06b6d4;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.40);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   5 · PROGRESS BARS — gradient fills + glow
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Track — subtle cyan */
+[data-theme="soft-future"] .m-bcc-bar-bg,
+[data-theme="soft-future"] .m-bmc-bar-bg,
+[data-theme="soft-future"] .m-budget-bar-bg,
+[data-theme="soft-future"] .m-goal-bar-bg     { background: rgba(6, 182, 212, 0.10); border-radius: 8px; }
+
+/* Normal fill — emerald gradient */
+[data-theme="soft-future"] .m-budget-bar-fill {
+  background: linear-gradient(90deg, #34d399, #6ee7b7);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.40);
+}
+[data-theme="soft-future"] .m-budget-bar-fill.warn {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.40);
+}
+[data-theme="soft-future"] .m-budget-bar-fill.over {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.40);
+}
+
+/* Goal bar — cyan gradient */
+[data-theme="soft-future"] .m-goal-bar-fill {
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
+}
+
+/* Budget month comparison bar */
+[data-theme="soft-future"] .m-bmc-bar-fill {
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.30);
+}
+
+/* Allocation bars */
+[data-theme="soft-future"] .pat-alloc-bar-bg  { background: rgba(6, 182, 212, 0.10); }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   6 · ACTIVE STATES — glow rings, luminous accents
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Month navigation */
+[data-theme="soft-future"] .m-month-btn,
+[data-theme="soft-future"] .m-today-btn,
+[data-theme="soft-future"] .m-month-nav-btn             { color: #a0aabb; }
+[data-theme="soft-future"] .m-today-btn {
+  background: rgba(6, 182, 212, 0.14);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
+}
+[data-theme="soft-future"] .m-today-btn:active,
+[data-theme="soft-future"] .m-month-btn:active          { background: rgba(6, 182, 212, 0.18); }
+[data-theme="soft-future"] .m-month-nav-today {
+  color: #a0aabb;
+  background: rgba(6, 182, 212, 0.14);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
+}
+[data-theme="soft-future"] .m-month-nav-today:active    { background: rgba(6, 182, 212, 0.22); }
+
+/* Month / stats text */
+[data-theme="soft-future"] .m-month-name,
+[data-theme="soft-future"] .m-stats-title,
+[data-theme="soft-future"] .m-month-nav-name            { color: var(--text-primary); }
+
+/* Segmented toggle */
+[data-theme="soft-future"] .m-toggle {
+  background: rgba(17, 19, 23, 0.95);
+  border: 0.5px solid rgba(6, 182, 212, 0.11);
+  box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
+}
+[data-theme="soft-future"] .m-toggle-btn                { color: var(--text-tertiary); }
+[data-theme="soft-future"] .m-toggle-btn.active {
+  background: rgba(6, 182, 212, 0.20);
+  color: #a0aabb;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.18), inset 0 0.5px 0 rgba(255,255,255,0.06);
+}
+
+/* Log summary */
+[data-theme="soft-future"] .m-log-summary {
+  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  box-shadow: 0 2px 16px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255,255,255,0.03);
+}
+[data-theme="soft-future"] .m-summary-label             { color: rgba(6, 182, 212, 0.45); }
+[data-theme="soft-future"] .m-summary-val               { color: var(--text-primary); }
+[data-theme="soft-future"] .m-summary-val.income        { color: #34d399; }
+[data-theme="soft-future"] .m-summary-val.expense       { color: #f87171; }
+[data-theme="soft-future"] .m-summary-sep               { background: rgba(6, 182, 212, 0.08); }
+
+/* Category bars (Stats) */
+[data-theme="soft-future"] .m-cat-row         { border-bottom-color: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .m-cat-name        { color: rgba(237, 233, 254, 0.80); }
+[data-theme="soft-future"] .m-cat-amt         { color: rgba(237, 233, 254, 0.80); }
+[data-theme="soft-future"] .m-cat-pct         { color: rgba(237, 233, 254, 0.30); }
+[data-theme="soft-future"] .m-cat-bar-bg      { background: rgba(6, 182, 212, 0.08); }
+[data-theme="soft-future"] .m-cat-bar-fill    { background: #f87171; }
+
+/* Recurring frequency buttons */
+[data-theme="soft-future"] .rp-freq-btn.active {
+  border-color: #06b6d4;
+  background: rgba(6, 182, 212, 0.16);
+  color: #a0aabb;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.20);
+}
+
+/* Recurring selector button */
+[data-theme="soft-future"] .rp-selector-btn:active {
+  border-color: #06b6d4;
+  background: rgba(6, 182, 212, 0.08);
+}
+
+/* Recurring modal selected item */
+[data-theme="soft-future"] .rp-modal-item.active {
+  color: #06b6d4;
+  background: rgba(6, 182, 212, 0.10);
+}
+[data-theme="soft-future"] .rp-modal-item.active::after { color: #06b6d4; }
+
+/* Budget nav link */
+[data-theme="soft-future"] .rp-budget-strip-nav         { color: #06b6d4; }
+
+/* Patrimony account main badge */
+[data-theme="soft-future"] .pat-account-item--main      { background: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-account-badge--main,
+[data-theme="soft-future"] .pat-account-badge-main {
+  color: #a0aabb;
+  background: rgba(6, 182, 212, 0.18);
+}
+[data-theme="soft-future"] .pat-asset-edit:hover,
+[data-theme="soft-future"] .pat-asset-edit:active       { color: #06b6d4; background: rgba(6, 182, 212, 0.18); }
+
+/* Budget save button */
+[data-theme="soft-future"] .m-budget-save {
+  background: rgba(6, 182, 212, 0.14);
+  color: #a0aabb;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.12);
+}
+[data-theme="soft-future"] .m-budget-save:active { background: rgba(6, 182, 212, 0.24); }
+
+/* Budget category nav ring animation */
+@keyframes sf-bcc-ring {
+  0%   { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.50), 0 4px 20px rgba(6, 182, 212, 0.18); }
+  60%  { box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.18), 0 4px 16px rgba(6, 182, 212, 0.06); }
+  100% { box-shadow: none; }
+}
+[data-theme="soft-future"] .m-bcc.nav-target            { animation: sf-bcc-ring 1.6s ease-out both; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   7 · BUTTONS — FAB, submit, transfer
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="soft-future"] .m-fab {
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 4px 22px rgba(13, 15, 18, 0.58), 0 0 0 1.5px rgba(167,139,250,0.20);
+}
+[data-theme="soft-future"] .m-fab:active {
+  box-shadow: 0 2px 10px rgba(13, 15, 18, 0.40);
+}
+
+[data-theme="soft-future"] .m-submit-btn.transfer {
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 3px 14px rgba(6, 182, 212, 0.40);
+}
+
+[data-theme="soft-future"] .m-transfer-btn {
+  background: rgba(6, 182, 212, 0.10);
+  border-color: rgba(6, 182, 212, 0.24);
+  color: #a0aabb;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.10);
+}
+
+[data-theme="soft-future"] .rp-form-save {
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 3px 14px rgba(13, 15, 18, 0.38);
+}
+
+[data-theme="soft-future"] .rp-cal-btn {
+  color: #06b6d4;
+  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   8 · BALANCE & TEXT
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="soft-future"] .m-balance-amount.positive   { color: #34d399; }
+[data-theme="soft-future"] .m-balance-amount.negative   { color: #f87171; }
+[data-theme="soft-future"] .m-balance-label             { color: rgba(6, 182, 212, 0.45); }
+
+[data-theme="soft-future"] .h-insight-badge.info        { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
+[data-theme="soft-future"] .h-month-btn                 { color: #a0aabb; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   9 · PROFILE & SETTINGS
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="soft-future"] .m-prof-avatar {
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
+}
+[data-theme="soft-future"] .m-prof-chip--on {
+  color: rgba(6, 182, 212, 0.92);
+  background: rgba(6, 182, 212, 0.12);
+}
+[data-theme="soft-future"] .m-cycle-badge {
+  color: rgba(6, 182, 212, 0.92);
+  background: rgba(6, 182, 212, 0.12);
+}
+[data-theme="soft-future"] .m-pill-toggle input:checked + .m-pill-toggle-track {
+  background: linear-gradient(90deg, #6d28d9, #06b6d4);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   10 · RECURRING CALENDAR
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="soft-future"] .rp-cal-dot                  { background: #06b6d4; box-shadow: 0 0 5px rgba(167,139,250,0.55); }
+[data-theme="soft-future"] .rp-cal-cell.today .rp-cal-day-num {
+  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  box-shadow: 0 0 10px rgba(109,40,217,0.45);
+}
+[data-theme="soft-future"] .rp-cal-cell.selected        { background: rgba(6, 182, 212, 0.12); }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   11 · REMAINING ACCENT OVERRIDES
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Home cashflow "today" quick-jump button */
+[data-theme="soft-future"] .h-today-btn {
+  background: rgba(6, 182, 212, 0.14);
+  color: #a0aabb;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.14);
+}
+
+/* Recurring budget strip */
+[data-theme="soft-future"] .rp-budget-strip {
+  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
+}
+
+/* Stock search dropdown */
+[data-theme="soft-future"] .pat-search-dropdown {
+  background: linear-gradient(180deg, #14171d 0%, #10121a 100%);
+  border-color: rgba(6, 182, 212, 0.18);
+  box-shadow: 0 8px 32px rgba(13, 15, 18, 0.70);
+}
+[data-theme="soft-future"] .pat-search-result:hover,
+[data-theme="soft-future"] .pat-search-result:active    { background: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-search-result           { border-bottom-color: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-search-spinner,
+[data-theme="soft-future"] .pat-stock-loading           { color: #a0aabb; }
+[data-theme="soft-future"] .pat-search-exch             { background: rgba(6, 182, 212, 0.08); }
+
+/* Swipe reveal actions — softer, less jarring */
+[data-theme="soft-future"] .swipe-btn-edit              { background: rgba(124, 70, 18, 0.88); }
+[data-theme="soft-future"] .swipe-btn-delete            { background: rgba(136, 30, 30, 0.88); }
+
+/* Account badge in transaction row */
+[data-theme="soft-future"] .ft-acct-badge {
+  background: rgba(6, 182, 212, 0.09);
+  color: rgba(196, 181, 253, 0.60);
+}
+
+/* "Transferência" inline badge in transaction sub */
+[data-theme="soft-future"] .ft-sub [style*="6366f1"],
+[data-theme="soft-future"] .ft-sub [style*="accent"] {
+  background: rgba(6, 182, 212, 0.16) !important;
+  color: #a0aabb !important;
+}
+
+/* Alerts panel */
+[data-theme="soft-future"] .pat-alerts-panel            { border-color: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .pat-alerts-title            { background: rgba(6, 182, 212, 0.04); border-bottom-color: rgba(6, 182, 212, 0.08); }
+
+/* Profile chip active (financial cycle, accounts count) */
+[data-theme="soft-future"] .m-prof-chip--on {
+  color: rgba(6, 182, 212, 0.92);
+  background: rgba(6, 182, 212, 0.12);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   12 · COMPONENT CSS OVERRIDES
+       (StatsTab.css, BudgetTab.css hardcoded hex values)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* History sub-tabs: Diário / Património */
+[data-theme="soft-future"] .hist-sub-tabs-wrap {
+  background: rgba(17, 19, 23, 0.95);
+  border: 0.5px solid rgba(6, 182, 212, 0.11);
+}
+[data-theme="soft-future"] .hist-sub-btn              { color: var(--text-tertiary); }
+[data-theme="soft-future"] .hist-sub-btn.active {
+  background: rgba(6, 182, 212, 0.20);
+  color: #a0aabb;
+}
+
+/* Category spend bars (StatsTab) */
+[data-theme="soft-future"] .category-bar-fill {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.75) 0%, rgba(6, 182, 212, 0.42) 100%);
+}
+
+/* Goal / budget progress bars (BudgetTab) */
+[data-theme="soft-future"] .progress-bar-fill {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.85) 0%, rgba(6, 182, 212, 0.50) 100%);
+}
+
+/* Budget & patrimony total summary cards (amber → charcoal + cyan depth) */
+[data-theme="soft-future"] .budget-total-card,
+[data-theme="soft-future"] .patrimony-total-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  box-shadow: 0 4px 24px rgba(13, 15, 18, 0.70), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
+}
+[data-theme="soft-future"] .budget-total-card *,
+[data-theme="soft-future"] .patrimony-total-card .patrimony-total-label { color: var(--text-secondary); }
+[data-theme="soft-future"] .patrimony-total-card .patrimony-total-amount { color: var(--text-primary); }
+
+/* Budget input focus ring */
+[data-theme="soft-future"] .budget-input:focus {
+  border-color: rgba(6, 182, 212, 0.50);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.10);
+}
+
+/* Transfer action button (BudgetTab) */
+[data-theme="soft-future"] .btn-transfer {
+  background: rgba(6, 182, 212, 0.18);
+  color: #a0aabb;
+  border: 0.5px solid rgba(6, 182, 212, 0.28);
+}
+[data-theme="soft-future"] .btn-transfer:not(:disabled):active {
+  background: rgba(6, 182, 212, 0.28);
+}
+
+/* Selected transaction row (BudgetTab transfer) */
+[data-theme="soft-future"] .tr-card--sel {
+  border-color: rgba(6, 182, 212, 0.38);
+  background: rgba(6, 182, 212, 0.07);
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.18);
+}
+[data-theme="soft-future"] .tr-card--sel .tr-card-name { color: #a0aabb; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   13 · STATS OVERVIEW CARD OVERRIDES
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* CSS custom properties consumed by inline template literals in StatsTab.jsx */
+[data-theme="soft-future"] {
+  --stats-bar-base:   rgba(6, 182, 212, 0.80);   /* progress bar low-spend colour */
+  --stats-ring-track: var(--bg-elevated);          /* conic-gradient empty segment  */
+}
+
+/* Saldo do mês — main balance card */
+[data-theme="soft-future"] .stats-saldo-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 40%, transparent 100%),
+    linear-gradient(135deg, #12151a 0%, #0d0f12 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.18);
+  box-shadow: 0 8px 32px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Generic dark surface cards (progress bar, top categories, financial score) */
+[data-theme="soft-future"] .stats-overview-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow: 0 2px 12px rgba(13, 15, 18, 0.55);
+}
+
+/* Progress bar track */
+[data-theme="soft-future"] .stats-bar-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Score ring inner circle */
+[data-theme="soft-future"] .stats-score-inner {
+  background: var(--bg-tertiary);
+}
+
+/* Compact history icon-toggle active state */
+[data-theme="soft-future"] .today-btn-compact.active {
+  background: rgba(6, 182, 212, 0.22);
+  color: #a0aabb;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.18);
+}
+
+/* Muted label text inside overview cards */
+[data-theme="soft-future"] .stats-saldo-card [style*="color: #71717a"],
+[data-theme="soft-future"] .stats-overview-card [style*="color: #71717a"] {
+  color: var(--text-tertiary) !important;
+}
+[data-theme="soft-future"] .stats-saldo-card [style*="color: #a1a1aa"] {
+  color: var(--text-secondary) !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   14 · FINTECH TRANSACTION CARD — SOFT FUTURE OVERRIDES
+       Target: FintechTransactionCard.css .fintech-ui rules
+       Specificity: [attr] + 2 classes = 0,3,0  >  .fintech-ui + class = 0,2,0
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Card shell */
+[data-theme="soft-future"] .fintech-ui .ftc-card {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
+    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  border-color: rgba(6, 182, 212, 0.12);
+}
+[data-theme="soft-future"] .fintech-ui .ftc-card:active {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 35%, transparent 100%),
+    linear-gradient(175deg, #1a1d23 0%, #15181d 100%);
+}
+
+/* Transfer / adjust badges */
+[data-theme="soft-future"] .ftc-badge--transfer {
+  background: rgba(6, 182, 212, 0.14);
+  color: #a0aabb;
+}
+[data-theme="soft-future"] .ftc-badge--adjust {
+  background: rgba(249, 115, 22, 0.12);
+  color: #fb923c;
+}
+
+/* Text colours */
+[data-theme="soft-future"] .fintech-ui .ftc-title   { color: var(--text-primary); }
+[data-theme="soft-future"] .fintech-ui .ftc-cat      { color: var(--text-tertiary); }
+[data-theme="soft-future"] .fintech-ui .ftc-date     { color: var(--text-tertiary); }
+[data-theme="soft-future"] .fintech-ui .ftc-amt--neutral { color: var(--text-secondary); }
+
+/* Account badge */
+[data-theme="soft-future"] .fintech-ui .ftc-acct-badge {
+  background: rgba(6, 182, 212, 0.08);
+  color: var(--text-tertiary);
+}
+
+/* Expanded action strip */
+[data-theme="soft-future"] .fintech-ui .ftc-actions {
+  border-top-color: rgba(6, 182, 212, 0.10);
+}
+[data-theme="soft-future"] .fintech-ui .ftc-action-date { color: var(--text-tertiary); }
+[data-theme="soft-future"] .fintech-ui .ftc-action-btn {
+  background: rgba(6, 182, 212, 0.08);
+  color: var(--text-primary);
+  border: 0.5px solid rgba(6, 182, 212, 0.12);
+}
+[data-theme="soft-future"] .fintech-ui .ftc-action-btn--danger {
+  background: rgba(248, 113, 113, 0.10);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.15);
+}
+
+/* List container gap */
+[data-theme="soft-future"] .fintech-ui .ftc-list { gap: 6px; display: flex; flex-direction: column; }
+
+/* Duplicate indicator */
+[data-theme="soft-future"] .fintech-ui .ftc-card--dupe { opacity: 0.55; }
