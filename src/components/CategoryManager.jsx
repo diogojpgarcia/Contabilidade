@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { dbService } from '../lib/supabase';
+import { CategoryIconBubble } from '../utils/categoryIcons';
 import './CategoryManager.css';
 
 const COLORS = [
@@ -8,19 +9,15 @@ const COLORS = [
   '#14b8a6', '#f43f5e', '#a855f7', '#22c55e', '#0ea5e9',
 ];
 
-/* Icon palette is derived at runtime from the live categories prop so it
-   always matches the icons used everywhere else in the app.             */
-const EXTRA_ICONS = [
-  '⚡','🎯','🎁','🌱','✈️','🏋️','🎵','📱','💻','🎨',
-  '🛍️','☕','🐕','🎬','🏦','⚽','💅','🎮','📚','🚌',
-];
-
 /**
  * CategoryManager
  *
  * Renders inside ProfileTab's <Overlay> bottom sheet — no extra wrapper needed.
  * Reads categories exclusively from the `categories` prop (App global state).
  * All mutations go through persist() → onUpdate() → App.setCategories.
+ *
+ * Icons are derived from the unified icon registry (getCategoryMeta) via
+ * CategoryIconBubble — same icon family as Budget, Stats, History, Home.
  *
  * Props:
  *   userId     — Supabase user id
@@ -36,31 +33,19 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
   const [saving, setSaving] = useState(false);
 
   // ── Edit state — all parent-owned, no inner components with hooks ──────────
-  const [editKey,          setEditKey]          = useState(null);
-  const [editDraft,        setEditDraft]        = useState({ label: '', color: '', icon: '' });
-  const [showEditColors,   setShowEditColors]   = useState(false);
-  const [showEditIcons,    setShowEditIcons]    = useState(false);
+  const [editKey,        setEditKey]        = useState(null);
+  const [editDraft,      setEditDraft]      = useState({ label: '', color: '' });
+  const [showEditColors, setShowEditColors] = useState(false);
 
   // ── New-category form ──────────────────────────────────────────────────────
-  const [newLabel,         setNewLabel]         = useState('');
-  const [newColor,         setNewColor]         = useState(COLORS[0]);
-  const [newIcon,          setNewIcon]          = useState('🏠');
-  const [showNewColors,    setShowNewColors]    = useState(false);
-  const [showNewIcons,     setShowNewIcons]     = useState(false);
+  const [newLabel,      setNewLabel]      = useState('');
+  const [newColor,      setNewColor]      = useState(COLORS[0]);
+  const [showNewColors, setShowNewColors] = useState(false);
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!categories?.expense || !categories?.income) return null;
 
   const list = categories[activeTab];
-
-  // ── Icon palette — real icons from global state first, then extras ─────────
-  const iconPalette = [
-    ...new Set([
-      ...categories.expense.map(c => c.icon),
-      ...categories.income.map(c => c.icon),
-      ...EXTRA_ICONS,
-    ].filter(Boolean)),
-  ];
 
   // ── Persistence ────────────────────────────────────────────────────────────
   const persist = async (updated) => {
@@ -81,22 +66,19 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
     setActiveTab(tab);
     setEditKey(null);
     setShowEditColors(false);
-    setShowEditIcons(false);
   };
 
   // ── Edit ───────────────────────────────────────────────────────────────────
   const startEdit = (index) => {
     const cat = categories[activeTab][index];
     setEditKey(`${activeTab}-${index}`);
-    setEditDraft({ label: cat.label, color: cat.color || COLORS[0], icon: cat.icon || '📦' });
+    setEditDraft({ label: cat.label, color: cat.color || COLORS[0] });
     setShowEditColors(false);
-    setShowEditIcons(false);
   };
 
   const cancelEdit = () => {
     setEditKey(null);
     setShowEditColors(false);
-    setShowEditIcons(false);
   };
 
   const saveEdit = async (index) => {
@@ -106,7 +88,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
       ...categories,
       [activeTab]: categories[activeTab].map((cat, i) =>
         i === index
-          ? { ...cat, label, color: editDraft.color, icon: editDraft.icon }
+          ? { ...cat, label, color: editDraft.color }
           : cat
       ),
     };
@@ -128,16 +110,14 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
     const label = newLabel.trim();
     if (!label) return;
     const id = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    const entry = { id, label, color: newColor, icon: newIcon };
+    const entry = { id, label, color: newColor };
     await persist({
       ...categories,
       [activeTab]: [...categories[activeTab], entry],
     });
     setNewLabel('');
     setNewColor(COLORS[0]);
-    setNewIcon(iconPalette[0] ?? '🏠');
     setShowNewColors(false);
-    setShowNewIcons(false);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -182,19 +162,19 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
               <div key={key} className="cm-row cm-row--edit">
                 {/* Edit controls */}
                 <div className="cm-edit-line">
+                  {/* Unified icon preview — auto-derived from the draft label */}
+                  <CategoryIconBubble
+                    name={editDraft.label || cat.label}
+                    type={activeTab}
+                    size={28}
+                    radius="8px"
+                  />
                   <button
                     className="cm-swatch-btn"
                     style={{ background: editDraft.color }}
-                    onClick={() => { setShowEditColors(!showEditColors); setShowEditIcons(false); }}
+                    onClick={() => setShowEditColors(!showEditColors)}
                     title="Mudar cor"
                   />
-                  <button
-                    className="cm-icon-btn"
-                    onClick={() => { setShowEditIcons(!showEditIcons); setShowEditColors(false); }}
-                    title="Mudar ícone"
-                  >
-                    {editDraft.icon}
-                  </button>
                   <input
                     className="cm-edit-input"
                     value={editDraft.label}
@@ -222,29 +202,19 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
                     ))}
                   </div>
                 )}
-
-                {/* Inline icon picker */}
-                {showEditIcons && (
-                  <div className="cm-picker-row cm-picker-row--icons">
-                    {iconPalette.map(ic => (
-                      <button
-                        key={ic}
-                        className={`cm-emoji-btn${editDraft.icon === ic ? ' cm-emoji-btn--on' : ''}`}
-                        onClick={() => { setEditDraft({ ...editDraft, icon: ic }); setShowEditIcons(false); }}
-                      >
-                        {ic}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           }
 
           return (
             <div key={key} className="cm-row">
-              <div className="cm-row-swatch" style={{ background: cat.color || '#9ca3af' }} />
-              <span className="cm-row-icon">{cat.icon || '📦'}</span>
+              {/* Unified icon bubble — same registry as Budget, Stats, History */}
+              <CategoryIconBubble
+                name={cat.label}
+                type={activeTab}
+                size={32}
+                radius="9px"
+              />
               <span className="cm-row-label">{cat.label}</span>
               <div className="cm-row-actions">
                 <button
@@ -269,19 +239,19 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
           Nova categoria de {activeTab === 'expense' ? 'despesa' : 'receita'}
         </p>
         <div className="cm-add-line">
+          {/* Unified icon preview — updates live as the user types the label */}
+          <CategoryIconBubble
+            name={newLabel || 'Outros'}
+            type={activeTab}
+            size={32}
+            radius="9px"
+          />
           <button
             className="cm-swatch-btn"
             style={{ background: newColor }}
-            onClick={() => { setShowNewColors(!showNewColors); setShowNewIcons(false); }}
+            onClick={() => setShowNewColors(!showNewColors)}
             title="Cor"
           />
-          <button
-            className="cm-icon-btn"
-            onClick={() => { setShowNewIcons(!showNewIcons); setShowNewColors(false); }}
-            title="Ícone"
-          >
-            {newIcon}
-          </button>
           <input
             className="cm-add-input"
             placeholder="Nome da categoria…"
@@ -307,20 +277,6 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
                 style={{ background: c }}
                 onClick={() => { setNewColor(c); setShowNewColors(false); }}
               />
-            ))}
-          </div>
-        )}
-
-        {showNewIcons && (
-          <div className="cm-picker-row cm-picker-row--icons">
-            {iconPalette.map(ic => (
-              <button
-                key={ic}
-                className={`cm-emoji-btn${newIcon === ic ? ' cm-emoji-btn--on' : ''}`}
-                onClick={() => { setNewIcon(ic); setShowNewIcons(false); }}
-              >
-                {ic}
-              </button>
             ))}
           </div>
         )}
