@@ -35,17 +35,25 @@ export const FOCUS_OPTIONS = [
 
 /**
  * Priority boosts applied to each insight type when a focus is active.
- * Higher = appears earlier in the top-4 list.
- *   savings  → surface "above average" (opportunity) and rising trends
- *   budgets  → surface budget alerts and near-limit risks first
- *   tracking → surface behavioral patterns and notable single expenses
- *   growth   → surface opportunities to free up money + rising costs
+ *
+ * Values must be large enough (200+) to guarantee visible reordering
+ * even when budget-alert insights already sit at priority 100.
+ * Secondary boosts (120) ensure a clear runner-up order within the focus.
+ *
+ *   savings  → spending opportunities and rising cost categories surface first
+ *   budgets  → budget limit alerts and near-limit risks surface first
+ *   tracking → behavioral patterns (weekend, volatility, micro) surface first
+ *   growth   → optimization opportunities and big-expense callouts surface first
+ *
+ * savings vs growth are intentionally different:
+ *   savings  = cut recurring waste (trend + opportunity)
+ *   growth   = spot the single biggest drains (info + opportunity)
  */
 const FOCUS_BOOSTS = {
-  savings:  { opportunity: 25, trend: 10 },
-  budgets:  { alert: 25, risk: 15 },
-  tracking: { pattern: 20, info: 10 },
-  growth:   { opportunity: 20, trend: 15 },
+  savings:  { opportunity: 200, trend: 120, pattern: 60 },
+  budgets:  { alert: 200, risk: 160, trend: 60 },
+  tracking: { pattern: 200, info: 160, opportunity: 40 },
+  growth:   { opportunity: 200, info: 120, trend: 60 },
 };
 
 /**
