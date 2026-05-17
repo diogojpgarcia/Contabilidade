@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { getFocusLine } from '../../utils/financialFocus';
+import CosmosCard from '../cosmos/CosmosCard';
+import CosmosSectionHeader from '../cosmos/CosmosSectionHeader';
 
+/* ── Insight computation — unchanged ────────────────────────────────────── */
 function computeInsight(transactions) {
   const expenses = (transactions || []).filter(t => t.type === 'expense');
 
@@ -15,7 +18,6 @@ function computeInsight(transactions) {
 
   const totalExp = expenses.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
 
-  // Build per-category totals
   const byCategory = {};
   expenses.forEach(t => {
     const cat = t.category || 'Outro';
@@ -46,18 +48,21 @@ function computeInsight(transactions) {
   };
 }
 
+/* ── Cosmos presentation ────────────────────────────────────────────────── */
 const HomeInsight = ({ transactions, onNavigate, financialFocus = null }) => {
-  const insight = useMemo(() => computeInsight(transactions), [transactions]);
+  const insight   = useMemo(() => computeInsight(transactions), [transactions]);
   const focusLine = useMemo(() => getFocusLine(financialFocus, insight), [financialFocus, insight]);
 
-  const tappable = !!(insight.categoryLabel && onNavigate);
+  const tappable  = !!(insight.categoryLabel && onNavigate);
   const handleTap = tappable
     ? () => onNavigate('budget', { categoryLabel: insight.categoryLabel })
     : undefined;
 
   return (
-    <div className="h-card">
-      <div className="h-section-title">Destaque</div>
+    <CosmosCard variant="standard">
+
+      <CosmosSectionHeader title="Destaque" style={{ marginBottom: 12 }} />
+
       <div
         className={`h-insight${tappable ? ' h-insight--tappable' : ''}`}
         onClick={handleTap}
@@ -75,10 +80,10 @@ const HomeInsight = ({ transactions, onNavigate, financialFocus = null }) => {
         </div>
         {tappable && <span className="h-insight-chev">›</span>}
       </div>
-      {focusLine && (
-        <div className="h-focus-line">{focusLine}</div>
-      )}
-    </div>
+
+      {focusLine && <div className="h-focus-line">{focusLine}</div>}
+
+    </CosmosCard>
   );
 };
 

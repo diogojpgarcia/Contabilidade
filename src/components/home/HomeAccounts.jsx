@@ -1,5 +1,8 @@
 import React from 'react';
+import CosmosCard from '../cosmos/CosmosCard';
+import CosmosSectionHeader from '../cosmos/CosmosSectionHeader';
 
+/* ── Logic unchanged ────────────────────────────────────────────────────── */
 const ACCOUNT_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6'];
 
 function fmt(val) {
@@ -9,7 +12,6 @@ function fmt(val) {
 const HomeAccounts = ({ accounts = [] }) => {
   if (accounts.length === 0) return null;
 
-  // Sort: by balance descending, then alphabetical by name
   const sorted = [...accounts].sort((a, b) => {
     const balA = parseFloat(a.currentBalance ?? a.balance) || 0;
     const balB = parseFloat(b.currentBalance ?? b.balance) || 0;
@@ -18,8 +20,10 @@ const HomeAccounts = ({ accounts = [] }) => {
   });
 
   return (
-    <div className="h-card">
-      <div className="h-section-title">Contas</div>
+    <CosmosCard variant="standard">
+
+      <CosmosSectionHeader title="Contas" style={{ marginBottom: 12 }} />
+
       <div className="h-accounts-list">
         {sorted.map((acc, i) => {
           const bal = parseFloat(acc.currentBalance ?? acc.balance) || 0;
@@ -37,7 +41,8 @@ const HomeAccounts = ({ accounts = [] }) => {
           );
         })}
       </div>
-    </div>
+
+    </CosmosCard>
   );
 };
 

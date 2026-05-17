@@ -7,6 +7,81 @@
   padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
 }
 
+/* ── Cosmos section stack ────────────────────────────────────────────────── */
+.h-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 0;
+}
+
+/* ── Cosmos Hero — enhanced typography when inside CosmosCard ── */
+.cosmos-card--hero .h-hero-patrimony-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(160, 170, 187, 0.65);
+  margin-bottom: 8px;
+  opacity: 1;
+}
+
+.cosmos-card--hero .h-hero-patrimony-value {
+  font-size: 2.625rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+  margin-bottom: 14px;
+}
+
+.cosmos-card--hero .h-hero-balance-badge {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+/* Progress header row — label left, pct right */
+.h-hero-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.h-hero-progress-pct {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--cosmos-accent, #06b6d4);
+  letter-spacing: 0.02em;
+}
+
+.cosmos-card--hero .h-hero-progress-label {
+  font-size: 0.6875rem;
+  opacity: 1;
+  margin-bottom: 0;
+}
+
+.cosmos-card--hero .h-hero-progress-track {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 0;
+}
+
+/* ── Cashflow compact month nav ── */
+.h-month-nav-compact {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── Quick Actions section ── */
+.h-quick-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* ── Card base ──────────────────────────────────────────────────────────── */
 .h-card {
   background: var(--bg-secondary);
