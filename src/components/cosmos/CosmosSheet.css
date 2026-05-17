@@ -1,0 +1,110 @@
+/* ── CosmosSheet ─────────────────────────────────────────────────────────── */
+
+/* Backdrop */
+.cs-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9990;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: cs-backdrop-in var(--cosmos-dur) var(--cosmos-ease) both;
+}
+
+@keyframes cs-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Sheet panel */
+.cs-sheet {
+  width: 100%;
+  max-width: 600px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, var(--cosmos-surface-2) 0%, var(--cosmos-surface-1) 100%);
+  border: 0.5px solid var(--cosmos-border-card);
+  border-bottom: none;
+  border-radius: var(--cosmos-r-hero) var(--cosmos-r-hero) 0 0;
+  box-shadow: var(--cosmos-shadow-sheet);
+  animation: cs-sheet-in var(--cosmos-dur-slow) var(--cosmos-ease-out) both;
+  overflow: hidden;
+}
+
+@keyframes cs-sheet-in {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Drag handle */
+.cs-handle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 4px;
+  border-radius: var(--cosmos-r-pill);
+  background: rgba(160, 170, 187, 0.25);
+  margin: 12px auto 0;
+}
+
+/* Header row */
+.cs-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  gap: 12px;
+}
+
+.cs-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cosmos-text-1);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--cosmos-neutral-dim);
+  border: none;
+  color: var(--cosmos-text-2);
+  cursor: pointer;
+  transition: background var(--cosmos-dur-fast) var(--cosmos-ease),
+              color      var(--cosmos-dur-fast) var(--cosmos-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cs-close:active {
+  background: var(--cosmos-accent-dim);
+  color: var(--cosmos-accent);
+}
+
+/* Scrollable body */
+.cs-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 4px 0 calc(16px + env(safe-area-inset-bottom));
+}
+
+/* Optional divider under header */
+.cs-divider {
+  height: 0.5px;
+  background: var(--cosmos-border-divider);
+  flex-shrink: 0;
+  margin: 0 16px;
+}

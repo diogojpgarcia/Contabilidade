@@ -1,0 +1,63 @@
+/* ── CosmosSectionHeader ─────────────────────────────────────────────────── */
+
+.cosmos-sh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px;
+  min-height: 28px;
+}
+
+.cosmos-sh__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cosmos-sh__title {
+  font-size: 0.8125rem;   /* 13px */
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cosmos-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cosmos-sh__subtitle {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--cosmos-text-3);
+  line-height: 1.3;
+}
+
+.cosmos-sh__action {
+  flex-shrink: 0;
+}
+
+/* Compact action button helper (used by default action slots) */
+.cosmos-sh__action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--cosmos-accent-dim);
+  border: 0.5px solid var(--cosmos-accent-border);
+  color: var(--cosmos-accent);
+  border-radius: var(--cosmos-r-pill);
+  padding: 4px 10px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background var(--cosmos-dur-fast) var(--cosmos-ease),
+              box-shadow var(--cosmos-dur-fast) var(--cosmos-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cosmos-sh__action-btn:active {
+  background: var(--cosmos-accent-hover);
+  box-shadow: 0 0 10px var(--cosmos-accent-glow);
+}

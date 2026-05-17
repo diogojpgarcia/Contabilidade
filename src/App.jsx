@@ -23,6 +23,7 @@ import ProfileTab from './components/tabs/ProfileTab';
 import { Home, BarChart2, Plus, LayoutGrid, User } from './components/icons';
 
 import './styles/layout.css';
+import './styles/cosmos-tokens.css';
 import './styles/modern.css';
 import './styles/fintech.css';
 import './styles/soft-future.css';
