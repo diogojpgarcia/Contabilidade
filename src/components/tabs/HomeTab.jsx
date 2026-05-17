@@ -15,6 +15,7 @@ const HomeTab = ({
   theme = 'default',
   onNavigate,
   recurringPayments,
+  confirmedRecurring = {},
   categories,
   financialFocus = null,
 }) => {
@@ -52,7 +53,7 @@ const HomeTab = ({
         financialMonthStartDay={financialMonthStartDay}
       />
       <HomeInsight transactions={transactions} onNavigate={onNavigate} financialFocus={financialFocus} />
-      <HomeRecurring recurringPayments={recurringPayments} categories={categories} />
+      <HomeRecurring recurringPayments={recurringPayments} confirmedRecurring={confirmedRecurring} categories={categories} />
       <HomeAccounts accounts={p.accounts || []} />
       <HomeEvolution
         patrimonyTotal={patrimonyTotal}

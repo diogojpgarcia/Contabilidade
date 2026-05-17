@@ -60,7 +60,8 @@ const App = () => {
   const [useFinancialMonth, setUseFinancialMonth] = useState(false);
   const [transactionAccountMap, setTransactionAccountMap] = useState({}); // { [txId]: { account_id, account_name } } — fallback when DB columns absent
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
-  const [recurringPayments, setRecurringPayments] = useState([]); // [{ id, title, amount, ... }]
+  const [recurringPayments, setRecurringPayments] = useState([]); // [{ id, title, amount, paymentType, ... }]
+  const [confirmedRecurring, setConfirmedRecurring] = useState({}); // { [recId]: { [monthKey]: { transactionId, amount, confirmedAt } } }
   const [financialFocus, setFinancialFocus] = useState(null); // 'savings' | 'budgets' | 'tracking' | 'growth' | null
   const loadRequestId = React.useRef(0); // incremented to cancel stale fetches
 
@@ -152,6 +153,9 @@ const App = () => {
 
       // Recurring payments
       if (Array.isArray(settings?.recurring_payments)) setRecurringPayments(settings.recurring_payments);
+      if (settings?.confirmed_recurring && typeof settings.confirmed_recurring === 'object') {
+        setConfirmedRecurring(settings.confirmed_recurring);
+      }
 
       // Financial month settings — restore and snap currentMonth to the correct period
       const sd  = settings?.financialMonthStartDay ?? 1;
@@ -376,6 +380,46 @@ const App = () => {
   const handleRecurringPaymentsChange = (updated) => {
     setRecurringPayments(updated);
     // Persistence is handled inside RecurringView to give immediate feedback
+  };
+
+  // Called when user confirms a recurring payment with the actual amount.
+  // Creates a real transaction and records the confirmation so it doesn't appear as pending again.
+  const handleConfirmRecurring = async ({ recurringPayment, dueDate, monthKey, amount, accountId }) => {
+    const account = patrimony.accounts.find(a => a.id === accountId);
+    const newTx = await dbService.addTransaction(currentUser.id, {
+      date:         dueDate,
+      description:  recurringPayment.title,
+      amount,
+      type:         'expense',
+      category:     recurringPayment.categoryId || 'Outros',
+      account_id:   accountId   || null,
+      account_name: account?.name || null,
+    });
+    // Apply account fallback map if DB columns not present
+    const txWithAccount = {
+      ...newTx,
+      account_id:   newTx.account_id   ?? accountId   ?? null,
+      account_name: newTx.account_name ?? account?.name ?? null,
+    };
+    setTransactions(prev => [txWithAccount, ...prev]);
+
+    // Record confirmation so this payment stops appearing as pending
+    const updated = {
+      ...confirmedRecurring,
+      [recurringPayment.id]: {
+        ...(confirmedRecurring[recurringPayment.id] || {}),
+        [monthKey]: { transactionId: newTx.id, amount, confirmedAt: new Date().toISOString() },
+      },
+    };
+    setConfirmedRecurring(updated);
+    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated }).catch(console.error);
+
+    // Keep account fallback map in sync
+    if (accountId && newTx.id) {
+      const updatedMap = { ...transactionAccountMap, [newTx.id]: { account_id: accountId, account_name: account?.name || null } };
+      setTransactionAccountMap(updatedMap);
+      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+    }
   };
 
   const handleBudgetsChange = async (newBudgets) => {
@@ -700,6 +744,7 @@ const App = () => {
             theme={theme}
             financialMonthStartDay={effectiveStartDay}
             recurringPayments={recurringPayments}
+            confirmedRecurring={confirmedRecurring}
             onNavigate={handleNavigateFromStats}
             financialFocus={financialFocus}
           />
@@ -755,6 +800,8 @@ const App = () => {
             onNavConsumed={() => setPendingBudgetNav(null)}
             recurringPayments={recurringPayments}
             onRecurringPaymentsChange={handleRecurringPaymentsChange}
+            confirmedRecurring={confirmedRecurring}
+            onConfirmRecurring={handleConfirmRecurring}
           />
         )}
 

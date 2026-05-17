@@ -135,6 +135,57 @@ export function getTotalMonthlyCommitted(payments) {
     .reduce((s, p) => s + getMonthlyEquivalent(p), 0);
 }
 
+// ── Recurring payment types ──────────────────────────────────────────────────
+
+export const PAYMENT_TYPES = {
+  fixed:    'fixed',
+  variable: 'variable',
+};
+
+export const PAYMENT_TYPE_LABELS = {
+  fixed:    'Fixo',
+  variable: 'Variável',
+};
+
+// ── Confirmation tracking ────────────────────────────────────────────────────
+
+/**
+ * Returns the month key (YYYY-MM) for a given date string or Date object.
+ */
+export function getRecurringMonthKey(dateStr) {
+  const s = dateStr ? String(dateStr) : new Date().toISOString();
+  return s.slice(0, 7); // 'YYYY-MM'
+}
+
+/**
+ * Whether a specific recurring payment has already been confirmed for a given month.
+ * confirmedRecurring: { [recId]: { [monthKey]: { transactionId, amount, confirmedAt } } }
+ */
+export function isConfirmedForMonth(recId, monthKey, confirmedRecurring) {
+  return !!(confirmedRecurring?.[recId]?.[monthKey]);
+}
+
+/**
+ * Returns payments that are currently due (dueDate <= today) and NOT yet confirmed
+ * for their respective month.
+ * Each item: { ...payment, dueDate, monthKey }
+ */
+export function getPendingConfirmations(payments, confirmedRecurring, fromDate = null) {
+  const today = fromDate || new Date().toISOString().split('T')[0];
+  const result = [];
+
+  for (const p of (payments || [])) {
+    if (p.active === false) continue;
+    const due = computeNextDueDate(p, null); // next due from start
+    if (due > today) continue;              // not yet due
+    const monthKey = getRecurringMonthKey(due);
+    if (isConfirmedForMonth(p.id, monthKey, confirmedRecurring)) continue; // already paid
+    result.push({ ...p, dueDate: due, monthKey });
+  }
+
+  return result.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+}
+
 // ── Labels ──────────────────────────────────────────────────────────────────
 
 export const FREQ_LABELS = {

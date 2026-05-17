@@ -331,7 +331,7 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
 // STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
 // Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
-const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1, pendingNav, onNavConsumed, recurringPayments = [], onRecurringPaymentsChange }) => {
+const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1, pendingNav, onNavConsumed, recurringPayments = [], onRecurringPaymentsChange, confirmedRecurring = {}, onConfirmRecurring }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
   const { draft: newGoal,      setField: setGoalField,      reset: resetGoal                               } = useForm(EMPTY_GOAL);
@@ -1246,6 +1246,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             user={user}
             recurringPayments={recurringPayments}
             onRecurringPaymentsChange={onRecurringPaymentsChange}
+            confirmedRecurring={confirmedRecurring}
+            onConfirmRecurring={onConfirmRecurring}
             categories={categories}
             patrimony={externalPatrimony}
           />

@@ -43,6 +43,7 @@ export const authService = {
 // Normalise a raw Supabase row so amount is always a Number.
 // Apply this to every row that comes back from the transactions table.
 function mapTransaction(raw) {
+  if (!raw) throw new Error('updateTransaction: no row returned — transaction may not exist or RLS blocked the update');
   return { ...raw, amount: Number(raw.amount) };
 }
 
@@ -112,15 +113,18 @@ export const dbService = {
       .eq('id', transactionId)
       .select();
     if (error) {
-      // If account columns don't exist yet, retry without them so other
-      // field updates (amount, category, date…) still succeed.
+      // If optional columns (account_id, account_name, subcategory…) don't exist yet,
+      // retry with only the core fields that are guaranteed to be in the schema.
       const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
-        (error.message || '').includes('account_id') || (error.message || '').includes('account_name');
+        (error.message || '').includes('account_id') ||
+        (error.message || '').includes('account_name') ||
+        (error.message || '').includes('subcategory');
       if (!isColErr) throw error;
-      console.warn('[supabase] account columns missing — updating without account fields');
-      const { account_id, account_name, ...baseUpdates } = updates;
+      console.warn('[supabase] optional column missing — retrying with core fields only');
+      // Strip all optional/possibly-missing columns; keep only guaranteed core schema fields
+      const { account_id, account_name, subcategory, ...baseUpdates } = updates;
       if (Object.keys(baseUpdates).length === 0) {
-        // Nothing else to update — fetch current row so caller gets a valid object back
+        // Nothing core to update — fetch current row so caller gets a valid object back
         const { data: cur, error: ce } = await supabase
           .from('transactions').select('*').eq('id', transactionId).single();
         if (ce) throw ce;
@@ -129,9 +133,9 @@ export const dbService = {
       const { data: d2, error: e2 } = await supabase
         .from('transactions').update(baseUpdates).eq('id', transactionId).select();
       if (e2) throw e2;
-      return mapTransaction(d2[0]);
+      return mapTransaction(d2?.[0]);
     }
-    return mapTransaction(data[0]);
+    return mapTransaction(data?.[0]);
   },
 
   async deleteTransaction(transactionId) {

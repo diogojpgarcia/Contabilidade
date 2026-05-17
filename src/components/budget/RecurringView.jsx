@@ -13,19 +13,23 @@ import {
   shortDate,
   FREQ_LABELS,
   FREQ_OPTIONS,
+  PAYMENT_TYPE_LABELS,
+  getPendingConfirmations,
 } from '../../utils/recurringPayments';
 import './Recurring.css';
 
 const EMPTY_FORM = {
-  title:      '',
-  amount:     '',
-  categoryId: '',
-  accountId:  '',
-  frequency:  'monthly',
-  customDays: '',
-  startDate:  new Date().toISOString().split('T')[0],
-  notes:      '',
-  active:     true,
+  title:           '',
+  amount:          '',
+  estimatedAmount: '',
+  paymentType:     'fixed',
+  categoryId:      '',
+  accountId:       '',
+  frequency:       'monthly',
+  customDays:      '',
+  startDate:       new Date().toISOString().split('T')[0],
+  notes:           '',
+  active:          true,
 };
 
 function genId() {
@@ -36,6 +40,8 @@ const RecurringView = ({
   user,
   recurringPayments,
   onRecurringPaymentsChange,
+  confirmedRecurring = {},
+  onConfirmRecurring,
   categories,
   patrimony,
 }) => {
@@ -46,6 +52,12 @@ const RecurringView = ({
   const [editingId,         setEditingId]         = useState(null);
   const [form,              setForm]              = useState(EMPTY_FORM);
   const [saving,            setSaving]            = useState(false);
+
+  // Confirm payment modal
+  const [confirmTarget,    setConfirmTarget]    = useState(null); // { payment, dueDate, monthKey }
+  const [confirmAmount,    setConfirmAmount]    = useState('');
+  const [confirmAccountId, setConfirmAccountId] = useState('');
+  const [confirming,       setConfirming]       = useState(false);
 
   const payments = recurringPayments || [];
   const totalMonthly = getTotalMonthlyCommitted(payments);
@@ -75,15 +87,17 @@ const RecurringView = ({
   const openEdit = (p) => {
     setEditingId(p.id);
     setForm({
-      title:      p.title      || '',
-      amount:     p.amount     != null ? String(p.amount) : '',
-      categoryId: p.categoryId || '',
-      accountId:  p.accountId  || '',
-      frequency:  p.frequency  || 'monthly',
-      customDays: p.customDays != null ? String(p.customDays) : '',
-      startDate:  p.startDate  || new Date().toISOString().split('T')[0],
-      notes:      p.notes      || '',
-      active:     p.active !== false,
+      title:           p.title           || '',
+      amount:          p.amount          != null ? String(p.amount) : '',
+      estimatedAmount: p.estimatedAmount != null ? String(p.estimatedAmount) : '',
+      paymentType:     p.paymentType     || 'fixed',
+      categoryId:      p.categoryId      || '',
+      accountId:       p.accountId       || '',
+      frequency:       p.frequency       || 'monthly',
+      customDays:      p.customDays      != null ? String(p.customDays) : '',
+      startDate:       p.startDate       || new Date().toISOString().split('T')[0],
+      notes:           p.notes           || '',
+      active:          p.active !== false,
     });
     setShowForm(true);
   };
@@ -99,16 +113,18 @@ const RecurringView = ({
     if (!title || amount <= 0) return;
 
     const entry = {
-      id:         editingId || genId(),
+      id:              editingId || genId(),
       title,
       amount,
-      categoryId: form.categoryId || '',
-      accountId:  form.accountId  || '',
-      frequency:  form.frequency,
-      customDays: form.frequency === 'custom' ? safeNum(form.customDays) || 30 : null,
-      startDate:  form.startDate,
-      notes:      form.notes.trim(),
-      active:     true,
+      paymentType:     form.paymentType || 'fixed',
+      estimatedAmount: form.paymentType === 'variable' ? safeNum(form.estimatedAmount) || amount : null,
+      categoryId:      form.categoryId || '',
+      accountId:       form.accountId  || '',
+      frequency:       form.frequency,
+      customDays:      form.frequency === 'custom' ? safeNum(form.customDays) || 30 : null,
+      startDate:       form.startDate,
+      notes:           form.notes.trim(),
+      active:          true,
     };
 
     const updated = editingId
@@ -135,6 +151,37 @@ const RecurringView = ({
 
   const canSave = form.title.trim().length > 0 && safeNum(form.amount) > 0;
 
+  // ── Confirm payment handlers ───────────────────────────────────────────────
+  const openConfirm = (payment, dueDate, monthKey) => {
+    const prefill = payment.paymentType === 'fixed'
+      ? String(payment.amount)
+      : (payment.estimatedAmount ? String(payment.estimatedAmount) : '');
+    setConfirmTarget({ payment, dueDate, monthKey });
+    setConfirmAmount(prefill);
+    setConfirmAccountId(payment.accountId || '');
+  };
+
+  const handleConfirmSave = async () => {
+    if (!confirmTarget || !onConfirmRecurring) return;
+    const amount = safeNum(confirmAmount);
+    if (amount <= 0) return;
+    setConfirming(true);
+    try {
+      await onConfirmRecurring({
+        recurringPayment: confirmTarget.payment,
+        dueDate:          confirmTarget.dueDate,
+        monthKey:         confirmTarget.monthKey,
+        amount,
+        accountId:        confirmAccountId || confirmTarget.payment.accountId || null,
+      });
+      setConfirmTarget(null);
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const pendingConfirmations = getPendingConfirmations(payments, confirmedRecurring);
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
@@ -156,6 +203,42 @@ const RecurringView = ({
         <span>Ver calendário</span>
         <span className="rp-cal-btn-chev">›</span>
       </button>
+
+      {/* Pending confirmations */}
+      {pendingConfirmations.length > 0 && (
+        <div className="rp-pending-section">
+          <div className="rp-pending-header">
+            <span className="rp-pending-dot" />
+            Aguardam confirmação
+          </div>
+          {pendingConfirmations.map(p => (
+            <div key={`${p.id}_${p.monthKey}`} className="rp-pending-row">
+              <CategoryIconBubble name={catLabel(p)} type="expense" size={30} radius="8px" />
+              <div className="rp-pending-body">
+                <div className="rp-pending-title">{p.title}</div>
+                <div className="rp-pending-meta">
+                  {p.paymentType === 'variable' ? 'Variável' : 'Fixo'}
+                  {' · '}
+                  <span className="rp-pending-due">{shortDate(p.dueDate)}</span>
+                </div>
+              </div>
+              <div className="rp-pending-right">
+                <div className="rp-pending-amount">
+                  {p.paymentType === 'variable' && p.estimatedAmount
+                    ? `~${safeNum(p.estimatedAmount).toFixed(2)}€`
+                    : `${safeNum(p.amount).toFixed(2)}€`}
+                </div>
+                <button
+                  className="rp-confirm-btn"
+                  onClick={() => openConfirm(p, p.dueDate, p.monthKey)}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Payment list */}
       <div className="rp-list">
@@ -197,6 +280,73 @@ const RecurringView = ({
       {/* FAB */}
       <button className="m-fab" onClick={openAdd}>+</button>
 
+      {/* Confirm payment modal */}
+      {confirmTarget && (
+        <Overlay onClose={() => setConfirmTarget(null)}>
+          <div className="rp-form-sheet" onClick={e => e.stopPropagation()}>
+            <div className="rp-form-handle" />
+            <div className="rp-form-header">
+              <span className="rp-form-title">Confirmar Pagamento</span>
+              <button className="rp-form-close" onClick={() => setConfirmTarget(null)}>✕</button>
+            </div>
+            <div className="rp-form-body">
+              <div className="rp-confirm-info">
+                <strong>{confirmTarget.payment.title}</strong>
+                <span>{shortDate(confirmTarget.dueDate)}</span>
+              </div>
+
+              <div className="rp-form-field">
+                <label className="rp-form-label">
+                  {confirmTarget.payment.paymentType === 'variable'
+                    ? 'Valor real *'
+                    : 'Valor *'}
+                </label>
+                <input
+                  className="rp-form-input"
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={confirmAmount}
+                  onChange={e => setConfirmAmount(e.target.value)}
+                  step="0.01"
+                  min="0.01"
+                  autoFocus
+                />
+              </div>
+
+              {accounts.length > 0 && (
+                <div className="rp-form-field">
+                  <label className="rp-form-label">Conta</label>
+                  <select
+                    className="rp-form-input"
+                    value={confirmAccountId}
+                    onChange={e => setConfirmAccountId(e.target.value)}
+                  >
+                    <option value="">— Nenhuma —</option>
+                    {accounts.map(a => (
+                      <option key={a.id} value={a.id}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="rp-form-actions">
+                <button className="rp-form-cancel" onClick={() => setConfirmTarget(null)}>
+                  Cancelar
+                </button>
+                <button
+                  className="rp-form-save"
+                  onClick={handleConfirmSave}
+                  disabled={confirming || safeNum(confirmAmount) <= 0}
+                >
+                  {confirming ? 'A confirmar…' : 'Confirmar pagamento'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
+
       {/* Calendar overlay */}
       {showCalendar && (
         <RecurringCalendar
@@ -230,9 +380,30 @@ const RecurringView = ({
                 />
               </div>
 
+              {/* Payment type */}
+              <div className="rp-form-field">
+                <label className="rp-form-label">Tipo</label>
+                <div className="rp-freq-row">
+                  {['fixed', 'variable'].map(t => (
+                    <button
+                      key={t}
+                      className={`rp-freq-btn${form.paymentType === t ? ' active' : ''}`}
+                      onClick={() => setField('paymentType', t)}
+                    >{PAYMENT_TYPE_LABELS[t]}</button>
+                  ))}
+                </div>
+                {form.paymentType === 'variable' && (
+                  <div className="rp-form-hint">
+                    O valor varia cada mês — serás pedido para confirmar o valor real quando for devido.
+                  </div>
+                )}
+              </div>
+
               {/* Amount */}
               <div className="rp-form-field">
-                <label className="rp-form-label">Valor *</label>
+                <label className="rp-form-label">
+                  {form.paymentType === 'variable' ? 'Valor estimado *' : 'Valor *'}
+                </label>
                 <input
                   className="rp-form-input"
                   type="number"
