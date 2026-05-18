@@ -862,13 +862,8 @@ const App = () => {
           <span className="nav-label">Stats</span>
         </button>
 
-        <button
-          className={`nav-item nav-item--add ${activeTab === 'add' ? 'active' : ''}`}
-          onClick={() => setActiveTab('add')}
-          aria-label="Adicionar transação"
-        >
-          <span className="nav-icon nav-icon--add"><Plus size={24} strokeWidth={2.5} /></span>
-        </button>
+        {/* Espaço reservado para manter o layout de 5 colunas */}
+        <div style={{ width: '52px', flexShrink: 0 }} />
 
         <button
           className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`}
@@ -886,6 +881,33 @@ const App = () => {
           <span className="nav-label">Perfil</span>
         </button>
       </nav>
+
+      {/* Botão "+" central — position: fixed, fora do nav para não ser cortado */}
+      <button
+        onClick={() => setActiveTab('add')}
+        aria-label="Adicionar transação"
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '52px',
+          height: '52px',
+          borderRadius: '50%',
+          background: '#00DDFF',
+          color: '#000000',
+          fontSize: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 20px rgba(0,221,255,0.45)',
+          zIndex: 100,
+          border: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <Plus size={24} strokeWidth={2.5} />
+      </button>
 
       {/* Bulk category update — rendered at App level so it overlays everything */}
       {bulkPending && (
