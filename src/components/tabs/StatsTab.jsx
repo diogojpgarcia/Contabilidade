@@ -46,12 +46,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   useEffect(() => {
     const outer = statsTabRef.current?.closest('.main-content-new');
     if (outer) outer.scrollTop = 0;
-  }, [activeView]);
+  }, []); // só no mount, não em cada mudança de view
   const [deleting, setDeleting] = useState(null);
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
   const [historyView, setHistoryView] = useState('daily'); // 'daily' | 'patrimony'
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null = all accounts
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
 
   // Compute expenses by category from already-filtered transactions
@@ -113,6 +114,20 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         income,
         expenses,
         balance: income - expenses
+      };
+    });
+  };
+
+  // Category monthly breakdown — used by the interactive chart in the fintech branch
+  const getCategoryMonthlyData = (categoryName) => {
+    return getLast6Months().map(month => {
+      const monthTxs = filterByFinancialMonth(transactions, month, financialMonthStartDay);
+      const amount = monthTxs
+        .filter(t => t.type === 'expense' && t.category === categoryName)
+        .reduce((s, t) => s + parseFloat(t.amount), 0);
+      return {
+        month: month.substring(5) + '/' + month.substring(2, 4),
+        amount,
       };
     });
   };
@@ -387,23 +402,72 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 </div>
               </div>
 
-              {/* SVG área chart — largura total */}
-              <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: 'block' }}>
-                <defs>
-                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(34,197,94,0.25)" />
-                    <stop offset="100%" stopColor="rgba(34,197,94,0)" />
-                  </linearGradient>
-                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(248,113,113,0.2)" />
-                    <stop offset="100%" stopColor="rgba(248,113,113,0)" />
-                  </linearGradient>
-                </defs>
-                <path d={incomeAreaPath}  fill="url(#incomeGrad)" />
-                <path d={expenseAreaPath} fill="url(#expenseGrad)" />
-                <polyline points={incomeLinePts}  fill="none" stroke="#22C55E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <polyline points={expenseLinePts} fill="none" stroke="#F87171" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              {/* SVG área chart — interativo por categoria */}
+              {(() => {
+                const selIdx = categoryData.findIndex(c => c.category === selectedCategory);
+                const selColor = selIdx >= 0 ? CAT_COLORS[selIdx % 5] : null;
+
+                if (selectedCategory && selColor) {
+                  const catData = getCategoryMonthlyData(selectedCategory);
+                  const maxCat  = Math.max(...catData.map(d => d.amount), 1);
+                  const pts = catData.map((d, i) => ({
+                    x: (i / 5) * 340,
+                    y: 68 - (d.amount / maxCat) * 60,
+                  }));
+                  const linePoints = pts.map(p => `${p.x},${p.y}`).join(' ');
+                  const areaPath = `M${pts[0].x},${pts[0].y} ` +
+                    pts.slice(1).map(p => `L${p.x},${p.y}`).join(' ') +
+                    ` L340,68 L0,68 Z`;
+                  return (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px 4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: selColor }} />
+                          <span style={{ fontSize: '12px', color: selColor, fontWeight: 500 }}>{selectedCategory}</span>
+                        </div>
+                        <button onClick={() => setSelectedCategory(null)} style={{ fontSize: '11px', color: '#94A3B8', background: 'none', border: 'none', cursor: 'pointer' }}>Ver tudo ×</button>
+                      </div>
+                      <svg width="100%" height={72} viewBox="0 0 340 72" preserveAspectRatio="none" style={{ display: 'block' }}>
+                        <defs>
+                          <linearGradient id="catGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={selColor} stopOpacity="0.3" />
+                            <stop offset="100%" stopColor={selColor} stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path d={areaPath} fill="url(#catGrad)" />
+                        <polyline points={linePoints} fill="none" stroke={selColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={selColor} />)}
+                      </svg>
+                    </div>
+                  );
+                }
+
+                const maxValG = Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses)), 1);
+                const incPts = monthlyData.map((d, i) => `${(i/5)*340},${68-(d.income/maxValG)*60}`).join(' ');
+                const expPts = monthlyData.map((d, i) => `${(i/5)*340},${68-(d.expenses/maxValG)*60}`).join(' ');
+                const incArea = `M0,${68-(monthlyData[0].income/maxValG)*60} ` +
+                  monthlyData.map((d,i) => `L${(i/5)*340},${68-(d.income/maxValG)*60}`).join(' ') + ' L340,68 L0,68 Z';
+                const expArea = `M0,${68-(monthlyData[0].expenses/maxValG)*60} ` +
+                  monthlyData.map((d,i) => `L${(i/5)*340},${68-(d.expenses/maxValG)*60}`).join(' ') + ' L340,68 L0,68 Z';
+                return (
+                  <svg width="100%" height={72} viewBox="0 0 340 72" preserveAspectRatio="none" style={{ display: 'block' }}>
+                    <defs>
+                      <linearGradient id="incGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22C55E" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
+                      </linearGradient>
+                      <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#F87171" stopOpacity="0.2" />
+                        <stop offset="100%" stopColor="#F87171" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={incArea} fill="url(#incGrad)" />
+                    <path d={expArea} fill="url(#expGrad)" />
+                    <polyline points={incPts} fill="none" stroke="#22C55E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <polyline points={expPts} fill="none" stroke="#F87171" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                );
+              })()}
 
               {/* Labels dos meses */}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 16px 14px' }}>
@@ -419,23 +483,35 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 <div style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
                   Top Categorias
                 </div>
-                {categoryData.slice(0, 5).map((cat, i) => (
-                  <div key={cat.category} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                    {/* Ponto colorido */}
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: CAT_COLORS[i % 5], flexShrink: 0 }} />
-                    {/* Nome */}
-                    <div style={{ flex: 1, fontSize: '14px', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.category}</div>
-                    {/* Barra + % */}
-                    <div style={{ width: '100px', flexShrink: 0 }}>
-                      <div style={{ fontSize: '12px', color: CAT_COLORS[i % 5], textAlign: 'right', marginBottom: '3px' }}>{cat.percentage.toFixed(0)}%</div>
-                      <div style={{ height: '3px', background: 'rgba(255,255,255,0.07)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${cat.percentage}%`, background: CAT_COLORS[i % 5], borderRadius: '3px', opacity: 0.7 }} />
+                {categoryData.slice(0, 5).map((cat, i) => {
+                  const isSelected = selectedCategory === cat.category;
+                  return (
+                    <div
+                      key={cat.category}
+                      onClick={() => setSelectedCategory(isSelected ? null : cat.category)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}
+                    >
+                      {/* Ponto colorido */}
+                      <div style={{
+                        width: '8px', height: '8px', borderRadius: '50%', background: CAT_COLORS[i % 5], flexShrink: 0,
+                        transform: isSelected ? 'scale(1.5)' : 'scale(1)',
+                        boxShadow: isSelected ? `0 0 8px ${CAT_COLORS[i % 5]}` : 'none',
+                        transition: 'all 0.2s',
+                      }} />
+                      {/* Nome */}
+                      <div style={{ flex: 1, fontSize: '14px', color: isSelected ? '#FFFFFF' : '#FFFFFF', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.category}</div>
+                      {/* Barra + % */}
+                      <div style={{ width: '100px', flexShrink: 0 }}>
+                        <div style={{ fontSize: '12px', color: CAT_COLORS[i % 5], textAlign: 'right', marginBottom: '3px' }}>{cat.percentage.toFixed(0)}%</div>
+                        <div style={{ height: '3px', background: 'rgba(255,255,255,0.07)', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${cat.percentage}%`, background: CAT_COLORS[i % 5], borderRadius: '3px', opacity: isSelected ? 1 : 0.7 }} />
+                        </div>
                       </div>
+                      {/* Valor */}
+                      <div style={{ width: '64px', fontSize: '13px', color: '#94A3B8', textAlign: 'right', flexShrink: 0 }}>{fmt(cat.amount)}</div>
                     </div>
-                    {/* Valor */}
-                    <div style={{ width: '64px', fontSize: '13px', color: '#94A3B8', textAlign: 'right', flexShrink: 0 }}>{fmt(cat.amount)}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -455,25 +531,35 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               {insights.length > 0 && <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '12px 0' }} />}
               {/* Insights */}
               {insights.slice(0, 3).map((item, i) => {
-                const insightColor = item.color === 'risk' ? '#F87171' : item.color === 'warn' ? '#FB923C' : item.color === 'good' ? '#22C55E' : '#94A3B8';
+                const CONFIG = {
+                  risk: { color: '#F87171', bg: 'rgba(248,113,113,0.08)', emoji: '⚠️' },
+                  warn: { color: '#FB923C', bg: 'rgba(251,146,60,0.08)',  emoji: '⚡' },
+                  good: { color: '#22C55E', bg: 'rgba(34,197,94,0.08)',   emoji: '📈' },
+                  info: { color: '#94A3B8', bg: 'rgba(148,163,184,0.06)', emoji: '💡' },
+                };
+                const cfg = CONFIG[item.color] || CONFIG.info;
                 return (
-                  <div key={i} style={{
-                    borderLeft: `3px solid ${insightColor}`,
-                    background: `${insightColor}0F`,
-                    borderRadius: '8px',
-                    padding: '10px 12px',
-                    marginBottom: i < insights.slice(0,3).length - 1 ? '8px' : 0,
-                    display: 'flex',
-                    gap: '10px',
-                    alignItems: 'flex-start',
-                  }}>
-                    <span style={{ fontSize: '14px', flexShrink: 0 }}>
-                      {item.color === 'risk' ? '⚠️' : item.color === 'warn' ? '⚡' : '📈'}
-                    </span>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFFFFF', marginBottom: '2px' }}>{item.title}</div>
-                      <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.4 }}>{item.message}</div>
+                  <div
+                    key={i}
+                    onClick={() => item.meta?.action === 'openHistory' && setActiveView('log')}
+                    style={{
+                      display: 'flex', gap: '12px', alignItems: 'flex-start',
+                      padding: '12px', borderRadius: '12px',
+                      background: cfg.bg,
+                      borderLeft: `3px solid ${cfg.color}`,
+                      marginBottom: i < 2 ? '8px' : 0,
+                      cursor: item.meta ? 'pointer' : 'default',
+                    }}
+                  >
+                    <span style={{ fontSize: '20px', lineHeight: 1, marginTop: '1px', flexShrink: 0 }}>{cfg.emoji}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFFFFF', marginBottom: '3px' }}>{item.title}</div>
+                      <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.5 }}>{item.message}</div>
+                      {item.explanation && (
+                        <div style={{ fontSize: '11px', color: '#64748B', marginTop: '4px', lineHeight: 1.4 }}>{item.explanation}</div>
+                      )}
                     </div>
+                    {item.meta && <span style={{ color: '#64748B', fontSize: '16px', alignSelf: 'center' }}>›</span>}
                   </div>
                 );
               })}
