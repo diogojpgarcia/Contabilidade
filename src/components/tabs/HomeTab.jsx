@@ -33,20 +33,24 @@ const HomeTab = ({
 
   return (
     <div className="h-page">
-<div className="h-sections">
 
-        {/* 1 — Flagship balance hero */}
+      {/* ── PRIMARY ZONE — hero owns its own spatial territory ── */}
+      <div className="h-primary-zone">
         <HomeHero
           patrimonyTotal={patrimonyTotal}
           monthlyBalance={balance}
           currentMonth={currentMonth}
           financialMonthStartDay={financialMonthStartDay}
         />
+      </div>
 
-        {/* 2 — Command-center quick action hub */}
+      {/* ── SECONDARY STACK — subordinate command modules ── */}
+      <div className="h-sections">
+
+        {/* Command hub */}
         <HomeQuickActions onNavigate={onNavigate} />
 
-        {/* 3 — Monthly cashflow overview */}
+        {/* Monthly cashflow */}
         <HomeCashflow
           income={income}
           expenses={expenses}
@@ -56,21 +60,21 @@ const HomeTab = ({
           financialMonthStartDay={financialMonthStartDay}
         />
 
-        {/* 4 — Contextual insight */}
+        {/* Contextual insight */}
         <HomeInsight
           transactions={transactions}
           onNavigate={onNavigate}
           financialFocus={financialFocus}
         />
 
-        {/* 5 — Upcoming recurring payments */}
+        {/* Upcoming recurring payments */}
         <HomeRecurring
           recurringPayments={recurringPayments}
           confirmedRecurring={confirmedRecurring}
           categories={categories}
         />
 
-        {/* 6 — Account balances (shown only when accounts exist) */}
+        {/* Account balances */}
         <HomeAccounts accounts={p.accounts || []} />
 
       </div>

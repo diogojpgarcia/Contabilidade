@@ -1101,3 +1101,177 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
   font-weight: 600;
   letter-spacing: 0.03em;
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PASS 3 — FLAGSHIP COMPOSITION
+   Goal: transform "good dashboard" into "flagship OS."
+   Strategy: spatial hierarchy, module orchestration, depth choreography,
+   intentional silence, dock-quality navigation.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── 1. SPATIAL HIERARCHY — hero zone vs secondary stack ───────────────────
+   Hero lives in .h-primary-zone with tighter side margins = wider card.
+   Secondary stack has standard margins — visually subordinate by width.   */
+
+[data-theme="soft-future"] .h-primary-zone {
+  padding: 24px 6px 0;   /* 6px sides → hero is wider than all secondary cards */
+}
+
+[data-theme="soft-future"] .h-sections {
+  gap: 14px;
+  padding: 22px 12px 0;  /* 22px top = intentional breathing zone after hero */
+}
+
+/* The silence zone — hero's bottom edge to secondary stack's first element.
+   h-primary-zone bottom + h-sections padding-top = ~22px breathing. */
+
+
+/* ── 2. HERO — FLAGSHIP MODULE TREATMENT ───────────────────────────────────
+   Now in its own zone, the hero can be styled as a commanding primary module.
+   Slightly larger padding, full-attention number, minimal internal noise.  */
+
+[data-theme="soft-future"] .cosmos-card--hero {
+  padding: 30px 24px 40px;
+}
+
+/* The number is the emotional anchor — give it maximum presence */
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-patrimony-value {
+  font-size: 3.875rem;
+  letter-spacing: -0.058em;
+  line-height: 0.94;
+  margin-bottom: 22px;
+}
+
+/* Label recedes so the number dominates */
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-patrimony-label {
+  font-size: 0.5875rem;
+  letter-spacing: 0.16em;
+  margin-bottom: 14px;
+  opacity: 0.80;
+}
+
+/* Hero glow — stronger ambient presence, cinematic depth */
+[data-theme="soft-future"] .cosmos-card--hero.cosmos-card--glow {
+  box-shadow:
+    0 20px 72px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(6, 182, 212, 0.18),
+    0 0 80px rgba(6, 182, 212, 0.20),
+    0 0 160px rgba(6, 182, 212, 0.06);
+}
+
+
+/* ── 3. DEPTH CHOREOGRAPHY — module stratification ─────────────────────────
+   Modules recede in depth as they decrease in importance.
+   Cashflow = primary data → standard depth.
+   Insight / Recurring / Accounts = context → receded depth.             */
+
+/* Quick actions — compact hub, no verbal label */
+[data-theme="soft-future"] .h-quick-section .cosmos-sh {
+  display: none;   /* pure command hub — icons speak for themselves */
+}
+[data-theme="soft-future"] .h-quick-section {
+  padding: 14px;
+}
+
+/* Cashflow card — primary data module, standard depth (no change needed) */
+
+/* Context modules (insight=3rd child, recurring=4th, accounts=5th) — recede */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
+  background:
+    linear-gradient(to top,
+      rgba(6, 182, 212, 0.04) 0%,
+      transparent 100%),
+    linear-gradient(145deg, #111318 0%, #0c0f15 100%);
+  border-color: rgba(6, 182, 212, 0.065);
+  box-shadow:
+    0 3px 20px rgba(13, 15, 18, 0.50),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.025);
+}
+
+/* Context module section headers — even more receded */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .cosmos-sh__title {
+  color: rgba(160, 170, 187, 0.32);
+}
+
+
+/* ── 4. TYPOGRAPHY ORCHESTRATION ────────────────────────────────────────────
+   Secondary module numbers and labels should be clearly subordinate to hero. */
+
+/* Cashflow amounts — strong but not competing with hero */
+[data-theme="soft-future"] .h-cf-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* Cashflow column separators — subtle cyan pulse */
+[data-theme="soft-future"] .h-cf-col + .h-cf-col {
+  border-left: 0.5px solid rgba(6, 182, 212, 0.08);
+}
+
+/* Insight title — confident but not dominant */
+[data-theme="soft-future"] .h-insight-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: rgba(232, 234, 237, 0.90);
+}
+
+/* Insight description — clearly secondary */
+[data-theme="soft-future"] .h-insight-desc {
+  font-size: 0.8125rem;
+  color: rgba(160, 170, 187, 0.55);
+  line-height: 1.5;
+}
+
+
+/* ── 5. DOCK-QUALITY NAVIGATION ─────────────────────────────────────────────
+   The nav should feel like a premium dock anchoring the OS — a separate
+   layer of the experience, not just a bar at the bottom.                  */
+
+[data-theme="soft-future"] .bottom-nav {
+  background: rgba(9, 11, 14, 0.97);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.12);
+  box-shadow:
+    0 -12px 56px rgba(0, 0, 0, 0.90),
+    0 -1px 0 rgba(6, 182, 212, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(32px) saturate(2);
+  -webkit-backdrop-filter: blur(32px) saturate(2);
+  padding: 10px 8px calc(18px + env(safe-area-inset-bottom));
+}
+
+/* Nav items — more comfortable tap targets */
+[data-theme="soft-future"] .nav-item {
+  border-radius: 14px;
+  padding: 8px 12px;
+  gap: 3px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Active dock item — clear focal point with directional glow */
+html[data-theme="soft-future"] .nav-item.active {
+  background: rgba(6, 182, 212, 0.11);
+  box-shadow:
+    0 0 24px rgba(6, 182, 212, 0.18),
+    inset 0 -1px 0 rgba(6, 182, 212, 0.22);
+}
+
+/* Active icon enlarges slightly for hierarchy */
+html[data-theme="soft-future"] .nav-item.active .nav-icon {
+  color: #06b6d4;
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.45));
+}
+
+html[data-theme="soft-future"] .nav-item.active .nav-label {
+  color: #06b6d4;
+}
+
+/* Inactive nav items — deeply receded, don't compete */
+html[data-theme="soft-future"] .nav-label,
+html[data-theme="soft-future"] .nav-icon {
+  color: rgba(160, 170, 187, 0.28);
+}

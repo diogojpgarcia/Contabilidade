@@ -7,12 +7,17 @@
   padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
 }
 
-/* ── Cosmos section stack ────────────────────────────────────────────────── */
+/* ── Primary zone — hero's exclusive spatial territory ───────────────────── */
+.h-primary-zone {
+  padding: 20px 12px 0;
+}
+
+/* ── Secondary stack — subordinate command modules ───────────────────────── */
 .h-sections {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px 16px 0;
+  gap: 14px;
+  padding: 16px 12px 0;
 }
 
 /* ── Cosmos Hero — enhanced typography when inside CosmosCard ── */
