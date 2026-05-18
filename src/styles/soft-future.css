@@ -1550,3 +1550,106 @@ html[data-theme="soft-future"] .nav-item.active {
 [data-theme="soft-future"] .h-page {
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 6 — STRUCTURAL PASS
+   Real composition changes: command strip, larger cashflow numbers,
+   simplified cashflow header, subordinate context cards.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. COMMAND STRIP — icon-only horizontal toolbar ────────────────────────
+   Replaces the 4-column quick-action grid.
+   4 icon circles in a single row, no labels, no card backgrounds.
+   Compact height. Tool palette, not a widget.                              */
+
+[data-theme="soft-future"] .h-cmd-strip {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin-bottom: 10px;
+}
+
+[data-theme="soft-future"] .h-cmd-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+[data-theme="soft-future"] .h-cmd-btn:active {
+  transform: scale(0.88);
+  opacity: 0.7;
+}
+
+[data-theme="soft-future"] .h-cmd-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Subtle border so circles don't vanish on dark bg */
+  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.07),
+              0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* ── 2. CASHFLOW: SIMPLIFIED NAV ROW ────────────────────────────────────────
+   "Este mês" label is gone. Single row: ‹ month-name › Hoje.
+   Removed section header chrome — just navigation and data.               */
+
+[data-theme="soft-future"] .h-cashflow-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+[data-theme="soft-future"] .h-cashflow-nav .h-month-name {
+  flex: 1;
+  text-align: center;
+}
+
+/* ── 3. CASHFLOW NUMBERS — dominant data mass ────────────────────────────────
+   1.2rem → 1.875rem. 56% larger. The numbers become the visual anchor
+   of the page below the hero, not a small info row.                        */
+
+[data-theme="soft-future"] .h-cf-amount {
+  font-size: 1.875rem;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+/* Labels scale down relative to enlarged numbers */
+[data-theme="soft-future"] .h-cf-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  margin-bottom: 6px;
+}
+
+/* ── 4. CONTEXT CARDS — visibly subordinate tier ────────────────────────────
+   Insight, recurring, accounts cards read as footnotes, not peers
+   of the cashflow panel. Smaller type, receded surface already set —
+   reinforce with reduced padding so they feel compact/secondary.           */
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
+  padding: 14px 16px;
+}
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .h-insight-title {
+  font-size: 0.82rem;
+}
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .h-insight-desc {
+  font-size: 0.73rem;
+}
