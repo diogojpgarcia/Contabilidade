@@ -1461,3 +1461,92 @@ html[data-theme="soft-future"] .nav-item.active {
 [data-theme="soft-future"] .h-page {
   padding-bottom: calc(108px + env(safe-area-inset-bottom));
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 5 — COMPOSITION STRUCTURE
+   Focus: screen structure, spatial rhythm, flagship orchestration.
+   Less effects. More hierarchy. OS composition, not stacked widgets.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. HERO: CENTERED STAGE PRESENTATION ───────────────────────────────────
+   Hero reads as a sovereign stage, not a left-aligned card.
+   Content aligns center like a financial instrument display.              */
+
+[data-theme="soft-future"] .cosmos-card--hero {
+  text-align: center;
+  /* Deeper shelf separates hero from sections below */
+  border-radius: 0 0 44px 44px;
+}
+
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-balance-row {
+  justify-content: center;
+}
+
+/* Progress meter stays left-aligned — editorial, not decorative */
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-progress {
+  text-align: left;
+}
+
+/* ── 2. VARIABLE EDITORIAL RHYTHM ───────────────────────────────────────────
+   Replace uniform gap with intentional chapter breaks.
+   Tight: quick-actions → cashflow (same command surface).
+   Chapter break: cashflow → context (mode shift, secondary tier).
+   Grouped: context cards read as a block.                                  */
+
+[data-theme="soft-future"] .h-sections {
+  gap: 0;
+  padding: 24px 12px 0;
+}
+
+/* Quick actions strip sits tight above cashflow */
+[data-theme="soft-future"] .h-sections > .h-quick-section {
+  margin-bottom: 10px;
+}
+
+/* Cashflow → context: prominent chapter break */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(2) {
+  margin-bottom: 22px;
+}
+
+/* Context cards: tightly grouped as a reading block */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
+  margin-bottom: 10px;
+}
+
+/* ── 3. QUICK ACTIONS: TRANSPARENT COMMAND STRIP ────────────────────────────
+   Remove card surface from quick-actions container so buttons appear
+   to float directly on the page canvas. Command strip, not a widget.      */
+
+[data-theme="soft-future"] .h-quick-section {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 2px 0;
+}
+
+/* ── 4. DOCK: GROUNDED, CALM, ANCHORED ──────────────────────────────────────
+   Kill the Dribbble floating island effect.
+   Sit closer to the screen edge. Neutral border. Calmer blur.
+   Premium depth via shadow, not via excessive frosting.                    */
+
+[data-theme="soft-future"] .bottom-nav {
+  left: 10px;
+  right: 10px;
+  bottom: calc(6px + env(safe-area-inset-bottom));
+  border-radius: 20px;
+  border: 0.5px solid rgba(255, 255, 255, 0.07);
+  background: rgba(11, 13, 17, 0.96);
+  box-shadow:
+    0 -1px 0 rgba(255, 255, 255, 0.03),
+    0 6px 36px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+
+/* Page clearance: recalculate for grounded dock */
+[data-theme="soft-future"] .h-page {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
