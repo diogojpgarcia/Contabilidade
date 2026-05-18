@@ -748,8 +748,8 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   };
 
   // Adaptive price formatting: stocks get 2–4 decimals, crypto gets 2–8
-  const fmtStockPrice  = (p) => p.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: p < 1 ? 4 : 2 });
-  const fmtCryptoPrice = (p) => p.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: p < 0.001 ? 8 : p < 0.1 ? 6 : p < 1 ? 4 : 2 });
+  const fmtStockPrice  = (p) => { const n = parseFloat(p) || 0; return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: n < 1 ? 4 : 2 }); };
+  const fmtCryptoPrice = (p) => { const n = parseFloat(p) || 0; return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: n < 0.001 ? 8 : n < 0.1 ? 6 : n < 1 ? 4 : 2 }); };
   const fmtFiat        = (v) => parseFloat(v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const renderPatrimonyItemValue = (typeKey, item) => {
@@ -1793,7 +1793,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
         <div className="patrimony-section">
           <div className="patrimony-total-card">
             <div className="patrimony-total-label">Património Total</div>
-            <div className="patrimony-total-amount">{totalPatrimony.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
+            <div className="patrimony-total-amount">{(totalPatrimony || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</div>
           </div>
           <div className="patrimony-types-list">
             {PATRIMONY_TYPES.map(({ key, label, Icon: PatIcon, color }) => {
