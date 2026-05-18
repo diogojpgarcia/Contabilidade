@@ -115,10 +115,10 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
   /* 80px baseline matches bottom-nav height; tabs add their own clearance
      via --bottom-clearance. This guards any tab that hasn't been ported. */
-  padding-bottom: 80px;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
