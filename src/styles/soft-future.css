@@ -873,7 +873,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
    entire background (body, main, scroll area) matches the design language.  */
 
 [data-theme="soft-future"] {
-  --bg-primary:    #0d0f12;
+  --bg-primary:    #0B0F14;
   --bg-secondary:  #13161d;
   --bg-tertiary:   #191d27;
   --bg-elevated:   #1f2330;
@@ -885,7 +885,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 
 html[data-theme="soft-future"],
 html[data-theme="soft-future"] body {
-  background: #0d0f12;
+  background: #0B0F14;
 }
 
 /* Ambient cyan gradient on the scroll canvas — subtle OS glow from the top */
@@ -894,7 +894,7 @@ html[data-theme="soft-future"] body {
     radial-gradient(ellipse 110% 28% at 50% 0%,
       rgba(6, 182, 212, 0.045) 0%,
       transparent 100%),
-    #0d0f12;
+    #0B0F14;
 }
 
 
@@ -1846,4 +1846,19 @@ html[data-theme="soft-future"] .nav-item.active {
 /* Page clearance: flush dock + safe area */
 [data-theme="soft-future"] .h-page {
   padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 9 — DEEP SPACE BACKGROUND
+   Global bg: #0B0F14 (Deep Space).
+   Home root container: radial-gradient atmospheric light, upper-right origin.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Home root wrapper — radial gradient as second background layer */
+[data-theme="soft-future"] .h-page {
+  background:
+    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(0, 221, 255, 0.07) 0%, transparent 70%),
+    #0B0F14;
+  overflow-x: hidden;
 }
