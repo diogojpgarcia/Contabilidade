@@ -882,13 +882,13 @@ const App = () => {
         </button>
       </nav>
 
-      {/* Botão "+" central — position: fixed, fora do nav para não ser cortado */}
+      {/* Botão "+" central — position: fixed, independente do nav */}
       <button
         onClick={() => setActiveTab('add')}
         aria-label="Adicionar transação"
         style={{
           position: 'fixed',
-          bottom: '20px',
+          bottom: '28px',
           left: '50%',
           transform: 'translateX(-50%)',
           width: '52px',
@@ -896,17 +896,19 @@ const App = () => {
           borderRadius: '50%',
           background: '#00DDFF',
           color: '#000000',
-          fontSize: '24px',
+          fontSize: '26px',
+          fontWeight: '300',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 0 20px rgba(0,221,255,0.45)',
+          boxShadow: '0 0 24px rgba(0,221,255,0.5)',
           zIndex: 100,
           border: 'none',
           cursor: 'pointer',
+          lineHeight: 1,
         }}
       >
-        <Plus size={24} strokeWidth={2.5} />
+        +
       </button>
 
       {/* Bulk category update — rendered at App level so it overlays everything */}
