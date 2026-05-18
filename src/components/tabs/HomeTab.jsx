@@ -7,6 +7,7 @@ import HomeAccounts      from '../home/HomeAccounts';
 import HomeRecurring     from '../home/HomeRecurring';
 import QuickActionsRow   from '../QuickActionsRow';
 import AccountsSection   from '../AccountsSection';
+import InsightsSection   from '../InsightsSection';
 import '../home/Home.css';
 
 const HomeTab = ({
@@ -67,6 +68,9 @@ const HomeTab = ({
           onMonthChange={onMonthChange}
           financialMonthStartDay={financialMonthStartDay}
         />
+
+        {/* Insights grid — below cashflow, above context cards */}
+        <InsightsSection onNavigate={onNavigate} />
 
         {/* Contextual insight */}
         <HomeInsight
