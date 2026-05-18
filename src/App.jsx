@@ -902,7 +902,7 @@ const App = () => {
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 0 24px rgba(0,221,255,0.5)',
-          zIndex: 100,
+          zIndex: 9999,
           border: 'none',
           cursor: 'pointer',
           lineHeight: 1,
