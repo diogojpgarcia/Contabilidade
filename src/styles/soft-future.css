@@ -2210,3 +2210,25 @@ html[data-theme="soft-future"] .nav-item.active {
 }
 
 /* === FIM HERO LAYOUT OVERRIDE === */
+
+
+/* === PASS 15 — BOTTOMNAV + BUTTON CLIP FIX ================================ */
+
+/* 1. Allow the elevated + button to paint above the nav bar */
+[data-theme="soft-future"] .bottom-nav {
+  overflow: visible !important;
+}
+
+/* 2. Elevate + button correctly with stacking context */
+[data-theme="soft-future"] .nav-item--add {
+  position: relative !important;
+  z-index: 10 !important;
+  margin-top: -16px !important;
+}
+
+/* 3. Extra page padding so last content isn't hidden behind the taller nav area */
+[data-theme="soft-future"] .h-page {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+}
+
+/* === FIM PASS 15 =========================================================== */
