@@ -20,6 +20,7 @@ const HomeTab = ({
   recurringPayments,
   confirmedRecurring = {},
   categories,
+  userName = '',
   financialFocus = null,
 }) => {
   const p = patrimony;
@@ -38,7 +39,7 @@ const HomeTab = ({
     <div className="h-page">
 
       {/* ── GREETING BAR — above everything ── */}
-      <HomeGreeting />
+      <HomeGreeting name={userName} />
 
       {/* ── PRIMARY STAGE — hero ── */}
       <div className="h-primary-zone">

@@ -747,6 +747,7 @@ const App = () => {
             recurringPayments={recurringPayments}
             confirmedRecurring={confirmedRecurring}
             onNavigate={handleNavigateFromStats}
+            userName={userName}
             financialFocus={financialFocus}
           />
         )}
