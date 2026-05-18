@@ -52,7 +52,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
   const [historyView, setHistoryView] = useState('daily'); // 'daily' | 'patrimony'
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null = all accounts
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
 
   // Compute expenses by category from already-filtered transactions
@@ -402,46 +402,99 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 </div>
               </div>
 
-              {/* SVG área chart — interativo por categoria */}
+              {/* SVG área chart — interativo por categoria (multi-select) */}
               {(() => {
-                const selIdx = categoryData.findIndex(c => c.category === selectedCategory);
-                const selColor = selIdx >= 0 ? CAT_COLORS[selIdx % 5] : null;
+                const CAT_COLORS = ['#00DDFF','#22C55E','#F59E0B','#F87171','#8B5CF6'];
 
-                if (selectedCategory && selColor) {
-                  const catData = getCategoryMonthlyData(selectedCategory);
-                  const maxCat  = Math.max(...catData.map(d => d.amount), 1);
-                  const pts = catData.map((d, i) => ({
-                    x: (i / 5) * 340,
-                    y: 68 - (d.amount / maxCat) * 60,
-                  }));
-                  const linePoints = pts.map(p => `${p.x},${p.y}`).join(' ');
-                  const areaPath = `M${pts[0].x},${pts[0].y} ` +
-                    pts.slice(1).map(p => `L${p.x},${p.y}`).join(' ') +
-                    ` L340,68 L0,68 Z`;
+                if (selectedCategories.length > 0) {
+                  // MODO MULTI-CATEGORIA
+                  const maxVal = Math.max(
+                    ...selectedCategories.flatMap(cat =>
+                      getCategoryMonthlyData(cat).map(d => d.amount)
+                    ), 1
+                  );
+
                   return (
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px 4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: selColor }} />
-                          <span style={{ fontSize: '12px', color: selColor, fontWeight: 500 }}>{selectedCategory}</span>
+                      {/* Labels das categorias selecionadas */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 16px 4px',
+                        flexWrap: 'wrap', gap: '4px',
+                      }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {selectedCategories.map(cat => {
+                            const idx = categoryData.findIndex(c => c.category === cat);
+                            const color = CAT_COLORS[idx % 5] || '#00DDFF';
+                            return (
+                              <div key={cat} style={{
+                                display: 'flex', alignItems: 'center', gap: '4px',
+                                background: `${color}18`, borderRadius: '12px',
+                                padding: '2px 8px',
+                              }}>
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
+                                <span style={{ fontSize: '11px', color: color }}>{cat}</span>
+                              </div>
+                            );
+                          })}
                         </div>
-                        <button onClick={() => setSelectedCategory(null)} style={{ fontSize: '11px', color: '#94A3B8', background: 'none', border: 'none', cursor: 'pointer' }}>Ver tudo ×</button>
+                        <button
+                          onClick={() => setSelectedCategories([])}
+                          style={{ fontSize: '11px', color: '#64748B', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          Limpar ×
+                        </button>
                       </div>
-                      <svg width="100%" height={72} viewBox="0 0 340 72" preserveAspectRatio="none" style={{ display: 'block' }}>
+
+                      {/* SVG com uma linha por categoria */}
+                      <svg width="100%" height={72} viewBox="0 0 340 72"
+                        preserveAspectRatio="none" style={{ display: 'block' }}>
                         <defs>
-                          <linearGradient id="catGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={selColor} stopOpacity="0.3" />
-                            <stop offset="100%" stopColor={selColor} stopOpacity="0" />
-                          </linearGradient>
+                          {selectedCategories.map((cat, ci) => {
+                            const idx = categoryData.findIndex(c => c.category === cat);
+                            const color = CAT_COLORS[idx % 5] || '#00DDFF';
+                            return (
+                              <linearGradient key={cat} id={`catGrad${ci}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+                                <stop offset="100%" stopColor={color} stopOpacity="0" />
+                              </linearGradient>
+                            );
+                          })}
                         </defs>
-                        <path d={areaPath} fill="url(#catGrad)" />
-                        <polyline points={linePoints} fill="none" stroke={selColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill={selColor} />)}
+
+                        {selectedCategories.map((cat, ci) => {
+                          const idx = categoryData.findIndex(c => c.category === cat);
+                          const color = CAT_COLORS[idx % 5] || '#00DDFF';
+                          const catData = getCategoryMonthlyData(cat);
+                          const pts = catData.map((d, i) => ({
+                            x: (i / 5) * 340,
+                            y: 68 - (d.amount / maxVal) * 60,
+                          }));
+                          const linePoints = pts.map(p => `${p.x},${p.y}`).join(' ');
+                          const areaPath = `M${pts[0].x},${pts[0].y} ` +
+                            pts.slice(1).map(p => `L${p.x},${p.y}`).join(' ') +
+                            ` L340,68 L0,68 Z`;
+                          return (
+                            <g key={cat}>
+                              <path d={areaPath} fill={`url(#catGrad${ci})`} />
+                              <polyline points={linePoints} fill="none"
+                                stroke={color} strokeWidth="2"
+                                strokeLinecap="round" strokeLinejoin="round" />
+                              <circle
+                                cx={pts[pts.length-1].x}
+                                cy={pts[pts.length-1].y}
+                                r="3" fill={color}
+                              />
+                            </g>
+                          );
+                        })}
                       </svg>
                     </div>
                   );
                 }
 
+                // MODO GERAL — receitas vs despesas
                 const maxValG = Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses)), 1);
                 const incPts = monthlyData.map((d, i) => `${(i/5)*340},${68-(d.income/maxValG)*60}`).join(' ');
                 const expPts = monthlyData.map((d, i) => `${(i/5)*340},${68-(d.expenses/maxValG)*60}`).join(' ');
@@ -484,11 +537,15 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   Top Categorias
                 </div>
                 {categoryData.slice(0, 5).map((cat, i) => {
-                  const isSelected = selectedCategory === cat.category;
+                  const isSelected = selectedCategories.includes(cat.category);
                   return (
                     <div
                       key={cat.category}
-                      onClick={() => setSelectedCategory(isSelected ? null : cat.category)}
+                      onClick={() => setSelectedCategories(prev =>
+                        prev.includes(cat.category)
+                          ? prev.filter(c => c !== cat.category)
+                          : [...prev, cat.category]
+                      )}
                       style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}
                     >
                       {/* Ponto colorido */}
