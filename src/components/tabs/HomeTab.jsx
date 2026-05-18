@@ -15,6 +15,7 @@ const HomeTab = ({
   currentMonth, onMonthChange,
   patrimony = {},
   financialMonthStartDay = 1,
+  homeUsesFinancialMonth = true,
   theme = 'default',
   onNavigate,
   recurringPayments,
@@ -75,7 +76,7 @@ const HomeTab = ({
           balance={balance}
           currentMonth={currentMonth}
           onMonthChange={onMonthChange}
-          financialMonthStartDay={financialMonthStartDay}
+          financialMonthStartDay={homeUsesFinancialMonth ? financialMonthStartDay : 1}
         />
 
         {/* Insights grid — below cashflow, above context cards */}

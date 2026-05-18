@@ -8,7 +8,7 @@ import { CreditCard, Tag, Clock } from '../icons';
 import { FOCUS_OPTIONS } from '../../utils/financialFocus';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange }) => {
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -211,6 +211,17 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
               <span className="m-cycle-desc">
                 Cada ciclo: dia {financialMonthStartDay} → dia {endDay} do mês seguinte
               </span>
+              <div className="m-cycle-day-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="m-cycle-day-label">Cartão Home usa o ciclo</span>
+                <label className="m-pill-toggle">
+                  <input
+                    type="checkbox"
+                    checked={homeUsesFinancialMonth}
+                    onChange={e => onHomeUsesFinancialMonthChange?.(e.target.checked)}
+                  />
+                  <span className="m-pill-toggle-track" />
+                </label>
+              </div>
             </div>
           ) : (
             <p className="m-cycle-off">Agrupa por mês calendário padrão</p>

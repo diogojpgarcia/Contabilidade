@@ -59,6 +59,7 @@ const App = () => {
   const [mainAccountId, setMainAccountId] = useState(null); // string | null — the "Principal" account
   const [financialMonthStartDay, setFinancialMonthStartDay] = useState(1); // 1 = calendar month
   const [useFinancialMonth, setUseFinancialMonth] = useState(false);
+  const [homeUsesFinancialMonth, setHomeUsesFinancialMonth] = useState(true);
   const [transactionAccountMap, setTransactionAccountMap] = useState({}); // { [txId]: { account_id, account_name } } — fallback when DB columns absent
   const [bulkPending, setBulkPending]   = useState(null); // { transactionId, newCategory, pattern, similar[] }
   const [recurringPayments, setRecurringPayments] = useState([]); // [{ id, title, amount, paymentType, ... }]
@@ -163,6 +164,8 @@ const App = () => {
       const ufm = settings?.useFinancialMonth      ?? false;
       setFinancialMonthStartDay(sd);
       setUseFinancialMonth(ufm);
+      const hufm = settings?.homeUsesFinancialMonth ?? true;
+      setHomeUsesFinancialMonth(hufm);
       setCurrentMonth(getCurrentFinancialMonth(ufm ? sd : 1));
     } catch (error) {
       console.error('❌ Error loading user data:', error);
@@ -303,6 +306,11 @@ const App = () => {
       financialMonthStartDay: sd,
       useFinancialMonth: enabled,
     }).catch(console.error);
+  };
+
+  const handleHomeUsesFinancialMonthChange = (enabled) => {
+    setHomeUsesFinancialMonth(enabled);
+    dbService.updateUserSettings(currentUser.id, { homeUsesFinancialMonth: enabled });
   };
 
   // Sets mainAccountId as the "Principal" account.
@@ -744,6 +752,7 @@ const App = () => {
             categories={categories}
             theme={theme}
             financialMonthStartDay={effectiveStartDay}
+            homeUsesFinancialMonth={homeUsesFinancialMonth}
             recurringPayments={recurringPayments}
             confirmedRecurring={confirmedRecurring}
             onNavigate={handleNavigateFromStats}
@@ -832,6 +841,8 @@ const App = () => {
             useFinancialMonth={useFinancialMonth}
             financialMonthStartDay={financialMonthStartDay}
             onFinancialMonthChange={handleFinancialMonthChange}
+            homeUsesFinancialMonth={homeUsesFinancialMonth}
+            onHomeUsesFinancialMonthChange={handleHomeUsesFinancialMonthChange}
             financialFocus={financialFocus}
             onFocusChange={handleFocusChange}
             onDataDeleted={() => {
