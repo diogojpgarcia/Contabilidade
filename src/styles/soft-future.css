@@ -1275,3 +1275,189 @@ html[data-theme="soft-future"] .nav-label,
 html[data-theme="soft-future"] .nav-icon {
   color: rgba(160, 170, 187, 0.28);
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PASS 4 — VISIBLE COMPOSITION OVERHAUL
+   Changes are deliberately visible in screenshots. No more micro-polish.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── 1. HERO: FULL-BLEED CANVAS ─────────────────────────────────────────────
+   Hero transitions from "floating card" to "flagship screen module."
+   Top corners flush to viewport; only bottom corners rounded = shelf effect.
+   Width: 100% of content area. No horizontal breathing margin.            */
+
+[data-theme="soft-future"] .h-primary-zone {
+  padding: 0;        /* hero fills zone edge-to-edge */
+}
+
+[data-theme="soft-future"] .cosmos-card--hero {
+  border-radius: 0 0 36px 36px;   /* flush top, rounded shelf bottom */
+  margin: 0;
+  padding: 48px 26px 52px;        /* generous internal breathing */
+}
+
+/* Glow: no top highlight (hero is flush), strong bottom ambient depth */
+[data-theme="soft-future"] .cosmos-card--hero.cosmos-card--glow {
+  box-shadow:
+    0 28px 88px rgba(0, 0, 0, 0.65),
+    inset 0 -2px 0 rgba(6, 182, 212, 0.24),
+    0 0 80px rgba(6, 182, 212, 0.18),
+    0 0 200px rgba(6, 182, 212, 0.07);
+}
+
+/* Hero background: deeper, more immersive */
+[data-theme="soft-future"] .cosmos-card--hero {
+  background:
+    linear-gradient(to top,
+      rgba(6, 182, 212, 0.18) 0%,
+      rgba(6, 182, 212, 0.07) 40%,
+      transparent 100%),
+    linear-gradient(160deg, #0f1420 0%, #090c12 100%);
+}
+
+
+/* ── 2. FLAGSHIP NUMBER ──────────────────────────────────────────────────────
+   The primary number commands the screen. No competition tolerated.        */
+
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-patrimony-value {
+  font-size: 4.25rem;
+  letter-spacing: -0.062em;
+  line-height: 0.92;
+  margin-bottom: 24px;
+  color: #f2f4f7;
+}
+
+/* Label: recedes maximally so number dominates */
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-patrimony-label {
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  margin-bottom: 16px;
+  color: rgba(6, 182, 212, 0.50);
+}
+
+/* Balance badge: reads clearly against the hero surface */
+[data-theme="soft-future"] .h-hero-balance-badge.positive {
+  background: rgba(52, 211, 153, 0.13);
+  border: 0.5px solid rgba(52, 211, 153, 0.24);
+  color: #4ade80;
+  font-size: 0.875rem;
+  padding: 5px 14px;
+}
+[data-theme="soft-future"] .h-hero-balance-badge.negative {
+  background: rgba(248, 113, 113, 0.13);
+  border: 0.5px solid rgba(248, 113, 113, 0.24);
+  color: #f87171;
+  font-size: 0.875rem;
+  padding: 5px 14px;
+}
+
+
+/* ── 3. BREATHING ZONE ───────────────────────────────────────────────────────
+   Intentional silence between hero and secondary stack.
+   This gap IS the hierarchy signal — hero breathes, the rest follows.     */
+
+[data-theme="soft-future"] .h-sections {
+  padding: 28px 12px 0;
+  gap: 12px;
+}
+
+
+/* ── 4. MODULE DEPTH STRATIFICATION ─────────────────────────────────────────
+   Three tiers of visual weight — cashflow (primary data), quick actions
+   (tool hub), context cards (insight/recurring/accounts = receded).       */
+
+/* Tier 1 — Cashflow: primary data module, full standard surface */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(2) {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.09) 0%, rgba(6, 182, 212, 0.02) 40%, transparent 100%),
+    linear-gradient(145deg, #161921 0%, #111420 100%);
+  border-color: rgba(6, 182, 212, 0.12);
+  box-shadow:
+    0 8px 36px rgba(0, 0, 0, 0.55),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Tier 2 — Context cards (insight=3rd, recurring=4th, accounts=5th): receded */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
+  background:
+    linear-gradient(145deg, #0f1217 0%, #0b0e13 100%);
+  border-color: rgba(6, 182, 212, 0.055);
+  box-shadow:
+    0 2px 14px rgba(0, 0, 0, 0.40);
+}
+
+/* Context cards: section headers nearly invisible */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .cosmos-sh__title {
+  color: rgba(160, 170, 187, 0.28);
+}
+
+/* Context cards: body text also slightly more receded */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .h-insight-title {
+  color: rgba(232, 234, 237, 0.80);
+}
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .h-insight-desc {
+  color: rgba(160, 170, 187, 0.48);
+}
+
+
+/* ── 5. FLOATING PILL DOCK ───────────────────────────────────────────────────
+   Transform bottom nav from full-width bar to premium floating pill dock.
+   This is the single most visible change after the full-bleed hero.       */
+
+[data-theme="soft-future"] .bottom-nav {
+  left: 14px;
+  right: 14px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  /* Pill shape */
+  border-radius: 26px;
+  /* Glass surface — all sides bordered, not just top */
+  border-top: none;
+  border: 0.5px solid rgba(6, 182, 212, 0.16);
+  /* Deep dark glass */
+  background: rgba(10, 12, 15, 0.97);
+  box-shadow:
+    0 8px 52px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 0.5px rgba(6, 182, 212, 0.07);
+  backdrop-filter: blur(36px) saturate(2.4);
+  -webkit-backdrop-filter: blur(36px) saturate(2.4);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+
+/* Ensure purple active bar is removed (reinforce) */
+html[data-theme="soft-future"] .nav-item.active::before {
+  display: none !important;
+}
+
+/* Pill dock nav items */
+[data-theme="soft-future"] .nav-item {
+  border-radius: 18px;
+  padding: 7px 10px;
+  min-width: 0;
+}
+
+/* Pill dock active item — directional glow, clear focal point */
+html[data-theme="soft-future"] .nav-item.active {
+  background: rgba(6, 182, 212, 0.13);
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.16),
+    inset 0 -1.5px 0 rgba(6, 182, 212, 0.28);
+}
+
+/* Pill dock icons and labels */
+[data-theme="soft-future"] .nav-label {
+  font-size: 0.5875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+}
+
+
+/* ── 6. PAGE CLEARANCE FOR FLOATING DOCK ────────────────────────────────────
+   Floating pill + its gap needs more clearance than a flush bar.          */
+
+[data-theme="soft-future"] .h-page {
+  padding-bottom: calc(108px + env(safe-area-inset-bottom));
+}
