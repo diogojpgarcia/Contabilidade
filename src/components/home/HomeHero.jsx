@@ -52,23 +52,10 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
     <CosmosCard variant="hero" glow>
 
       {/* Two-column row layout */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 0,
-        padding: '16px 20px 28px 20px',
-      }}>
+      <div className="h-hero-inner-row" style={{ padding: '16px 20px 28px 20px' }}>
 
         {/* ── LEFT COLUMN — all text content ── */}
-        <div style={{
-          flex: 1,
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          textAlign: 'left',
-        }}>
+        <div className="h-hero-left-col" style={{ textAlign: 'left' }}>
 
           {/* Label */}
           <div className="h-hero-patrimony-label">Património total</div>
@@ -114,11 +101,7 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
         </div>{/* end left column */}
 
         {/* ── RIGHT COLUMN — sparkline only ── */}
-        <div style={{
-          width: 88,
-          flexShrink: 0,
-          marginTop: 4,
-        }}>
+        <div className="h-hero-right-col">
           <HeroSparkline />
         </div>
 

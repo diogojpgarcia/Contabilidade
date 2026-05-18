@@ -2173,3 +2173,40 @@ html[data-theme="soft-future"] .nav-item.active {
 .accounts-scroll-row::-webkit-scrollbar {
   display: none;
 }
+
+
+/* === HERO LAYOUT OVERRIDE — FINAL PASS === */
+
+.cosmos-card--hero .h-hero-inner-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.cosmos-card--hero .h-hero-left-col {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.cosmos-card--hero .h-hero-right-col {
+  width: 88px !important;
+  flex-shrink: 0 !important;
+  margin-top: 6px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-end !important;
+}
+
+.cosmos-card--hero .h-hero-right-col svg {
+  width: 88px !important;
+  height: 56px !important;
+  display: block !important;
+  overflow: visible !important;
+}
+
+/* === FIM HERO LAYOUT OVERRIDE === */
