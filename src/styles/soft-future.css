@@ -2143,6 +2143,22 @@ html[data-theme="soft-future"] .nav-item.active {
   border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 14 — HERO LEFT-ALIGN + SPARKLINE
+   Cancel Pass-7 centering; hero text is now left-aligned via JSX inline.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Cancel Pass 7 center alignment — JSX inline styles now control layout */
+[data-theme="soft-future"] .cosmos-card--hero {
+  text-align: left !important;
+}
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-balance-row {
+  justify-content: flex-start !important;
+}
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-progress {
+  text-align: left;
+}
+
 /* ── AccountsSection scroll row — scrollbar hidden ───────────────────────── */
 .accounts-scroll-row {
   display: flex;

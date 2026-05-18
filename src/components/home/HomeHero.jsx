@@ -20,9 +20,54 @@ function fmt(val) {
   return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/* ── Cosmos flagship hero — Mockup 2 direction ──────────────────────────── */
+/* ── Sparkline — inline SVG, hardcoded trend, no library needed ─────────── */
+const SPARKLINE_POINTS = [40, 55, 45, 70, 60, 80];
+const SX = 80, SY = 40, PAD = 4;
+
+function buildSparklinePath(points) {
+  const minV = Math.min(...points);
+  const maxV = Math.max(...points);
+  const range = maxV - minV || 1;
+  const w = SX - PAD * 2;
+  const h = SY - PAD * 2;
+  return points
+    .map((v, i) => {
+      const x = PAD + (i / (points.length - 1)) * w;
+      const y = PAD + (1 - (v - minV) / range) * h;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+}
+
+const Sparkline = () => (
+  <svg
+    width={SX}
+    height={SY}
+    viewBox={`0 0 ${SX} ${SY}`}
+    aria-hidden="true"
+    style={{
+      position: 'absolute',
+      top: 16,
+      right: 16,
+      zIndex: 1,
+      pointerEvents: 'none',
+    }}
+  >
+    <path
+      d={buildSparklinePath(SPARKLINE_POINTS)}
+      stroke="#00DDFF"
+      strokeWidth="1.5"
+      fill="none"
+      opacity="0.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/* ── Cosmos flagship hero ───────────────────────────────────────────────── */
 const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonthStartDay = 1 }) => {
-  const progress  = getProgress(currentMonth, financialMonthStartDay);
+  const progress   = getProgress(currentMonth, financialMonthStartDay);
   const isPositive = monthlyBalance >= 0;
 
   return (
@@ -33,8 +78,19 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
         <CosmosPlanet />
       </div>
 
-      {/* Text content — sits above the planet */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      {/* Sparkline — top-right corner, floats over background */}
+      <Sparkline />
+
+      {/* Text column — left-aligned, max 70% width so sparkline has room */}
+      <div style={{
+        position: 'relative',
+        zIndex: 1,
+        maxWidth: '70%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        textAlign: 'left',
+      }}>
 
         {/* Label */}
         <div className="h-hero-patrimony-label">Património total</div>
@@ -52,7 +108,7 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
 
         {/* Month progress — only shown in current financial month */}
         {progress && (
-          <div className="h-hero-progress">
+          <div className="h-hero-progress" style={{ width: '100%' }}>
             <div className="h-hero-progress-header">
               <span className="h-hero-progress-label">
                 Dia {progress.passed} de {progress.total}
@@ -65,7 +121,7 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
           </div>
         )}
 
-      </div>{/* end text layer */}
+      </div>{/* end text column */}
 
     </CosmosCard>
   );
