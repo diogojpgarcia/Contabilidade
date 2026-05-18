@@ -87,11 +87,17 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias }) =>
 
       {/* GRÁFICO — largura total */}
       <div style={{ position: 'relative' }}>
+        <div style={{
+          width: '100%',
+          overflow: 'hidden',
+          lineHeight: 0,
+        }}>
         <svg
           width="100%"
+          height={H}
           viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          style={{ display: 'block' }}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ display: 'block', width: '100%', height: `${H}px` }}
         >
           <defs>
             <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -116,6 +122,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias }) =>
             fill="#00DDFF"
           />
         </svg>
+        </div>
 
         {/* Labels de mês abaixo do gráfico */}
         <div style={{
