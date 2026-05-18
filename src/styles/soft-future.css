@@ -1954,3 +1954,86 @@ html[data-theme="soft-future"] .nav-item.active {
   color: #000000;
   stroke: #000000;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 12 — CASHFLOW SECTION REDESIGN
+   Composed report header, reduced number scale, refined labels, soft colours.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. SECTION PADDING ──────────────────────────────────────────────────── */
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
+  padding: 24px 16px !important;
+}
+
+/* ── 2. HEADER: month nav left + "Ver detalhes →" right ─────────────────── */
+
+[data-theme="soft-future"] .h-cashflow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+[data-theme="soft-future"] .h-cashflow-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 0; /* reset — margin now on header */
+}
+
+[data-theme="soft-future"] .h-cashflow-month-label {
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+  padding: 0 4px;
+}
+
+[data-theme="soft-future"] .h-cashflow-details-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #00DDFF;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+[data-theme="soft-future"] .h-cashflow-details-btn:active {
+  opacity: 0.7;
+}
+
+/* ── 3. NUMBERS — 24px SemiBold, support the hero, don't compete ────────── */
+
+[data-theme="soft-future"] .h-cf-amount {
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 24px !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* ── 4. LABELS — 10px, Regular, above numbers ───────────────────────────── */
+
+[data-theme="soft-future"] .h-cf-label {
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 10px !important;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94A3B8 !important;
+  margin-bottom: 4px;
+}
+
+/* ── 5. COLOUR ADJUSTMENTS ───────────────────────────────────────────────── */
+
+/* Negative balance: soft red instead of alarm red */
+[data-theme="soft-future"] .h-cf-amount.negative {
+  color: #E07070 !important;
+}
