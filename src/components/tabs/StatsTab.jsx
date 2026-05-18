@@ -418,11 +418,18 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       overflow: 'hidden',
                     }}>
                       <div style={{
-                        display: 'flex', gap: '6px',
-                        overflow: 'hidden', flex: 1,
+                        display: 'flex',
+                        gap: '6px',
+                        flex: 1,
+                        overflowX: 'auto',
+                        overflowY: 'hidden',
+                        scrollbarWidth: 'none',
+                        WebkitOverflowScrolling: 'touch',
                         opacity: selectedCategories.length > 0 ? 1 : 0,
                         transition: 'opacity 0.15s ease',
+                        paddingBottom: '2px',
                       }}>
+                        <style>{`.cat-label-scroll::-webkit-scrollbar { display: none; }`}</style>
                         {selectedCategories.map(cat => {
                           const idx = categoryData.findIndex(c => c.category === cat);
                           const color = CAT_COLORS[idx % 5] || '#00DDFF';
