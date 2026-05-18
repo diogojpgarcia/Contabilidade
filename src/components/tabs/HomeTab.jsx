@@ -1,7 +1,6 @@
 import React from 'react';
 import HomeGreeting      from '../home/HomeGreeting';
 import HomeHero          from '../home/HomeHero';
-import HomeCashflow      from '../home/HomeCashflow';
 import HomeInsight       from '../home/HomeInsight';
 import HomeAccounts      from '../home/HomeAccounts';
 import HomeRecurring     from '../home/HomeRecurring';
@@ -11,8 +10,7 @@ import InsightsSection   from '../InsightsSection';
 import '../home/Home.css';
 
 const HomeTab = ({
-  balance, income, expenses, totalBalance = 0, transactions,
-  currentMonth, onMonthChange,
+  balance, totalBalance = 0, transactions,
   patrimony = {},
   financialMonthStartDay = 1,
   homeUsesFinancialMonth = true,
@@ -92,16 +90,6 @@ const HomeTab = ({
 
       {/* ── DATA ZONE — cashflow panel + context cluster ── */}
       <div className="h-sections">
-
-        {/* Monthly cashflow — primary data panel */}
-        <HomeCashflow
-          income={income}
-          expenses={expenses}
-          balance={balance}
-          currentMonth={currentMonth}
-          onMonthChange={onMonthChange}
-          financialMonthStartDay={homeUsesFinancialMonth ? financialMonthStartDay : 1}
-        />
 
         {/* Insights grid — below cashflow, above context cards */}
         <InsightsSection onNavigate={onNavigate} />
