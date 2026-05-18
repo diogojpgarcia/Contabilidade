@@ -18,35 +18,79 @@ function fmt(val) {
   return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/* ── Sparkline ───────────────────────────────────────────────────────────── */
-const HeroSparkline = () => (
-  <svg
-    width="80"
-    height="52"
-    viewBox="0 0 80 52"
-    aria-hidden="true"
-    style={{ display: 'block', overflow: 'hidden' }}
-  >
-    <defs>
-      <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stopColor="#00DDFF" stopOpacity="0.15" />
-        <stop offset="100%" stopColor="#00DDFF" stopOpacity="0"    />
-      </linearGradient>
-    </defs>
-    <path
-      d="M0,48 L0,44 L13,38 L26,41 L39,28 L52,32 L65,18 L80,10 L80,48 Z"
-      fill="url(#sparkFill)"
-    />
-    <polyline
-      points="0,44 13,38 26,41 39,28 52,32 65,18 80,10"
-      fill="none"
-      stroke="#00DDFF"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+/* ── Sparkline — mini chart with month labels and current-value dot ─────── */
+const HeroSparkline = () => {
+  const pontos = [2980, 3100, 2890, 3050, 3180, 3247];
+  const meses  = ['D', 'J', 'F', 'M', 'A', 'M'];
+
+  const min          = Math.min(...pontos);
+  const max          = Math.max(...pontos);
+  const largura      = 88;
+  const altura       = 48;
+  const paddingBottom = 14; // space for month labels
+  const chartAltura  = altura - paddingBottom;
+
+  const x = (i) => (i / (pontos.length - 1)) * largura;
+  const y = (v) => chartAltura - ((v - min) / (max - min)) * (chartAltura - 4);
+
+  const linhaPoints = pontos.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+  const areaPath = `M0,${y(pontos[0])} ` +
+    pontos.map((v, i) => `L${x(i)},${y(v)}`).join(' ') +
+    ` L${largura},${chartAltura} L0,${chartAltura} Z`;
+
+  return (
+    <svg
+      width={largura}
+      height={altura}
+      viewBox={`0 0 ${largura} ${altura}`}
+      aria-hidden="true"
+      style={{ display: 'block', overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#00DDFF" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#00DDFF" stopOpacity="0"   />
+        </linearGradient>
+      </defs>
+
+      {/* Área preenchida */}
+      <path d={areaPath} fill="url(#sparkFill)" />
+
+      {/* Linha principal */}
+      <polyline
+        points={linhaPoints}
+        fill="none"
+        stroke="#00DDFF"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Ponto final — valor atual */}
+      <circle
+        cx={x(pontos.length - 1)}
+        cy={y(pontos[pontos.length - 1])}
+        r="2.5"
+        fill="#00DDFF"
+      />
+
+      {/* Labels de mês */}
+      {meses.map((m, i) => (
+        <text
+          key={i}
+          x={x(i)}
+          y={altura - 2}
+          textAnchor="middle"
+          fontSize="7"
+          fill="#94A3B8"
+          fontFamily="Inter, sans-serif"
+        >
+          {m}
+        </text>
+      ))}
+    </svg>
+  );
+};
 
 /* ── HomeHero ────────────────────────────────────────────────────────────── */
 const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonthStartDay = 1 }) => {
