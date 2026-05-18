@@ -6,6 +6,7 @@ import HomeInsight       from '../home/HomeInsight';
 import HomeAccounts      from '../home/HomeAccounts';
 import HomeRecurring     from '../home/HomeRecurring';
 import QuickActionsRow   from '../QuickActionsRow';
+import AccountsSection   from '../AccountsSection';
 import '../home/Home.css';
 
 const HomeTab = ({
@@ -50,6 +51,9 @@ const HomeTab = ({
 
       {/* ── QUICK ACTIONS ROW — immediately below hero ── */}
       <QuickActionsRow onNavigate={onNavigate} />
+
+      {/* ── ACCOUNTS SECTION — horizontal scroll, below quick actions ── */}
+      <AccountsSection accounts={p.accounts} onNavigate={onNavigate} />
 
       {/* ── DATA ZONE — cashflow panel + context cluster ── */}
       <div className="h-sections">

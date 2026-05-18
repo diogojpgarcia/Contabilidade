@@ -2037,3 +2037,18 @@ html[data-theme="soft-future"] .nav-item.active {
 [data-theme="soft-future"] .h-cf-amount.negative {
   color: #E07070 !important;
 }
+
+
+/* ── AccountsSection scroll row — scrollbar hidden ───────────────────────── */
+.accounts-scroll-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  /* Hide scrollbar — all browsers */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.accounts-scroll-row::-webkit-scrollbar {
+  display: none;
+}
