@@ -1,4 +1,5 @@
 import React from 'react';
+import HomeGreeting      from '../home/HomeGreeting';
 import HomeHero          from '../home/HomeHero';
 import HomeCashflow      from '../home/HomeCashflow';
 import HomeInsight       from '../home/HomeInsight';
@@ -33,6 +34,9 @@ const HomeTab = ({
 
   return (
     <div className="h-page">
+
+      {/* ── GREETING BAR — above everything ── */}
+      <HomeGreeting />
 
       {/* ── PRIMARY STAGE — hero + commands form one sovereign zone ── */}
       <div className="h-primary-zone">
