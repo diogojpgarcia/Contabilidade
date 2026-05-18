@@ -857,3 +857,247 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 
 /* Duplicate indicator */
 [data-theme="soft-future"] .fintech-ui .ftc-card--dupe { opacity: 0.55; }
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PASS 2 — FLAGSHIP ATMOSPHERE
+   Goal: close the gap between current state and the premium OS mockup.
+   All rules scoped to [data-theme="soft-future"] — zero side-effects on
+   other themes. Higher specificity via html[] prefix where needed to beat
+   fintech.css and earlier rules in this file.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── 1. PAGE CANVAS ─────────────────────────────────────────────────────────
+   Fix: --bg-primary was #0f172a (navy). Override to Cosmos charcoal so the
+   entire background (body, main, scroll area) matches the design language.  */
+
+[data-theme="soft-future"] {
+  --bg-primary:    #0d0f12;
+  --bg-secondary:  #13161d;
+  --bg-tertiary:   #191d27;
+  --bg-elevated:   #1f2330;
+  --text-primary:  #e8eaed;
+  --text-secondary: rgba(160, 170, 187, 0.80);
+  --text-tertiary: rgba(160, 170, 187, 0.45);
+  --separator:     rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="soft-future"],
+html[data-theme="soft-future"] body {
+  background: #0d0f12;
+}
+
+/* Ambient cyan gradient on the scroll canvas — subtle OS glow from the top */
+[data-theme="soft-future"] .main-content-new {
+  background:
+    radial-gradient(ellipse 110% 28% at 50% 0%,
+      rgba(6, 182, 212, 0.045) 0%,
+      transparent 100%),
+    #0d0f12;
+}
+
+
+/* ── 2. HERO DOMINANCE ──────────────────────────────────────────────────────
+   The hero must own ~40% of the viewport and feel commanding.              */
+
+[data-theme="soft-future"] .cosmos-card--hero {
+  padding: 28px 22px 38px;
+  background:
+    linear-gradient(to top,
+      rgba(6, 182, 212, 0.16) 0%,
+      rgba(6, 182, 212, 0.06) 45%,
+      transparent 100%),
+    linear-gradient(145deg, #111520 0%, #0a0d14 100%);
+}
+
+[data-theme="soft-future"] .cosmos-card--hero.cosmos-card--glow {
+  box-shadow:
+    0 16px 60px rgba(0, 0, 0, 0.60),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(6, 182, 212, 0.16),
+    0 0 72px rgba(6, 182, 212, 0.24);
+}
+
+/* Patrimony label — cyan-tinted OS label */
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-patrimony-label {
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  margin-bottom: 12px;
+  color: rgba(6, 182, 212, 0.60);
+  text-transform: uppercase;
+}
+
+/* Main number — flagship scale */
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-patrimony-value {
+  font-size: 3.75rem;
+  letter-spacing: -0.055em;
+  margin-bottom: 20px;
+  color: #f0f2f5;
+}
+
+/* Balance badge — sharper definition */
+[data-theme="soft-future"] .h-hero-balance-badge {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 5px 13px;
+  border: 0.5px solid transparent;
+}
+[data-theme="soft-future"] .h-hero-balance-badge.positive {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.22);
+  color: #34d399;
+}
+[data-theme="soft-future"] .h-hero-balance-badge.negative {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.22);
+  color: #f87171;
+}
+
+/* Progress — cyan fill with glow */
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-progress {
+  margin-top: 22px;
+}
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-progress-track {
+  height: 4px;
+  background: rgba(6, 182, 212, 0.10);
+}
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-progress-fill {
+  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.50);
+}
+[data-theme="soft-future"] .h-hero-progress-pct {
+  color: rgba(6, 182, 212, 0.70);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+[data-theme="soft-future"] .cosmos-card--hero .h-hero-progress-label {
+  color: rgba(160, 170, 187, 0.45);
+  font-size: 0.6875rem;
+}
+
+
+/* ── 3. PAGE COMPOSITION ────────────────────────────────────────────────────
+   More generous section spacing and edge-to-edge card feel.               */
+
+[data-theme="soft-future"] .h-sections {
+  gap: 20px;
+  padding: 24px 12px 0;
+}
+
+
+/* ── 4. QUICK ACTIONS — SURFACE CONTAINER ──────────────────────────────────
+   Currently floats without a backing surface. Add one via CSS only.       */
+
+[data-theme="soft-future"] .h-quick-section {
+  background:
+    linear-gradient(to top,
+      rgba(6, 182, 212, 0.08) 0%,
+      rgba(6, 182, 212, 0.02) 35%,
+      transparent 100%),
+    linear-gradient(145deg, #15181d 0%, #10121a 100%);
+  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  box-shadow:
+    0 4px 24px rgba(13, 15, 18, 0.60),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.03);
+  border-radius: 18px;
+  padding: 14px 14px 16px;
+}
+
+
+/* ── 5. CASHFLOW — FINANCIAL OS SCALE ──────────────────────────────────────
+   The three key numbers (income / expenses / balance) must feel weighty.  */
+
+[data-theme="soft-future"] .h-cf-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+[data-theme="soft-future"] .h-cf-label {
+  font-size: 0.5875rem;
+  letter-spacing: 0.09em;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: rgba(160, 170, 187, 0.38);
+  margin-bottom: 5px;
+}
+
+[data-theme="soft-future"] .h-cf-col + .h-cf-col {
+  border-left-color: rgba(6, 182, 212, 0.08);
+}
+
+/* Month nav controls — more presence */
+[data-theme="soft-future"] .h-month-nav-compact {
+  gap: 4px;
+}
+[data-theme="soft-future"] .h-month-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(160, 170, 187, 0.65);
+  letter-spacing: -0.01em;
+}
+
+/* Cashflow card itself — elevated shadow */
+[data-theme="soft-future"] .cosmos-card--standard {
+  box-shadow:
+    0 6px 32px rgba(13, 15, 18, 0.65),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
+}
+
+
+/* ── 6. SECTION HEADERS — OS HIERARCHY ─────────────────────────────────────
+   Uniform uppercase labels create visual monotony. Slightly differentiate. */
+
+[data-theme="soft-future"] .cosmos-sh__title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: rgba(160, 170, 187, 0.42);
+}
+
+
+/* ── 7. BOTTOM NAV — PREMIUM FLOATING BAR ───────────────────────────────────
+   Fix: purple ::before bar still showing, active color is muted silver.
+   Target: clean dark glass pill with cyan active accent.                   */
+
+/* Remove the purple gradient top-bar from active nav items */
+html[data-theme="soft-future"] .nav-item.active::before {
+  display: none !important;
+}
+
+/* Deepen the bar itself */
+[data-theme="soft-future"] .bottom-nav {
+  background: rgba(10, 12, 15, 0.97);
+  border-top: 0.5px solid rgba(6, 182, 212, 0.14);
+  box-shadow:
+    0 -10px 48px rgba(0, 0, 0, 0.88),
+    0 -1px 0 rgba(6, 182, 212, 0.07);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  padding: 10px 6px calc(10px + env(safe-area-inset-bottom));
+}
+
+/* Inactive icons — slightly more visible */
+html[data-theme="soft-future"] .nav-label,
+html[data-theme="soft-future"] .nav-icon {
+  color: rgba(160, 170, 187, 0.32);
+}
+
+/* Active items — use actual cyan, not muted silver */
+html[data-theme="soft-future"] .nav-item.active {
+  background: rgba(6, 182, 212, 0.11);
+  box-shadow: 0 0 22px rgba(6, 182, 212, 0.16);
+}
+html[data-theme="soft-future"] .nav-item.active .nav-icon,
+html[data-theme="soft-future"] .nav-item.active .nav-label {
+  color: #06b6d4;
+}
+
+/* Nav labels — legible size */
+[data-theme="soft-future"] .nav-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
