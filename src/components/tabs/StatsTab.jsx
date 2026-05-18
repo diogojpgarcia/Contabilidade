@@ -272,6 +272,258 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   };
   const saldoDeltaLabel = (saldoDelta >= 0 ? '↑ +' : '↓ ') + fmt(Math.abs(saldoDelta)) + ' vs mês anterior';
 
+  /* ── SOFT-FUTURE BRANCH ────────────────────────────────────────────────── */
+  if (theme === 'soft-future') {
+  return (
+    <div ref={statsTabRef} style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100%',
+      background: 'transparent',
+      paddingBottom: '80px',
+    }}>
+
+      {/* ── HEADER ── */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 20px 8px',
+      }}>
+        <span style={{ fontSize: '24px', fontWeight: 600, color: '#FFFFFF' }}>
+          Estatísticas
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={goToPreviousMonth} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: '#FFFFFF', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+          <span style={{ fontSize: '13px', color: '#94A3B8', fontWeight: 500, minWidth: '90px', textAlign: 'center' }}>{monthName}</span>
+          <button onClick={goToNextMonth} disabled={currentMonth === new Date().toISOString().slice(0, 7)} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: '#FFFFFF', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentMonth === new Date().toISOString().slice(0, 7) ? 0.4 : 1 }}>›</button>
+        </div>
+      </div>
+
+      {/* ── VIEW TOGGLE ── */}
+      <div style={{ display: 'flex', gap: '8px', padding: '8px 20px 16px' }}>
+        {['overview', 'log'].map(view => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            style={{
+              padding: '7px 20px',
+              borderRadius: '20px',
+              border: activeView === view ? '1px solid rgba(0,221,255,0.3)' : '1px solid transparent',
+              background: activeView === view ? 'rgba(0,221,255,0.12)' : 'rgba(255,255,255,0.06)',
+              color: activeView === view ? '#00DDFF' : '#94A3B8',
+              fontSize: '13px',
+              fontWeight: activeView === view ? 500 : 400,
+              cursor: 'pointer',
+            }}
+          >
+            {view === 'overview' ? 'Visão Geral' : 'Histórico'}
+          </button>
+        ))}
+      </div>
+
+      {/* ══ OVERVIEW ══ */}
+      {activeView === 'overview' && (
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+          {/* SALDO CARD */}
+          <div style={{
+            borderRadius: '20px',
+            background: 'linear-gradient(160deg, #141E2E 0%, #0D1520 100%)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            padding: '20px',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+          }}>
+            <div style={{ fontSize: '11px', color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              Saldo do Mês
+            </div>
+            <div style={{ fontSize: '36px', fontWeight: 700, color: monthSaldo >= 0 ? '#22C55E' : '#F87171', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '6px' }}>
+              {monthSaldo >= 0 ? '+' : '−'}{fmt(Math.abs(monthSaldo))}
+            </div>
+            <div style={{ fontSize: '13px', color: saldoDelta >= 0 ? '#22C55E' : '#F87171', marginBottom: '16px' }}>
+              {saldoDeltaLabel}
+            </div>
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '16px' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '10px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Receitas</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#22C55E' }}>+{fmt(monthIncome)}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '10px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Despesas</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#F87171' }}>−{fmt(monthExpenses)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* BARRA DE GASTOS */}
+          {(() => {
+            const pct = monthIncome > 0 ? Math.min((monthExpenses / monthIncome) * 100, 100) : 0;
+            const barColor = pct >= 90 ? '#F87171' : pct >= 70 ? '#FB923C' : '#00DDFF';
+            return (
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94A3B8', marginBottom: '10px' }}>
+                  <span>Gasto mensal</span>
+                  <span style={{ color: barColor, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+                </div>
+                <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, #00DDFF, ${barColor})`, borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* TOP CATEGORIAS */}
+          {categoryData.length > 0 && (
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '16px' }}>
+              <div style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
+                Top Categorias
+              </div>
+              {categoryData.slice(0, 5).map((cat, i) => (
+                <div key={cat.category} style={{ marginBottom: i < categoryData.slice(0,5).length - 1 ? '12px' : 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '5px' }}>
+                    <span style={{ color: '#FFFFFF' }}>{cat.category}</span>
+                    <span style={{ color: '#94A3B8' }}>{fmt(cat.amount)} <span style={{ color: '#64748B' }}>· {cat.percentage.toFixed(0)}%</span></span>
+                  </div>
+                  <div style={{ height: '3px', background: 'rgba(255,255,255,0.07)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${cat.percentage}%`, background: '#00DDFF', borderRadius: '3px', opacity: 0.7 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* GRÁFICO 6 MESES */}
+          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '16px' }}>
+            <div style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
+              Evolução 6 Meses
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '64px' }}>
+              {monthlyData.map((data, i) => (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', height: '100%', justifyContent: 'flex-end' }}>
+                  <div style={{ width: '100%', display: 'flex', gap: '2px', alignItems: 'flex-end', justifyContent: 'center' }}>
+                    <div style={{ flex: 1, background: 'rgba(34,197,94,0.5)', borderRadius: '3px 3px 0 0', height: `${maxAmount > 0 ? (data.income / maxAmount) * 52 : 2}px` }} />
+                    <div style={{ flex: 1, background: 'rgba(248,113,113,0.5)', borderRadius: '3px 3px 0 0', height: `${maxAmount > 0 ? (data.expenses / maxAmount) * 52 : 2}px` }} />
+                  </div>
+                  <span style={{ fontSize: '9px', color: '#64748B' }}>{data.month}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#94A3B8' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'rgba(34,197,94,0.5)' }} />
+                Receitas
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#94A3B8' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'rgba(248,113,113,0.5)' }} />
+                Despesas
+              </div>
+            </div>
+          </div>
+
+          {/* SCORE + INSIGHTS */}
+          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: insights.length > 0 ? '16px' : 0 }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, rgba(255,255,255,0.08) ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#0D1520', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '10px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Score Financeiro</div>
+                <div style={{ fontSize: '15px', fontWeight: 600, color: '#FFFFFF' }}>{financialScore.label}</div>
+              </div>
+            </div>
+            {insights.slice(0, 3).map((item, i) => (
+              <div key={i} style={{ display: 'flex', gap: '10px', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '16px', flexShrink: 0 }}>
+                  {item.color === 'risk' ? '⚠️' : item.color === 'warn' ? '⚡' : item.color === 'good' ? '📈' : '📊'}
+                </span>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFFFFF', marginBottom: '2px' }}>{item.title}</div>
+                  <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.4 }}>{item.message}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      )}
+
+      {/* ══ HISTÓRICO ══ */}
+      {activeView === 'log' && (
+        <div style={{ padding: '0 16px' }}>
+
+          {/* Sub-tabs: Diário / Património */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            {['daily', 'patrimony'].map(v => (
+              <button
+                key={v}
+                onClick={() => setHistoryView(v)}
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: '20px',
+                  border: historyView === v ? '1px solid rgba(0,221,255,0.3)' : '1px solid transparent',
+                  background: historyView === v ? 'rgba(0,221,255,0.12)' : 'rgba(255,255,255,0.06)',
+                  color: historyView === v ? '#00DDFF' : '#94A3B8',
+                  fontSize: '13px',
+                  fontWeight: historyView === v ? 500 : 400,
+                  cursor: 'pointer',
+                }}
+              >
+                {v === 'daily' ? 'Diário' : 'Património'}
+              </button>
+            ))}
+          </div>
+
+          {/* Filtro por conta */}
+          {(patrimony.accounts || []).length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+              <button
+                onClick={() => setSelectedAccountId(null)}
+                style={{
+                  flexShrink: 0, padding: '5px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
+                  border: selectedAccountId === null ? '1px solid rgba(0,221,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                  background: selectedAccountId === null ? 'rgba(0,221,255,0.1)' : 'rgba(255,255,255,0.04)',
+                  color: selectedAccountId === null ? '#00DDFF' : '#94A3B8',
+                }}
+              >Todas</button>
+              {(patrimony.accounts || []).map(acc => (
+                <button
+                  key={acc.id}
+                  onClick={() => setSelectedAccountId(acc.id)}
+                  style={{
+                    flexShrink: 0, padding: '5px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
+                    border: selectedAccountId === acc.id ? '1px solid rgba(0,221,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                    background: selectedAccountId === acc.id ? 'rgba(0,221,255,0.1)' : 'rgba(255,255,255,0.04)',
+                    color: selectedAccountId === acc.id ? '#00DDFF' : '#94A3B8',
+                  }}
+                >{acc.name}</button>
+              ))}
+            </div>
+          )}
+
+          {/* Lista de transações — reutiliza o ModernTransactionList existente */}
+          {visibleTransactions.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: '14px', marginTop: '60px' }}>
+              {historyView === 'patrimony' ? 'Sem transferências este mês' : 'Sem transações este mês'}
+            </div>
+          ) : (
+            <ModernTransactionList
+              transactions={visibleTransactions}
+              onCategoryChange={onCategoryChange}
+              onAccountChange={onAccountChange}
+              onTransactionDeleted={onTransactionDeleted}
+              categories={categories}
+              patrimony={patrimony}
+            />
+          )}
+
+        </div>
+      )}
+
+    </div>
+  );
+}
+
   /* ── MODERN / FINTECH BRANCH ───────────────────────────────────────────── */
   if (theme === 'modern' || theme === 'fintech') {
     return (
