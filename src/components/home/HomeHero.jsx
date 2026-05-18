@@ -1,7 +1,6 @@
 import React from 'react';
 import { getFinancialMonthRange } from '../../utils/financialMonth';
 import CosmosCard from '../cosmos/CosmosCard';
-/* CosmosPlanet intentionally not imported — planet removed from hero */
 
 /* ── Progress logic — unchanged ─────────────────────────────────────────── */
 function getProgress(currentMonth, startDay) {
@@ -20,56 +19,29 @@ function fmt(val) {
   return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/* ── Sparkline — area + line, no sphere, no background ──────────────────── */
-/*  SVG viewBox 0 0 90 50. Lower Y = higher on screen = better performance.
-    Points represent ascending trend (Y values decrease left→right).        */
-const SPARK_PTS = '0,45 15,38 30,42 45,28 60,32 75,18 90,22';
+/* ── Sparkline — in-flow element, no position absolute ──────────────────── */
+const SPARK_PTS  = '0,50 15,42 30,46 45,30 60,35 75,18 88,10';
+const AREA_PATH  = `M ${SPARK_PTS.replace(/ /g, ' L ')} L 88,56 L 0,56 Z`;
 
-const HeroSparkline = () => {
-  /* Build area-fill path: line points → bottom-right → bottom-left → close */
-  const linePairs = SPARK_PTS.split(' ');
-  const first = linePairs[0];
-  const last  = linePairs[linePairs.length - 1].split(',')[0]; /* x of last point */
-  const areaPath = `M ${SPARK_PTS.replace(/ /g, ' L ')} L ${last},50 L 0,50 Z`;
-
-  return (
-    <svg
-      width="90" height="50" viewBox="0 0 90 50"
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        top: 16,
-        right: 20,
-        zIndex: 1,
-        pointerEvents: 'none',
-        overflow: 'visible',
-      }}
-    >
-      <defs>
-        <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="rgba(0,221,255,0.15)" />
-          <stop offset="100%" stopColor="rgba(0,221,255,0)"    />
-        </linearGradient>
-      </defs>
-      {/* Area fill */}
-      <path
-        d={areaPath}
-        fill="url(#sparkGradient)"
-        stroke="none"
-      />
-      {/* Trend line */}
-      <polyline
-        points={SPARK_PTS}
-        stroke="#00DDFF"
-        strokeWidth="2"
-        fill="none"
-        opacity="0.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-};
+const HeroSparkline = () => (
+  <svg
+    width="88" height="56" viewBox="0 0 88 56"
+    aria-hidden="true"
+    style={{ display: 'block', overflow: 'visible' }}
+  >
+    {/* Area fill */}
+    <path d={AREA_PATH} fill="rgba(0,221,255,0.08)" stroke="none" />
+    {/* Trend line */}
+    <polyline
+      points={SPARK_PTS}
+      stroke="#00DDFF"
+      strokeWidth="2"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonthStartDay = 1 }) => {
@@ -79,62 +51,78 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
   return (
     <CosmosCard variant="hero" glow>
 
-      {/* Sparkline — top-right corner, clean, no sphere behind it */}
-      <HeroSparkline />
-
-      {/* Text column — left-aligned, max 70% so sparkline has room */}
+      {/* Two-column row layout */}
       <div style={{
-        position: 'relative',
-        zIndex: 1,
-        maxWidth: '70%',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         alignItems: 'flex-start',
-        textAlign: 'left',
+        gap: 0,
+        padding: '16px 20px 28px 20px',
       }}>
 
-        {/* Label */}
-        <div className="h-hero-patrimony-label">Património total</div>
-
-        {/* Big number */}
-        <div className="h-hero-patrimony-value">{fmt(patrimonyTotal)}€</div>
-
-        {/* Trend context — new informational line replacing planet */}
+        {/* ── LEFT COLUMN — all text content ── */}
         <div style={{
-          fontFamily: 'Inter, -apple-system, sans-serif',
-          fontSize: 13,
-          fontWeight: 400,
-          color: '#22C55E',
-          marginBottom: 12,
-          letterSpacing: '-0.01em',
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          textAlign: 'left',
         }}>
-          ↑ +2,4% vs mês passado
-        </div>
 
-        {/* Monthly delta badge — unchanged */}
-        <div className="h-hero-balance-row">
-          <span className={`h-hero-balance-badge ${isPositive ? 'positive' : 'negative'}`}>
-            {isPositive ? '↑' : '↓'}&nbsp;
-            {isPositive ? '+' : ''}{fmt(monthlyBalance)}€ este mês
-          </span>
-        </div>
+          {/* Label */}
+          <div className="h-hero-patrimony-label">Património total</div>
 
-        {/* Month progress — only shown in current financial month */}
-        {progress && (
-          <div className="h-hero-progress" style={{ width: '100%' }}>
-            <div className="h-hero-progress-header">
-              <span className="h-hero-progress-label">
-                Dia {progress.passed} de {progress.total}
-              </span>
-              <span className="h-hero-progress-pct">{progress.pct}%</span>
-            </div>
-            <div className="h-hero-progress-track">
-              <div className="h-hero-progress-fill" style={{ width: `${progress.pct}%` }} />
-            </div>
+          {/* Big number */}
+          <div className="h-hero-patrimony-value">{fmt(patrimonyTotal)}€</div>
+
+          {/* Trend context */}
+          <div style={{
+            fontFamily: 'Inter, -apple-system, sans-serif',
+            fontSize: 13,
+            fontWeight: 400,
+            color: '#22C55E',
+            marginBottom: 12,
+            letterSpacing: '-0.01em',
+          }}>
+            ↑ +2,4% vs mês passado
           </div>
-        )}
 
-      </div>
+          {/* Monthly delta badge — unchanged */}
+          <div className="h-hero-balance-row">
+            <span className={`h-hero-balance-badge ${isPositive ? 'positive' : 'negative'}`}>
+              {isPositive ? '↑' : '↓'}&nbsp;
+              {isPositive ? '+' : ''}{fmt(monthlyBalance)}€ este mês
+            </span>
+          </div>
+
+          {/* Month progress bar — unchanged */}
+          {progress && (
+            <div className="h-hero-progress" style={{ width: '100%' }}>
+              <div className="h-hero-progress-header">
+                <span className="h-hero-progress-label">
+                  Dia {progress.passed} de {progress.total}
+                </span>
+                <span className="h-hero-progress-pct">{progress.pct}%</span>
+              </div>
+              <div className="h-hero-progress-track">
+                <div className="h-hero-progress-fill" style={{ width: `${progress.pct}%` }} />
+              </div>
+            </div>
+          )}
+
+        </div>{/* end left column */}
+
+        {/* ── RIGHT COLUMN — sparkline only ── */}
+        <div style={{
+          width: 88,
+          flexShrink: 0,
+          marginTop: 4,
+        }}>
+          <HeroSparkline />
+        </div>
+
+      </div>{/* end row */}
 
     </CosmosCard>
   );

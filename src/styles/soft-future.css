@@ -1877,8 +1877,8 @@ html[data-theme="soft-future"] .nav-item.active {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 24px 20px 32px 20px !important;
-  /* Allow planet to extend beyond card bounds */
+  /* Padding now controlled by the inner row div in HomeHero.jsx */
+  padding: 0 !important;
   overflow: visible !important;
 }
 
