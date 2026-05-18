@@ -1878,6 +1878,8 @@ html[data-theme="soft-future"] .nav-item.active {
   border: none !important;
   box-shadow: none !important;
   padding: 24px 20px 32px 20px !important;
+  /* Allow planet to extend beyond card bounds */
+  overflow: visible !important;
 }
 
 /* ── 2. LABEL — "PATRIMÓNIO TOTAL" ──────────────────────────────────────── */

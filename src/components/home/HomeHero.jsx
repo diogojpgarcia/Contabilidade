@@ -1,6 +1,7 @@
 import React from 'react';
 import { getFinancialMonthRange } from '../../utils/financialMonth';
 import CosmosCard from '../cosmos/CosmosCard';
+import CosmosPlanet from '../CosmosPlanet';
 
 /* ── Logic unchanged ────────────────────────────────────────────────────── */
 function getProgress(currentMonth, startDay) {
@@ -27,34 +28,44 @@ const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonth
   return (
     <CosmosCard variant="hero" glow>
 
-      {/* Label */}
-      <div className="h-hero-patrimony-label">Património total</div>
-
-      {/* Big number — emotional anchor */}
-      <div className="h-hero-patrimony-value">{fmt(patrimonyTotal)}€</div>
-
-      {/* Monthly delta badge */}
-      <div className="h-hero-balance-row">
-        <span className={`h-hero-balance-badge ${isPositive ? 'positive' : 'negative'}`}>
-          {isPositive ? '↑' : '↓'}&nbsp;
-          {isPositive ? '+' : ''}{fmt(monthlyBalance)}€ este mês
-        </span>
+      {/* Decorative planet — upper-right, partially outside card bounds */}
+      <div style={{ position: 'absolute', top: -10, right: -20, zIndex: 0 }}>
+        <CosmosPlanet />
       </div>
 
-      {/* Month progress — only shown in current financial month */}
-      {progress && (
-        <div className="h-hero-progress">
-          <div className="h-hero-progress-header">
-            <span className="h-hero-progress-label">
-              Dia {progress.passed} de {progress.total}
-            </span>
-            <span className="h-hero-progress-pct">{progress.pct}%</span>
-          </div>
-          <div className="h-hero-progress-track">
-            <div className="h-hero-progress-fill" style={{ width: `${progress.pct}%` }} />
-          </div>
+      {/* Text content — sits above the planet */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+        {/* Label */}
+        <div className="h-hero-patrimony-label">Património total</div>
+
+        {/* Big number — emotional anchor */}
+        <div className="h-hero-patrimony-value">{fmt(patrimonyTotal)}€</div>
+
+        {/* Monthly delta badge */}
+        <div className="h-hero-balance-row">
+          <span className={`h-hero-balance-badge ${isPositive ? 'positive' : 'negative'}`}>
+            {isPositive ? '↑' : '↓'}&nbsp;
+            {isPositive ? '+' : ''}{fmt(monthlyBalance)}€ este mês
+          </span>
         </div>
-      )}
+
+        {/* Month progress — only shown in current financial month */}
+        {progress && (
+          <div className="h-hero-progress">
+            <div className="h-hero-progress-header">
+              <span className="h-hero-progress-label">
+                Dia {progress.passed} de {progress.total}
+              </span>
+              <span className="h-hero-progress-pct">{progress.pct}%</span>
+            </div>
+            <div className="h-hero-progress-track">
+              <div className="h-hero-progress-fill" style={{ width: `${progress.pct}%` }} />
+            </div>
+          </div>
+        )}
+
+      </div>{/* end text layer */}
 
     </CosmosCard>
   );
