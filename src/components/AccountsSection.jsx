@@ -124,7 +124,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
               letterSpacing: '-0.02em',
               lineHeight: 1.15,
             }}>
-              {fmtBalance(account.balance)}
+              {fmtBalance(account.currentBalance ?? account.balance)}
             </span>
 
           </div>

@@ -36,6 +36,36 @@ const HomeTab = ({
 
   const patrimonyTotal = sumAccounts + sumStocks + sumBonds + sumRealestate + sumVehicles + sumCrypto;
 
+  function getCycleDayInfo(homeUsesFinancialMonth, financialMonthStartDay) {
+    const today = new Date();
+    const d = today.getDate();
+    const S = (homeUsesFinancialMonth && financialMonthStartDay > 1) ? financialMonthStartDay : 1;
+
+    if (S === 1) {
+      const totalDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      return { diaAtual: d, totalDias: totalDays };
+    }
+
+    // Financial cycle: starts on day S of a month
+    let cycleStartYear = today.getFullYear();
+    let cycleStartMonth = today.getMonth();
+    if (d < S) {
+      // Still in previous cycle
+      cycleStartMonth -= 1;
+      if (cycleStartMonth < 0) { cycleStartMonth = 11; cycleStartYear -= 1; }
+    }
+
+    const cycleEndMonth = (cycleStartMonth + 1) % 12;
+    const cycleEndYear = cycleStartMonth === 11 ? cycleStartYear + 1 : cycleStartYear;
+
+    const cycleStart = new Date(cycleStartYear, cycleStartMonth, S);
+    const cycleEnd   = new Date(cycleEndYear, cycleEndMonth, S);
+    const totalDias  = Math.round((cycleEnd - cycleStart) / 86400000);
+    const diaAtual   = Math.round((today - cycleStart) / 86400000) + 1;
+
+    return { diaAtual: Math.max(1, diaAtual), totalDias };
+  }
+
   return (
     <div className="h-page">
 
@@ -49,14 +79,8 @@ const HomeTab = ({
           despesasMes={balance < 0
             ? (parseFloat(balance) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€'
             : undefined}
-          diaAtual={(() => {
-            const today = new Date();
-            return today.getDate();
-          })()}
-          totalDias={(() => {
-            const today = new Date();
-            return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-          })()}
+          diaAtual={getCycleDayInfo(homeUsesFinancialMonth, financialMonthStartDay).diaAtual}
+          totalDias={getCycleDayInfo(homeUsesFinancialMonth, financialMonthStartDay).totalDias}
         />
       </div>
 
