@@ -1,8 +1,7 @@
 import React from 'react';
 import { getFinancialMonthRange } from '../../utils/financialMonth';
-import CosmosCard from '../cosmos/CosmosCard';
 
-/* ── Progress logic — unchanged ─────────────────────────────────────────── */
+/* ── Progress logic ──────────────────────────────────────────────────────── */
 function getProgress(currentMonth, startDay) {
   const today    = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -19,95 +18,165 @@ function fmt(val) {
   return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/* ── Sparkline — in-flow element, no position absolute ──────────────────── */
-const SPARK_PTS  = '0,50 15,42 30,46 45,30 60,35 75,18 88,10';
-const AREA_PATH  = `M ${SPARK_PTS.replace(/ /g, ' L ')} L 88,56 L 0,56 Z`;
-
+/* ── Sparkline ───────────────────────────────────────────────────────────── */
 const HeroSparkline = () => (
   <svg
-    width="88" height="56" viewBox="0 0 88 56"
+    width="80"
+    height="52"
+    viewBox="0 0 80 52"
     aria-hidden="true"
-    style={{ display: 'block', overflow: 'visible' }}
+    style={{ display: 'block', overflow: 'hidden' }}
   >
-    {/* Area fill */}
-    <path d={AREA_PATH} fill="rgba(0,221,255,0.08)" stroke="none" />
-    {/* Trend line */}
+    <defs>
+      <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stopColor="#00DDFF" stopOpacity="0.15" />
+        <stop offset="100%" stopColor="#00DDFF" stopOpacity="0"    />
+      </linearGradient>
+    </defs>
+    <path
+      d="M0,48 L0,44 L13,38 L26,41 L39,28 L52,32 L65,18 L80,10 L80,48 Z"
+      fill="url(#sparkFill)"
+    />
     <polyline
-      points={SPARK_PTS}
+      points="0,44 13,38 26,41 39,28 52,32 65,18 80,10"
+      fill="none"
       stroke="#00DDFF"
       strokeWidth="2"
-      fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
   </svg>
 );
 
-/* ── Hero ────────────────────────────────────────────────────────────────── */
+/* ── HomeHero ────────────────────────────────────────────────────────────── */
 const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonthStartDay = 1 }) => {
   const progress   = getProgress(currentMonth, financialMonthStartDay);
   const isPositive = monthlyBalance >= 0;
 
+  /* Badge colours */
+  const badgeBg     = isPositive ? 'rgba(34,197,94,0.15)'  : 'rgba(231,76,60,0.15)';
+  const badgeBorder = isPositive ? 'rgba(34,197,94,0.30)'  : 'rgba(231,76,60,0.30)';
+  const badgeColor  = isPositive ? '#22C55E'                : '#E74C3C';
+  const badgeArrow  = isPositive ? '↑' : '↓';
+  const badgeSign   = isPositive ? '+' : '';
+
   return (
-    <CosmosCard variant="hero" glow>
+    <div style={{
+      padding: '12px 20px 24px 20px',
+      background: 'transparent',
+      border: 'none',
+    }}>
 
-      {/* Two-column row layout */}
-      <div className="h-hero-inner-row" style={{ padding: '16px 20px 28px 20px' }}>
+      {/* ── MAIN ROW: text left, sparkline right ── */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: '8px',
+      }}>
 
-        {/* ── LEFT COLUMN — all text content ── */}
-        <div className="h-hero-left-col" style={{ textAlign: 'left' }}>
+        {/* LEFT COLUMN */}
+        <div style={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+        }}>
 
-          {/* Label */}
-          <div className="h-hero-patrimony-label">Património total</div>
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 400,
+            color: '#94A3B8',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            marginBottom: '4px',
+          }}>
+            Património Total
+          </span>
 
-          {/* Big number */}
-          <div className="h-hero-patrimony-value">{fmt(patrimonyTotal)}€</div>
+          <span style={{
+            fontSize: '44px',
+            fontWeight: 700,
+            color: '#FFFFFF',
+            lineHeight: 1.05,
+            letterSpacing: '-0.02em',
+            marginBottom: '8px',
+          }}>
+            {fmt(patrimonyTotal)}€
+          </span>
 
-          {/* Trend context */}
-          <div style={{
-            fontFamily: 'Inter, -apple-system, sans-serif',
-            fontSize: 13,
+          <span style={{
+            fontSize: '13px',
             fontWeight: 400,
             color: '#22C55E',
-            marginBottom: 12,
-            letterSpacing: '-0.01em',
+            marginBottom: '10px',
           }}>
             ↑ +2,4% vs mês passado
-          </div>
+          </span>
 
-          {/* Monthly delta badge — unchanged */}
-          <div className="h-hero-balance-row">
-            <span className={`h-hero-balance-badge ${isPositive ? 'positive' : 'negative'}`}>
-              {isPositive ? '↑' : '↓'}&nbsp;
-              {isPositive ? '+' : ''}{fmt(monthlyBalance)}€ este mês
+          {/* Monthly balance pill */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: badgeBg,
+            border: `1px solid ${badgeBorder}`,
+            borderRadius: '20px',
+            padding: '5px 13px',
+            marginBottom: '16px',
+          }}>
+            <span style={{ color: badgeColor, fontSize: '13px' }}>{badgeArrow}</span>
+            <span style={{ color: badgeColor, fontSize: '13px', fontWeight: 500 }}>
+              {badgeSign}{fmt(monthlyBalance)}€ este mês
             </span>
           </div>
 
-          {/* Month progress bar — unchanged */}
-          {progress && (
-            <div className="h-hero-progress" style={{ width: '100%' }}>
-              <div className="h-hero-progress-header">
-                <span className="h-hero-progress-label">
-                  Dia {progress.passed} de {progress.total}
-                </span>
-                <span className="h-hero-progress-pct">{progress.pct}%</span>
-              </div>
-              <div className="h-hero-progress-track">
-                <div className="h-hero-progress-fill" style={{ width: `${progress.pct}%` }} />
-              </div>
-            </div>
-          )}
-
         </div>{/* end left column */}
 
-        {/* ── RIGHT COLUMN — sparkline only ── */}
-        <div className="h-hero-right-col">
+        {/* RIGHT COLUMN — sparkline */}
+        <div style={{
+          width: '80px',
+          flexShrink: 0,
+          marginTop: '20px',
+        }}>
           <HeroSparkline />
         </div>
 
-      </div>{/* end row */}
+      </div>{/* end main row */}
 
-    </CosmosCard>
+      {/* ── MONTH PROGRESS BAR ── */}
+      {progress && (
+        <div style={{ marginTop: '4px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '6px',
+          }}>
+            <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+              Dia {progress.passed} de {progress.total}
+            </span>
+            <span style={{ fontSize: '12px', color: '#00DDFF' }}>
+              {progress.pct}%
+            </span>
+          </div>
+          <div style={{
+            height: '3px',
+            background: 'rgba(255,255,255,0.08)',
+            borderRadius: '2px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${progress.pct}%`,
+              background: '#00DDFF',
+              borderRadius: '2px',
+            }} />
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 };
 
