@@ -2039,6 +2039,110 @@ html[data-theme="soft-future"] .nav-item.active {
 }
 
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 13 — CASHFLOW HEADER FIX + STATS REFINEMENT
+   Single-line header, compact nav buttons, 22px numbers, vertical dividers.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. SECTION HORIZONTAL PADDING ──────────────────────────────────────── */
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
+  padding: 20px 20px !important;
+}
+
+/* ── 2. HEADER — single row, never wraps ─────────────────────────────────── */
+
+[data-theme="soft-future"] .h-cashflow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* Nav group (left side) — inline, never wraps */
+[data-theme="soft-future"] .h-cashflow-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* Month label — clamp if very long, never wrap */
+[data-theme="soft-future"] .h-cashflow-month-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0;
+}
+
+/* Compact arrow buttons — 28×28, subtle bg */
+[data-theme="soft-future"] .h-cashflow-nav .h-month-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+
+[data-theme="soft-future"] .h-cashflow-nav .h-month-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* "Hoje" pill — keep existing style, just ensure no shrink */
+[data-theme="soft-future"] .h-cashflow-nav .h-today-btn {
+  flex-shrink: 0;
+}
+
+/* "Ver detalhes →" — never wraps, never shrinks */
+[data-theme="soft-future"] .h-cashflow-details-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── 3. NUMBERS — 22px SemiBold ─────────────────────────────────────────── */
+
+[data-theme="soft-future"] .h-cf-amount {
+  font-size: 22px !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* ── 4. LABELS ───────────────────────────────────────────────────────────── */
+
+[data-theme="soft-future"] .h-cf-label {
+  font-size: 10px !important;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94A3B8 !important;
+  margin-bottom: 5px;
+}
+
+/* ── 5. VERTICAL DIVIDERS between columns ───────────────────────────────── */
+
+[data-theme="soft-future"] .h-cf-col + .h-cf-col {
+  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
 /* ── AccountsSection scroll row — scrollbar hidden ───────────────────────── */
 .accounts-scroll-row {
   display: flex;
