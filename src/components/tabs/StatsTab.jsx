@@ -293,9 +293,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     <div ref={statsTabRef} style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100%',
       background: 'transparent',
-      paddingBottom: '80px',
     }}>
 
       {/* ── HEADER ── */}
