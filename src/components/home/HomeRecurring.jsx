@@ -12,7 +12,7 @@ import CosmosSectionHeader from '../cosmos/CosmosSectionHeader';
 import './Recurring.css';
 
 /* ── Logic unchanged ────────────────────────────────────────────────────── */
-const HomeRecurring = ({ recurringPayments, confirmedRecurring = {}, categories }) => {
+const HomeRecurring = ({ recurringPayments, confirmedRecurring = {}, categories, onNavigate }) => {
   const expCats = categories?.expense || [];
 
   const upcoming = useMemo(
@@ -40,7 +40,15 @@ const HomeRecurring = ({ recurringPayments, confirmedRecurring = {}, categories 
   return (
     <CosmosCard variant="standard">
 
-      <CosmosSectionHeader title="Próximos pagamentos" style={{ marginBottom: 12 }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <CosmosSectionHeader title="Próximos pagamentos" style={{ margin: 0 }} />
+        <button
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, color: '#00DDFF', WebkitTapHighlightColor: 'transparent' }}
+          onClick={() => onNavigate?.('budget', { view: 'recurring' })}
+        >
+          Ver todos →
+        </button>
+      </div>
 
       {upcoming.map(p => {
         const due         = p.computedNextDue;

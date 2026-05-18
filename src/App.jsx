@@ -38,8 +38,10 @@ const App = () => {
   // Cross-tab navigation — called by StatsTab insights
   const handleNavigateFromStats = (tab, extra = null) => {
     setActiveTab(tab);
-    if (tab === 'budget' && extra?.categoryLabel) {
-      setPendingBudgetNav({ categoryLabel: extra.categoryLabel, ts: Date.now() });
+    if (tab === 'budget') {
+      if (extra?.categoryLabel || extra?.view) {
+        setPendingBudgetNav({ ...extra, ts: Date.now() });
+      }
     }
   };
 

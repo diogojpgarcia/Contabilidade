@@ -8,7 +8,7 @@ import InsightsSection   from '../InsightsSection';
 import '../home/Home.css';
 
 const HomeTab = ({
-  balance, totalBalance = 0, transactions,
+  balance, totalBalance = 0, transactions, currentMonth,
   patrimony = {},
   financialMonthStartDay = 1,
   homeUsesFinancialMonth = true,
@@ -90,13 +90,19 @@ const HomeTab = ({
       <div className="h-sections">
 
         {/* Insights grid — below cashflow, above context cards */}
-        <InsightsSection onNavigate={onNavigate} />
+        <InsightsSection
+          transactions={transactions}
+          currentMonth={currentMonth}
+          recurringPayments={recurringPayments}
+          onNavigate={onNavigate}
+        />
 
         {/* Upcoming recurring payments */}
         <HomeRecurring
           recurringPayments={recurringPayments}
           confirmedRecurring={confirmedRecurring}
           categories={categories}
+          onNavigate={onNavigate}
         />
 
       </div>

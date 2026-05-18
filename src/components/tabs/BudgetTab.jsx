@@ -355,12 +355,16 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
   // Deep navigation from insights: switch to budgets, expand + highlight category
   useEffect(() => {
-    if (!pendingNav?.categoryLabel) return;
-    setActiveView('budgets');
-    const cat = categories.expense.find(c => c.label === pendingNav.categoryLabel);
-    if (cat) {
-      setExpandedCategoryId(cat.id);
-      setNavExpandedId(cat.id);
+    if (!pendingNav) return;
+    if (pendingNav.view) {
+      setActiveView(pendingNav.view);
+    } else if (pendingNav.categoryLabel) {
+      setActiveView('budgets');
+      const cat = categories.expense.find(c => c.label === pendingNav.categoryLabel);
+      if (cat) {
+        setExpandedCategoryId(cat.id);
+        setNavExpandedId(cat.id);
+      }
     }
     onNavConsumed?.();
   }, [pendingNav]);
