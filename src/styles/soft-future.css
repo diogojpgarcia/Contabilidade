@@ -1746,3 +1746,104 @@ html[data-theme="soft-future"] .nav-item.active {
 [data-theme="soft-future"] .h-sections > .h-quick-section {
   margin-bottom: 0;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 8 — COHESION / SURFACE DISSOLUTION
+   Remove card boxes from content zone. Content lives on the canvas.
+   One surfaced zone only: the hero. Everything else flows open.
+   Dock becomes flush infrastructure, not a showcase element.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. DISSOLVE ALL SECTION CARD SURFACES ───────────────────────────────────
+   Remove background, border, box-shadow from every standard card in the
+   data zone. Content floats directly on the page canvas.
+   Sections are separated by hairline rules, not by boxes.                 */
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  /* Reset margin overrides from previous passes */
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Hairline top-rule replaces box borders as the section separator */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard + .cosmos-card--standard {
+  border-top: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Section spacing: replace card margins with clean padding rhythm */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard {
+  padding: 24px 4px !important;
+}
+
+/* First section (cashflow) — starts with less top space, no top hairline */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
+  padding-top: 8px !important;
+}
+
+/* ── 2. CASHFLOW CONTENT: WIDER HORIZONTAL PADDING FOR NUMBERS ───────────────
+   With no card box, numbers need enough side padding to sit correctly.   */
+
+[data-theme="soft-future"] .h-cashflow-nav {
+  padding: 0 12px;
+  margin-bottom: 18px;
+}
+
+[data-theme="soft-future"] .h-cashflow-grid {
+  padding: 0 0 4px;
+}
+
+/* Columns: restore consistent horizontal padding with dividers */
+[data-theme="soft-future"] .h-cf-col {
+  padding: 2px 8px;
+}
+
+/* ── 3. CONTEXT CONTENT: LEFT INDENT FOR SUBORDINATION ──────────────────────
+   Without box hierarchy, use left-indented content to signal secondary tier.
+   A 16px left indent on the text block reads as contextual, not primary. */
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) > * {
+  padding-left: 12px;
+}
+
+/* ── 4. DATA ZONE TOP SPACING: LESS AIR, MORE CONTINUITY ────────────────────
+   36px was a chapter-break gap between boxes. With dissolved cards,
+   24px reads as natural breathing space, not a hard stop.                */
+
+[data-theme="soft-future"] .h-sections {
+  padding: 24px 12px 0;
+}
+
+/* ── 5. DOCK: FLUSH INFRASTRUCTURE ──────────────────────────────────────────
+   Remove every feature that makes the dock a "showcase element":
+   no floating, no radius, no backdrop-filter, no border ring.
+   Just a dark bar with a single top hairline — grounded, invisible.      */
+
+[data-theme="soft-future"] .bottom-nav {
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(10, 12, 15, 0.99) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 6px 4px env(safe-area-inset-bottom) !important;
+}
+
+/* Keep active item highlight — just subdued */
+html[data-theme="soft-future"] .nav-item.active {
+  background: rgba(6, 182, 212, 0.08);
+  box-shadow: none;
+}
+
+/* Page clearance: flush dock + safe area */
+[data-theme="soft-future"] .h-page {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
