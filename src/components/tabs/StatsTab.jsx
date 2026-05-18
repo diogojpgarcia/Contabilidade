@@ -273,7 +273,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const saldoDeltaLabel = (saldoDelta >= 0 ? '↑ +' : '↓ ') + fmt(Math.abs(saldoDelta)) + ' vs mês anterior';
 
   /* ── SOFT-FUTURE BRANCH ────────────────────────────────────────────────── */
-  if (theme === 'soft-future') {
+  if (theme === 'fintech') {
   return (
     <div ref={statsTabRef} style={{
       display: 'flex',
@@ -525,7 +525,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 }
 
   /* ── MODERN / FINTECH BRANCH ───────────────────────────────────────────── */
-  if (theme === 'modern' || theme === 'fintech') {
+  if (theme === 'modern') {
     return (
       <div className="m-page" ref={statsTabRef}>
         <PageHeader title="Estatísticas" />
