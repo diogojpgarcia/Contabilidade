@@ -34,7 +34,7 @@ const HomeTab = ({
   return (
     <div className="h-page">
 
-      {/* ── PRIMARY ZONE — hero owns its own spatial territory ── */}
+      {/* ── PRIMARY STAGE — hero + commands form one sovereign zone ── */}
       <div className="h-primary-zone">
         <HomeHero
           patrimonyTotal={patrimonyTotal}
@@ -42,15 +42,14 @@ const HomeTab = ({
           currentMonth={currentMonth}
           financialMonthStartDay={financialMonthStartDay}
         />
+        {/* Command shelf — bottom of the hero stage, not a separate module */}
+        <HomeQuickActions onNavigate={onNavigate} />
       </div>
 
-      {/* ── SECONDARY STACK — subordinate command modules ── */}
+      {/* ── DATA ZONE — cashflow panel + context cluster ── */}
       <div className="h-sections">
 
-        {/* Command hub */}
-        <HomeQuickActions onNavigate={onNavigate} />
-
-        {/* Monthly cashflow */}
+        {/* Monthly cashflow — primary data panel */}
         <HomeCashflow
           income={income}
           expenses={expenses}

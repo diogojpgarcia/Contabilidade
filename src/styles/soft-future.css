@@ -1640,7 +1640,9 @@ html[data-theme="soft-future"] .nav-item.active {
 /* ── 4. CONTEXT CARDS — visibly subordinate tier ────────────────────────────
    Insight, recurring, accounts cards read as footnotes, not peers
    of the cashflow panel. Smaller type, receded surface already set —
-   reinforce with reduced padding so they feel compact/secondary.           */
+   reinforce with reduced padding so they feel compact/secondary.
+   NOTE: nth-child(n+3) targets when quick-actions was in h-sections.
+   Corrected selectors are in Pass 7 below.                                */
 
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
   padding: 14px 16px;
@@ -1652,4 +1654,95 @@ html[data-theme="soft-future"] .nav-item.active {
 
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .h-insight-desc {
   font-size: 0.73rem;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 7 — MACRO ORCHESTRATION
+   Hero + commands = one sovereign stage.
+   Horizontal hierarchy through inset width.
+   Intentional chapter-break spacing.
+   Corrected nth-child selectors now that QuickActions lives in h-primary-zone
+   (h-sections children: 1=cashflow, 2+=context).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. COMMAND STRIP AS HERO BOTTOM SHELF ───────────────────────────────────
+   The strip is now inside h-primary-zone, after HomeHero.
+   Style it as the hero's bottom shelf: same horizontal padding, thin
+   separator above, surface continuation — not a floating island.          */
+
+[data-theme="soft-future"] .h-primary-zone .h-cmd-strip {
+  /* Align icons with hero text (hero padding-left is 26px) */
+  padding: 18px 26px 28px;
+  margin-bottom: 0;
+  /* Hairline: marks the bottom shelf of the hero stage */
+  border-top: 0.5px solid rgba(6, 182, 212, 0.10);
+  /* Slight gradient continuation of the hero surface tone */
+  background: linear-gradient(to bottom,
+    rgba(6, 182, 212, 0.04) 0%,
+    transparent 100%
+  );
+  justify-content: space-evenly;
+}
+
+/* ── 2. DATA ZONE: INTENTIONAL CHAPTER BREAK ────────────────────────────────
+   36px of deliberate air separates the command stage from the data zone.
+   This is a compositional pause — the eye resets before entering data.    */
+
+[data-theme="soft-future"] .h-sections {
+  gap: 0;
+  padding: 36px 12px 0;
+}
+
+/* ── 3. CORRECT nth-child SELECTORS ─────────────────────────────────────────
+   QuickActions is now in h-primary-zone, not h-sections.
+   New h-sections structure: 1=cashflow, 2+=context cards.                 */
+
+/* Cashflow: primary data panel — full width, chapter break margin below */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
+  margin-bottom: 20px;
+  /* Elevated border: stronger signal that this is the primary data panel */
+  border-color: rgba(6, 182, 212, 0.14);
+  /* Cashflow card needs more internal breathing room for the large numbers */
+  padding: 20px 18px 22px;
+}
+
+/* Re-apply cashflow surface (was nth-child(2) in Pass 4 — now nth-child(1)) */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
+  background:
+    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 50%, transparent 100%),
+    linear-gradient(145deg, #161921 0%, #111420 100%);
+}
+
+/* ── 4. CONTEXT CLUSTER: HORIZONTAL HIERARCHY ───────────────────────────────
+   Context cards are 10px narrower per side than the cashflow panel.
+   Width = importance. Narrower = subordinate. No color tricks needed.     */
+
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) {
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 14px 16px;
+}
+
+/* Context card typography */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) .h-insight-title {
+  font-size: 0.82rem;
+}
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) .h-insight-desc {
+  font-size: 0.73rem;
+}
+
+/* Re-apply context surface (was nth-child(n+3) in Pass 4 — now nth-child(n+2)) */
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) {
+  background: linear-gradient(145deg, #0f1217 0%, #0b0e13 100%);
+  border-color: rgba(6, 182, 212, 0.055);
+}
+[data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) .cosmos-sh__title {
+  color: rgba(160, 170, 187, 0.28);
+}
+
+/* ── 5. CANCEL STALE PASS 5 SELECTOR (h-quick-section no longer in h-sections) */
+[data-theme="soft-future"] .h-sections > .h-quick-section {
+  margin-bottom: 0;
 }
