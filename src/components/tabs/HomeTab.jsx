@@ -5,7 +5,7 @@ import HomeCashflow      from '../home/HomeCashflow';
 import HomeInsight       from '../home/HomeInsight';
 import HomeAccounts      from '../home/HomeAccounts';
 import HomeRecurring     from '../home/HomeRecurring';
-import HomeQuickActions  from '../home/HomeQuickActions';
+import QuickActionsRow   from '../QuickActionsRow';
 import '../home/Home.css';
 
 const HomeTab = ({
@@ -38,7 +38,7 @@ const HomeTab = ({
       {/* ── GREETING BAR — above everything ── */}
       <HomeGreeting />
 
-      {/* ── PRIMARY STAGE — hero + commands form one sovereign zone ── */}
+      {/* ── PRIMARY STAGE — hero ── */}
       <div className="h-primary-zone">
         <HomeHero
           patrimonyTotal={patrimonyTotal}
@@ -46,9 +46,10 @@ const HomeTab = ({
           currentMonth={currentMonth}
           financialMonthStartDay={financialMonthStartDay}
         />
-        {/* Command shelf — bottom of the hero stage, not a separate module */}
-        <HomeQuickActions onNavigate={onNavigate} />
       </div>
+
+      {/* ── QUICK ACTIONS ROW — immediately below hero ── */}
+      <QuickActionsRow onNavigate={onNavigate} />
 
       {/* ── DATA ZONE — cashflow panel + context cluster ── */}
       <div className="h-sections">

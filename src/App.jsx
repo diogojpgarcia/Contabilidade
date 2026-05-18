@@ -863,11 +863,11 @@ const App = () => {
         </button>
 
         <button
-          className={`nav-item ${activeTab === 'add' ? 'active' : ''}`}
+          className={`nav-item nav-item--add ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => setActiveTab('add')}
+          aria-label="Adicionar transação"
         >
-          <span className="nav-icon"><Plus size={24} strokeWidth={2} /></span>
-          <span className="nav-label">Adicionar</span>
+          <span className="nav-icon nav-icon--add"><Plus size={24} strokeWidth={2.5} /></span>
         </button>
 
         <button

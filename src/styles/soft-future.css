@@ -1906,3 +1906,51 @@ html[data-theme="soft-future"] .nav-item.active {
   line-height: 1.0;
   margin-bottom: 16px;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PASS 11 — NAV "+" BUTTON ELEVATION
+   Central add button becomes a 56px cyan circle, elevated above the nav bar.
+   All other nav items unchanged.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="soft-future"] .nav-item--add {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #00DDFF !important;
+  color: #000000;
+  margin-top: -20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 221, 255, 0.4);
+  /* Override active background from other rules */
+  box-shadow: 0 0 20px rgba(0, 221, 255, 0.4) !important;
+  flex-shrink: 0;
+}
+
+[data-theme="soft-future"] .nav-item--add.active,
+[data-theme="soft-future"] .nav-item--add:focus {
+  background: #00DDFF !important;
+  box-shadow: 0 0 28px rgba(0, 221, 255, 0.55) !important;
+}
+
+[data-theme="soft-future"] .nav-item--add:active {
+  transform: scale(0.93);
+}
+
+[data-theme="soft-future"] .nav-icon--add {
+  font-size: 24px;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure the SVG icon inherits black color */
+[data-theme="soft-future"] .nav-icon--add svg {
+  color: #000000;
+  stroke: #000000;
+}
