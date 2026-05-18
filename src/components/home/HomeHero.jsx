@@ -1,224 +1,162 @@
 import React from 'react';
-import { getFinancialMonthRange } from '../../utils/financialMonth';
 
-/* ── Progress logic ──────────────────────────────────────────────────────── */
-function getProgress(currentMonth, startDay) {
-  const today    = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-  const { start, end } = getFinancialMonthRange(currentMonth, startDay);
-  if (todayStr < start || todayStr > end) return null;
-  const s     = new Date(start + 'T00:00:00');
-  const e     = new Date(end   + 'T00:00:00');
-  const total  = Math.round((e - s) / 86400000) + 1;
-  const passed = Math.round((today - s) / 86400000) + 1;
-  return { passed, total, pct: Math.min(100, Math.round((passed / total) * 100)) };
-}
+const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias }) => {
+  const progresso = Math.round((diaAtual / totalDias) * 100);
 
-function fmt(val) {
-  return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+  // Dados dos últimos 6 meses (hardcoded por agora)
+  const dados = [2650, 2980, 2810, 3050, 2920, 3247];
+  const meses = ['Dez', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai'];
 
-/* ── Sparkline — mini chart with month labels and current-value dot ─────── */
-const HeroSparkline = () => {
-  const pontos = [2980, 3100, 2890, 3050, 3180, 3247];
-  const meses  = ['D', 'J', 'F', 'M', 'A', 'M'];
+  const W = 340; // viewBox width
+  const H = 80;  // viewBox height da chart
+  const min = Math.min(...dados) * 0.98;
+  const max = Math.max(...dados) * 1.01;
 
-  const min          = Math.min(...pontos);
-  const max          = Math.max(...pontos);
-  const largura      = 88;
-  const altura       = 48;
-  const paddingBottom = 14; // space for month labels
-  const chartAltura  = altura - paddingBottom;
+  const cx = (i) => (i / (dados.length - 1)) * W;
+  const cy = (v) => H - ((v - min) / (max - min)) * H;
 
-  const x = (i) => (i / (pontos.length - 1)) * largura;
-  const y = (v) => chartAltura - ((v - min) / (max - min)) * (chartAltura - 4);
-
-  const linhaPoints = pontos.map((v, i) => `${x(i)},${y(v)}`).join(' ');
-  const areaPath = `M0,${y(pontos[0])} ` +
-    pontos.map((v, i) => `L${x(i)},${y(v)}`).join(' ') +
-    ` L${largura},${chartAltura} L0,${chartAltura} Z`;
-
-  return (
-    <svg
-      width={largura}
-      height={altura}
-      viewBox={`0 0 ${largura} ${altura}`}
-      aria-hidden="true"
-      style={{ display: 'block', overflow: 'visible' }}
-    >
-      <defs>
-        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#00DDFF" stopOpacity="0.2" />
-          <stop offset="100%" stopColor="#00DDFF" stopOpacity="0"   />
-        </linearGradient>
-      </defs>
-
-      {/* Área preenchida */}
-      <path d={areaPath} fill="url(#sparkFill)" />
-
-      {/* Linha principal */}
-      <polyline
-        points={linhaPoints}
-        fill="none"
-        stroke="#00DDFF"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* Ponto final — valor atual */}
-      <circle
-        cx={x(pontos.length - 1)}
-        cy={y(pontos[pontos.length - 1])}
-        r="2.5"
-        fill="#00DDFF"
-      />
-
-      {/* Labels de mês */}
-      {meses.map((m, i) => (
-        <text
-          key={i}
-          x={x(i)}
-          y={altura - 2}
-          textAnchor="middle"
-          fontSize="7"
-          fill="#94A3B8"
-          fontFamily="Inter, sans-serif"
-        >
-          {m}
-        </text>
-      ))}
-    </svg>
-  );
-};
-
-/* ── HomeHero ────────────────────────────────────────────────────────────── */
-const HomeHero = ({ patrimonyTotal, monthlyBalance, currentMonth, financialMonthStartDay = 1 }) => {
-  const progress   = getProgress(currentMonth, financialMonthStartDay);
-  const isPositive = monthlyBalance >= 0;
-
-  /* Badge colours */
-  const badgeBg     = isPositive ? 'rgba(34,197,94,0.15)'  : 'rgba(231,76,60,0.15)';
-  const badgeBorder = isPositive ? 'rgba(34,197,94,0.30)'  : 'rgba(231,76,60,0.30)';
-  const badgeColor  = isPositive ? '#22C55E'                : '#E74C3C';
-  const badgeArrow  = isPositive ? '↑' : '↓';
-  const badgeSign   = isPositive ? '+' : '';
+  const linePoints = dados.map((v, i) => `${cx(i)},${cy(v)}`).join(' ');
+  const areaPath =
+    `M0,${cy(dados[0])} ` +
+    dados.map((v, i) => `L${cx(i)},${cy(v)}`).join(' ') +
+    ` L${W},${H} L0,${H} Z`;
 
   return (
     <div style={{
-      padding: '12px 20px 24px 20px',
-      background: 'transparent',
-      border: 'none',
+      margin: '0 16px',
+      borderRadius: '20px',
+      background: 'linear-gradient(160deg, #141E2E 0%, #0D1520 100%)',
+      border: '1px solid rgba(255,255,255,0.07)',
+      overflow: 'hidden',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
     }}>
 
-      {/* ── MAIN ROW: text left, sparkline right ── */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: '8px',
-      }}>
+      {/* TOPO: label + número + trend */}
+      <div style={{ padding: '20px 20px 12px 20px' }}>
 
-        {/* LEFT COLUMN */}
-        <div style={{
-          flex: 1,
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: 400,
+              color: '#94A3B8',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              margin: '0 0 6px 0',
+            }}>
+              Património Total
+            </p>
+            <p style={{
+              fontSize: '36px',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
+              margin: '0 0 8px 0',
+            }}>
+              {patrimonio ?? '3 247,00€'}
+            </p>
+            <p style={{
+              fontSize: '13px',
+              color: '#22C55E',
+              margin: 0,
+            }}>
+              ↑ +2,4% vs mês passado
+            </p>
+          </div>
 
-          <span style={{
-            fontSize: '11px',
-            fontWeight: 400,
-            color: '#94A3B8',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            marginBottom: '4px',
-          }}>
-            Património Total
-          </span>
-
-          <span style={{
-            fontSize: '44px',
-            fontWeight: 700,
-            color: '#FFFFFF',
-            lineHeight: 1.05,
-            letterSpacing: '-0.02em',
-            marginBottom: '8px',
-          }}>
-            {fmt(patrimonyTotal)}€
-          </span>
-
-          <span style={{
-            fontSize: '13px',
-            fontWeight: 400,
-            color: '#22C55E',
-            marginBottom: '10px',
-          }}>
-            ↑ +2,4% vs mês passado
-          </span>
-
-          {/* Monthly balance pill */}
+          {/* Pílula de variação mensal */}
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
-            background: badgeBg,
-            border: `1px solid ${badgeBorder}`,
+            background: 'rgba(231,76,60,0.12)',
+            border: '1px solid rgba(231,76,60,0.25)',
             borderRadius: '20px',
-            padding: '5px 13px',
-            marginBottom: '16px',
+            padding: '5px 10px',
+            marginTop: '2px',
           }}>
-            <span style={{ color: badgeColor, fontSize: '13px' }}>{badgeArrow}</span>
-            <span style={{ color: badgeColor, fontSize: '13px', fontWeight: 500 }}>
-              {badgeSign}{fmt(monthlyBalance)}€ este mês
+            <span style={{ color: '#E74C3C', fontSize: '12px' }}>↓</span>
+            <span style={{ color: '#E74C3C', fontSize: '12px', fontWeight: 500 }}>
+              {despesasMes ?? '-308,00€'}
             </span>
           </div>
+        </div>
 
-        </div>{/* end left column */}
+      </div>
 
-        {/* RIGHT COLUMN — sparkline */}
+      {/* GRÁFICO — largura total */}
+      <div style={{ position: 'relative' }}>
+        <svg
+          width="100%"
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          style={{ display: 'block' }}
+        >
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00DDFF" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#00DDFF" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill="url(#areaGrad)" />
+          <polyline
+            points={linePoints}
+            fill="none"
+            stroke="#00DDFF"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Ponto atual */}
+          <circle
+            cx={cx(dados.length - 1)}
+            cy={cy(dados[dados.length - 1])}
+            r="3"
+            fill="#00DDFF"
+          />
+        </svg>
+
+        {/* Labels de mês abaixo do gráfico */}
         <div style={{
-          width: '80px',
-          flexShrink: 0,
-          marginTop: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '6px 12px 14px 12px',
         }}>
-          <HeroSparkline />
+          {meses.map((m, i) => (
+            <span key={i} style={{
+              fontSize: '10px',
+              color: i === meses.length - 1 ? '#00DDFF' : '#94A3B8',
+              fontWeight: i === meses.length - 1 ? 600 : 400,
+            }}>
+              {m}
+            </span>
+          ))}
         </div>
+      </div>
 
-      </div>{/* end main row */}
-
-      {/* ── MONTH PROGRESS BAR ── */}
-      {progress && (
-        <div style={{ marginTop: '4px' }}>
+      {/* BARRA DE PROGRESSO DO MÊS */}
+      <div style={{ padding: '0 20px 16px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '11px', color: '#94A3B8' }}>
+            Dia {diaAtual ?? 19} de {totalDias ?? 31}
+          </span>
+          <span style={{ fontSize: '11px', color: '#00DDFF' }}>{progresso}%</span>
+        </div>
+        <div style={{
+          height: '3px',
+          background: 'rgba(255,255,255,0.08)',
+          borderRadius: '2px',
+          overflow: 'hidden',
+        }}>
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '6px',
-          }}>
-            <span style={{ fontSize: '12px', color: '#94A3B8' }}>
-              Dia {progress.passed} de {progress.total}
-            </span>
-            <span style={{ fontSize: '12px', color: '#00DDFF' }}>
-              {progress.pct}%
-            </span>
-          </div>
-          <div style={{
-            height: '3px',
-            background: 'rgba(255,255,255,0.08)',
+            height: '100%',
+            width: `${progresso}%`,
+            background: 'linear-gradient(90deg, #0099BB, #00DDFF)',
             borderRadius: '2px',
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${progress.pct}%`,
-              background: '#00DDFF',
-              borderRadius: '2px',
-            }} />
-          </div>
+          }} />
         </div>
-      )}
+      </div>
 
     </div>
   );

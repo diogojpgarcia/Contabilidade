@@ -43,10 +43,18 @@ const HomeTab = ({
       {/* ── PRIMARY STAGE — hero ── */}
       <div className="h-primary-zone">
         <HomeHero
-          patrimonyTotal={patrimonyTotal}
-          monthlyBalance={balance}
-          currentMonth={currentMonth}
-          financialMonthStartDay={financialMonthStartDay}
+          patrimonio={patrimonyTotal.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€'}
+          despesasMes={balance < 0
+            ? balance.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€'
+            : undefined}
+          diaAtual={(() => {
+            const today = new Date();
+            return today.getDate();
+          })()}
+          totalDias={(() => {
+            const today = new Date();
+            return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+          })()}
         />
       </div>
 
