@@ -43,9 +43,9 @@ const HomeTab = ({
       {/* ── PRIMARY STAGE — hero ── */}
       <div className="h-primary-zone">
         <HomeHero
-          patrimonio={patrimonyTotal.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€'}
+          patrimonio={(parseFloat(patrimonyTotal) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€'}
           despesasMes={balance < 0
-            ? balance.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€'
+            ? (parseFloat(balance) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€'
             : undefined}
           diaAtual={(() => {
             const today = new Date();

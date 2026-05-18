@@ -20,7 +20,7 @@ const PLACEHOLDER_ACCOUNTS = [
 ];
 
 function fmtBalance(value) {
-  return value.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+  return (parseFloat(value) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
 }
 
 const AccountsSection = ({ accounts, onNavigate }) => {

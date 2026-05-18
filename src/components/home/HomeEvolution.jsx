@@ -1,7 +1,7 @@
 import React from 'react';
 
 function fmt(val) {
-  return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (parseFloat(val) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 const HomeEvolution = ({ patrimonyTotal, income, balance, investments = 0, realestate = 0 }) => {

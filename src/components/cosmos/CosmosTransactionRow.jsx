@@ -35,7 +35,7 @@ export default function CosmosTransactionRow({
   const formattedAmount =
     typeof amount === 'number'
       ? (positive === false ? '−' : positive === true ? '+' : '') +
-        Math.abs(amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+        (Math.abs(parseFloat(amount)) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
       : amount;
 
   const recurringLabel =

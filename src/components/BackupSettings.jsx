@@ -189,7 +189,7 @@ const BackupSettings = ({ user, onClose }) => {
             </button>
             {lastBackup && (
               <p className="backup-info">
-                Último backup: {lastBackup.toLocaleString('pt-PT')}
+                Último backup: {(lastBackup instanceof Date ? lastBackup : new Date(lastBackup)).toLocaleString('pt-PT')}
               </p>
             )}
           </section>

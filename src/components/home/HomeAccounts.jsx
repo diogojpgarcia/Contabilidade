@@ -6,7 +6,7 @@ import CosmosSectionHeader from '../cosmos/CosmosSectionHeader';
 const ACCOUNT_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6'];
 
 function fmt(val) {
-  return val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (parseFloat(val) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 const HomeAccounts = ({ accounts = [] }) => {
