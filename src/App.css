@@ -33,8 +33,18 @@ body {
   color: var(--text-primary);
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 .app-new {
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
