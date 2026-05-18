@@ -1,8 +1,6 @@
 import React from 'react';
 import HomeGreeting      from '../home/HomeGreeting';
 import HomeHero          from '../home/HomeHero';
-import HomeInsight       from '../home/HomeInsight';
-import HomeAccounts      from '../home/HomeAccounts';
 import HomeRecurring     from '../home/HomeRecurring';
 import QuickActionsRow   from '../QuickActionsRow';
 import AccountsSection   from '../AccountsSection';
@@ -94,22 +92,12 @@ const HomeTab = ({
         {/* Insights grid — below cashflow, above context cards */}
         <InsightsSection onNavigate={onNavigate} />
 
-        {/* Contextual insight */}
-        <HomeInsight
-          transactions={transactions}
-          onNavigate={onNavigate}
-          financialFocus={financialFocus}
-        />
-
         {/* Upcoming recurring payments */}
         <HomeRecurring
           recurringPayments={recurringPayments}
           confirmedRecurring={confirmedRecurring}
           categories={categories}
         />
-
-        {/* Account balances */}
-        <HomeAccounts accounts={p.accounts || []} />
 
       </div>
     </div>
