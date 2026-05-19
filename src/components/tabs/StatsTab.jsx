@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { BarChart2, Clock } from 'lucide-react';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
@@ -315,26 +316,51 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       </div>
 
       {/* ── VIEW TOGGLE ── */}
-      <div style={{ display: 'flex', gap: '8px', padding: '8px 20px 16px' }}>
-        {['overview', 'log'].map(view => (
-          <button
-            key={view}
-            onClick={() => setActiveView(view)}
-            style={{
-              padding: '7px 20px',
-              borderRadius: '20px',
-              border: activeView === view ? '1px solid rgba(0,221,255,0.3)' : '1px solid transparent',
-              background: activeView === view ? 'rgba(0,221,255,0.12)' : 'rgba(255,255,255,0.06)',
-              color: activeView === view ? '#00DDFF' : '#94A3B8',
-              fontSize: '13px',
-              fontWeight: activeView === view ? 500 : 400,
-              cursor: 'pointer',
-            }}
-          >
-            {view === 'overview' ? 'Visão Geral' : 'Histórico'}
-          </button>
-        ))}
-      </div>
+      {(() => {
+        const NAV = [
+          { key: 'overview', Icon: BarChart2, label: 'Visão Geral' },
+          { key: 'log',      Icon: Clock,     label: 'Histórico'   },
+        ];
+        return (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '6px',
+            padding: '8px 20px 16px',
+          }}>
+            {NAV.map(({ key, Icon, label }) => (
+              <button
+                key={key}
+                onClick={() => setActiveView(key)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '10px 4px 9px',
+                  background: activeView === key ? 'rgba(0,221,255,0.10)' : 'rgba(255,255,255,0.04)',
+                  border: activeView === key ? '1px solid rgba(0,221,255,0.28)' : '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: '14px',
+                  color: activeView === key ? '#00DDFF' : '#475569',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  WebkitTapHighlightColor: 'transparent',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <Icon size={18} strokeWidth={1.75} color={activeView === key ? '#00DDFF' : '#475569'} />
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 500,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                  color: 'inherit',
+                }}>{label}</span>
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* ══ OVERVIEW ══ */}
       {activeView === 'overview' && (() => {
