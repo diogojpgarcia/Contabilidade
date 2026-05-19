@@ -56,6 +56,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [searchQuery,    setSearchQuery]    = useState('');
   const [showAccFilter,  setShowAccFilter]  = useState(false);
+  const [showSearch,     setShowSearch]     = useState(false);
 
 
   // Compute expenses by category from already-filtered transactions
@@ -671,15 +672,89 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       {/* ══ HISTÓRICO ══ */}
       {activeView === 'log' && (
         <>
-          {/* Search + filter button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 20px 6px' }}>
+          {/* Type chips + search + filter buttons */}
+          <div style={{
+            display: 'flex', gap: 5, padding: '0 20px 10px',
+            overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
+            alignItems: 'center',
+          }}>
+            {[
+              { key: 'all',      label: 'Todos'          },
+              { key: 'expense',  label: 'Despesas'       },
+              { key: 'income',   label: 'Receitas'       },
+              { key: 'transfer', label: 'Transferências' },
+            ].map(({ key, label }) => {
+              const cfg = {
+                all:      { color: '#94A3B8', bg: 'rgba(255,255,255,0.06)',  border: 'rgba(255,255,255,0.11)'  },
+                expense:  { color: '#F87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)'  },
+                income:   { color: '#4ADE80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.25)'   },
+                transfer: { color: '#00DDFF', bg: 'rgba(0,221,255,0.10)',   border: 'rgba(0,221,255,0.25)'    },
+              }[key];
+              const active = historyView === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setHistoryView(key)}
+                  style={{
+                    flexShrink: 0, padding: '5px 10px', borderRadius: 8,
+                    fontSize: 10, fontWeight: 500, cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
+                    background: active ? cfg.bg : 'rgba(255,255,255,0.03)',
+                    border: active ? `1px solid ${cfg.border}` : '1px solid rgba(255,255,255,0.07)',
+                    color: active ? cfg.color : '#475569',
+                  }}
+                >{label}</button>
+              );
+            })}
+
+            {/* Separator */}
+            <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)', flexShrink: 0, marginLeft: 2 }} />
+
+            {/* Search icon button */}
+            <button
+              onClick={() => { setShowSearch(v => !v); if (showSearch) setSearchQuery(''); }}
+              style={{
+                flexShrink: 0, width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: showSearch ? 'rgba(0,221,255,0.10)' : 'rgba(255,255,255,0.03)',
+                border: showSearch ? '1px solid rgba(0,221,255,0.28)' : '1px solid rgba(255,255,255,0.07)',
+                color: showSearch ? '#00DDFF' : '#475569',
+                transition: 'all 0.15s',
+              }}
+            >
+              <Search size={12} strokeWidth={1.75} />
+            </button>
+
+            {/* Filter (accounts) icon button */}
+            <button
+              onClick={() => setShowAccFilter(v => !v)}
+              style={{
+                flexShrink: 0, width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: showAccFilter ? 'rgba(251,191,36,0.10)' : 'rgba(255,255,255,0.03)',
+                border: showAccFilter ? '1px solid rgba(251,191,36,0.28)' : '1px solid rgba(255,255,255,0.07)',
+                color: showAccFilter ? '#FBBF24' : '#475569',
+                transition: 'all 0.15s',
+              }}
+            >
+              <SlidersHorizontal size={12} strokeWidth={1.75} />
+            </button>
+          </div>
+
+          {/* Expandable search input */}
+          {showSearch && (
             <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', gap: 5,
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+              display: 'flex', alignItems: 'center', gap: 5,
+              margin: '-4px 20px 8px',
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(0,221,255,0.20)',
               borderRadius: 8, padding: '4px 9px',
+              animation: 'expandSearch 0.15s ease',
             }}>
               <Search size={12} color="#2D3748" strokeWidth={1.75} style={{ flexShrink: 0 }} />
               <input
+                autoFocus
                 type="text"
                 placeholder="Pesquisar..."
                 value={searchQuery}
@@ -689,21 +764,14 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   color: '#94A3B8', fontSize: 11, width: '100%', fontFamily: 'inherit',
                 }}
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{ background: 'none', border: 'none', color: '#334155', cursor: 'pointer', padding: 0, fontSize: 13, lineHeight: 1 }}
+                >✕</button>
+              )}
             </div>
-            <button
-              onClick={() => setShowAccFilter(v => !v)}
-              style={{
-                width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
-                background: showAccFilter ? 'rgba(0,221,255,0.10)' : 'rgba(255,255,255,0.04)',
-                border: showAccFilter ? '1px solid rgba(0,221,255,0.28)' : '1px solid rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: showAccFilter ? '#00DDFF' : '#475569',
-                transition: 'all 0.15s', WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              <SlidersHorizontal size={13} strokeWidth={1.75} />
-            </button>
-          </div>
+          )}
 
           {/* Account filter chips */}
           {showAccFilter && (
@@ -727,32 +795,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               ))}
             </div>
           )}
-
-          {/* Type filter chips */}
-          <div style={{
-            display: 'flex', gap: 5, padding: '0 20px 10px',
-            overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
-          }}>
-            {[
-              { key: 'all',      label: 'Todos',          color: '#94A3B8', bg: 'rgba(255,255,255,0.06)',  border: 'rgba(255,255,255,0.11)'  },
-              { key: 'expense',  label: 'Despesas',       color: '#F87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)'  },
-              { key: 'income',   label: 'Receitas',       color: '#4ADE80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.25)'   },
-              { key: 'transfer', label: 'Transferências', color: '#00DDFF', bg: 'rgba(0,221,255,0.10)',   border: 'rgba(0,221,255,0.25)'    },
-            ].map(({ key, label, color, bg, border }) => (
-              <button
-                key={key}
-                onClick={() => setHistoryView(key)}
-                style={{
-                  flexShrink: 0, padding: '5px 10px', borderRadius: 8,
-                  fontSize: 10, fontWeight: 500, cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
-                  background: historyView === key ? bg : 'rgba(255,255,255,0.03)',
-                  border: historyView === key ? `1px solid ${border}` : '1px solid rgba(255,255,255,0.07)',
-                  color: historyView === key ? color : '#475569',
-                }}
-              >{label}</button>
-            ))}
-          </div>
 
           {/* Day-grouped transaction list */}
           {visibleTransactions.length === 0 ? (
