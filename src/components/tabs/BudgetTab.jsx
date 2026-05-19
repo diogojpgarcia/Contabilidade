@@ -172,138 +172,70 @@ const CountUp = ({ value, decimals = 0 }) => {
 
 /* SwipeRevealCard is now imported from ../SwipeRevealCard */
 
-const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, predicted, animated, isEditing, onEditToggle, onLimitChange, onSave, isExpanded, onToggleExpand, categoryTransactions, isNavTarget }) => {
-  const [hovered, setHovered] = useState(false);
+const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, animated, isEditing, onEditToggle, onLimitChange, onSave, onOpenHistory }) => {
   const { Icon: CatIcon, color: catColor } = getCategoryMeta(cat.label);
-  const st         = STATUS(percent);
-  const willExceed = predicted !== null && limit > 0 && predicted > limit;
-  const cardRef    = useRef(null);
-  const inputRef   = useRef(null);
+  const st = STATUS(percent);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     if (!isEditing) return;
-    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     const t = setTimeout(() => inputRef.current?.focus(), 200);
     return () => clearTimeout(t);
   }, [isEditing]);
 
-  useEffect(() => {
-    if (!isExpanded) return;
-    const block = isNavTarget ? 'start' : 'nearest';
-    const t = setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block }), 120);
-    return () => clearTimeout(t);
-  }, [isExpanded, isNavTarget]);
-
-  const txs = categoryTransactions || [];
-
   return (
     <div
-      ref={cardRef}
-      className={`m-bcc${isExpanded ? ' expanded' : ''}${isNavTarget && isExpanded ? ' nav-target' : ''}`}
-      style={hovered && !isExpanded ? { transform: 'scale(1.02)', boxShadow: `0 6px 24px ${st.glow}` } : undefined}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className="m-gcc"
+      style={{ borderTopColor: limit > 0 ? st.color : 'rgba(255,255,255,0.08)' }}
+      onClick={onOpenHistory}
     >
-      {/* top row — clickable to expand */}
-      <div className="m-bcc-row" onClick={onToggleExpand} style={{ cursor: 'pointer' }}>
-        <Bubble color={catColor} Icon={CatIcon} size={40} radius="12px" />
-        <div className="m-bcc-info">
-          <div className="m-bcc-name-row">
-            <span className="m-bcc-name">{cat.label}</span>
-            {limit > 0 && (
-              <span className="m-bcc-badge" style={{ color: st.color, background: st.glow }}>
-                {st.label}
-              </span>
-            )}
-          </div>
-          <div className="m-bcc-meta-row">
-            <span className="m-bcc-spent" style={limit > 0 && percent >= 70 ? { color: st.color } : {}}>
-              {spent.toFixed(0)}€{limit > 0 ? ` / ${limit.toFixed(0)}€` : ''}
-            </span>
-            {delta > 0.5  && <span className="m-bcc-delta up">↑ +{delta.toFixed(0)}€</span>}
-            {delta < -0.5 && <span className="m-bcc-delta down">↓ −{Math.abs(delta).toFixed(0)}€</span>}
-          </div>
+      <div className="m-gcc-top">
+        <div className="m-gcc-ico" style={{ background: catColor + '1A' }}>
+          <CatIcon size={16} color={catColor} strokeWidth={1.75} />
         </div>
-        {/* percentage + chevron + edit button */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, marginLeft: 6, flexShrink: 0 }}>
-          {limit > 0 && (
-            <span style={{ fontSize: '1rem', fontWeight: 700, color: st.color, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-              {percent.toFixed(0)}%
-            </span>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <span className={`m-bcc-chevron${isExpanded ? ' open' : ''}`}>›</span>
-            {/* ✎ (U+270E) renders reliably on Android system fonts */}
-            <button
-              className="m-bcc-edit"
-              onClick={(e) => { e.stopPropagation(); onEditToggle(); }}
-              aria-label="Editar limite"
-            >✎</button>
-          </div>
+        <div className="m-gcc-right">
+          {limit > 0 && <div className="m-gcc-pct" style={{ color: st.color }}>{percent.toFixed(0)}%</div>}
+          {delta > 0.5  && <div className="m-gcc-delta up">+{delta.toFixed(0)}€ ↑</div>}
+          {delta < -0.5 && <div className="m-gcc-delta down">−{Math.abs(delta).toFixed(0)}€ ↓</div>}
         </div>
       </div>
-
-      {/* inline limit editor */}
-      {isEditing && (
-        <div className="m-bcc-edit-row">
-          <input
-            ref={inputRef}
-            type="number"
-            inputMode="decimal"
-            className="m-bcc-input"
-            value={limit || ''}
-            onChange={(e) => onLimitChange(cat.id, e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { onSave(); e.target.blur(); } }}
-            onBlur={onSave}
-            placeholder="Limite €/mês"
-          />
-          <button className="m-bcc-save" onClick={onSave}>✓</button>
-        </div>
-      )}
-
-      {/* gradient progress bar */}
+      <div className="m-gcc-name">{cat.label}</div>
+      <div className="m-gcc-amounts">
+        {spent.toFixed(0)}€{limit > 0 ? <span> /{limit.toFixed(0)}€</span> : null}
+      </div>
       {limit > 0 && (
-        <div className="m-bcc-bar-bg">
+        <div className="m-gcc-bar-bg">
           <div
-            className="m-bcc-bar-fill"
+            className="m-gcc-bar-fill"
             style={{
-              width:      animated ? `${Math.min(percent, 100)}%` : '0%',
+              width: animated ? `${Math.min(percent, 100)}%` : '0%',
               background: st.grad,
-              boxShadow:  animated ? `0 0 10px ${st.glow}` : 'none',
+              boxShadow: animated ? `0 0 8px ${st.glow}` : 'none',
             }}
           />
         </div>
       )}
-
-      {/* end-of-month prediction */}
-      {predicted !== null && limit > 0 && (
-        <div className={`m-bcc-prediction${willExceed ? ' exceed' : ''}`}>
-          <span>Previsto: {predicted}€</span>
-          {willExceed && <span className="m-bcc-prediction-warn">Vai ultrapassar</span>}
+      {isEditing && (
+        <div className="m-gcc-edit-row" onClick={e => e.stopPropagation()}>
+          <input
+            ref={inputRef}
+            type="number"
+            inputMode="decimal"
+            className="m-gcc-input"
+            value={limit || ''}
+            onChange={e => onLimitChange(cat.id, e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { onSave(); e.target.blur(); } }}
+            onBlur={onSave}
+            placeholder="Limite €/mês"
+          />
+          <button className="m-gcc-save-btn" onClick={e => { e.stopPropagation(); onSave(); }}>✓</button>
         </div>
       )}
-
-      {/* expandable transaction list */}
-      {isExpanded && (
-        <div className="m-bcc-txs">
-          {txs.length === 0 ? (
-            <div className="m-bcc-txs-empty">Sem transações neste mês</div>
-          ) : (
-            txs.map((tx, i) => (
-              <div key={tx.id || i} className="m-bcc-tx">
-                <div className="m-bcc-tx-left">
-                  <span className="m-bcc-tx-title">{tx.description || tx.title || tx.category}</span>
-                  {tx.account_name && <span className="m-bcc-tx-meta">{tx.account_name}</span>}
-                </div>
-                <div className="m-bcc-tx-right">
-                  <span className="m-bcc-tx-amount">−{parseFloat(tx.amount || 0).toFixed(2)}€</span>
-                  <span className="m-bcc-tx-date">{tx.date ? new Date(tx.date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) : ''}</span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+      <button
+        className="m-gcc-edit-btn"
+        onClick={e => { e.stopPropagation(); onEditToggle(); }}
+        aria-label="Editar limite"
+      >✎</button>
     </div>
   );
 };
@@ -331,6 +263,123 @@ const GoalSavingsInput = ({ goal, onSave, className }) => {
 // STOCK_LIST and CRYPTO_LIST have been moved to src/data/assetsList.js.
 // Search is now handled by searchAssets() from src/utils/searchAssets.js.
 
+const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sortedItems, animated: budgetAnimated, isVisible, onClose }) => {
+  const [txVisible, setTxVisible] = useState([]);
+
+  const catData = catId ? sortedItems.find(i => i.cat.id === catId) : null;
+  const txs = catId ? (txByCategory[catId] || []) : [];
+  const { Icon: CatIcon, color: catColor } = catData ? getCategoryMeta(catData.cat.label) : { Icon: () => null, color: '#475569' };
+  const st = catData ? STATUS(catData.percent) : STATUS(0);
+
+  useEffect(() => {
+    if (!isVisible) { setTxVisible([]); return; }
+    setTxVisible([]);
+    txs.forEach((_, i) => {
+      setTimeout(() => setTxVisible(prev => [...prev, i]), 180 + i * 55);
+    });
+  }, [isVisible, catId]);
+
+  if (!catId) return null;
+
+  const remaining = catData ? catData.limit - catData.spent : 0;
+  const isOver = catData && catData.percent >= 100;
+
+  return (
+    <>
+      <div
+        className={`m-sheet-backdrop${isVisible ? ' open' : ''}`}
+        onClick={onClose}
+      />
+      <div className={`m-sheet${isVisible ? ' open' : ''}`}>
+        <div className="m-sheet-handle" />
+        <div className="m-sheet-header">
+          <div className="m-sheet-ico" style={{ background: catColor + '1A' }}>
+            <CatIcon size={18} color={catColor} strokeWidth={1.75} />
+          </div>
+          <div className="m-sheet-hdr-info">
+            <div className="m-sheet-title">{catData?.cat.label || ''}</div>
+            <div className="m-sheet-subtitle">{txs.length} transações este mês</div>
+          </div>
+          <button className="m-sheet-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="m-sheet-stats">
+          <div className="m-sheet-stat">
+            <div className="m-sheet-stat-lbl">Gasto</div>
+            <div className="m-sheet-stat-val" style={{ color: isOver ? '#F87171' : '#E2E8F0' }}>
+              {catData ? catData.spent.toFixed(0) : 0}€
+            </div>
+          </div>
+          <div className="m-sheet-stat">
+            <div className="m-sheet-stat-lbl">Orçamento</div>
+            <div className="m-sheet-stat-val" style={{ color: '#00DDFF' }}>
+              {catData && catData.limit > 0 ? catData.limit.toFixed(0) : '—'}€
+            </div>
+          </div>
+          <div className="m-sheet-stat">
+            <div className="m-sheet-stat-lbl">Restante</div>
+            <div className="m-sheet-stat-val" style={{ color: remaining >= 0 ? '#4ADE80' : '#F87171' }}>
+              {catData && catData.limit > 0 ? `${remaining >= 0 ? '' : '−'}${Math.abs(remaining).toFixed(0)}€` : '—'}
+            </div>
+          </div>
+        </div>
+
+        {catData && catData.limit > 0 && (
+          <div className="m-sheet-prog-wrap">
+            <div className="m-sheet-prog-row">
+              <span className="m-sheet-prog-lbl">{catData.percent.toFixed(0)}% do orçamento</span>
+              {catData.delta > 0.5  && <span className="m-sheet-delta up">+{catData.delta.toFixed(0)}€ ↑</span>}
+              {catData.delta < -0.5 && <span className="m-sheet-delta down">−{Math.abs(catData.delta).toFixed(0)}€ ↓</span>}
+            </div>
+            <div className="m-sheet-prog-track">
+              <div
+                className="m-sheet-prog-fill"
+                style={{
+                  width: isVisible ? `${Math.min(catData.percent, 100)}%` : '0%',
+                  background: st.grad,
+                  boxShadow: isVisible ? `0 0 8px ${st.glow}` : 'none',
+                  transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1) 0.1s',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="m-sheet-txs-label">Histórico do mês</div>
+        <div className="m-sheet-txs-list">
+          {txs.length === 0 ? (
+            <div className="m-sheet-txs-empty">Sem transações neste mês</div>
+          ) : (
+            txs.map((tx, i) => (
+              <div
+                key={tx.id || i}
+                className="m-sheet-tx-row"
+                style={{
+                  opacity: txVisible.includes(i) ? 1 : 0,
+                  transform: txVisible.includes(i) ? 'translateY(0)' : 'translateY(10px)',
+                  transition: 'opacity 0.25s ease, transform 0.25s ease',
+                }}
+              >
+                <div className="m-sheet-tx-dot" style={{ background: catColor }} />
+                <div className="m-sheet-tx-info">
+                  <div className="m-sheet-tx-name">{tx.description || tx.title || tx.category}</div>
+                  {tx.account_name && <div className="m-sheet-tx-acc">{tx.account_name}</div>}
+                </div>
+                <div className="m-sheet-tx-right">
+                  <div className="m-sheet-tx-amount">−{parseFloat(tx.amount || 0).toFixed(2)}€</div>
+                  <div className="m-sheet-tx-date">
+                    {tx.date ? new Date(tx.date + 'T00:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) : ''}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
 const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: externalBudgets = {}, onBudgetsChange, patrimony: externalPatrimony, onPatrimonyChange, mainAccountId, onMainAccountChange, theme = 'default', financialMonthStartDay = 1, pendingNav, onNavConsumed, recurringPayments = [], onRecurringPaymentsChange, confirmedRecurring = {}, onConfirmRecurring }) => {
   // ── useForm-backed drafts (onChange → local only; save on blur / button) ──
   const { draft: budgets, setField: setBudgetField, reset: resetBudgets, save: saveBudgetsForm } = useForm(externalBudgets);
@@ -352,8 +401,18 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
   const [expandedCategoryId,  setExpandedCategoryId]  = useState(null);
   const [navExpandedId,       setNavExpandedId]       = useState(null);
+  const [sheetCategoryId,     setSheetCategoryId]     = useState(null);
+  const [sheetVisible,        setSheetVisible]        = useState(false);
 
-  // Deep navigation from insights: switch to budgets, expand + highlight category
+  const openCategorySheet = (catId) => {
+    setSheetCategoryId(catId);
+    setTimeout(() => setSheetVisible(true), 10);
+  };
+  const closeCategorySheet = () => {
+    setSheetVisible(false);
+    setTimeout(() => setSheetCategoryId(null), 350);
+  };
+
   useEffect(() => {
     if (!pendingNav) return;
     if (pendingNav.view) {
@@ -361,10 +420,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
     } else if (pendingNav.categoryLabel) {
       setActiveView('budgets');
       const cat = categories.expense.find(c => c.label === pendingNav.categoryLabel);
-      if (cat) {
-        setExpandedCategoryId(cat.id);
-        setNavExpandedId(cat.id);
-      }
+      if (cat) openCategorySheet(cat.id);
     }
     onNavConsumed?.();
   }, [pendingNav]);
@@ -656,8 +712,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       const categoryName = cat.label;
       map[cat.id] = transactions
         .filter(t => t.type === 'expense' && t.category === categoryName && t.date && isInFinancialMonth(t.date, selectedMonth, financialMonthStartDay))
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5);
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
     }
     return map;
   }, [transactions, categories.expense, selectedMonth, financialMonthStartDay]);
@@ -1165,22 +1220,21 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
             {/* Recurring committed strip */}
             {recurringPayments.length > 0 && (() => {
               const committed = getTotalMonthlyCommitted(recurringPayments);
+              const activeCount = recurringPayments.filter(r => r.active !== false).length;
               return (
-                <div className="rp-budget-strip">
-                  <span className="rp-budget-strip-icon">↻</span>
-                  <div className="rp-budget-strip-body">
-                    <div className="rp-budget-strip-label">Pagamentos recorrentes / mês</div>
-                    <div className="rp-budget-strip-amount">{committed.toFixed(2)}€</div>
+                <div className="rp-committed-strip" onClick={() => setActiveView('recurring')}>
+                  <span className="rp-committed-ico">↻</span>
+                  <div className="rp-committed-body">
+                    <div className="rp-committed-label">Comprometido (recorrentes)</div>
+                    <div className="rp-committed-val">{committed.toFixed(2)}€ / mês</div>
                   </div>
-                  <button className="rp-budget-strip-nav" onClick={() => setActiveView('recurring')}>
-                    Ver →
-                  </button>
+                  <div className="rp-committed-count">{activeCount} ativos</div>
                 </div>
               );
             })()}
 
-            {/* Category cards */}
-            <div className="m-bcc-list">
+            {/* Category grid */}
+            <div className="m-gcc-grid">
               {sortedItems.map(({ cat, limit, spent, percent, delta, predicted }) => (
                 <BudgetCategoryCard
                   key={cat.id}
@@ -1195,13 +1249,21 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
                   onLimitChange={handleLimitChange}
                   onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
-                  isExpanded={expandedCategoryId === cat.id}
-                  onToggleExpand={() => { setExpandedCategoryId(expandedCategoryId === cat.id ? null : cat.id); setNavExpandedId(null); }}
-                  isNavTarget={navExpandedId === cat.id}
-                  categoryTransactions={txByCategory[cat.id] || []}
+                  onOpenHistory={() => openCategorySheet(cat.id)}
                 />
               ))}
             </div>
+
+            <CategoryHistorySheet
+              catId={sheetCategoryId}
+              categories={categories}
+              txByCategory={txByCategory}
+              budgets={budgets}
+              sortedItems={sortedItems}
+              animated={animated}
+              isVisible={sheetVisible}
+              onClose={closeCategorySheet}
+            />
           </>
         )}
 
