@@ -331,21 +331,6 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
           <div className="cosmos-add-subtitle">{cfg.sub}</div>
         </div>
 
-        {/* Amount */}
-        <div className="cosmos-amount-zone">
-          <input
-            className={`cosmos-amount-display ${type}`}
-            type="number"
-            inputMode="decimal"
-            placeholder="0,00"
-            step="0.01"
-            min="0"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-          <div className="cosmos-amount-hint">€</div>
-        </div>
-
         {/* Type chips */}
         <div className="cosmos-type-row">
           {['expense','income','transfer','goal'].map(t => (
@@ -359,6 +344,21 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
               <span className="cta-lbl">{typeConfig[t].label}</span>
             </button>
           ))}
+        </div>
+
+        {/* Amount */}
+        <div className="cosmos-amount-zone">
+          <input
+            className={`cosmos-amount-display ${type}`}
+            type="number"
+            inputMode="decimal"
+            placeholder="0,00"
+            step="0.01"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          <div className="cosmos-amount-hint">€</div>
         </div>
 
         {/* Fields card */}
