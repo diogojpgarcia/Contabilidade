@@ -3,7 +3,6 @@
    the light / dark / gray data-theme and modern-ui class.               */
 
 .h-page {
-  overflow-x: hidden;
   padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
 }
 
