@@ -2181,7 +2181,7 @@
    PROFILE TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
 .m-profile-page {
-  padding: 0 16px var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
+  padding: 0 0 var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
 }
 
 /* ── Identity strip ─────────────────────────────────────────────────────── */
@@ -2194,17 +2194,18 @@
 .m-prof-identity {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  padding: 16px;
 }
 .m-prof-avatar {
-  width: 40px; height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.15);
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.02em;
+  font-size: 16px;
+  font-weight: 600;
+  color: #E8EAF0;
   flex-shrink: 0;
 }
 .m-prof-id    { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
@@ -2226,8 +2227,9 @@
   white-space: nowrap;
 }
 .m-prof-chip--on {
-  color: rgba(99, 102, 241, 0.9);
-  background: rgba(99, 102, 241, 0.1);
+  color: #00DDFF;
+  background: rgba(0,221,255,0.07);
+  border-color: rgba(0,221,255,0.18);
 }
 
 /* ── Appearance — inline, no card frame ─────────────────────────────────── */
@@ -2414,7 +2416,8 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
 }
-.m-pill-toggle input:checked + .m-pill-toggle-track { background: #6366f1; }
+.m-pill-toggle input:checked + .m-pill-toggle-track { background: rgba(0,221,255,0.25); border: 1px solid rgba(0,221,255,0.4); }
+.m-pill-toggle input:checked + .m-pill-toggle-track::after { background: #00DDFF; }
 .m-pill-toggle input:checked + .m-pill-toggle-track::after { transform: translateX(18px); }
 [data-theme="light"] .m-pill-toggle-track { background: rgba(60,60,67,0.2); }
 
@@ -2523,28 +2526,31 @@
 
 /* ── Logout ─────────────────────────────────────────────────────────────── */
 .m-logout-btn {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 12px;
-  background: rgba(239,68,68,0.07);
-  color: rgba(220,38,38,0.85);
-  font-weight: 600;
-  font-size: 0.875rem;
+  display: block;
+  width: calc(100% - 28px);
+  margin: 14px 14px 0;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
   cursor: pointer;
-  transition: background 0.12s;
+  text-align: center;
+  transition: background 0.15s;
   font-family: inherit;
-  margin-top: 4px;
-  letter-spacing: -0.01em;
   -webkit-tap-highlight-color: transparent;
 }
-.m-logout-btn:active { background: rgba(239,68,68,0.13); }
+.m-logout-btn:active { background: rgba(255,255,255,0.07); }
 
 /* ── Danger zone — isolated, minimal weight ─────────────────────────────── */
 .m-danger-zone {
-  display: flex;
-  justify-content: center;
-  padding: 14px 0 4px;
+  margin: 12px 14px 0;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: rgba(255,50,50,0.03);
+  border: 1px solid rgba(255,50,50,0.08);
 }
 .m-danger-item {
   background: transparent;
