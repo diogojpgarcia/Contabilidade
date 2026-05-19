@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, SlidersHorizontal, Search } from 'lucide-react';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
@@ -51,9 +51,11 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [deleting, setDeleting] = useState(null);
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
-  const [historyView, setHistoryView] = useState('daily'); // 'daily' | 'patrimony'
+  const [historyView, setHistoryView] = useState('all');
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null = all accounts
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [searchQuery,    setSearchQuery]    = useState('');
+  const [showAccFilter,  setShowAccFilter]  = useState(false);
 
 
   // Compute expenses by category from already-filtered transactions
@@ -179,40 +181,36 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   // Derived from filteredTransactions (already filtered by currentMonth in App)
   const categoryData      = useMemo(() => computeExpensesByCategory(filteredTransactions),  [filteredTransactions]);
   const monthTransactions = useMemo(() => computeMonthTransactions(filteredTransactions),   [filteredTransactions, filterDate]);
-  // Further filter the log list by historyView (daily = expense+income, patrimony = transfer+adjustment)
-  // and optionally by account. Transfer pairs (out + in) share the same date/amount/flow — dedupe keeps only the first.
   const visibleTransactions = useMemo(() => {
-    const filtered = monthTransactions.filter(t =>
-      historyView === 'daily'
-        ? (t.type === 'expense' || t.type === 'income' || !t.type)
-        : (t.type === 'transfer' || t.type === 'adjustment')
-    );
+    const typeFiltered = monthTransactions.filter(t => {
+      if (historyView === 'all')      return true;
+      if (historyView === 'expense')  return t.type === 'expense';
+      if (historyView === 'income')   return t.type === 'income';
+      if (historyView === 'transfer') return t.type === 'transfer' || t.type === 'adjustment';
+      return true;
+    });
 
-    // Apply account filter: if selected, only show transactions for that account
     const accountFiltered = selectedAccountId
-      ? filtered.filter(t => {
-          // For transfers, show if either source or destination matches the selected account
-          if (t.type === 'transfer') {
-            // Check description for source/dest account names
-            const desc = (t.description || '').toLowerCase();
-            // Also check account_id field
-            return t.account_id === selectedAccountId;
-          }
-          // For regular transactions (expense/income), check account_id
-          return t.account_id === selectedAccountId;
-        })
-      : filtered;
+      ? typeFiltered.filter(t => t.account_id === selectedAccountId)
+      : typeFiltered;
 
-    // Deduplicate paired transfer records
+    const searchFiltered = searchQuery.trim()
+      ? accountFiltered.filter(t => {
+          const q = searchQuery.toLowerCase();
+          return (t.description || '').toLowerCase().includes(q)
+            || (t.category || '').toLowerCase().includes(q);
+        })
+      : accountFiltered;
+
     const seen = new Set();
-    return accountFiltered.filter(t => {
+    return searchFiltered.filter(t => {
       if (t.type !== 'transfer') return true;
       const key = `${t.date}|${t.amount}|${getTransferFlow(t)}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-  }, [monthTransactions, historyView, selectedAccountId]);
+  }, [monthTransactions, historyView, selectedAccountId, searchQuery]);
   // 6-month chart still needs all transactions so it can look at past months
   const monthlyData       = useMemo(() => getMonthlyData(),                                 [transactions, currentMonth]);
   const maxAmount         = useMemo(
@@ -1023,39 +1021,153 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         {/* ── LOG ── */}
         {activeView === 'log' && (
           <>
-            <div className="m-tx-list">
-              {visibleTransactions.length === 0 ? (
-                <div className="m-empty">
-                  {historyView === 'patrimony' ? 'Sem transferências este mês' : 'Sem transações neste mês'}
-                </div>
-              ) : theme === 'fintech' ? (
-                /* ── Fintech card list (isolated rollout) ── */
-                <div className="ftc-list">
-                  {visibleTransactions.map(tx => (
-                    <FintechTransactionCard
-                      key={tx.id}
-                      tx={tx}
-                      onCategoryChange={onCategoryChange}
-                      onAccountChange={onAccountChange}
-                      onDelete={onTransactionDeleted}
-                      onEditTransaction={onTransactionEdited}
-                      categories={categories}
-                      accounts={patrimony.accounts || []}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <ModernTransactionList
-                  transactions={visibleTransactions}
-                  onCategoryChange={onCategoryChange}
-                  onAccountChange={onAccountChange}
-                  onTransactionDeleted={onTransactionDeleted}
-                  categories={categories}
-                  patrimony={patrimony}
+            {/* Search + filter button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 20px 6px' }}>
+              <div style={{
+                flex: 1, display: 'flex', alignItems: 'center', gap: 5,
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 8, padding: '4px 9px',
+              }}>
+                <Search size={12} color="#2D3748" strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                <input
+                  type="text"
+                  placeholder="Pesquisar..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{
+                    background: 'none', border: 'none', outline: 'none',
+                    color: '#94A3B8', fontSize: 11, width: '100%', fontFamily: 'inherit',
+                  }}
                 />
-              )}
+              </div>
+              <button
+                onClick={() => setShowAccFilter(v => !v)}
+                style={{
+                  width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                  background: showAccFilter ? 'rgba(0,221,255,0.10)' : 'rgba(255,255,255,0.04)',
+                  border: showAccFilter ? '1px solid rgba(0,221,255,0.28)' : '1px solid rgba(255,255,255,0.06)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: showAccFilter ? '#00DDFF' : '#475569',
+                  transition: 'all 0.15s', WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <SlidersHorizontal size={13} strokeWidth={1.75} />
+              </button>
             </div>
 
+            {/* Account filter chips */}
+            {showAccFilter && (
+              <div style={{
+                display: 'flex', gap: 5, padding: '0 20px 6px',
+                overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
+              }}>
+                {[{ id: null, name: 'Todas as contas' }, ...(patrimony.accounts || [])].map(acc => (
+                  <button
+                    key={acc.id ?? 'all'}
+                    onClick={() => setSelectedAccountId(acc.id)}
+                    style={{
+                      flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '5px 10px', borderRadius: 8, fontSize: 10, fontWeight: 500,
+                      cursor: 'pointer', WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
+                      background: selectedAccountId === acc.id ? 'rgba(251,191,36,0.10)' : 'rgba(255,255,255,0.03)',
+                      border: selectedAccountId === acc.id ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.07)',
+                      color: selectedAccountId === acc.id ? '#FBBF24' : '#475569',
+                    }}
+                  >{acc.name}</button>
+                ))}
+              </div>
+            )}
+
+            {/* Type filter chips */}
+            <div style={{
+              display: 'flex', gap: 5, padding: '0 20px 10px',
+              overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
+            }}>
+              {[
+                { key: 'all',      label: 'Todos',          color: '#94A3B8', bg: 'rgba(255,255,255,0.06)',  border: 'rgba(255,255,255,0.11)'  },
+                { key: 'expense',  label: 'Despesas',       color: '#F87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)'  },
+                { key: 'income',   label: 'Receitas',       color: '#4ADE80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.25)'   },
+                { key: 'transfer', label: 'Transferências', color: '#00DDFF', bg: 'rgba(0,221,255,0.10)',   border: 'rgba(0,221,255,0.25)'    },
+              ].map(({ key, label, color, bg, border }) => (
+                <button
+                  key={key}
+                  onClick={() => setHistoryView(key)}
+                  style={{
+                    flexShrink: 0, padding: '5px 10px', borderRadius: 8,
+                    fontSize: 10, fontWeight: 500, cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
+                    background: historyView === key ? bg : 'rgba(255,255,255,0.03)',
+                    border: historyView === key ? `1px solid ${border}` : '1px solid rgba(255,255,255,0.07)',
+                    color: historyView === key ? color : '#475569',
+                  }}
+                >{label}</button>
+              ))}
+            </div>
+
+            {/* Day-grouped transaction list */}
+            {visibleTransactions.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#334155', fontSize: 13, padding: '40px 20px' }}>
+                Sem transações
+              </div>
+            ) : (
+              <div style={{ padding: '0 20px' }}>
+                {(() => {
+                  const groups = [];
+                  const seen = {};
+                  visibleTransactions.forEach(tx => {
+                    const d = tx.date || '';
+                    if (!seen[d]) { seen[d] = []; groups.push({ date: d, txs: seen[d] }); }
+                    seen[d].push(tx);
+                  });
+
+                  const fmtDayLabel = (dateStr) => {
+                    if (!dateStr) return '—';
+                    const d = new Date(dateStr + 'T00:00:00');
+                    const today = new Date();
+                    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+                    if (d.toDateString() === today.toDateString())     return 'hoje · ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+                    if (d.toDateString() === yesterday.toDateString()) return 'ontem · ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+                    return d.toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'short' });
+                  };
+
+                  return groups.map(({ date, txs }, gi) => {
+                    const net = txs.reduce((s, t) => {
+                      const a = parseFloat(t.amount) || 0;
+                      return s + (t.type === 'income' ? a : -a);
+                    }, 0);
+                    return (
+                      <div key={date}>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          paddingTop: gi === 0 ? 0 : 8, paddingBottom: 5,
+                          borderTop: gi === 0 ? 'none' : '1px solid rgba(255,255,255,0.04)',
+                          marginTop: gi === 0 ? 0 : 6,
+                        }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: '#2D3748', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                            {fmtDayLabel(date)}
+                          </span>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: net >= 0 ? '#4ADE80' : '#F87171' }}>
+                            {net >= 0 ? '+' : '−'}{Math.abs(net).toFixed(2)}€
+                          </span>
+                        </div>
+                        {txs.map(tx => (
+                          <FintechTransactionCard
+                            key={tx.id}
+                            tx={tx}
+                            onCategoryChange={onCategoryChange}
+                            onAccountChange={onAccountChange}
+                            onDelete={onTransactionDeleted}
+                            onEditTransaction={onTransactionEdited}
+                            categories={categories}
+                            accounts={patrimony.accounts || []}
+                          />
+                        ))}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )}
           </>
         )}
 
