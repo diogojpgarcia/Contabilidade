@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { LayoutGrid, RefreshCw, Target, Briefcase } from 'lucide-react';
 import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
@@ -1154,12 +1155,28 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       <div className="m-budget-page" ref={budgetTabRef}>
         <PageHeader title="Orçamento" />
         {/* View toggle */}
-        <div className="m-toggle m-toggle--4">
-          <button className={`m-toggle-btn ${activeView === 'budgets'    ? 'active' : ''}`} onClick={() => setActiveView('budgets')}>Orçamento</button>
-          <button className={`m-toggle-btn ${activeView === 'recurring'  ? 'active' : ''}`} onClick={() => setActiveView('recurring')}>Recorrentes</button>
-          <button className={`m-toggle-btn ${activeView === 'goals'      ? 'active' : ''}`} onClick={() => setActiveView('goals')}>Objetivos</button>
-          <button className={`m-toggle-btn ${activeView === 'patrimony'  ? 'active' : ''}`} onClick={() => setActiveView('patrimony')}>Património</button>
-        </div>
+        {(() => {
+          const NAV = [
+            { key: 'budgets',   Icon: LayoutGrid, label: 'Orçamento'   },
+            { key: 'recurring', Icon: RefreshCw,  label: 'Recorrentes' },
+            { key: 'goals',     Icon: Target,     label: 'Objetivos'   },
+            { key: 'patrimony', Icon: Briefcase,  label: 'Património'  },
+          ];
+          return (
+            <div className="b-nav-grid">
+              {NAV.map(({ key, Icon, label }) => (
+                <button
+                  key={key}
+                  className={`b-nav-btn${activeView === key ? ' active' : ''}`}
+                  onClick={() => setActiveView(key)}
+                >
+                  <Icon size={18} strokeWidth={1.75} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Month navigation */}
         {activeView === 'budgets' && (
