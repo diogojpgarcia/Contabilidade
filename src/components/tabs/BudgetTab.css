@@ -442,3 +442,37 @@
 .m-sheet-tx-amount { font-size: 13px; font-weight: 700; color: #F87171; letter-spacing: -0.02em; }
 .m-sheet-tx-date   { font-size: 10px; color: #334155; margin-top: 1px; }
 .m-sheet-txs-empty { padding: 32px 16px; text-align: center; color: #334155; font-size: 13px; }
+
+/* ── Inactive categories toggle ─────────────────────────────────────── */
+.m-gcc-inactive-toggle {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+  margin-top: 2px;
+}
+.m-gcc-inactive-toggle:active { background: rgba(255,255,255,0.06); }
+
+.m-gcc-inactive-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  letter-spacing: -0.01em;
+}
+
+.m-gcc-inactive-chev {
+  font-size: 16px;
+  color: #334155;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+.m-gcc-inactive-chev.open {
+  transform: rotate(90deg);
+}

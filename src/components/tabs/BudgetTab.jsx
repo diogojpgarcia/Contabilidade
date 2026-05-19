@@ -399,6 +399,7 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingCategoryId,   setEditingCategoryId]   = useState(null);
+  const [showInactive,        setShowInactive]        = useState(false);
   const [expandedCategoryId,  setExpandedCategoryId]  = useState(null);
   const [navExpandedId,       setNavExpandedId]       = useState(null);
   const [sheetCategoryId,     setSheetCategoryId]     = useState(null);
@@ -705,6 +706,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
       })
       .sort((a, b) => b.percent - a.percent);
   }, [categories.expense, budgets, transactions, selectedMonth]);
+
+  const activeItems   = sortedItems.filter(i => i.limit > 0 || i.spent > 0);
+  const inactiveItems = sortedItems.filter(i => i.limit === 0 && i.spent === 0);
 
   const txByCategory = useMemo(() => {
     const map = {};
@@ -1235,7 +1239,9 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
 
             {/* Category grid */}
             <div className="m-gcc-grid">
-              {sortedItems.map(({ cat, limit, spent, percent, delta, predicted }) => (
+
+              {/* Active categories — always visible */}
+              {activeItems.map(({ cat, limit, spent, percent, delta, predicted }) => (
                 <BudgetCategoryCard
                   key={cat.id}
                   cat={cat}
@@ -1252,6 +1258,40 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                   onOpenHistory={() => openCategorySheet(cat.id)}
                 />
               ))}
+
+              {/* Inactive categories — collapsed by default */}
+              {inactiveItems.length > 0 && (
+                <>
+                  <div
+                    className="m-gcc-inactive-toggle"
+                    onClick={() => setShowInactive(v => !v)}
+                  >
+                    <span className="m-gcc-inactive-label">
+                      {showInactive ? '−' : '＋'} {inactiveItems.length} categorias sem atividade
+                    </span>
+                    <span className={`m-gcc-inactive-chev${showInactive ? ' open' : ''}`}>›</span>
+                  </div>
+
+                  {showInactive && inactiveItems.map(({ cat, limit, spent, percent, delta, predicted }) => (
+                    <BudgetCategoryCard
+                      key={cat.id}
+                      cat={cat}
+                      limit={limit}
+                      spent={spent}
+                      percent={percent}
+                      delta={delta}
+                      predicted={predicted}
+                      animated={animated}
+                      isEditing={editingCategoryId === cat.id}
+                      onEditToggle={() => setEditingCategoryId(editingCategoryId === cat.id ? null : cat.id)}
+                      onLimitChange={handleLimitChange}
+                      onSave={() => { saveBudgetToDb(); setEditingCategoryId(null); }}
+                      onOpenHistory={() => openCategorySheet(cat.id)}
+                    />
+                  ))}
+                </>
+              )}
+
             </div>
 
             <CategoryHistorySheet
