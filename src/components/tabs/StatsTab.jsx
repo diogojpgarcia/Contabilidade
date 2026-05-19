@@ -670,74 +670,160 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
       {/* ══ HISTÓRICO ══ */}
       {activeView === 'log' && (
-        <div style={{ padding: '0 16px' }}>
-
-          {/* Sub-tabs: Diário / Património */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-            {['daily', 'patrimony'].map(v => (
-              <button
-                key={v}
-                onClick={() => setHistoryView(v)}
+        <>
+          {/* Search + filter button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 20px 6px' }}>
+            <div style={{
+              flex: 1, display: 'flex', alignItems: 'center', gap: 5,
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 8, padding: '4px 9px',
+            }}>
+              <Search size={12} color="#2D3748" strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              <input
+                type="text"
+                placeholder="Pesquisar..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
                 style={{
-                  padding: '6px 16px',
-                  borderRadius: '20px',
-                  border: historyView === v ? '1px solid rgba(0,221,255,0.3)' : '1px solid transparent',
-                  background: historyView === v ? 'rgba(0,221,255,0.12)' : 'rgba(255,255,255,0.06)',
-                  color: historyView === v ? '#00DDFF' : '#94A3B8',
-                  fontSize: '13px',
-                  fontWeight: historyView === v ? 500 : 400,
-                  cursor: 'pointer',
+                  background: 'none', border: 'none', outline: 'none',
+                  color: '#94A3B8', fontSize: 11, width: '100%', fontFamily: 'inherit',
                 }}
-              >
-                {v === 'daily' ? 'Diário' : 'Património'}
-              </button>
-            ))}
+              />
+            </div>
+            <button
+              onClick={() => setShowAccFilter(v => !v)}
+              style={{
+                width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                background: showAccFilter ? 'rgba(0,221,255,0.10)' : 'rgba(255,255,255,0.04)',
+                border: showAccFilter ? '1px solid rgba(0,221,255,0.28)' : '1px solid rgba(255,255,255,0.06)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: showAccFilter ? '#00DDFF' : '#475569',
+                transition: 'all 0.15s', WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              <SlidersHorizontal size={13} strokeWidth={1.75} />
+            </button>
           </div>
 
-          {/* Filtro por conta */}
-          {(patrimony.accounts || []).length > 0 && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x' }}>
-              <button
-                onClick={() => setSelectedAccountId(null)}
-                style={{
-                  flexShrink: 0, padding: '5px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
-                  border: selectedAccountId === null ? '1px solid rgba(0,221,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                  background: selectedAccountId === null ? 'rgba(0,221,255,0.1)' : 'rgba(255,255,255,0.04)',
-                  color: selectedAccountId === null ? '#00DDFF' : '#94A3B8',
-                }}
-              >Todas</button>
-              {(patrimony.accounts || []).map(acc => (
+          {/* Account filter chips */}
+          {showAccFilter && (
+            <div style={{
+              display: 'flex', gap: 5, padding: '0 20px 6px',
+              overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
+            }}>
+              {[{ id: null, name: 'Todas as contas' }, ...(patrimony.accounts || [])].map(acc => (
                 <button
-                  key={acc.id}
+                  key={acc.id ?? 'all'}
                   onClick={() => setSelectedAccountId(acc.id)}
                   style={{
-                    flexShrink: 0, padding: '5px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer',
-                    border: selectedAccountId === acc.id ? '1px solid rgba(0,221,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                    background: selectedAccountId === acc.id ? 'rgba(0,221,255,0.1)' : 'rgba(255,255,255,0.04)',
-                    color: selectedAccountId === acc.id ? '#00DDFF' : '#94A3B8',
+                    flexShrink: 0, padding: '5px 10px', borderRadius: 8,
+                    fontSize: 10, fontWeight: 500, cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
+                    background: selectedAccountId === acc.id ? 'rgba(251,191,36,0.10)' : 'rgba(255,255,255,0.03)',
+                    border: selectedAccountId === acc.id ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.07)',
+                    color: selectedAccountId === acc.id ? '#FBBF24' : '#475569',
                   }}
                 >{acc.name}</button>
               ))}
             </div>
           )}
 
-          {/* Lista de transações — reutiliza o ModernTransactionList existente */}
+          {/* Type filter chips */}
+          <div style={{
+            display: 'flex', gap: 5, padding: '0 20px 10px',
+            overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
+          }}>
+            {[
+              { key: 'all',      label: 'Todos',          color: '#94A3B8', bg: 'rgba(255,255,255,0.06)',  border: 'rgba(255,255,255,0.11)'  },
+              { key: 'expense',  label: 'Despesas',       color: '#F87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)'  },
+              { key: 'income',   label: 'Receitas',       color: '#4ADE80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.25)'   },
+              { key: 'transfer', label: 'Transferências', color: '#00DDFF', bg: 'rgba(0,221,255,0.10)',   border: 'rgba(0,221,255,0.25)'    },
+            ].map(({ key, label, color, bg, border }) => (
+              <button
+                key={key}
+                onClick={() => setHistoryView(key)}
+                style={{
+                  flexShrink: 0, padding: '5px 10px', borderRadius: 8,
+                  fontSize: 10, fontWeight: 500, cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
+                  background: historyView === key ? bg : 'rgba(255,255,255,0.03)',
+                  border: historyView === key ? `1px solid ${border}` : '1px solid rgba(255,255,255,0.07)',
+                  color: historyView === key ? color : '#475569',
+                }}
+              >{label}</button>
+            ))}
+          </div>
+
+          {/* Day-grouped transaction list */}
           {visibleTransactions.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: '14px', marginTop: '60px' }}>
-              {historyView === 'patrimony' ? 'Sem transferências este mês' : 'Sem transações este mês'}
+            <div style={{ textAlign: 'center', color: '#475569', fontSize: 13, padding: '40px 20px' }}>
+              Sem transações
             </div>
           ) : (
-            <ModernTransactionList
-              transactions={visibleTransactions}
-              onCategoryChange={onCategoryChange}
-              onAccountChange={onAccountChange}
-              onTransactionDeleted={onTransactionDeleted}
-              categories={categories}
-              patrimony={patrimony}
-            />
-          )}
+            <div style={{ padding: '0 16px' }}>
+              {(() => {
+                const groups = [];
+                const seenDates = {};
+                visibleTransactions.forEach(tx => {
+                  const d = tx.date || '';
+                  if (!seenDates[d]) { seenDates[d] = []; groups.push({ date: d, txs: seenDates[d] }); }
+                  seenDates[d].push(tx);
+                });
 
-        </div>
+                const fmtDayLabel = (dateStr) => {
+                  if (!dateStr) return '—';
+                  const d = new Date(dateStr + 'T00:00:00');
+                  const today = new Date();
+                  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+                  if (d.toDateString() === today.toDateString())
+                    return 'hoje · ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+                  if (d.toDateString() === yesterday.toDateString())
+                    return 'ontem · ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+                  return d.toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'short' });
+                };
+
+                return groups.map(({ date, txs }, gi) => {
+                  const net = txs.reduce((s, t) => {
+                    const a = parseFloat(t.amount) || 0;
+                    return s + (t.type === 'income' ? a : -a);
+                  }, 0);
+                  return (
+                    <div key={date}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        paddingTop: gi === 0 ? 2 : 10, paddingBottom: 4,
+                        borderTop: gi === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                        marginTop: gi === 0 ? 0 : 4,
+                      }}>
+                        <span style={{
+                          fontSize: 10, fontWeight: 600, color: '#475569',
+                          letterSpacing: '0.04em', textTransform: 'uppercase',
+                        }}>
+                          {fmtDayLabel(date)}
+                        </span>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: net >= 0 ? '#4ADE80' : '#F87171' }}>
+                          {net >= 0 ? '+' : '−'}{Math.abs(net).toFixed(2)}€
+                        </span>
+                      </div>
+                      {txs.map(tx => (
+                        <FintechTransactionCard
+                          key={tx.id}
+                          tx={tx}
+                          onCategoryChange={onCategoryChange}
+                          onAccountChange={onAccountChange}
+                          onDelete={onTransactionDeleted}
+                          onEditTransaction={onTransactionEdited}
+                          categories={categories}
+                          accounts={patrimony.accounts || []}
+                        />
+                      ))}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
+        </>
       )}
 
     </div>
