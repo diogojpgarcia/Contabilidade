@@ -1,4 +1,4 @@
-.add-tab {
+﻿.add-tab {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -36,7 +36,7 @@
   gap: 1.25rem;
 }
 
-/* ── Sticky submit footer ─────────────────────────────────────────────────── */
+/* â”€â”€ Sticky submit footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .add-footer {
   flex-shrink: 0;
   padding: 0.75rem 0 0;
@@ -230,3 +230,195 @@
   margin-top: 0.5rem;
   font-style: italic;
 }
+
+/* ── NEW COSMOS ADD DESIGN ───────────────────────────────────────────────── */
+.cosmos-add {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  min-height: 100%;
+}
+
+.cosmos-add-header {
+  padding: 16px 20px 4px;
+}
+
+.cosmos-add-title {
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.03em;
+}
+
+.cosmos-add-subtitle {
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 13px;
+  color: #475569;
+  margin-top: 2px;
+  transition: color 0.2s;
+}
+
+.cosmos-amount-zone {
+  padding: 20px 20px 16px;
+  text-align: center;
+}
+
+.cosmos-amount-display {
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: center;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cosmos-amount-display.expense  { color: #F87171; }
+.cosmos-amount-display.income   { color: #4ADE80; }
+.cosmos-amount-display.transfer { color: #00DDFF; }
+.cosmos-amount-display.goal     { color: #FBBF24; }
+.cosmos-amount-display::placeholder { opacity: 0.35; }
+
+.cosmos-amount-hint {
+  font-size: 11px;
+  color: #334155;
+  margin-top: 4px;
+  font-family: Inter, -apple-system, sans-serif;
+}
+
+.cosmos-type-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0 20px 20px;
+}
+
+.cosmos-type-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 10px 4px 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cosmos-type-btn .cta-ico { font-size: 18px; line-height: 1; color: #475569; }
+.cosmos-type-btn .cta-lbl { font-size: 10px; font-weight: 500; color: #475569; font-family: Inter, -apple-system, sans-serif; }
+
+.cosmos-type-btn.sel-expense  { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.35); }
+.cosmos-type-btn.sel-expense  .cta-ico, .cosmos-type-btn.sel-expense  .cta-lbl { color: #F87171; }
+.cosmos-type-btn.sel-income   { background: rgba(74,222,128,0.12);  border-color: rgba(74,222,128,0.35);  }
+.cosmos-type-btn.sel-income   .cta-ico, .cosmos-type-btn.sel-income   .cta-lbl { color: #4ADE80; }
+.cosmos-type-btn.sel-transfer { background: rgba(0,221,255,0.10);   border-color: rgba(0,221,255,0.30);   }
+.cosmos-type-btn.sel-transfer .cta-ico, .cosmos-type-btn.sel-transfer .cta-lbl { color: #00DDFF; }
+.cosmos-type-btn.sel-goal     { background: rgba(251,191,36,0.10);  border-color: rgba(251,191,36,0.30);  }
+.cosmos-type-btn.sel-goal     .cta-ico, .cosmos-type-btn.sel-goal     .cta-lbl { color: #FBBF24; }
+
+.cosmos-fields {
+  margin: 0 20px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+
+.cosmos-field-row {
+  display: flex;
+  align-items: center;
+  padding: 13px 16px;
+  gap: 12px;
+}
+.cosmos-field-row:not(:last-child) {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.cosmos-field-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.cosmos-field-inner { flex: 1; min-width: 0; }
+
+.cosmos-field-label {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 500;
+  font-family: Inter, -apple-system, sans-serif;
+  margin-bottom: 2px;
+}
+
+.cosmos-field-select,
+.cosmos-field-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  font-family: Inter, -apple-system, sans-serif;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.cosmos-field-select option { background: #0B0F14; color: #FFFFFF; }
+.cosmos-field-input::placeholder { color: #334155; font-weight: 400; }
+.cosmos-field-input[type="date"] { color-scheme: dark; }
+
+.cosmos-field-cat-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+.cosmos-field-cat-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  font-family: Inter, -apple-system, sans-serif;
+}
+.cosmos-field-cat-text.ph { color: #334155; font-weight: 400; }
+
+.cosmos-field-chevron { color: #1E293B; font-size: 18px; flex-shrink: 0; }
+
+.cosmos-cta {
+  margin: 16px 20px 0;
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: Inter, -apple-system, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
+}
+.cosmos-cta:active:not(:disabled) { opacity: 0.75; transform: scale(0.98); }
+.cosmos-cta:disabled { opacity: 0.35; cursor: not-allowed; }
+.cosmos-cta.expense  { background: rgba(248,113,113,0.9);  color: #fff; }
+.cosmos-cta.income   { background: rgba(74,222,128,0.9);   color: #052e10; }
+.cosmos-cta.transfer { background: rgba(0,221,255,0.9);    color: #001a1f; }
+.cosmos-cta.goal     { background: rgba(251,191,36,0.9);   color: #1a1000; }

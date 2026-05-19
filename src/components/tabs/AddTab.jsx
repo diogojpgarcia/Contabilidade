@@ -313,28 +313,183 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
      Layout: flex column — scrollable body on top, sticky footer on bottom.
      No height:100vh, no overflow:hidden on this element.                   */
   if (theme === 'modern' || theme === 'fintech') {
+    const typeConfig = {
+      expense:  { label: 'Despesa',       sub: 'Regista uma despesa',        cta: 'Adicionar Despesa',         ico: '−' },
+      income:   { label: 'Receita',        sub: 'Regista uma receita',         cta: 'Adicionar Receita',          ico: '+' },
+      transfer: { label: 'Transferência',  sub: 'Transfere entre contas',      cta: 'Confirmar Transferência',    ico: '↕' },
+      goal:     { label: 'Objetivo',       sub: 'Contribui para um objetivo',  cta: 'Guardar para Objetivo',      ico: '◆' },
+    };
+    const cfg = typeConfig[type];
+
     return (
-      <div className="m-add-page">
-        {/* Scrollable form body */}
-        <div className="m-add-body">
-          <div className="m-add-header">
-            <div className="m-page-title">Nova Transação</div>
-          </div>
-          <div className="m-form">
-            {formFields}
-          </div>
+      <div className="cosmos-add">
+
+        {/* Header */}
+        <div className="cosmos-add-header">
+          <div className="cosmos-add-title">Adicionar</div>
+          <div className="cosmos-add-subtitle">{cfg.sub}</div>
         </div>
 
-        {/* Sticky submit footer — always visible above keyboard / nav */}
-        <div className="m-add-footer">
-          <button
-            className={`m-submit-btn ${type}`}
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? 'A guardar…' : '✓ Adicionar'}
-          </button>
+        {/* Amount */}
+        <div className="cosmos-amount-zone">
+          <input
+            className={`cosmos-amount-display ${type}`}
+            type="number"
+            inputMode="decimal"
+            placeholder="0,00"
+            step="0.01"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          <div className="cosmos-amount-hint">€</div>
         </div>
+
+        {/* Type chips */}
+        <div className="cosmos-type-row">
+          {['expense','income','transfer','goal'].map(t => (
+            <button
+              key={t}
+              type="button"
+              className={`cosmos-type-btn${type === t ? ` sel-${t}` : ''}`}
+              onClick={() => switchType(t)}
+            >
+              <span className="cta-ico">{typeConfig[t].ico}</span>
+              <span className="cta-lbl">{typeConfig[t].label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Fields card */}
+        <div className="cosmos-fields">
+
+          {/* Transfer: From + To */}
+          {type === 'transfer' && (<>
+            <div className="cosmos-field-row">
+              <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.12)' }}>⬆</div>
+              <div className="cosmos-field-inner">
+                <div className="cosmos-field-label">De</div>
+                {accounts.length === 0
+                  ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas — adiciona em Budget</span>
+                  : <select className="cosmos-field-select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
+                      <option value="">Conta de origem</option>
+                      {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
+                    </select>}
+              </div>
+            </div>
+            <div className="cosmos-field-row">
+              <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.12)' }}>⬇</div>
+              <div className="cosmos-field-inner">
+                <div className="cosmos-field-label">Para</div>
+                {accounts.length === 0
+                  ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas — adiciona em Budget</span>
+                  : <select className="cosmos-field-select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
+                      <option value="">Conta de destino</option>
+                      {accounts.filter(a => a.id !== transferFrom).map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>)}
+                    </select>}
+              </div>
+            </div>
+          </>)}
+
+          {/* Expense / Income: Category */}
+          {(type === 'expense' || type === 'income') && (
+            <div className="cosmos-field-row">
+              <div className="cosmos-field-ico" style={{ background: 'rgba(99,102,241,0.15)' }}>📁</div>
+              <div className="cosmos-field-inner">
+                <div className="cosmos-field-label">Categoria</div>
+                <button type="button" className="cosmos-field-cat-btn" onClick={() => setShowCategoryPicker(true)}>
+                  {category
+                    ? <><CategoryIconBubble name={category} type={type} size={22} radius="6px" /><span className="cosmos-field-cat-text">{category}</span></>
+                    : <span className="cosmos-field-cat-text ph">Seleciona uma categoria</span>}
+                </button>
+              </div>
+              <span className="cosmos-field-chevron">›</span>
+              {showCategoryPicker && (
+                <CategoryPicker
+                  transaction={{ id: null, type, category, description }}
+                  categories={categories}
+                  title="Selecionar Categoria"
+                  onSelect={(label) => { setCategory(label); setShowCategoryPicker(false); }}
+                  onClose={() => setShowCategoryPicker(false)}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Goal: Goal selector */}
+          {type === 'goal' && (
+            <div className="cosmos-field-row">
+              <div className="cosmos-field-ico" style={{ background: 'rgba(251,191,36,0.12)' }}>◆</div>
+              <div className="cosmos-field-inner">
+                <div className="cosmos-field-label">Objetivo</div>
+                {goals.length === 0
+                  ? <span style={{ fontSize: 13, color: '#334155' }}>Sem objetivos — cria um em Budget</span>
+                  : <select className="cosmos-field-select" value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)}>
+                      <option value="">Seleciona um objetivo</option>
+                      {goals.map(g => <option key={g.id} value={g.id}>{g.name} ({(g.currentSavings || 0).toFixed(0)}€ / {g.amount.toFixed(0)}€)</option>)}
+                    </select>}
+              </div>
+            </div>
+          )}
+
+          {/* Account — expense/income only */}
+          {(type === 'expense' || type === 'income') && (
+            <div className="cosmos-field-row">
+              <div className="cosmos-field-ico" style={{ background: 'rgba(20,184,166,0.15)' }}>🏦</div>
+              <div className="cosmos-field-inner">
+                <div className="cosmos-field-label">Conta</div>
+                {accounts.length === 0
+                  ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas</span>
+                  : <select className="cosmos-field-select" value={accountId} onChange={handleAccountSelect}>
+                      <option value="">Sem conta específica</option>
+                      {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€</option>)}
+                    </select>}
+              </div>
+            </div>
+          )}
+
+          {/* Description / Note — all types */}
+          <div className="cosmos-field-row">
+            <div className="cosmos-field-ico" style={{ background: 'rgba(148,163,184,0.10)' }}>📝</div>
+            <div className="cosmos-field-inner">
+              <div className="cosmos-field-label">{type === 'transfer' || type === 'goal' ? 'Nota' : 'Descrição'} (opcional)</div>
+              <input
+                type="text"
+                className="cosmos-field-input"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Adiciona uma nota..."
+                maxLength={100}
+              />
+            </div>
+          </div>
+
+          {/* Date — all types */}
+          <div className="cosmos-field-row">
+            <div className="cosmos-field-ico" style={{ background: 'rgba(148,163,184,0.10)' }}>📅</div>
+            <div className="cosmos-field-inner">
+              <div className="cosmos-field-label">Data</div>
+              <input
+                type="date"
+                className="cosmos-field-input"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* CTA */}
+        <button
+          className={`cosmos-cta ${type}`}
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'A guardar…' : `✓ ${cfg.cta}`}
+        </button>
+
       </div>
     );
   }
