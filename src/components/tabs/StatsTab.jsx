@@ -294,6 +294,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       display: 'flex',
       flexDirection: 'column',
       background: 'transparent',
+      paddingBottom: 'calc(88px + env(safe-area-inset-bottom))',
     }}>
 
       {/* ── HEADER ── */}
