@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dbService } from '../../lib/supabase';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
 import CategoryPicker from '../CategoryPicker';
+import { Tag, CreditCard, FileText, Calendar, ArrowUp, ArrowDown, Target, Minus, Plus, ArrowLeftRight } from 'lucide-react';
 import './AddTab.css';
 
 const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, defaultAccount, theme = 'default' }) => {
@@ -314,10 +315,10 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
      No height:100vh, no overflow:hidden on this element.                   */
   if (theme === 'modern' || theme === 'fintech') {
     const typeConfig = {
-      expense:  { label: 'Despesa',       sub: 'Regista uma despesa',        cta: 'Adicionar Despesa',         ico: '−' },
-      income:   { label: 'Receita',        sub: 'Regista uma receita',         cta: 'Adicionar Receita',          ico: '+' },
-      transfer: { label: 'Transferência',  sub: 'Transfere entre contas',      cta: 'Confirmar Transferência',    ico: '↕' },
-      goal:     { label: 'Objetivo',       sub: 'Contribui para um objetivo',  cta: 'Guardar para Objetivo',      ico: '◆' },
+      expense:  { label: 'Despesa',       sub: 'Regista uma despesa',        cta: 'Adicionar Despesa',         ico: <Minus size={18} strokeWidth={2} /> },
+      income:   { label: 'Receita',        sub: 'Regista uma receita',         cta: 'Adicionar Receita',          ico: <Plus size={18} strokeWidth={2} /> },
+      transfer: { label: 'Transferência',  sub: 'Transfere entre contas',      cta: 'Confirmar Transferência',    ico: <ArrowLeftRight size={16} strokeWidth={1.75} /> },
+      goal:     { label: 'Objetivo',       sub: 'Contribui para um objetivo',  cta: 'Guardar para Objetivo',      ico: <Target size={16} strokeWidth={1.75} /> },
     };
     const cfg = typeConfig[type];
 
@@ -366,7 +367,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
           {/* Transfer: From + To */}
           {type === 'transfer' && (<>
             <div className="cosmos-field-row">
-              <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.12)' }}>⬆</div>
+              <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.10)' }}><ArrowUp size={16} strokeWidth={1.75} color="#00DDFF" /></div>
               <div className="cosmos-field-inner">
                 <div className="cosmos-field-label">De</div>
                 {accounts.length === 0
@@ -378,7 +379,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
               </div>
             </div>
             <div className="cosmos-field-row">
-              <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.12)' }}>⬇</div>
+              <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.10)' }}><ArrowDown size={16} strokeWidth={1.75} color="#00DDFF" /></div>
               <div className="cosmos-field-inner">
                 <div className="cosmos-field-label">Para</div>
                 {accounts.length === 0
@@ -394,7 +395,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
           {/* Expense / Income: Category */}
           {(type === 'expense' || type === 'income') && (
             <div className="cosmos-field-row">
-              <div className="cosmos-field-ico" style={{ background: 'rgba(99,102,241,0.15)' }}>📁</div>
+              <div className="cosmos-field-ico" style={{ background: 'rgba(255,255,255,0.06)' }}><Tag size={16} strokeWidth={1.75} color="#94A3B8" /></div>
               <div className="cosmos-field-inner">
                 <div className="cosmos-field-label">Categoria</div>
                 <button type="button" className="cosmos-field-cat-btn" onClick={() => setShowCategoryPicker(true)}>
@@ -419,7 +420,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
           {/* Goal: Goal selector */}
           {type === 'goal' && (
             <div className="cosmos-field-row">
-              <div className="cosmos-field-ico" style={{ background: 'rgba(251,191,36,0.12)' }}>◆</div>
+              <div className="cosmos-field-ico" style={{ background: 'rgba(251,191,36,0.10)' }}><Target size={16} strokeWidth={1.75} color="#FBBF24" /></div>
               <div className="cosmos-field-inner">
                 <div className="cosmos-field-label">Objetivo</div>
                 {goals.length === 0
@@ -435,7 +436,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
           {/* Account — expense/income only */}
           {(type === 'expense' || type === 'income') && (
             <div className="cosmos-field-row">
-              <div className="cosmos-field-ico" style={{ background: 'rgba(20,184,166,0.15)' }}>🏦</div>
+              <div className="cosmos-field-ico" style={{ background: 'rgba(255,255,255,0.06)' }}><CreditCard size={16} strokeWidth={1.75} color="#94A3B8" /></div>
               <div className="cosmos-field-inner">
                 <div className="cosmos-field-label">Conta</div>
                 {accounts.length === 0
@@ -450,7 +451,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
 
           {/* Description / Note — all types */}
           <div className="cosmos-field-row">
-            <div className="cosmos-field-ico" style={{ background: 'rgba(148,163,184,0.10)' }}>📝</div>
+            <div className="cosmos-field-ico" style={{ background: 'rgba(255,255,255,0.06)' }}><FileText size={16} strokeWidth={1.75} color="#94A3B8" /></div>
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">{type === 'transfer' || type === 'goal' ? 'Nota' : 'Descrição'} (opcional)</div>
               <input
@@ -466,7 +467,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
 
           {/* Date — all types */}
           <div className="cosmos-field-row">
-            <div className="cosmos-field-ico" style={{ background: 'rgba(148,163,184,0.10)' }}>📅</div>
+            <div className="cosmos-field-ico" style={{ background: 'rgba(255,255,255,0.06)' }}><Calendar size={16} strokeWidth={1.75} color="#94A3B8" /></div>
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">Data</div>
               <input
