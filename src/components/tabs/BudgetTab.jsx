@@ -1586,28 +1586,6 @@ const BudgetTab = ({ user, transactions, currentMonth, categories, budgets: exte
                         : 'Poupança estável nos últimos meses'}
                     </span>
                   </div>
-
-                  {/* Sparkline — last 6 months net savings */}
-                  <div className="pat-intel-chart">
-                    <span className="pat-intel-chart-title">Poupança mensal</span>
-                    <div className="pat-intel-bars">
-                      {monthlySavings.map((v, i) => {
-                        const h = Math.max((Math.abs(v) / maxAbs) * 40, 3);
-                        return (
-                          <div key={i} className="pat-intel-bar-col">
-                            <div className="pat-intel-bar-wrap">
-                              <div className="pat-intel-bar" style={{
-                                height: h,
-                                background: v >= 0 ? '#4ade80' : '#f87171',
-                                boxShadow: v >= 0 ? '0 0 6px rgba(74,222,128,0.4)' : '0 0 6px rgba(248,113,113,0.4)',
-                              }} />
-                            </div>
-                            <span className="pat-intel-bar-label">{last6Months[i].slice(5)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </div>
               )}
 
