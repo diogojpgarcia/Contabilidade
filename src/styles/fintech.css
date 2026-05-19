@@ -9,7 +9,9 @@
    naturally (outer scroll via .main-content-new overflow-y:auto).         */
 .modern-ui .main-content-new {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .modern-ui .main-content-new > div {
   flex: unset;
