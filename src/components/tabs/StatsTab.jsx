@@ -422,7 +422,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                         overflowX: 'auto',
                         overflowY: 'hidden',
                         scrollbarWidth: 'none',
-                        WebkitOverflowScrolling: 'touch',
+                        touchAction: 'pan-x',
                         opacity: selectedCategories.length > 0 ? 1 : 0,
                         transition: 'opacity 0.15s ease',
                         paddingBottom: '2px',
@@ -671,7 +671,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
           {/* Filtro por conta */}
           {(patrimony.accounts || []).length > 0 && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x' }}>
               <button
                 onClick={() => setSelectedAccountId(null)}
                 style={{
