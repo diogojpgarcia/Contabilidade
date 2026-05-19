@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { BarChart2, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
