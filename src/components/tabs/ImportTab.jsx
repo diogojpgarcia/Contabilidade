@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { dbService } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
-import { categorizeWithClaude } from '../../utils/categorizeWithClaude.js';
 import FintechTransactionCard from '../FintechTransactionCard';
 import './ImportTab.css';
 
@@ -25,7 +24,6 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
   const [saving,      setSaving]      = useState(false);
   const [saved,       setSaved]       = useState(false);
   const [keepDupes,   setKeepDupes]   = useState(false);
-  const [categorizing, setCategorizing] = useState(false);
   const inputRef = useRef();
 
   const handleFile = async (file) => {
@@ -49,16 +47,18 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
       const { transactions, insights: ins } = enrichTransactions(rows);
       console.log('[ImportTab] enriched transactions:', transactions.length, ins);
 
-      // Categorize with local rules + one Claude batch call
-      setCategorizing(true);
-      const categorized = await categorizeWithClaude(transactions, learnedRules);
-      setCategorizing(false);
+      // Apply learned rules locally
+      const categorized = transactions.map(tx => {
+        if (tx.category) return tx;
+        const desc = (tx.description || '').toLowerCase();
+        const match = learnedRules.find(r => r.pattern && desc.includes(r.pattern));
+        return match ? { ...tx, category: match.category } : tx;
+      });
 
       setPreview(categorized);
       setInsights(ins);
     } catch (e) {
       setError('Erro ao processar ficheiro: ' + e.message);
-      setCategorizing(false);
     } finally {
       setLoading(false);
     }
@@ -129,10 +129,10 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
           style={{ display: 'none' }}
           onChange={(e) => handleFile(e.target.files[0])}
         />
-        {(loading || categorizing) ? (
+        {loading ? (
           <div className="import-spinner-wrap">
             <div className="import-spinner" />
-            <span>{categorizing ? 'A categorizar com IA…' : 'A processar…'}</span>
+            <span>A processar…</span>
           </div>
         ) : (
           <>
