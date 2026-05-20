@@ -21,7 +21,6 @@ import ImportTab from './components/tabs/ImportTab';
 import ProfileTab from './components/tabs/ProfileTab';
 
 import { Home, BarChart2, Plus, LayoutGrid, User } from './components/icons';
-import CosmosBottomNav from './components/cosmos/CosmosBottomNav';
 
 import './styles/cosmos-tokens.css';
 import './styles/modern.css';
@@ -859,17 +858,66 @@ const App = () => {
       </ErrorBoundary>
       </main>
       {/* Bottom Navigation */}
-      <CosmosBottomNav
-        items={[
-          { id: 'home',    icon: <Home     size={20} strokeWidth={1.75} />, label: 'Home'   },
-          { id: 'stats',   icon: <BarChart2 size={20} strokeWidth={1.75} />, label: 'Stats'  },
-          { id: 'add',     icon: <Plus     size={22} strokeWidth={2}    />, label: 'Add', center: true },
-          { id: 'budget',  icon: <LayoutGrid size={20} strokeWidth={1.75} />, label: 'Budget' },
-          { id: 'profile', icon: <User     size={20} strokeWidth={1.75} />, label: 'Perfil' },
-        ]}
-        active={activeTab}
-        onChange={setActiveTab}
-      />
+      <nav className="bottom-nav">
+        <button
+          className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
+          onClick={() => setActiveTab('home')}
+        >
+          <span className="nav-icon"><Home size={22} strokeWidth={1.75} /></span>
+          <span className="nav-label">Home</span>
+        </button>
+        <button
+          className={`nav-item ${activeTab === 'stats' ? 'active' : ''}`}
+          onClick={() => setActiveTab('stats')}
+        >
+          <span className="nav-icon"><BarChart2 size={22} strokeWidth={1.75} /></span>
+          <span className="nav-label">Stats</span>
+        </button>
+        <div style={{ width: '52px', flexShrink: 0 }} />
+        <button
+          className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`}
+          onClick={() => setActiveTab('budget')}
+        >
+          <span className="nav-icon"><LayoutGrid size={22} strokeWidth={1.75} /></span>
+          <span className="nav-label">Budget</span>
+        </button>
+        <button
+          className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+          onClick={() => setActiveTab('profile')}
+        >
+          <span className="nav-icon"><User size={22} strokeWidth={1.75} /></span>
+          <span className="nav-label">Perfil</span>
+        </button>
+      </nav>
+
+      {/* FAB central */}
+      <button
+        onClick={() => setActiveTab('add')}
+        aria-label="Adicionar transação"
+        style={{
+          position: 'fixed',
+          bottom: '28px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '52px',
+          height: '52px',
+          borderRadius: '50%',
+          background: '#00DDFF',
+          color: '#000000',
+          fontSize: '26px',
+          fontWeight: '300',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 24px rgba(0,221,255,0.5)',
+          zIndex: 9999,
+          border: 'none',
+          cursor: 'pointer',
+          lineHeight: 1,
+        }}
+      >
+        +
+      </button>
 
       {/* Bulk category update — rendered at App level so it overlays everything */}
       {bulkPending && (
