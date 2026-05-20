@@ -93,7 +93,7 @@
    Autumn evening, warm studio light, premium feel.
    Apply via:  document.documentElement.setAttribute('data-palette', 'dusk')
    ══════════════════════════════════════════════════════════════════════════ */
-[data-palette="dusk"] {
+html[data-palette="dusk"] {
   /* Surfaces */
   --cosmos-bg:        #121008;
   --cosmos-surface-1: #1c1810;
@@ -181,7 +181,7 @@
    Japanese washi, warm daylight, clean Apple-style.
    Apply via:  document.documentElement.setAttribute('data-palette', 'stone')
    ══════════════════════════════════════════════════════════════════════════ */
-[data-palette="stone"] {
+html[data-palette="stone"] {
   /* Surfaces */
   --cosmos-bg:        #f0ebe4;
   --cosmos-surface-1: #faf7f2;
