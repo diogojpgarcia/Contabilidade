@@ -5,13 +5,13 @@
 
    Palette (Graphite/Charcoal with Cyan Accents)
    ─────────────────────────────────────────────────
-   Page bg:     #0d0f12  (deep charcoal)
-   Card:        #15181d → #10121a  (layered dark grey)
-   Row:         #14171d → #0f1218  (cool charcoal)
+   Page bg:     var(--bg-primary)  (deep charcoal)
+   Card:        var(--bg-secondary) → var(--bg-primary)  (layered dark grey)
+   Row:         var(--bg-secondary) → var(--bg-primary)  (cool charcoal)
    Accent:      #06b6d4  (soft cyan)
-   Accent light:#a0aabb  (cool silver-grey)
+   Accent light:var(--text-secondary)  (cool silver-grey)
    Accent alt:  #6b7adb  (muted indigo)
-   Text:        #e8e8e8  (light grey)
+   Text:        var(--text-primary)  (light grey)
 
    Material language
    ─────────────────────────────────────────────────
@@ -28,12 +28,12 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="soft-future"] .main-content-new {
-  background: var(--bg-primary); /* #0d0f12 — deep charcoal */
+  background: var(--bg-primary); /* var(--bg-primary) — deep charcoal */
 }
 
 /* Bottom nav — lifted dark panel */
 [data-theme="soft-future"] .bottom-nav {
-  background: rgba(17, 19, 26, 0.96);
+  background: var(--surface-nav);
   border-top: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow: 0 -4px 28px rgba(13, 15, 18, 0.80);
   backdrop-filter: blur(16px);
@@ -46,12 +46,12 @@
   box-shadow: 0 0 18px rgba(6, 182, 212, 0.15);
 }
 [data-theme="soft-future"] .nav-item.active .nav-icon,
-[data-theme="soft-future"] .nav-item.active .nav-label  { color: #a0aabb; }
+[data-theme="soft-future"] .nav-item.active .nav-label  { color: var(--text-secondary); }
 
 /* Higher specificity (0,4,1 vs fintech.css 0,4,0) — guarantees Cosmos nav beats purple */
 html[data-theme="soft-future"] .nav-item.active            { background: rgba(6, 182, 212, 0.12); box-shadow: 0 0 18px rgba(6, 182, 212, 0.15); }
 html[data-theme="soft-future"] .nav-item.active .nav-icon,
-html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
+html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-secondary); }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -62,7 +62,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .h-hero {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
-    linear-gradient(135deg, #0f1218 0%, #0a0d12 100%);
+    linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
   box-shadow:
     0 8px 36px rgba(13, 15, 18, 0.40),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -71,16 +71,16 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 }
 
 /* Hero text — excellent contrast on dark charcoal */
-[data-theme="soft-future"] .h-hero-tab-label { color: #f5f5f5; opacity: 0.95; }
+[data-theme="soft-future"] .h-hero-tab-label { color: var(--text-primary); opacity: 0.95; }
 [data-theme="soft-future"] .h-hero-patrimony-label { color: rgba(160, 170, 187, 0.72); opacity: 1; }
-[data-theme="soft-future"] .h-hero-patrimony-value { color: #f5f5f5; opacity: 0.98; }
+[data-theme="soft-future"] .h-hero-patrimony-value { color: var(--text-primary); opacity: 0.98; }
 [data-theme="soft-future"] .h-hero-progress-label { color: rgba(160, 170, 187, 0.68); opacity: 1; }
 
 /* Balance badge — cyan accents for premium OS feel */
 [data-theme="soft-future"] .h-hero-balance-badge {
   background: rgba(6, 182, 212, 0.10);
   border: 0.5px solid rgba(6, 182, 212, 0.22);
-  color: #a0aabb;
+  color: var(--text-secondary);
   backdrop-filter: blur(8px);
 }
 [data-theme="soft-future"] .h-hero-balance-badge.positive {
@@ -113,7 +113,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .cosmos-card--hero {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
-    linear-gradient(145deg, #111520 0%, #0a0d14 100%);
+    linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 [data-theme="soft-future"] .cosmos-card--standard {
   background: linear-gradient(145deg, var(--cosmos-surface-2) 0%, var(--cosmos-surface-1) 100%);
@@ -122,7 +122,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Month navigation — cyan accent material controls */
 [data-theme="soft-future"] .h-month-btn {
   background: rgba(6, 182, 212, 0.10);
-  color: #a0aabb;
+  color: var(--text-secondary);
   border: 0.5px solid rgba(6, 182, 212, 0.14);
   transition: all 0.2s ease;
 }
@@ -132,14 +132,14 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 }
 
 [data-theme="soft-future"] .h-month-name {
-  color: #a0aabb;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 [data-theme="soft-future"] .h-today-btn {
   background: rgba(6, 182, 212, 0.10);
   border: 0.5px solid rgba(6, 182, 212, 0.16);
-  color: #a0aabb;
+  color: var(--text-secondary);
 }
 
 
@@ -159,7 +159,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .m-insight-card {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
-    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow:
     0 4px 24px rgba(13, 15, 18, 0.70),
@@ -175,22 +175,22 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .ft-row {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
-    linear-gradient(175deg, #14171d 0%, #0f1218 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.10);
   box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
   border-radius: 14px;
   margin-bottom: 5px;
 }
-[data-theme="soft-future"] .ft-row:active  { background: #1a1d23; }
+[data-theme="soft-future"] .ft-row:active  { background: var(--bg-elevated); }
 
 /* Expandable detail row */
 [data-theme="soft-future"] .ft-detail {
-  background: linear-gradient(175deg, #14171d 0%, #10121a 100%);
+  background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-top: 0.5px solid rgba(6, 182, 212, 0.10);
 }
 [data-theme="soft-future"] .ft-detail-btn {
   background: rgba(6, 182, 212, 0.10);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: none;
   border-radius: 9px;
 }
@@ -200,7 +200,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .rp-row {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
-    linear-gradient(175deg, #14171d 0%, #0f1218 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.10);
   box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
   border-radius: 16px;
@@ -209,12 +209,12 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Calendar / form sheets */
 [data-theme="soft-future"] .rp-form-sheet,
 [data-theme="soft-future"] .rp-cal-sheet   {
-  background: linear-gradient(180deg, #14171d 0%, #0a0d12 100%);
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-top: 0.5px solid rgba(6, 182, 212, 0.18);
   box-shadow: 0 -8px 40px rgba(13, 11, 30, 0.80);
 }
 [data-theme="soft-future"] .rp-modal-panel {
-  background: linear-gradient(180deg, #14171d 0%, #0a0d12 100%);
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-top: 0.5px solid rgba(6, 182, 212, 0.18);
   box-shadow: 0 -4px 28px rgba(13, 11, 30, 0.75);
 }
@@ -246,20 +246,20 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 }
 [data-theme="soft-future"] .m-total-balance-label       { color: rgba(160, 170, 187, 0.75); }
 [data-theme="soft-future"] .m-total-balance-sub         { color: rgba(220, 220, 230, 0.30); }
-[data-theme="soft-future"] .m-total-balance-value       { color: #f5f5f5; }
+[data-theme="soft-future"] .m-total-balance-value       { color: var(--text-primary); }
 
 /* ── Home summary hero card — dark graphite with cyan depth ───────────── */
 [data-theme="soft-future"] .m-summary-card {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
-    linear-gradient(145deg, #0a0d12 0%, #0f1218 100%);
+    linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.14);
   box-shadow:
     0 8px 36px rgba(13, 15, 18, 0.50),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     inset 0 -1px 0 rgba(6, 182, 212, 0.08);
 }
-[data-theme="soft-future"] .m-sc-total-value  { color: #f5f5f5; }
+[data-theme="soft-future"] .m-sc-total-value  { color: var(--text-primary); }
 [data-theme="soft-future"] .m-sc-total-label  { color: rgba(160, 170, 187, 0.72); }
 [data-theme="soft-future"] .m-sc-total-sub    { color: rgba(220, 220, 230, 0.26); }
 [data-theme="soft-future"] .m-sc-divider      { background: rgba(6, 182, 212, 0.10); }
@@ -287,14 +287,14 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .m-chip {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 45%, transparent 100%),
-    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.10);
   box-shadow:
     0 2px 10px rgba(13, 15, 18, 0.55),
     inset 0 0.5px 0 rgba(255,255,255,0.03);
 }
 [data-theme="soft-future"] .m-chip-label                { color: rgba(160, 170, 187, 0.60); }
-[data-theme="soft-future"] .m-chip-amount               { color: #e8e8e8; }
+[data-theme="soft-future"] .m-chip-amount               { color: var(--text-primary); }
 [data-theme="soft-future"] .m-chip.income  .m-chip-amount { color: #34d399; }
 [data-theme="soft-future"] .m-chip.expense .m-chip-amount { color: #f87171; }
 
@@ -302,13 +302,13 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .m-patrimony-row {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
-    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.10);
 }
 [data-theme="soft-future"] .m-patrimony-label           { color: rgba(160, 170, 187, 0.50); }
-[data-theme="soft-future"] .m-patrimony-select          { color: #a0aabb; }
-[data-theme="soft-future"] .m-patrimony-value           { color: #e8e8e8; }
-[data-theme="soft-future"] .m-patrimony-select option   { background: #10121a; }
+[data-theme="soft-future"] .m-patrimony-select          { color: var(--text-secondary); }
+[data-theme="soft-future"] .m-patrimony-value           { color: var(--text-primary); }
+[data-theme="soft-future"] .m-patrimony-select option   { background: var(--bg-primary); }
 
 /* ── Insight cards (Budget) ─────────────────────────────────────────────── */
 [data-theme="soft-future"] .m-insight-card {
@@ -320,13 +320,13 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
   background: rgba(6, 182, 212, 0.06);
   border: 0.5px solid rgba(6, 182, 212, 0.13);
 }
-[data-theme="soft-future"] .pat-insight-icon            { color: #a0aabb; }
+[data-theme="soft-future"] .pat-insight-icon            { color: var(--text-secondary); }
 
 /* ── Profile cycle card — dark graphite with cyan bottom depth ────────────*/
 [data-theme="soft-future"] .m-cycle-card {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.09) 0%, rgba(6, 182, 212, 0.03) 35%, transparent 100%),
-    linear-gradient(175deg, #14171d 0%, #10121a 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.11);
   box-shadow: 0 2px 16px rgba(13, 15, 18, 0.60);
   border-radius: 18px;
@@ -375,7 +375,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Recurring summary icon container */
 [data-theme="soft-future"] .rp-summary-icon {
   background: rgba(6, 182, 212, 0.10);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.40);
 }
 
@@ -432,7 +432,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Month navigation */
 [data-theme="soft-future"] .m-month-btn,
 [data-theme="soft-future"] .m-today-btn,
-[data-theme="soft-future"] .m-month-nav-btn             { color: #a0aabb; }
+[data-theme="soft-future"] .m-month-nav-btn             { color: var(--text-secondary); }
 [data-theme="soft-future"] .m-today-btn {
   background: rgba(6, 182, 212, 0.14);
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
@@ -440,7 +440,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .m-today-btn:active,
 [data-theme="soft-future"] .m-month-btn:active          { background: rgba(6, 182, 212, 0.18); }
 [data-theme="soft-future"] .m-month-nav-today {
-  color: #a0aabb;
+  color: var(--text-secondary);
   background: rgba(6, 182, 212, 0.14);
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
 }
@@ -453,20 +453,20 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 
 /* Segmented toggle */
 [data-theme="soft-future"] .m-toggle {
-  background: rgba(17, 19, 23, 0.95);
+  background: var(--surface-nav);
   border: 0.5px solid rgba(6, 182, 212, 0.11);
   box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
 }
 [data-theme="soft-future"] .m-toggle-btn                { color: var(--text-tertiary); }
 [data-theme="soft-future"] .m-toggle-btn.active {
   background: rgba(6, 182, 212, 0.20);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: 0 0 14px rgba(6, 182, 212, 0.18), inset 0 0.5px 0 rgba(255,255,255,0.06);
 }
 
 /* Log summary */
 [data-theme="soft-future"] .m-log-summary {
-  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow: 0 2px 16px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255,255,255,0.03);
 }
@@ -488,7 +488,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .rp-freq-btn.active {
   border-color: #06b6d4;
   background: rgba(6, 182, 212, 0.16);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.20);
 }
 
@@ -512,7 +512,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .pat-account-item--main      { background: rgba(6, 182, 212, 0.06); }
 [data-theme="soft-future"] .pat-account-badge--main,
 [data-theme="soft-future"] .pat-account-badge-main {
-  color: #a0aabb;
+  color: var(--text-secondary);
   background: rgba(6, 182, 212, 0.18);
 }
 [data-theme="soft-future"] .pat-asset-edit:hover,
@@ -521,7 +521,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Budget save button */
 [data-theme="soft-future"] .m-budget-save {
   background: rgba(6, 182, 212, 0.14);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.12);
 }
 [data-theme="soft-future"] .m-budget-save:active { background: rgba(6, 182, 212, 0.24); }
@@ -555,7 +555,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .m-transfer-btn {
   background: rgba(6, 182, 212, 0.10);
   border-color: rgba(6, 182, 212, 0.24);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.10);
 }
 
@@ -566,7 +566,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 
 [data-theme="soft-future"] .rp-cal-btn {
   color: #06b6d4;
-  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.14);
   box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
 }
@@ -581,7 +581,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .m-balance-label             { color: rgba(6, 182, 212, 0.45); }
 
 [data-theme="soft-future"] .h-insight-badge.info        { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
-[data-theme="soft-future"] .h-month-btn                 { color: #a0aabb; }
+[data-theme="soft-future"] .h-month-btn                 { color: var(--text-secondary); }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -624,20 +624,20 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Home cashflow "today" quick-jump button */
 [data-theme="soft-future"] .h-today-btn {
   background: rgba(6, 182, 212, 0.14);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.14);
 }
 
 /* Recurring budget strip */
 [data-theme="soft-future"] .rp-budget-strip {
-  background: linear-gradient(175deg, #15181d 0%, #10121a 100%);
+  background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
 }
 
 /* Stock search dropdown */
 [data-theme="soft-future"] .pat-search-dropdown {
-  background: linear-gradient(180deg, #14171d 0%, #10121a 100%);
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-color: rgba(6, 182, 212, 0.18);
   box-shadow: 0 8px 32px rgba(13, 15, 18, 0.70);
 }
@@ -645,7 +645,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .pat-search-result:active    { background: rgba(6, 182, 212, 0.06); }
 [data-theme="soft-future"] .pat-search-result           { border-bottom-color: rgba(6, 182, 212, 0.06); }
 [data-theme="soft-future"] .pat-search-spinner,
-[data-theme="soft-future"] .pat-stock-loading           { color: #a0aabb; }
+[data-theme="soft-future"] .pat-stock-loading           { color: var(--text-secondary); }
 [data-theme="soft-future"] .pat-search-exch             { background: rgba(6, 182, 212, 0.08); }
 
 /* Swipe reveal actions — softer, less jarring */
@@ -662,7 +662,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .ft-sub [style*="6366f1"],
 [data-theme="soft-future"] .ft-sub [style*="accent"] {
   background: rgba(6, 182, 212, 0.16) !important;
-  color: #a0aabb !important;
+  color: var(--text-secondary) !important;
 }
 
 /* Alerts panel */
@@ -683,13 +683,13 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 
 /* History sub-tabs: Diário / Património */
 [data-theme="soft-future"] .hist-sub-tabs-wrap {
-  background: rgba(17, 19, 23, 0.95);
+  background: var(--surface-nav);
   border: 0.5px solid rgba(6, 182, 212, 0.11);
 }
 [data-theme="soft-future"] .hist-sub-btn              { color: var(--text-tertiary); }
 [data-theme="soft-future"] .hist-sub-btn.active {
   background: rgba(6, 182, 212, 0.20);
-  color: #a0aabb;
+  color: var(--text-secondary);
 }
 
 /* Category spend bars (StatsTab) */
@@ -707,7 +707,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .patrimony-total-card {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
-    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.14);
   box-shadow: 0 4px 24px rgba(13, 15, 18, 0.70), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
 }
@@ -724,7 +724,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Transfer action button (BudgetTab) */
 [data-theme="soft-future"] .btn-transfer {
   background: rgba(6, 182, 212, 0.18);
-  color: #a0aabb;
+  color: var(--text-secondary);
   border: 0.5px solid rgba(6, 182, 212, 0.28);
 }
 [data-theme="soft-future"] .btn-transfer:not(:disabled):active {
@@ -737,7 +737,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
   background: rgba(6, 182, 212, 0.07);
   box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.18);
 }
-[data-theme="soft-future"] .tr-card--sel .tr-card-name { color: #a0aabb; }
+[data-theme="soft-future"] .tr-card--sel .tr-card-name { color: var(--text-secondary); }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -754,7 +754,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .stats-saldo-card {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 40%, transparent 100%),
-    linear-gradient(135deg, #12151a 0%, #0d0f12 100%);
+    linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.18);
   box-shadow: 0 8px 32px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
 }
@@ -763,7 +763,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .stats-overview-card {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
-    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.10);
   box-shadow: 0 2px 12px rgba(13, 15, 18, 0.55);
 }
@@ -781,16 +781,16 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 /* Compact history icon-toggle active state */
 [data-theme="soft-future"] .today-btn-compact.active {
   background: rgba(6, 182, 212, 0.22);
-  color: #a0aabb;
+  color: var(--text-secondary);
   box-shadow: 0 0 8px rgba(6, 182, 212, 0.18);
 }
 
 /* Muted label text inside overview cards */
-[data-theme="soft-future"] .stats-saldo-card [style*="color: #71717a"],
-[data-theme="soft-future"] .stats-overview-card [style*="color: #71717a"] {
+[data-theme="soft-future"] .stats-saldo-card [style*="color: var(--text-tertiary)"],
+[data-theme="soft-future"] .stats-overview-card [style*="color: var(--text-tertiary)"] {
   color: var(--text-tertiary) !important;
 }
-[data-theme="soft-future"] .stats-saldo-card [style*="color: #a1a1aa"] {
+[data-theme="soft-future"] .stats-saldo-card [style*="color: var(--text-secondary)"] {
   color: var(--text-secondary) !important;
 }
 
@@ -805,19 +805,19 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 [data-theme="soft-future"] .fintech-ui .ftc-card {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
-    linear-gradient(175deg, #15181d 0%, #10121a 100%);
+    linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-color: rgba(6, 182, 212, 0.12);
 }
 [data-theme="soft-future"] .fintech-ui .ftc-card:active {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 35%, transparent 100%),
-    linear-gradient(175deg, #1a1d23 0%, #15181d 100%);
+    linear-gradient(175deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
 }
 
 /* Transfer / adjust badges */
 [data-theme="soft-future"] .ftc-badge--transfer {
   background: rgba(6, 182, 212, 0.14);
-  color: #a0aabb;
+  color: var(--text-secondary);
 }
 [data-theme="soft-future"] .ftc-badge--adjust {
   background: rgba(249, 115, 22, 0.12);
@@ -869,7 +869,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 
 
 /* ── 1. PAGE CANVAS ─────────────────────────────────────────────────────────
-   Fix: --bg-primary was #0f172a (navy). Override to Cosmos charcoal so the
+   Fix: --bg-primary was var(--bg-secondary) (navy). Override to Cosmos charcoal so the
    entire background (body, main, scroll area) matches the design language.  */
 
 [data-theme="soft-future"] {
@@ -885,7 +885,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: #a0aabb; }
 
 html[data-theme="soft-future"],
 html[data-theme="soft-future"] body {
-  background: #0B0F14;
+  background: var(--bg-primary);
 }
 
 /* Ambient cyan gradient on the scroll canvas — subtle OS glow from the top */
@@ -894,7 +894,7 @@ html[data-theme="soft-future"] body {
     radial-gradient(ellipse 110% 28% at 50% 0%,
       rgba(6, 182, 212, 0.045) 0%,
       transparent 100%),
-    #0B0F14;
+    var(--bg-primary);
 }
 
 
@@ -908,7 +908,7 @@ html[data-theme="soft-future"] body {
       rgba(6, 182, 212, 0.16) 0%,
       rgba(6, 182, 212, 0.06) 45%,
       transparent 100%),
-    linear-gradient(145deg, #111520 0%, #0a0d14 100%);
+    linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 
 [data-theme="soft-future"] .cosmos-card--hero.cosmos-card--glow {
@@ -933,7 +933,7 @@ html[data-theme="soft-future"] body {
   font-size: 3.75rem;
   letter-spacing: -0.055em;
   margin-bottom: 20px;
-  color: #f0f2f5;
+  color: var(--text-primary);
 }
 
 /* Balance badge — sharper definition */
@@ -996,7 +996,7 @@ html[data-theme="soft-future"] body {
       rgba(6, 182, 212, 0.08) 0%,
       rgba(6, 182, 212, 0.02) 35%,
       transparent 100%),
-    linear-gradient(145deg, #15181d 0%, #10121a 100%);
+    linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid rgba(6, 182, 212, 0.10);
   box-shadow:
     0 4px 24px rgba(13, 15, 18, 0.60),
@@ -1069,7 +1069,7 @@ html[data-theme="soft-future"] .nav-item.active::before {
 
 /* Deepen the bar itself */
 [data-theme="soft-future"] .bottom-nav {
-  background: rgba(10, 12, 15, 0.97);
+  background: var(--surface-sheet);
   border-top: 0.5px solid rgba(6, 182, 212, 0.14);
   box-shadow:
     0 -10px 48px rgba(0, 0, 0, 0.88),
@@ -1184,7 +1184,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
     linear-gradient(to top,
       rgba(6, 182, 212, 0.04) 0%,
       transparent 100%),
-    linear-gradient(145deg, #111318 0%, #0c0f15 100%);
+    linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-color: rgba(6, 182, 212, 0.065);
   box-shadow:
     0 3px 20px rgba(13, 15, 18, 0.50),
@@ -1233,7 +1233,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
    layer of the experience, not just a bar at the bottom.                  */
 
 [data-theme="soft-future"] .bottom-nav {
-  background: rgba(9, 11, 14, 0.97);
+  background: var(--surface-sheet);
   border-top: 0.5px solid rgba(6, 182, 212, 0.12);
   box-shadow:
     0 -12px 56px rgba(0, 0, 0, 0.90),
@@ -1314,7 +1314,7 @@ html[data-theme="soft-future"] .nav-icon {
       rgba(6, 182, 212, 0.18) 0%,
       rgba(6, 182, 212, 0.07) 40%,
       transparent 100%),
-    linear-gradient(160deg, #0f1420 0%, #090c12 100%);
+    linear-gradient(160deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 
 
@@ -1326,7 +1326,7 @@ html[data-theme="soft-future"] .nav-icon {
   letter-spacing: -0.062em;
   line-height: 0.92;
   margin-bottom: 24px;
-  color: #f2f4f7;
+  color: var(--text-primary);
 }
 
 /* Label: recedes maximally so number dominates */
@@ -1372,7 +1372,7 @@ html[data-theme="soft-future"] .nav-icon {
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(2) {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.09) 0%, rgba(6, 182, 212, 0.02) 40%, transparent 100%),
-    linear-gradient(145deg, #161921 0%, #111420 100%);
+    linear-gradient(145deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
   border-color: rgba(6, 182, 212, 0.12);
   box-shadow:
     0 8px 36px rgba(0, 0, 0, 0.55),
@@ -1382,7 +1382,7 @@ html[data-theme="soft-future"] .nav-icon {
 /* Tier 2 — Context cards (insight=3rd, recurring=4th, accounts=5th): receded */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
   background:
-    linear-gradient(145deg, #0f1217 0%, #0b0e13 100%);
+    linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
   border-color: rgba(6, 182, 212, 0.055);
   box-shadow:
     0 2px 14px rgba(0, 0, 0, 0.40);
@@ -1416,7 +1416,7 @@ html[data-theme="soft-future"] .nav-icon {
   border-top: none;
   border: 0.5px solid rgba(6, 182, 212, 0.16);
   /* Deep dark glass */
-  background: rgba(10, 12, 15, 0.97);
+  background: var(--surface-sheet);
   box-shadow:
     0 8px 52px rgba(0, 0, 0, 0.85),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -1536,7 +1536,7 @@ html[data-theme="soft-future"] .nav-item.active {
   bottom: calc(6px + env(safe-area-inset-bottom));
   border-radius: 20px;
   border: 0.5px solid rgba(255, 255, 255, 0.07);
-  background: rgba(11, 13, 17, 0.96);
+  background: var(--surface-sheet);
   box-shadow:
     0 -1px 0 rgba(255, 255, 255, 0.03),
     0 6px 36px rgba(0, 0, 0, 0.72),
@@ -1711,7 +1711,7 @@ html[data-theme="soft-future"] .nav-item.active {
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
   background:
     linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 50%, transparent 100%),
-    linear-gradient(145deg, #161921 0%, #111420 100%);
+    linear-gradient(145deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
 }
 
 /* ── 4. CONTEXT CLUSTER: HORIZONTAL HIERARCHY ───────────────────────────────
@@ -1735,7 +1735,7 @@ html[data-theme="soft-future"] .nav-item.active {
 
 /* Re-apply context surface (was nth-child(n+3) in Pass 4 — now nth-child(n+2)) */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) {
-  background: linear-gradient(145deg, #0f1217 0%, #0b0e13 100%);
+  background: linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
   border-color: rgba(6, 182, 212, 0.055);
 }
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) .cosmos-sh__title {
@@ -1830,7 +1830,7 @@ html[data-theme="soft-future"] .nav-item.active {
   border-radius: 0 !important;
   border: none !important;
   border-top: 0.5px solid rgba(255, 255, 255, 0.06) !important;
-  background: rgba(10, 12, 15, 0.99) !important;
+  background: var(--surface-sheet) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1851,7 +1851,7 @@ html[data-theme="soft-future"] .nav-item.active {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PASS 9 — DEEP SPACE BACKGROUND
-   Global bg: #0B0F14 (Deep Space).
+   Global bg: var(--bg-primary) (Deep Space).
    Home root container: radial-gradient atmospheric light, upper-right origin.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -1859,7 +1859,7 @@ html[data-theme="soft-future"] .nav-item.active {
 [data-theme="soft-future"] .h-page {
   background:
     radial-gradient(ellipse 60% 40% at 85% 15%, rgba(0, 221, 255, 0.07) 0%, transparent 70%),
-    #0B0F14;
+    var(--bg-primary);
 }
 
 
@@ -1889,7 +1889,7 @@ html[data-theme="soft-future"] .nav-item.active {
   font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #94A3B8;
+  color: var(--text-secondary);
   margin-bottom: 4px;
   opacity: 1;
 }
@@ -2026,7 +2026,7 @@ html[data-theme="soft-future"] .nav-item.active {
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94A3B8 !important;
+  color: var(--text-secondary) !important;
   margin-bottom: 4px;
 }
 
@@ -2132,7 +2132,7 @@ html[data-theme="soft-future"] .nav-item.active {
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94A3B8 !important;
+  color: var(--text-secondary) !important;
   margin-bottom: 5px;
 }
 

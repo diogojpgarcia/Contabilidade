@@ -87,6 +87,10 @@
   --cosmos-surface-border: rgba(255, 255, 255, 0.08); /* inner card/component borders */
   --cosmos-toggle-knob:    rgba(255, 255, 255, 0.50); /* toggle knob (off state) */
 
+  /* ── Nav / modal surface overlays (used by soft-future.css after refactor) */
+  --surface-nav:   rgba(17, 19, 26, 0.96);
+  --surface-sheet: rgba(10, 12, 15, 0.97);
+
   /* ── Legacy component aliases (not in modern.css — defined here so palettes can override) */
   --card-bg:       #13161d;
   --surface-2:     #191d27;

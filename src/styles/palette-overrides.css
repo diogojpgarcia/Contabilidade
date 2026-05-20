@@ -88,6 +88,10 @@ html[data-palette="dusk"] {
   --accent:        #c49a6c;
   --bg-hover:      rgba(255, 245, 230, 0.07);
   --input-bg:      #231e14;
+
+  /* Nav / modal overlays */
+  --surface-nav:   rgba(20, 16, 10, 0.96);
+  --surface-sheet: rgba(18, 14, 8, 0.97);
 }
 
 /* ── STONE — warm light, terracotta accent ───────────────────────────────── */
@@ -173,6 +177,10 @@ html[data-palette="stone"] {
   --accent:        #9f6b48;
   --bg-hover:      rgba(0, 0, 0, 0.05);
   --input-bg:      #f4efe9;
+
+  /* Nav / modal overlays */
+  --surface-nav:   rgba(235, 230, 222, 0.96);
+  --surface-sheet: rgba(238, 233, 226, 0.97);
 }
 
 /* ── Stone: body/page background ─────────────────────────────────────────── */
