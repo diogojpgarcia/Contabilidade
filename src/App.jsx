@@ -56,6 +56,9 @@ const App = () => {
   const [learnedRules, setLearnedRules] = useState([]); // [{ pattern, category }]
   const [budgets, setBudgets] = useState({});
   const [theme, setTheme] = useState('fintech');
+  const [colorPalette, setColorPaletteState] = useState(
+    () => localStorage.getItem('cosmos-palette') || 'midnight'
+  );
   const [categories, setCategories] = useState({ expense: CATEGORIES_EXPENSE, income: CATEGORIES_INCOME });
   const [mainAccountId, setMainAccountId] = useState(null); // string | null — the "Principal" account
   const [financialMonthStartDay, setFinancialMonthStartDay] = useState(1); // 1 = calendar month
@@ -67,6 +70,22 @@ const App = () => {
   const [confirmedRecurring, setConfirmedRecurring] = useState({}); // { [recId]: { [monthKey]: { transactionId, amount, confirmedAt } } }
   const [financialFocus, setFinancialFocus] = useState(null); // 'savings' | 'budgets' | 'tracking' | 'growth' | null
   const loadRequestId = React.useRef(0); // incremented to cancel stale fetches
+
+  // Apply colour palette to <html> whenever it changes + persist
+  const setColorPalette = React.useCallback((palette) => {
+    setColorPaletteState(palette);
+    document.documentElement.setAttribute('data-palette', palette);
+    localStorage.setItem('cosmos-palette', palette);
+    // Persist to Supabase if user is logged in (fire-and-forget)
+    if (currentUser?.id) {
+      dbService.updateUserSettings(currentUser.id, { color_palette: palette }).catch(console.error);
+    }
+  }, [currentUser]);
+
+  // Apply on first render (localStorage may already have a value)
+  useEffect(() => {
+    document.documentElement.setAttribute('data-palette', colorPalette);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check for existing session on mount
   useEffect(() => {
@@ -150,6 +169,12 @@ const App = () => {
       }
       // Cosmos is the only visual theme — always enforce soft-future regardless of stored value
       document.documentElement.setAttribute('data-theme', 'soft-future');
+      // Restore saved colour palette
+      if (settings?.color_palette) {
+        setColorPaletteState(settings.color_palette);
+        document.documentElement.setAttribute('data-palette', settings.color_palette);
+        localStorage.setItem('cosmos-palette', settings.color_palette);
+      }
       if (settings?.financial_focus) setFinancialFocus(settings.financial_focus);
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
@@ -834,6 +859,8 @@ const App = () => {
             onLogout={handleLogout}
             theme={theme}
             setTheme={setTheme}
+            colorPalette={colorPalette}
+            setColorPalette={setColorPalette}
             categories={categories}
             onCategoriesChange={handleCategoriesChange}
             patrimony={patrimonyWithLiveBalances}

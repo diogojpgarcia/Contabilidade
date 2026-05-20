@@ -78,6 +78,132 @@
   --cosmos-dur-slow: 0.35s;
 
   /* ── Bottom nav ───────────────────────────────────────────────────────── */
-  --cosmos-nav-h:      60px;
-  --cosmos-nav-safe:   calc(var(--cosmos-nav-h) + env(safe-area-inset-bottom));
+  --cosmos-nav-h:       60px;
+  --cosmos-nav-safe:    calc(var(--cosmos-nav-h) + env(safe-area-inset-bottom));
+  --cosmos-nav-surface: rgba(17, 19, 26, 0.90);   /* floating bar fill */
+  --cosmos-nav-notch:   #0d0f12;                   /* page-bg colour used for notch cutout */
+
+  /* ── Extra component tokens ────────────────────────────────────────────── */
+  --cosmos-surface-border: rgba(255, 255, 255, 0.08); /* inner card/component borders */
+  --cosmos-toggle-knob:    rgba(255, 255, 255, 0.50); /* toggle knob (off state) */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PALETTE — DUSK  (warm dark · amber accent)
+   Autumn evening, warm studio light, premium feel.
+   Apply via:  document.documentElement.setAttribute('data-palette', 'dusk')
+   ══════════════════════════════════════════════════════════════════════════ */
+[data-palette="dusk"] {
+  /* Surfaces */
+  --cosmos-bg:        #121008;
+  --cosmos-surface-1: #1c1810;
+  --cosmos-surface-2: #231e14;
+  --cosmos-surface-3: #2b2417;
+
+  /* Accent — warm gold/amber */
+  --cosmos-accent:        #c49a6c;
+  --cosmos-accent-dim:    rgba(196, 154, 108, 0.11);
+  --cosmos-accent-hover:  rgba(196, 154, 108, 0.18);
+  --cosmos-accent-border: rgba(196, 154, 108, 0.17);
+  --cosmos-accent-glow:   rgba(196, 154, 108, 0.22);
+  --cosmos-accent-soft:   rgba(196, 154, 108, 0.07);
+
+  /* Text */
+  --cosmos-text-1:     #ede8e0;
+  --cosmos-text-2:     rgba(205, 192, 175, 0.78);
+  --cosmos-text-3:     rgba(205, 192, 175, 0.40);
+  --cosmos-text-accent: #c49a6c;
+
+  /* Semantic */
+  --cosmos-income:      #6bbd8e;
+  --cosmos-expense:     #e07878;
+  --cosmos-income-dim:  rgba(107, 189, 142, 0.13);
+  --cosmos-expense-dim: rgba(224, 120, 120, 0.13);
+  --cosmos-neutral-dim: rgba(205, 192, 175, 0.09);
+
+  /* Borders */
+  --cosmos-border-subtle:  rgba(255, 245, 230, 0.04);
+  --cosmos-border-card:    rgba(196, 154, 108, 0.14);
+  --cosmos-border-hero:    rgba(196, 154, 108, 0.20);
+  --cosmos-border-divider: rgba(255, 245, 230, 0.05);
+  --cosmos-surface-border: rgba(255, 245, 230, 0.09);
+  --cosmos-toggle-knob:    rgba(255, 245, 230, 0.50);
+
+  /* Shadows */
+  --cosmos-shadow-card:
+    0 4px 24px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 245, 230, 0.04);
+  --cosmos-shadow-hero:
+    0 10px 40px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 245, 230, 0.05),
+    inset 0 -1px 0 rgba(196, 154, 108, 0.09);
+  --cosmos-shadow-sheet:
+    0 -8px 40px rgba(0, 0, 0, 0.54),
+    inset 0 1px 0 rgba(255, 245, 230, 0.05);
+  --cosmos-glow-accent:
+    0 0 24px rgba(196, 154, 108, 0.18);
+
+  /* Nav */
+  --cosmos-nav-surface: rgba(20, 16, 10, 0.92);
+  --cosmos-nav-notch:   #121008;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PALETTE — STONE  (warm light · terracotta accent)
+   Japanese washi, warm daylight, clean Apple-style.
+   Apply via:  document.documentElement.setAttribute('data-palette', 'stone')
+   ══════════════════════════════════════════════════════════════════════════ */
+[data-palette="stone"] {
+  /* Surfaces */
+  --cosmos-bg:        #f0ebe4;
+  --cosmos-surface-1: #faf7f2;
+  --cosmos-surface-2: #ffffff;
+  --cosmos-surface-3: #f4efe9;
+
+  /* Accent — terracotta/clay */
+  --cosmos-accent:        #9f6b48;
+  --cosmos-accent-dim:    rgba(159, 107, 72, 0.10);
+  --cosmos-accent-hover:  rgba(159, 107, 72, 0.16);
+  --cosmos-accent-border: rgba(159, 107, 72, 0.18);
+  --cosmos-accent-glow:   rgba(159, 107, 72, 0.22);
+  --cosmos-accent-soft:   rgba(159, 107, 72, 0.07);
+
+  /* Text */
+  --cosmos-text-1:     #1e1812;
+  --cosmos-text-2:     rgba(60, 48, 38, 0.68);
+  --cosmos-text-3:     rgba(60, 48, 38, 0.38);
+  --cosmos-text-accent: #9f6b48;
+
+  /* Semantic */
+  --cosmos-income:      #3a8e60;
+  --cosmos-expense:     #c04040;
+  --cosmos-income-dim:  rgba(58, 142, 96, 0.12);
+  --cosmos-expense-dim: rgba(192, 64, 64, 0.10);
+  --cosmos-neutral-dim: rgba(60, 48, 38, 0.07);
+
+  /* Borders */
+  --cosmos-border-subtle:  rgba(0, 0, 0, 0.05);
+  --cosmos-border-card:    rgba(159, 107, 72, 0.16);
+  --cosmos-border-hero:    rgba(159, 107, 72, 0.22);
+  --cosmos-border-divider: rgba(0, 0, 0, 0.06);
+  --cosmos-surface-border: rgba(0, 0, 0, 0.09);
+  --cosmos-toggle-knob:    rgba(255, 255, 255, 0.90);
+
+  /* Shadows */
+  --cosmos-shadow-card:
+    0 2px 12px rgba(120, 90, 60, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.80);
+  --cosmos-shadow-hero:
+    0 8px 32px rgba(120, 90, 60, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.90),
+    inset 0 -1px 0 rgba(159, 107, 72, 0.06);
+  --cosmos-shadow-sheet:
+    0 -6px 28px rgba(120, 90, 60, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+  --cosmos-glow-accent:
+    0 0 20px rgba(159, 107, 72, 0.14);
+
+  /* Nav */
+  --cosmos-nav-surface: rgba(240, 235, 228, 0.94);
+  --cosmos-nav-notch:   #f0ebe4;
 }

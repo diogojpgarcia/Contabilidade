@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { authService, dbService } from '../../lib/supabase';
 import CategoryManager from '../CategoryManager';
 import Overlay from '../Overlay';
@@ -6,7 +6,13 @@ import { useForm } from '../../hooks/useForm';
 import PageHeader from '../PageHeader';
 import './ProfileTab.css';
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange }) => {
+const PALETTES = [
+  { id: 'midnight', name: 'Midnight', bg: '#0d0f12', accent: '#06b6d4' },
+  { id: 'dusk',     name: 'Dusk',     bg: '#1c1810', accent: '#c49a6c' },
+  { id: 'stone',    name: 'Stone',    bg: '#f0ebe4', accent: '#9f6b48' },
+];
+
+const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, colorPalette = 'midnight', setColorPalette, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange }) => {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -19,17 +25,8 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
   const { draft: deleteDraft, setField: setDeleteField, reset: resetDeleteDraft } = useForm({ confirmText: '' });
   const { draft: resetDraft,  setField: setResetField,  reset: resetResetDraft  } = useForm({ email: '' });
 
-  // Cosmos is the only theme — always enforce soft-future on mount
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'soft-future');
-    if (user?.id) {
-      dbService.getUserSettings(user.id).then(settings => {
-        if (settings?.color_theme !== 'soft-future') {
-          dbService.updateUserSettings(user.id, { color_theme: 'soft-future' }).catch(console.error);
-        }
-      }).catch(console.error);
-    }
-  }, [user]);
+  // Cosmos theme is always soft-future — enforced by App.jsx on load
+  // palette changes are managed by App.jsx via colorPalette / setColorPalette props
 
   const handleResetPassword = async () => {
     if (!resetDraft.email) {
@@ -237,6 +234,26 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
           </div>
         </div>
       )}
+
+      {/* Appearance */}
+      <span className="m-section-label">Aparência</span>
+      <div className="m-card">
+        <div className="m-palette-row">
+          {PALETTES.map(p => (
+            <button
+              key={p.id}
+              className={`m-palette-swatch${colorPalette === p.id ? ' m-palette-swatch--active' : ''}`}
+              onClick={() => setColorPalette?.(p.id)}
+              aria-label={`Palette ${p.name}`}
+            >
+              <span className="m-palette-preview" style={{ background: p.bg }}>
+                <span className="m-palette-dot" style={{ background: p.accent }} />
+              </span>
+              <span className="m-palette-name">{p.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Preferences */}
       <span className="m-section-label">Preferências</span>
