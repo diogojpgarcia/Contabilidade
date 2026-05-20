@@ -18,6 +18,7 @@
 /* Inner floating bar */
 .cbn__bar {
   pointer-events: all;
+  position: relative;          /* needed for concave arc pseudo-elements */
   width: calc(100% - 24px);
   max-width: 480px;
   height: 56px;
@@ -34,6 +35,39 @@
     0 0 24px rgba(6, 182, 212, 0.06);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  /* overflow: visible is the default — FAB can protrude above */
+}
+
+/* ── Concave arc fills ───────────────────────────────────────────────────────
+   These are solid squares positioned at the top inner corner of the two items
+   flanking the FAB. The corner facing the FAB is rounded (100%), creating the
+   illusion that the bar has been "bitten" around the circle.
+   The fill colour matches the page background so the bar appears cut away.    */
+
+/* Left neighbour → right-top corner piece */
+.cbn__item:has(+ .cbn__item--center)::after {
+  content: '';
+  position: absolute;
+  top: -1px;         /* -1px covers the bar's thin border line */
+  right: -16px;      /* extends rightward into the FAB margin gap */
+  width: 22px;
+  height: 22px;
+  background: #0B0F14;          /* page background — the "bite" colour */
+  border-radius: 0 100% 0 0;   /* top-right corner rounded → concave arc */
+  pointer-events: none;
+}
+
+/* Right neighbour → left-top corner piece */
+.cbn__item--center + .cbn__item::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -16px;
+  width: 22px;
+  height: 22px;
+  background: #0B0F14;
+  border-radius: 100% 0 0 0;   /* top-left corner rounded → concave arc */
+  pointer-events: none;
 }
 
 /* ── Nav items ── */
@@ -71,7 +105,7 @@
   box-shadow: 0 0 16px rgba(6, 182, 212, 0.14);
 }
 
-/* ── Center action item (add button) ── */
+/* ── Center action item (FAB) ── */
 .cbn__item--center {
   background: var(--cosmos-accent);
   color: #000;
@@ -81,13 +115,17 @@
   flex: none;
   padding: 0;
   margin: 0 6px;
+  /* Lift the FAB above the bar surface so the concave notch is visible */
+  transform: translateY(-10px);
+  z-index: 2;
   box-shadow:
     0 4px 18px rgba(6, 182, 212, 0.35),
     0 0 0 1.5px rgba(6, 182, 212, 0.20);
 }
 
+/* Keep the Y offset while the button is pressed */
 .cbn__item--center:active {
-  transform: scale(0.90);
+  transform: translateY(-10px) scale(0.90);
   box-shadow: 0 2px 10px rgba(6, 182, 212, 0.30);
 }
 
