@@ -86,6 +86,15 @@
   /* ── Extra component tokens ────────────────────────────────────────────── */
   --cosmos-surface-border: rgba(255, 255, 255, 0.08); /* inner card/component borders */
   --cosmos-toggle-knob:    rgba(255, 255, 255, 0.50); /* toggle knob (off state) */
+
+  /* ── Legacy component aliases (not in modern.css — defined here so palettes can override) */
+  --card-bg:       #13161d;
+  --surface-2:     #191d27;
+  --border-color:  rgba(255, 255, 255, 0.10);
+  --accent:        #06b6d4;
+  --bg-hover:      rgba(255, 255, 255, 0.06);
+  --input-bg:      #15181d;
+  --primary-light: #a0aabb;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -174,6 +183,15 @@ html[data-palette="dusk"] {
   --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.50);
   --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.60);
   --shadow-lg:  0 8px 30px rgba(0, 0, 0, 0.70);
+
+  /* Legacy aliases */
+  --card-bg:       #1c1810;
+  --surface-2:     #231e14;
+  --border-color:  rgba(196, 154, 108, 0.18);
+  --accent:        #c49a6c;
+  --bg-hover:      rgba(255, 245, 230, 0.07);
+  --input-bg:      #231e14;
+  --primary-light: #d4b896;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -262,4 +280,13 @@ html[data-palette="stone"] {
   --shadow-sm:  0 1px 4px rgba(120, 90, 60, 0.12);
   --shadow-md:  0 4px 16px rgba(120, 90, 60, 0.16);
   --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
+
+  /* Legacy aliases */
+  --card-bg:       #faf7f2;
+  --surface-2:     rgba(0, 0, 0, 0.04);
+  --border-color:  rgba(159, 107, 72, 0.18);
+  --accent:        #9f6b48;
+  --bg-hover:      rgba(0, 0, 0, 0.05);
+  --input-bg:      #f4efe9;
+  --primary-light: #c49a80;
 }
