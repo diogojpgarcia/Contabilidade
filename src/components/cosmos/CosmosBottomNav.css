@@ -49,9 +49,9 @@
   content: '';
   position: absolute;
   top: -1px;         /* -1px covers the bar's thin border line */
-  right: -16px;      /* extends rightward into the FAB margin gap */
-  width: 22px;
-  height: 22px;
+  right: -20px;      /* extends rightward into the FAB margin gap */
+  width: 26px;
+  height: 26px;
   background: #0B0F14;          /* page background — the "bite" colour */
   border-radius: 0 100% 0 0;   /* top-right corner rounded → concave arc */
   pointer-events: none;
@@ -62,9 +62,9 @@
   content: '';
   position: absolute;
   top: -1px;
-  left: -16px;
-  width: 22px;
-  height: 22px;
+  left: -20px;
+  width: 26px;
+  height: 26px;
   background: #0B0F14;
   border-radius: 100% 0 0 0;   /* top-left corner rounded → concave arc */
   pointer-events: none;
