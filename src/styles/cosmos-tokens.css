@@ -146,6 +146,34 @@
   /* Nav */
   --cosmos-nav-surface: rgba(20, 16, 10, 0.92);
   --cosmos-nav-notch:   #121008;
+
+  /* ── modern.css bridge — makes all tab CSS respond to this palette ── */
+  --primary:        #c49a6c;
+  --success:        #6bbd8e;
+  --danger:         #e07878;
+  --warning:        #d4a04a;
+
+  --bg-primary:     #121008;
+  --bg-secondary:   #1c1810;
+  --bg-tertiary:    #231e14;
+  --bg-elevated:    #2b2417;
+
+  --text-primary:   #ede8e0;
+  --text-secondary: rgba(205, 192, 175, 0.78);
+  --text-tertiary:  rgba(205, 192, 175, 0.40);
+
+  --border:     rgba(196, 154, 108, 0.10);
+  --separator:  rgba(196, 154, 108, 0.13);
+  --overlay:    rgba(18, 16, 8, 0.75);
+
+  --header-bg:  rgba(20, 16, 10, 0.92);
+  --nav-bg:     rgba(20, 16, 10, 0.94);
+  --nav-text:         #ede8e0;
+  --nav-text-secondary: rgba(205, 192, 175, 0.78);
+
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.50);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.60);
+  --shadow-lg:  0 8px 30px rgba(0, 0, 0, 0.70);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -206,4 +234,32 @@
   /* Nav */
   --cosmos-nav-surface: rgba(240, 235, 228, 0.94);
   --cosmos-nav-notch:   #f0ebe4;
+
+  /* ── modern.css bridge — makes all tab CSS respond to this palette ── */
+  --primary:        #9f6b48;
+  --success:        #3a8e60;
+  --danger:         #c04040;
+  --warning:        #b07530;
+
+  --bg-primary:     #f0ebe4;
+  --bg-secondary:   #faf7f2;
+  --bg-tertiary:    #f4efe9;
+  --bg-elevated:    #ffffff;
+
+  --text-primary:   #1e1812;
+  --text-secondary: rgba(60, 48, 38, 0.68);
+  --text-tertiary:  rgba(60, 48, 38, 0.38);
+
+  --border:     rgba(159, 107, 72, 0.12);
+  --separator:  rgba(159, 107, 72, 0.14);
+  --overlay:    rgba(200, 185, 170, 0.70);
+
+  --header-bg:  rgba(240, 235, 228, 0.92);
+  --nav-bg:     rgba(240, 235, 228, 0.94);
+  --nav-text:         #1e1812;
+  --nav-text-secondary: rgba(60, 48, 38, 0.68);
+
+  --shadow-sm:  0 1px 4px rgba(120, 90, 60, 0.12);
+  --shadow-md:  0 4px 16px rgba(120, 90, 60, 0.16);
+  --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
 }
