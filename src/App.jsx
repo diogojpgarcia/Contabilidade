@@ -26,6 +26,7 @@ import './styles/cosmos-tokens.css';
 import './styles/modern.css';
 import './styles/fintech.css';
 import './styles/soft-future.css';
+import './styles/palette-overrides.css'; /* LAST — always wins the cascade */
 
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);

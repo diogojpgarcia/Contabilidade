@@ -1,0 +1,188 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PALETTE OVERRIDES
+   Imported LAST in App.jsx so these rules always win the cascade.
+   Uses html[data-palette] (specificity 0,1,1) which beats every :root and
+   [data-theme] rule (both 0,1,0) across modern.css and soft-future.css.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── DUSK — warm dark, amber accent ──────────────────────────────────────── */
+html[data-palette="dusk"] {
+  /* Surfaces */
+  --cosmos-bg:        #121008;
+  --cosmos-surface-1: #1c1810;
+  --cosmos-surface-2: #231e14;
+  --cosmos-surface-3: #2b2417;
+
+  /* Accent */
+  --cosmos-accent:        #c49a6c;
+  --cosmos-accent-dim:    rgba(196, 154, 108, 0.11);
+  --cosmos-accent-hover:  rgba(196, 154, 108, 0.18);
+  --cosmos-accent-border: rgba(196, 154, 108, 0.17);
+  --cosmos-accent-glow:   rgba(196, 154, 108, 0.22);
+  --cosmos-accent-soft:   rgba(196, 154, 108, 0.07);
+
+  /* Text */
+  --cosmos-text-1:      #ede8e0;
+  --cosmos-text-2:      rgba(205, 192, 175, 0.78);
+  --cosmos-text-3:      rgba(205, 192, 175, 0.40);
+  --cosmos-text-accent: #c49a6c;
+
+  /* Semantic */
+  --cosmos-income:      #6bbd8e;
+  --cosmos-expense:     #e07878;
+  --cosmos-income-dim:  rgba(107, 189, 142, 0.13);
+  --cosmos-expense-dim: rgba(224, 120, 120, 0.13);
+  --cosmos-neutral-dim: rgba(205, 192, 175, 0.09);
+
+  /* Borders */
+  --cosmos-border-subtle:  rgba(255, 245, 230, 0.04);
+  --cosmos-border-card:    rgba(196, 154, 108, 0.14);
+  --cosmos-border-hero:    rgba(196, 154, 108, 0.20);
+  --cosmos-border-divider: rgba(255, 245, 230, 0.05);
+  --cosmos-surface-border: rgba(255, 245, 230, 0.09);
+  --cosmos-toggle-knob:    rgba(255, 245, 230, 0.50);
+
+  /* Shadows */
+  --cosmos-shadow-card:  0 4px 24px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,245,230,0.04);
+  --cosmos-shadow-hero:  0 10px 40px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,245,230,0.05), inset 0 -1px 0 rgba(196,154,108,0.09);
+  --cosmos-shadow-sheet: 0 -8px 40px rgba(0,0,0,0.54), inset 0 1px 0 rgba(255,245,230,0.05);
+  --cosmos-glow-accent:  0 0 24px rgba(196, 154, 108, 0.18);
+
+  /* Nav */
+  --cosmos-nav-surface: rgba(20, 16, 10, 0.92);
+  --cosmos-nav-notch:   #121008;
+
+  /* modern.css bridge */
+  --primary:        #c49a6c;
+  --primary-light:  #d4b896;
+  --success:        #6bbd8e;
+  --danger:         #e07878;
+  --warning:        #d4a04a;
+
+  --bg-primary:     #121008;
+  --bg-secondary:   #1c1810;
+  --bg-tertiary:    #231e14;
+  --bg-elevated:    #2b2417;
+
+  --text-primary:   #ede8e0;
+  --text-secondary: rgba(205, 192, 175, 0.78);
+  --text-tertiary:  rgba(205, 192, 175, 0.40);
+
+  --border:         rgba(196, 154, 108, 0.10);
+  --separator:      rgba(196, 154, 108, 0.13);
+  --overlay:        rgba(18, 16, 8, 0.75);
+
+  --header-bg:      rgba(20, 16, 10, 0.92);
+  --nav-bg:         rgba(20, 16, 10, 0.94);
+  --nav-text:             #ede8e0;
+  --nav-text-secondary:   rgba(205, 192, 175, 0.78);
+
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.50);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.60);
+  --shadow-lg:  0 8px 30px rgba(0, 0, 0, 0.70);
+
+  /* Legacy aliases */
+  --card-bg:       #1c1810;
+  --surface-2:     #231e14;
+  --border-color:  rgba(196, 154, 108, 0.18);
+  --accent:        #c49a6c;
+  --bg-hover:      rgba(255, 245, 230, 0.07);
+  --input-bg:      #231e14;
+}
+
+/* ── STONE — warm light, terracotta accent ───────────────────────────────── */
+html[data-palette="stone"] {
+  /* Surfaces */
+  --cosmos-bg:        #f0ebe4;
+  --cosmos-surface-1: #faf7f2;
+  --cosmos-surface-2: #ffffff;
+  --cosmos-surface-3: #f4efe9;
+
+  /* Accent */
+  --cosmos-accent:        #9f6b48;
+  --cosmos-accent-dim:    rgba(159, 107, 72, 0.10);
+  --cosmos-accent-hover:  rgba(159, 107, 72, 0.16);
+  --cosmos-accent-border: rgba(159, 107, 72, 0.18);
+  --cosmos-accent-glow:   rgba(159, 107, 72, 0.22);
+  --cosmos-accent-soft:   rgba(159, 107, 72, 0.07);
+
+  /* Text */
+  --cosmos-text-1:      #1e1812;
+  --cosmos-text-2:      rgba(60, 48, 38, 0.68);
+  --cosmos-text-3:      rgba(60, 48, 38, 0.38);
+  --cosmos-text-accent: #9f6b48;
+
+  /* Semantic */
+  --cosmos-income:      #3a8e60;
+  --cosmos-expense:     #c04040;
+  --cosmos-income-dim:  rgba(58, 142, 96, 0.12);
+  --cosmos-expense-dim: rgba(192, 64, 64, 0.10);
+  --cosmos-neutral-dim: rgba(60, 48, 38, 0.07);
+
+  /* Borders */
+  --cosmos-border-subtle:  rgba(0, 0, 0, 0.05);
+  --cosmos-border-card:    rgba(159, 107, 72, 0.16);
+  --cosmos-border-hero:    rgba(159, 107, 72, 0.22);
+  --cosmos-border-divider: rgba(0, 0, 0, 0.06);
+  --cosmos-surface-border: rgba(0, 0, 0, 0.09);
+  --cosmos-toggle-knob:    rgba(255, 255, 255, 0.90);
+
+  /* Shadows */
+  --cosmos-shadow-card:  0 2px 12px rgba(120,90,60,0.10), inset 0 1px 0 rgba(255,255,255,0.80);
+  --cosmos-shadow-hero:  0 8px 32px rgba(120,90,60,0.14), inset 0 1px 0 rgba(255,255,255,0.90), inset 0 -1px 0 rgba(159,107,72,0.06);
+  --cosmos-shadow-sheet: 0 -6px 28px rgba(120,90,60,0.12), inset 0 1px 0 rgba(255,255,255,0.70);
+  --cosmos-glow-accent:  0 0 20px rgba(159, 107, 72, 0.14);
+
+  /* Nav */
+  --cosmos-nav-surface: rgba(240, 235, 228, 0.94);
+  --cosmos-nav-notch:   #f0ebe4;
+
+  /* modern.css bridge */
+  --primary:        #9f6b48;
+  --primary-light:  #c49a80;
+  --success:        #3a8e60;
+  --danger:         #c04040;
+  --warning:        #b07530;
+
+  --bg-primary:     #f0ebe4;
+  --bg-secondary:   #faf7f2;
+  --bg-tertiary:    #f4efe9;
+  --bg-elevated:    #ffffff;
+
+  --text-primary:   #1e1812;
+  --text-secondary: rgba(60, 48, 38, 0.68);
+  --text-tertiary:  rgba(60, 48, 38, 0.38);
+
+  --border:         rgba(159, 107, 72, 0.12);
+  --separator:      rgba(159, 107, 72, 0.14);
+  --overlay:        rgba(200, 185, 170, 0.70);
+
+  --header-bg:      rgba(240, 235, 228, 0.92);
+  --nav-bg:         rgba(240, 235, 228, 0.94);
+  --nav-text:             #1e1812;
+  --nav-text-secondary:   rgba(60, 48, 38, 0.68);
+
+  --shadow-sm:  0 1px 4px rgba(120, 90, 60, 0.12);
+  --shadow-md:  0 4px 16px rgba(120, 90, 60, 0.16);
+  --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
+
+  /* Legacy aliases */
+  --card-bg:       #faf7f2;
+  --surface-2:     rgba(0, 0, 0, 0.04);
+  --border-color:  rgba(159, 107, 72, 0.18);
+  --accent:        #9f6b48;
+  --bg-hover:      rgba(0, 0, 0, 0.05);
+  --input-bg:      #f4efe9;
+}
+
+/* ── Stone: body/page background ─────────────────────────────────────────── */
+html[data-palette="stone"],
+html[data-palette="stone"] body {
+  background: #f0ebe4;
+}
+
+/* ── Dusk: body/page background ──────────────────────────────────────────── */
+html[data-palette="dusk"],
+html[data-palette="dusk"] body {
+  background: #121008;
+}
