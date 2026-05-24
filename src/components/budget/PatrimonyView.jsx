@@ -13,6 +13,7 @@ import { filterByFinancialMonth } from '../../utils/financialMonth';
 import {
   PATRIMONY_TYPES, EMPTY_PATRIMONY, toNum, normCoin,
   sortPatrimonyTypes, sortItemsByType,
+  computeAccountBalance,
 } from '../../utils/budgetUtils';
 import Sparkline from './Sparkline';
 
@@ -20,6 +21,7 @@ const PatrimonyView = ({
   transactions,
   patrimony: externalPatrimony,
   onPatrimonyChange,
+  onAccountRename,
   mainAccountId,
   onMainAccountChange,
   currentMonth,
@@ -182,26 +184,12 @@ const PatrimonyView = ({
     return () => { cancelled = true; clearInterval(id); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // initialBalance (account.balance) + all linked transaction effects = live current balance
-  const computeAccountBalance = (acc) => {
-    const initial = parseFloat(acc.balance ?? 0);
-    if (isNaN(initial)) return 0;
-    return (transactions || []).reduce((sum, tx) => {
-      if (tx.account_id !== acc.id) return sum;
-      const amt = parseFloat(tx.amount) || 0;
-      if (tx.type === 'income')  return sum + amt;
-      if (tx.type === 'expense') return sum - amt;
-      if (tx.type === 'transfer') {
-        const isOut = /^Transferência para/i.test(tx.description || '');
-        return isOut ? sum - amt : sum + amt;
-      }
-      return sum;
-    }, initial);
-  };
+  // Wrapper local — usa a função partilhada de budgetUtils com as transações da prop.
+  const computeAccountBalanceLocal = (acc) => computeAccountBalance(acc, transactions);
 
   const getPatrimonyTypeValue = (key) => {
     const items = patrimony[key] || [];
-    if (key === 'accounts')   return items.reduce((s, x) => s + computeAccountBalance(x), 0);
+    if (key === 'accounts')   return items.reduce((s, x) => s + computeAccountBalanceLocal(x), 0);
     if (key === 'stocks')     return items.reduce((s, x) => {
       const price = toNum(livePrices[x.ticker]?.price ?? x.lastPrice ?? x.avgPrice);
       return s + toNum(x.qty) * price;
@@ -266,6 +254,13 @@ const PatrimonyView = ({
     if (!patrimonyFormType) return;
     const clean = { ...patrimonyForm };
     if (editingAssetId) {
+      // Detectar rename de conta e propagar às transações ligadas
+      if (patrimonyFormType === 'accounts' && onAccountRename) {
+        const oldItem = (patrimony?.accounts || []).find(a => a.id === editingAssetId);
+        if (oldItem && oldItem.name && clean.name && oldItem.name !== clean.name) {
+          onAccountRename(editingAssetId, clean.name);
+        }
+      }
       const updated = {
         ...patrimony,
         [patrimonyFormType]: (patrimony[patrimonyFormType] || []).map(x =>
@@ -291,7 +286,7 @@ const PatrimonyView = ({
   const fmtFiat        = (v) => parseFloat(v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const renderPatrimonyItemValue = (typeKey, item) => {
-    if (typeKey === 'accounts')   return `${fmtFiat(computeAccountBalance(item))}€`;
+    if (typeKey === 'accounts')   return `${fmtFiat(computeAccountBalanceLocal(item))}€`;
     if (typeKey === 'stocks') {
       const price = parseFloat(item.lastPrice ?? item.avgPrice) || null;
       if (!price) return `${item.qty || 0} ações · cotação pendente`;

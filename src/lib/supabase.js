@@ -159,6 +159,24 @@ export const dbService = {
   // deleteAllUserData — removes financial transaction data and user settings.
   // Budget goals, categories, rules etc. are intentionally kept so the user
   // doesn't have to reconfigure the app after a data reset.
+  // Propaga o novo nome de uma conta a todas as transações ligadas (DB).
+  // Chamado pelo handleAccountRename em useTransactions quando o utilizador
+  // renomeia uma conta em PatrimonyView.
+  async updateAccountName(userId, accountId, newName) {
+    const { error } = await supabase
+      .from('transactions')
+      .update({ account_name: newName })
+      .eq('user_id', userId)
+      .eq('account_id', accountId);
+    if (error) {
+      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
+        (error.message || '').includes('account_name') ||
+        (error.message || '').includes('account_id');
+      if (!isColErr) throw error;
+      console.warn('[supabase] account_name column missing — DB rename skipped');
+    }
+  },
+
   async deleteAllUserData(userId) {
     if (!userId) throw new Error('userId is required');
 

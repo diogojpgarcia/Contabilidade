@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { dbService } from '../lib/supabase';
 import { toast } from '../utils/toast';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
+import { computeAccountBalance } from '../utils/budgetUtils';
 
 /**
  * useTransactions — responsável por TODA a lógica de transações.
@@ -312,21 +313,34 @@ export function useTransactions(currentUser) {
 
   // ── Utilitários ───────────────────────────────────────────────────────────
 
-  // Calcula o saldo atual de uma conta com base nas transações ligadas a ela.
-  const computeCurrentBalance = (account, allTransactions) => {
-    const initial = parseFloat(account.balance ?? 0);
-    if (isNaN(initial)) return 0;
-    return (allTransactions || []).reduce((sum, tx) => {
-      if (tx.account_id !== account.id) return sum;
-      const amt = parseFloat(tx.amount) || 0;
-      if (tx.type === 'income')  return sum + amt;
-      if (tx.type === 'expense') return sum - amt;
-      if (tx.type === 'transfer') {
-        const isOut = /^Transferência para/i.test(tx.description || '');
-        return isOut ? sum - amt : sum + amt;
+  // Wrapper de conveniência — delega em computeAccountBalance (budgetUtils).
+  // Mantido por compatibilidade com os chamadores existentes.
+  const computeCurrentBalance = (account, allTransactions) =>
+    computeAccountBalance(account, allTransactions);
+
+  // Propaga o novo nome de uma conta a todas as transações ligadas.
+  // Chamado pelo PatrimonyView quando o utilizador renomeia uma conta.
+  const handleAccountRename = async (accountId, newName) => {
+    // Actualizar em memória
+    setTransactions(prev => prev.map(t =>
+      t.account_id === accountId ? { ...t, account_name: newName } : t
+    ));
+    // Actualizar o mapa de contas
+    const updatedMap = { ...transactionAccountMap };
+    Object.keys(updatedMap).forEach(txId => {
+      if (updatedMap[txId]?.account_id === accountId) {
+        updatedMap[txId] = { ...updatedMap[txId], account_name: newName };
       }
-      return sum;
-    }, initial);
+    });
+    setTransactionAccountMap(updatedMap);
+    dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap })
+      .catch(e => toast.error('Erro ao guardar: ' + e.message));
+    // Persistir no DB
+    try {
+      await dbService.updateAccountName(currentUser.id, accountId, newName);
+    } catch (err) {
+      toast.error('Erro ao actualizar nome da conta nas transações: ' + err.message);
+    }
   };
 
   return {
@@ -355,5 +369,6 @@ export function useTransactions(currentUser) {
     handleCategoriesChange,
     // Utilitários
     computeCurrentBalance,
+    handleAccountRename,
   };
 }

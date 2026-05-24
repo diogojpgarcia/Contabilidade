@@ -194,6 +194,7 @@ const App = () => {
               onBudgetsChange={s.handleBudgetsChange}
               patrimony={patrimonyWithLiveBalances}
               onPatrimonyChange={s.handlePatrimonyChange}
+              onAccountRename={tx.handleAccountRename}
               mainAccountId={s.mainAccountId}
               onMainAccountChange={s.handleMainAccountChange}
               financialMonthStartDay={effectiveStartDay}

@@ -21,6 +21,7 @@ const BudgetTab = ({
   onBudgetsChange,
   patrimony: externalPatrimony,
   onPatrimonyChange,
+  onAccountRename,
   mainAccountId,
   onMainAccountChange,
   financialMonthStartDay = 1,
@@ -115,6 +116,7 @@ const BudgetTab = ({
           transactions={transactions}
           patrimony={externalPatrimony}
           onPatrimonyChange={onPatrimonyChange}
+          onAccountRename={onAccountRename}
           mainAccountId={mainAccountId}
           onMainAccountChange={onMainAccountChange}
           currentMonth={currentMonth}

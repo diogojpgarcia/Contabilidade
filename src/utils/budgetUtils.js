@@ -1,5 +1,26 @@
 import { PATRIMONY_META } from './categoryIcons';
 
+/**
+ * Calcula o saldo actual de uma conta a partir do saldo inicial e das
+ * transações ligadas. Fonte única de verdade — usada em useTransactions e
+ * PatrimonyView para garantir resultados sempre idênticos.
+ */
+export const computeAccountBalance = (account, transactions) => {
+  const initial = parseFloat(account.balance ?? 0);
+  if (isNaN(initial)) return 0;
+  return (transactions || []).reduce((sum, tx) => {
+    if (tx.account_id !== account.id) return sum;
+    const amt = parseFloat(tx.amount) || 0;
+    if (tx.type === 'income')  return sum + amt;
+    if (tx.type === 'expense') return sum - amt;
+    if (tx.type === 'transfer') {
+      const isOut = /^Transferência para/i.test(tx.description || '');
+      return isOut ? sum - amt : sum + amt;
+    }
+    return sum;
+  }, initial);
+};
+
 /* ── Asset/Patrimony Sorting Utilities ────────────────────────────────────── */
 
 // Compute value of a patrimony item (type-specific)
