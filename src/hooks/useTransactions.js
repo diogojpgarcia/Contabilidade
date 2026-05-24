@@ -184,11 +184,13 @@ export function useTransactions(currentUser) {
         description: `Transferência para ${toName}`,
         amount: value, type: 'transfer', category: fromName, date: today,
         account_id: fromId, account_name: fromName,
+        subcategory: 'out',
       });
       const rawIn = await dbService.addTransaction(currentUser.id, {
         description: `Transferência de ${fromName}`,
         amount: value, type: 'transfer', category: toName, date: today,
         account_id: toId, account_name: toName,
+        subcategory: 'in',
       });
 
       const outTx = { ...rawOut, account_id: rawOut.account_id || fromId, account_name: rawOut.account_name || fromName };

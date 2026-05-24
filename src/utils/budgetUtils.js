@@ -14,7 +14,10 @@ export const computeAccountBalance = (account, transactions) => {
     if (tx.type === 'income')  return sum + amt;
     if (tx.type === 'expense') return sum - amt;
     if (tx.type === 'transfer') {
-      const isOut = /^Transferência para/i.test(tx.description || '');
+      // subcategory 'out'/'in' é a fonte primária (definida desde 2025).
+      // Fallback para o padrão de texto para compatibilidade com dados antigos.
+      const isOut = tx.subcategory === 'out'
+        || (tx.subcategory !== 'in' && /^Transferência para/i.test(tx.description || ''));
       return isOut ? sum - amt : sum + amt;
     }
     return sum;
