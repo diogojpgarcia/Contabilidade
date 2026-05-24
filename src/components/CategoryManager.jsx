@@ -286,3 +286,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
 
     </div>
   );
+};
+
+export default CategoryManager;
+
