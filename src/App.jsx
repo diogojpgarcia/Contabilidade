@@ -12,8 +12,8 @@ import { useSettings } from './hooks/useSettings';
 
 // Context
 import { AppProvider } from './context/AppContext';
-import { toast } from './utils/toast';
 import { ToastProvider } from './context/ToastContext';
+import { toast } from './utils/toast';
 
 // Tabs
 import HomeTab from './components/tabs/HomeTab';
@@ -267,7 +267,7 @@ const App = () => {
               }}
             />
           </ErrorBoundary>
-        )}
+        )
       </main>
 
       {/* Bottom Navigation */}
@@ -302,3 +302,24 @@ const App = () => {
           fontSize: '26px', fontWeight: '300',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 0 24px rgba(0,221,255,0.5)',
+          zIndex: 9999, border: 'none', cursor: 'pointer', lineHeight: 1,
+        }}
+      >
+        +
+      </button>
+
+      {/* Modal de atualização em massa de categoria */}
+      {tx.bulkPending && (
+        <BulkUpdateModal
+          bulkPending={tx.bulkPending}
+          onConfirm={tx.handleBulkConfirm}
+          onDismiss={tx.handleBulkDismiss}
+        />
+      )}
+    </div>
+    </AppProvider>
+    </ToastProvider>
+  );
+};
+
+export default App;
