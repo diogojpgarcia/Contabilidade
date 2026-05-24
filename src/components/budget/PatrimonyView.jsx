@@ -842,7 +842,7 @@ const PatrimonyView = ({
               {items.length > 0 && (
                 <div className="pat-cat-items">
                   {key === 'accounts' ? sorted.map(item => {
-                    const currentBal = computeAccountBalance(item);
+                    const currentBal = computeAccountBalanceLocal(item);
                     const isMain     = item.id === mainAccountId;
                     return (
                       <SwipeRevealCard
