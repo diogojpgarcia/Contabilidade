@@ -97,6 +97,14 @@ export function useTransactions(currentUser) {
     try {
       await dbService.deleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
+      // Limpar entrada do mapa para não acumular IDs mortos
+      if (transactionAccountMap[id]) {
+        const updatedMap = { ...transactionAccountMap };
+        delete updatedMap[id];
+        setTransactionAccountMap(updatedMap);
+        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap })
+          .catch(e => toast.error('Erro ao guardar: ' + e.message));
+      }
     } catch (error) {
       console.error('❌ Error deleting transaction:', error);
       throw error;

@@ -26,7 +26,9 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
   const [description, setDescription] = useState('');
   const [date, setDate]             = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading]       = useState(false);
-  const [selectedGoal, setSelectedGoal]         = useState('');
+  const [selectedGoal,     setSelectedGoal]     = useState('');
+  const [goalAccountId,    setGoalAccountId]    = useState('');
+  const [goalAccountName,  setGoalAccountName]  = useState('');
   const [transferFrom, setTransferFrom]         = useState('');
   const [transferTo,   setTransferTo]           = useState('');
   const [accountId,    setAccountId]            = useState(defaultAccount?.id   || '');
@@ -48,8 +50,9 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
 
     if (type === 'transfer') {
       const fromAcc = accounts.find(a => a.id === transferFrom);
-      if (fromAcc && amountValue > (parseFloat(fromAcc.balance) || 0)) {
-        showWarning(`Saldo insuficiente. Disponível: ${(parseFloat(fromAcc.balance) || 0).toFixed(2)}€`);
+      const liveBal = parseFloat(fromAcc?.currentBalance ?? fromAcc?.balance) || 0;
+      if (fromAcc && amountValue > liveBal) {
+        showWarning(`Saldo insuficiente. Disponível: ${liveBal.toFixed(2)}€`);
         return;
       }
     }
@@ -61,10 +64,24 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
         setAmount(''); setTransferFrom(''); setTransferTo('');
         setDate(new Date().toISOString().split('T')[0]);
       } else if (type === 'goal') {
+        // Actualizar progresso do objetivo
         const updatedGoals = goals.map(g =>
           g.id === selectedGoal ? { ...g, currentSavings: (g.currentSavings || 0) + amountValue } : g
         );
         onGoalsChange?.(updatedGoals);
+        // Criar transação de despesa ligada à conta escolhida
+        const goalName = goals.find(g => g.id === selectedGoal)?.name || 'Objetivo';
+        if (onTransactionAdded) {
+          await onTransactionAdded({
+            type:         'expense',
+            amount:       amountValue,
+            category:     'Objetivos',
+            description:  `Para objetivo: ${goalName}`,
+            date,
+            account_id:   goalAccountId   || null,
+            account_name: goalAccountName || null,
+          });
+        }
       } else {
         const transaction = {
           type, amount: amountValue, category,
@@ -75,7 +92,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
         if (onTransactionAdded) await onTransactionAdded(transaction);
       }
       if (type !== 'transfer') {
-        setAmount(''); setCategory(''); setSelectedGoal(''); setDescription('');
+        setAmount(''); setCategory(''); setSelectedGoal(''); setGoalAccountId(''); setGoalAccountName(''); setDescription('');
         setDate(new Date().toISOString().split('T')[0]);
         // Account selection preserved — user usually pays from the same account
       }
@@ -89,7 +106,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
 
   const switchType = (newType) => {
     setType(newType);
-    setCategory(''); setSelectedGoal(''); setTransferFrom(''); setTransferTo('');
+    setCategory(''); setSelectedGoal(''); setGoalAccountId(''); setGoalAccountName(''); setTransferFrom(''); setTransferTo('');
   };
 
   const handleAccountSelect = (e) => {
@@ -213,6 +230,31 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
                 : <select className="cosmos-field-select" value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)}>
                     <option value="">Seleciona um objetivo</option>
                     {goals.map(g => <option key={g.id} value={g.id}>{g.name} ({(g.currentSavings || 0).toFixed(0)}€ / {g.amount.toFixed(0)}€)</option>)}
+                  </select>}
+            </div>
+          </div>
+        )}
+
+        {/* Goal: Account selector */}
+        {type === 'goal' && (
+          <div className="cosmos-field-row">
+            <div className="cosmos-field-ico" style={{ background: 'rgba(255,255,255,0.06)' }}><CreditCard size={16} strokeWidth={1.75} color="#94A3B8" /></div>
+            <div className="cosmos-field-inner">
+              <div className="cosmos-field-label">Conta (de onde sai)</div>
+              {accounts.length === 0
+                ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas</span>
+                : <select
+                    className="cosmos-field-select"
+                    value={goalAccountId}
+                    onChange={e => {
+                      const id = e.target.value;
+                      const acc = accounts.find(a => a.id === id);
+                      setGoalAccountId(id);
+                      setGoalAccountName(acc?.name || '');
+                    }}
+                  >
+                    <option value="">Sem conta específica</option>
+                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€</option>)}
                   </select>}
             </div>
           </div>
