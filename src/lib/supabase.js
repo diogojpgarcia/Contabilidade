@@ -42,9 +42,19 @@ export const authService = {
 
 // Normalise a raw Supabase row so amount is always a Number.
 // Apply this to every row that comes back from the transactions table.
+const VALID_TX_TYPES = new Set(['expense', 'income', 'transfer', 'adjustment']);
+
 function mapTransaction(raw) {
   if (!raw) throw new Error('updateTransaction: no row returned — transaction may not exist or RLS blocked the update');
-  return { ...raw, amount: Number(raw.amount) };
+  const type = VALID_TX_TYPES.has(raw.type) ? raw.type : 'expense';
+  return {
+    ...raw,
+    amount:      Number(raw.amount) || 0,
+    type,
+    category:    raw.category    || (type === 'income' ? 'Outros Rendimentos' : 'Outros'),
+    description: raw.description || '',
+    date:        raw.date        || new Date().toISOString().slice(0, 10),
+  };
 }
 
 export const dbService = {

@@ -405,7 +405,7 @@ export function getCategoryIcon(categoryId, type = 'expense') {
 // Category stats
 export function getCategoryStats(transactions, categoryId, monthKey) {
   const categoryTransactions = transactions.filter(
-    t => t.category === categoryId && t.date.startsWith(monthKey)
+    t => t.category === categoryId && t.date && t.date.startsWith(monthKey)
   );
   
   return {
