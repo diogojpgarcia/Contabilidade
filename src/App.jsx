@@ -12,6 +12,8 @@ import { useSettings } from './hooks/useSettings';
 
 // Context
 import { AppProvider } from './context/AppContext';
+import { toast } from './utils/toast';
+import { ToastProvider } from './context/ToastContext';
 
 // Tabs
 import HomeTab from './components/tabs/HomeTab';
@@ -129,14 +131,16 @@ const App = () => {
     currentUser: auth.currentUser,
     categories:  tx.categories,
     onCategoriesChange: tx.handleCategoriesChange,
+    theme: s.theme,
   };
 
   return (
+    <ToastProvider>
     <AppProvider value={appContextValue}>
     <div className={`app-new ${s.theme}-ui${s.theme === 'fintech' ? ' modern-ui' : ''}`}>
       <main className="main-content-new" ref={mainContentRef}>
-        <ErrorBoundary>
-          {activeTab === 'home' && (
+        {activeTab === 'home' && (
+          <ErrorBoundary tab="Início">
             <HomeTab
               balance={balance}
               income={monthlyIncome}
@@ -160,9 +164,11 @@ const App = () => {
               userName={userName}
               financialFocus={s.financialFocus}
             />
-          )}
+          </ErrorBoundary>
+        )}
 
-          {activeTab === 'stats' && (
+        {activeTab === 'stats' && (
+          <ErrorBoundary tab="Estatísticas">
             <StatsTab
               transactions={safeTransactions}
               filteredTransactions={filteredTransactions}
@@ -178,26 +184,30 @@ const App = () => {
               onNavigate={handleNavigateFromStats}
               financialFocus={s.financialFocus}
             />
-          )}
+          </ErrorBoundary>
+        )}
 
-          {activeTab === 'add' && (
+        {activeTab === 'add' && (
+          <ErrorBoundary tab="Adicionar">
             <AddTab
               onTransactionAdded={(transaction) =>
                 tx.handleAddTransaction(transaction, s.mainAccountId, s.patrimony.accounts)
                   .then(() => setActiveTab('home'))
-                  .catch(err => alert('Erro ao adicionar transação: ' + err.message))
+                  .catch(err => toast.error('Erro ao adicionar transação: ' + err.message))
               }
               onTransfer={(fromId, toId, amount) =>
                 tx.handleTransfer(fromId, toId, amount, s.patrimony.accounts)
                   .then(() => setActiveTab('home'))
-                  .catch(err => alert('Erro ao criar transferência: ' + err.message))
+                  .catch(err => toast.error('Erro ao criar transferência: ' + err.message))
               }
               patrimony={patrimonyWithLiveBalances}
               defaultAccount={defaultAccount}
             />
-          )}
+          </ErrorBoundary>
+        )}
 
-          {activeTab === 'budget' && (
+        {activeTab === 'budget' && (
+          <ErrorBoundary tab="Orçamento">
             <BudgetTab
               transactions={safeTransactions}
               currentMonth={s.currentMonth}
@@ -215,16 +225,20 @@ const App = () => {
               confirmedRecurring={s.confirmedRecurring}
               onConfirmRecurring={s.handleConfirmRecurring}
             />
-          )}
+          </ErrorBoundary>
+        )}
 
-          {activeTab === 'import' && (
+        {activeTab === 'import' && (
+          <ErrorBoundary tab="Importar">
             <ImportTab
               onImportDone={tx.handleImport}
               learnedRules={tx.learnedRules}
             />
-          )}
+          </ErrorBoundary>
+        )}
 
-          {activeTab === 'profile' && (
+        {activeTab === 'profile' && (
+          <ErrorBoundary tab="Perfil">
             <ProfileTab
               onNavigateToImport={() => setActiveTab('import')}
               userName={userName}
@@ -252,8 +266,8 @@ const App = () => {
                 setActiveTab('home');
               }}
             />
-          )}
-        </ErrorBoundary>
+          </ErrorBoundary>
+        )}
       </main>
 
       {/* Bottom Navigation */}
@@ -288,23 +302,3 @@ const App = () => {
           fontSize: '26px', fontWeight: '300',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 0 24px rgba(0,221,255,0.5)',
-          zIndex: 9999, border: 'none', cursor: 'pointer', lineHeight: 1,
-        }}
-      >
-        +
-      </button>
-
-      {/* Modal de atualização em massa de categoria */}
-      {tx.bulkPending && (
-        <BulkUpdateModal
-          bulkPending={tx.bulkPending}
-          onConfirm={tx.handleBulkConfirm}
-          onDismiss={tx.handleBulkDismiss}
-        />
-      )}
-    </div>
-    </AppProvider>
-  );
-};
-
-export default App;

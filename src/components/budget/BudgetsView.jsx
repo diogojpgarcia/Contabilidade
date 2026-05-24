@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useForm } from '../../hooks/useForm';
 import { dbService } from '../../lib/supabase';
 import { shiftFinancialMonth, isInFinancialMonth, getFinancialMonthRange } from '../../utils/financialMonth';
@@ -49,29 +49,30 @@ const BudgetsView = ({
   // Open category sheet when parent sends a pendingCategoryLabel (from pendingNav)
   useEffect(() => {
     if (!pendingCategoryLabel) return;
-    const cat = categories.expense.find(c => c.label === pendingCategoryLabel);
+    const cat = (categories.expense || []).find(c => c.label === pendingCategoryLabel);
     if (cat) openCategorySheet(cat.id);
     onPendingCategoryConsumed?.();
   }, [pendingCategoryLabel]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const openCategorySheet = (catId) => {
+  const openCategorySheet = useCallback((catId) => {
     setSheetCategoryId(catId);
     setTimeout(() => setSheetVisible(true), 10);
-  };
-  const closeCategorySheet = () => {
+  }, []);
+
+  const closeCategorySheet = useCallback(() => {
     setSheetVisible(false);
     setTimeout(() => setSheetCategoryId(null), 350);
-  };
+  }, []);
 
-  const saveBudgetToDb = () => {
+  const saveBudgetToDb = useCallback(() => {
     saveBudgetsForm((current) => {
       onBudgetsChange && onBudgetsChange(current);
     });
-  };
+  }, [saveBudgetsForm, onBudgetsChange]);
 
-  const handleLimitChange = (categoryId, value) => {
+  const handleLimitChange = useCallback((categoryId, value) => {
     setBudgetField(categoryId, parseFloat(value) || 0);
-  };
+  }, [setBudgetField]);
 
   const getSpentForMonth = (categoryId, month) => {
     const categoryName = categories.expense.find(c => c.id === categoryId)?.label;
@@ -112,7 +113,7 @@ const BudgetsView = ({
   const inactiveItems = sortedItems.filter(i => i.limit === 0 && i.spent === 0);
 
   const totalBudget = Object.values(budgets).reduce((s, v) => s + (v || 0), 0);
-  const totalSpent  = categories.expense.reduce((s, cat) => s + getSpentByCategory(cat.id), 0);
+  const totalSpent  = (categories.expense || []).reduce((s, cat) => s + getSpentByCategory(cat.id), 0);
   const isTotalOver = totalBudget > 0 && totalSpent > totalBudget;
 
   return (
@@ -251,12 +252,4 @@ const BudgetsView = ({
         txByCategory={txByCategory}
         budgets={budgets}
         sortedItems={sortedItems}
-        animated={animated}
-        isVisible={sheetVisible}
-        onClose={closeCategorySheet}
-      />
-    </>
-  );
-};
-
-export default BudgetsView;
+        animated={animat

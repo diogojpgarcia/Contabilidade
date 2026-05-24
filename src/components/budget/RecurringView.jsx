@@ -4,6 +4,7 @@ import Overlay from '../Overlay';
 import SwipeRevealCard from '../SwipeRevealCard';
 import RecurringCalendar from './RecurringCalendar';
 import { useAppContext } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 import { Repeat, Calendar } from '../icons';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
 import {
@@ -45,6 +46,7 @@ const RecurringView = ({
   patrimony,
 }) => {
   const { currentUser: user, categories } = useAppContext();
+  const { showError } = useToast();
   const [showForm,          setShowForm]          = useState(false);
   const [showCalendar,      setShowCalendar]      = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -72,7 +74,7 @@ const RecurringView = ({
       onRecurringPaymentsChange(updated);
     } catch (err) {
       console.error('[RecurringView] save error:', err);
-      alert('Erro ao guardar: ' + err.message);
+      showError('Erro ao guardar: ' + err.message);
     } finally {
       setSaving(false);
     }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { dbService } from '../lib/supabase';
+import { useToast } from '../context/ToastContext';
 import { CategoryIconBubble } from '../utils/categoryIcons';
 import './CategoryManager.css';
 
@@ -26,6 +27,7 @@ const COLORS = [
  *   onUpdate   — (updated) => void  — propagates changes to App state
  */
 const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
+  const { showError } = useToast();
   // ── Tab ────────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('expense');
 
@@ -55,7 +57,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
       onUpdate?.(updated);
     } catch (err) {
       console.error('[CategoryManager] save error:', err);
-      alert('Erro ao guardar: ' + err.message);
+      showError('Erro ao guardar: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -284,6 +286,3 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
 
     </div>
   );
-};
-
-export default CategoryManager;

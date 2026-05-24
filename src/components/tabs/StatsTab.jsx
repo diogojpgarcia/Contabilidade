@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Clock, SlidersHorizontal, Search } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
@@ -34,11 +35,7 @@ function getTransferFlow(tx) {
 
 const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
   const { categories, theme } = useAppContext();
-  console.log('REAL STATS TAB LOADED');
-  console.log('RENDER STATS');
-  console.log('ACTIVE THEME:', theme);
-  console.log('transactions:', transactions);
-  console.log('budgets:', budgets);
+  const { showError } = useToast();
 
   const [pickerTx, setPickerTx] = useState(null);
 
@@ -175,7 +172,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      alert('Erro ao apagar transação: ' + error.message);
+      showError('Erro ao apagar transação: ' + error.message);
     } finally {
       setDeleting(null);
     }
@@ -1700,3 +1697,4 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 };
 
 export default StatsTab;
+                                                                                                                                                                                                

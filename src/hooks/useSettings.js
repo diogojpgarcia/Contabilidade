@@ -3,6 +3,7 @@ import { dbService } from '../lib/supabase';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
 import { getMonthKey } from '../utils/data';
 import { getCurrentFinancialMonth } from '../utils/financialMonth';
+import { toast } from '../utils/toast';
 
 /**
  * useSettings — responsável por TODAS as configurações do utilizador.
@@ -119,6 +120,7 @@ export function useSettings(currentUser, txHook) {
 
     } catch (error) {
       console.error('❌ Error loading user data:', error);
+      toast.error('Erro ao carregar dados. Tenta recarregar a página.');
     }
   };
 
@@ -143,7 +145,7 @@ export function useSettings(currentUser, txHook) {
     document.documentElement.setAttribute('data-palette', palette);
     localStorage.setItem('cosmos-palette', palette);
     if (currentUser?.id) {
-      dbService.updateUserSettings(currentUser.id, { color_palette: palette }).catch(console.error);
+      dbService.updateUserSettings(currentUser.id, { color_palette: palette }).catch(e => toast.error('Erro ao guardar paleta: ' + e.message));
     }
   }, [currentUser]);
 
@@ -154,6 +156,7 @@ export function useSettings(currentUser, txHook) {
       await dbService.updateUserSettings(currentUser.id, { patrimony: newPatrimony });
     } catch (error) {
       console.error('Error saving patrimony:', error);
+      toast.error('Erro ao guardar património.');
     }
   };
 
@@ -163,6 +166,7 @@ export function useSettings(currentUser, txHook) {
       await dbService.updateUserSettings(currentUser.id, { homePatrimonyView: view });
     } catch (error) {
       console.error('Error saving patrimony view:', error);
+      toast.error('Erro ao guardar preferência de vista.');
     }
   };
 
@@ -170,13 +174,13 @@ export function useSettings(currentUser, txHook) {
   // Precisa de txHook.transactions e txHook.setTransactions para a migração.
   const handleMainAccountChange = async (accountId) => {
     setMainAccountId(accountId);
-    dbService.updateUserSettings(currentUser.id, { mainAccountId: accountId }).catch(console.error);
+    dbService.updateUserSettings(currentUser.id, { mainAccountId: accountId }).catch(e => toast.error('Erro ao guardar: ' + e.message));
 
     if (!accountId) return;
     const acc = (patrimony.accounts || []).find(a => a.id === accountId);
     if (!acc) return;
 
-    const unlinked = txHook.transactions.filter(t => !t.account_id && t.type !== 'transfer');
+    const unlinked = (txHook.transactions || []).filter(t => !t.account_id && t.type !== 'transfer');
     if (unlinked.length === 0) return;
 
     const confirmed = window.confirm(
@@ -198,10 +202,10 @@ export function useSettings(currentUser, txHook) {
         updatedMap[t.id] = { account_id: acc.id, account_name: acc.name };
       });
       txHook.setTransactionAccountMap(updatedMap);
-      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
     } catch (err) {
-      console.error('❌ Migration failed:', err);
-      alert('Erro na migração: ' + err.message);
+      console.error('❌ Migration failed:', err);  // toast already shown below
+      toast.error('Erro na migração: ' + err.message);
     }
   };
 
@@ -212,7 +216,7 @@ export function useSettings(currentUser, txHook) {
       await dbService.updateUserSettings(currentUser.id, { category_budgets: newBudgets });
     } catch (error) {
       console.error('Error saving budgets:', error);
-      alert('Erro ao guardar orçamento');
+      toast.error('Erro ao guardar orçamento.');
     }
   };
 
@@ -225,7 +229,7 @@ export function useSettings(currentUser, txHook) {
     dbService.updateUserSettings(currentUser.id, {
       financialMonthStartDay: sd,
       useFinancialMonth: enabled,
-    }).catch(console.error);
+    }).catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
   const handleHomeUsesFinancialMonthChange = (enabled) => {
@@ -242,7 +246,7 @@ export function useSettings(currentUser, txHook) {
   // Confirma um pagamento recorrente: cria a transação real e regista a confirmação.
   // Usa txHook.setTransactions para adicionar a nova transação ao estado global.
   const handleConfirmRecurring = async ({ recurringPayment, dueDate, monthKey, amount, accountId }) => {
-    const account = patrimony.accounts.find(a => a.id === accountId);
+    const account = (patrimony.accounts || []).find(a => a.id === accountId);
     const newTx = await dbService.addTransaction(currentUser.id, {
       date:         dueDate,
       description:  recurringPayment.title,
@@ -268,7 +272,7 @@ export function useSettings(currentUser, txHook) {
       },
     };
     setConfirmedRecurring(updated);
-    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated }).catch(console.error);
+    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated }).catch(e => toast.error('Erro ao guardar: ' + e.message));
 
     if (accountId && newTx.id) {
       const updatedMap = {
@@ -276,14 +280,14 @@ export function useSettings(currentUser, txHook) {
         [newTx.id]: { account_id: accountId, account_name: account?.name || null },
       };
       txHook.setTransactionAccountMap(updatedMap);
-      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
     }
   };
 
   // ── Focus financeiro ──────────────────────────────────────────────────────
   const handleFocusChange = (focus) => {
     setFinancialFocus(focus);
-    dbService.updateUserSettings(currentUser.id, { financial_focus: focus }).catch(console.error);
+    dbService.updateUserSettings(currentUser.id, { financial_focus: focus }).catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
   return {

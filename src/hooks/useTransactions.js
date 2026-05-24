@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { dbService } from '../lib/supabase';
+import { toast } from '../utils/toast';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
 
 /**
@@ -81,7 +82,7 @@ export function useTransactions(currentUser) {
           [txWithAccount.id]: { account_id: accId, account_name: accName || null },
         };
         setTransactionAccountMap(updatedMap);
-        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
       }
 
       return txWithAccount;
@@ -137,7 +138,7 @@ export function useTransactions(currentUser) {
           delete updatedMap[merged.id];
         }
         setTransactionAccountMap(updatedMap);
-        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
       }
     } catch (error) {
       console.error('❌ Error updating transaction:', error);
@@ -164,8 +165,8 @@ export function useTransactions(currentUser) {
     if (!value || value <= 0) return;
     const today = new Date().toISOString().split('T')[0];
     const accs     = patrimonyAccounts || [];
-    const fromAcc  = accs.find(a => a.id === fromId);
-    const toAcc    = accs.find(a => a.id === toId);
+    const fromAcc  = (accs || []).find(a => a.id === fromId);
+    const toAcc    = (accs || []).find(a => a.id === toId);
     const fromName = fromAcc?.name || fromId;
     const toName   = toAcc?.name   || toId;
 
@@ -191,7 +192,7 @@ export function useTransactions(currentUser) {
       if (outTx.id) updatedMap[outTx.id] = { account_id: fromId, account_name: fromName };
       if (inTx.id)  updatedMap[inTx.id]  = { account_id: toId,   account_name: toName  };
       setTransactionAccountMap(updatedMap);
-      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
     } catch (err) {
       console.error('❌ Transfer error:', err);
       throw err;
@@ -215,7 +216,7 @@ export function useTransactions(currentUser) {
       delete updatedMap[transactionId];
     }
     setTransactionAccountMap(updatedMap);
-    dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(console.error);
+    dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
 
     try {
       await dbService.updateTransaction(transactionId, {
@@ -251,7 +252,7 @@ export function useTransactions(currentUser) {
       ...learnedRules.filter(r => r.pattern !== pattern),
     ];
     setLearnedRules(updated);
-    dbService.updateUserSettings(currentUser.id, { learned_rules: updated }).catch(console.error);
+    dbService.updateUserSettings(currentUser.id, { learned_rules: updated }).catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
   const handleCategoryChange = async (transactionId, newCategory, description) => {
@@ -293,7 +294,7 @@ export function useTransactions(currentUser) {
     ));
 
     for (const tx of similar) {
-      dbService.updateTransaction(tx.id, { category: newCategory }).catch(console.error);
+      dbService.updateTransaction(tx.id, { category: newCategory }).catch(e => toast.error('Erro ao guardar: ' + e.message));
     }
 
     saveLearnedRule(pattern, newCategory);

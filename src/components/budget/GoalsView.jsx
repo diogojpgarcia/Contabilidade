@@ -4,11 +4,13 @@ import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import GoalSavingsInput from './GoalSavingsInput';
 import { useAppContext } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 
 const EMPTY_GOAL = { name: '', amount: '', targetDate: '', currentSavings: '' };
 
 const GoalsView = () => {
   const { currentUser: user } = useAppContext();
+  const { showError, showWarning } = useToast();
   const [goals,         setGoals]         = useState([]);
   const [editingGoalId, setEditingGoalId] = useState(null);
   const { draft: newGoal, setField: setGoalField, reset: resetGoal } = useForm(EMPTY_GOAL);
@@ -26,11 +28,11 @@ const GoalsView = () => {
     try {
       await dbService.updateUserSettings(user.id, { goals: updatedGoals });
       setGoals(updatedGoals);
-    } catch (error) { console.error('Error saving goals:', error); alert('Erro ao guardar objetivos'); }
+    } catch (error) { console.error('Error saving goals:', error); showError('Erro ao guardar objetivos.'); }
   };
 
   const handleAddGoal = () => {
-    if (!newGoal.name || !newGoal.amount) { alert('Preenche nome e valor'); return; }
+    if (!newGoal.name || !newGoal.amount) { showWarning('Preenche nome e valor.'); return; }
     const goal = {
       id: Date.now().toString(),
       ...newGoal,

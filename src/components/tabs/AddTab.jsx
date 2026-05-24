@@ -4,10 +4,12 @@ import { CategoryIconBubble } from '../../utils/categoryIcons';
 import CategoryPicker from '../CategoryPicker';
 import { Tag, CreditCard, FileText, Calendar, ArrowUp, ArrowDown, Target, Minus, Plus, ArrowLeftRight } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 import './AddTab.css';
 
 const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount }) => {
   const { currentUser, categories, theme } = useAppContext();
+  const { showError, showWarning } = useToast();
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -49,18 +51,18 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount }) =
   const handleSubmit = async (e) => {
     if (e?.preventDefault) e.preventDefault();
 
-    if (!amount) { alert('Preenche o valor!'); return; }
-    if (type === 'goal' && !selectedGoal) { alert('Seleciona um objetivo!'); return; }
-    if (type !== 'goal' && type !== 'transfer' && !category) { alert('Seleciona uma categoria!'); return; }
-    if (type === 'transfer' && (!transferFrom || !transferTo)) { alert('Seleciona origem e destino!'); return; }
+    if (!amount) { showWarning('Preenche o valor.'); return; }
+    if (type === 'goal' && !selectedGoal) { showWarning('Seleciona um objetivo.'); return; }
+    if (type !== 'goal' && type !== 'transfer' && !category) { showWarning('Seleciona uma categoria.'); return; }
+    if (type === 'transfer' && (!transferFrom || !transferTo)) { showWarning('Seleciona origem e destino.'); return; }
 
     const amountValue = parseFloat(amount);
-    if (isNaN(amountValue) || amountValue <= 0) { alert('Valor inválido!'); return; }
+    if (isNaN(amountValue) || amountValue <= 0) { showWarning('Valor inválido.'); return; }
 
     if (type === 'transfer') {
       const fromAcc = accounts.find(a => a.id === transferFrom);
       if (fromAcc && amountValue > (parseFloat(fromAcc.balance) || 0)) {
-        alert(`Saldo insuficiente. Disponível: ${(parseFloat(fromAcc.balance) || 0).toFixed(2)}€`);
+        showWarning(`Saldo insuficiente. Disponível: ${(parseFloat(fromAcc.balance) || 0).toFixed(2)}€`);
         return;
       }
     }
@@ -93,7 +95,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount }) =
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('✕ Erro: ' + error.message);
+      showError('Erro ao adicionar: ' + error.message);
     } finally {
       setLoading(false);
     }
