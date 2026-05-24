@@ -131,6 +131,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
+    <>
     <div className="cm-sheet">
 
       {/* ── Header ── */}
@@ -319,6 +320,7 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
           </div>
         </Overlay>
       )}
+    </>
   );
 };
 

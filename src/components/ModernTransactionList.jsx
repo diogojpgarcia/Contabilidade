@@ -248,10 +248,6 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange
           onClose={() => setAcctPickerTx(null)}
         />
       )}
-    </>
-  );
-};
-
       {confirmDeleteTx && (
         <Overlay onClose={() => setConfirmDeleteTx(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -278,5 +274,9 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange
           </div>
         </Overlay>
       )}
+
+    </>
+  );
+};
 
 export default ModernTransactionList;
