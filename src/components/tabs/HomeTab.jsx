@@ -17,7 +17,6 @@ const HomeTab = ({
   recurringPayments,
   confirmedRecurring = {},
   userName = '',
-  financialFocus = null,
 }) => {
   const { categories } = useAppContext();
   const p = patrimony;

@@ -9,7 +9,7 @@ import { toast } from '../utils/toast';
  * useSettings — responsável por TODAS as configurações do utilizador.
  *
  * Inclui:
- *  - Estado: patrimony, budgets, recurring, confirmedRecurring, theme,
+ *  - Estado: patrimony, budgets, goals, recurring, confirmedRecurring,
  *            colorPalette, mainAccountId, financialMonth*, homePatrimonyView,
  *            financialFocus, currentMonth
  *  - loadUserData(): fetch atómico de transações + settings (elimina race conditions)
@@ -26,7 +26,6 @@ export function useSettings(currentUser, txHook) {
   });
   const [homePatrimonyView, setHomePatrimonyView] = useState('total');
   const [budgets, setBudgets] = useState({});
-  const [theme, setTheme] = useState('fintech');
   const [colorPalette, setColorPaletteState] = useState(
     () => localStorage.getItem('cosmos-palette') || 'midnight'
   );
@@ -34,6 +33,7 @@ export function useSettings(currentUser, txHook) {
   const [financialMonthStartDay, setFinancialMonthStartDay] = useState(1);
   const [useFinancialMonth, setUseFinancialMonth] = useState(false);
   const [homeUsesFinancialMonth, setHomeUsesFinancialMonth] = useState(true);
+  const [goals, setGoals] = useState([]);
   const [recurringPayments, setRecurringPayments] = useState([]);
   const [confirmedRecurring, setConfirmedRecurring] = useState({});
   const [financialFocus, setFinancialFocus] = useState(null);
@@ -90,6 +90,7 @@ export function useSettings(currentUser, txHook) {
       if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
       if (settings?.category_budgets) setBudgets(settings.category_budgets);
       if (settings?.financial_focus)  setFinancialFocus(settings.financial_focus);
+      if (Array.isArray(settings?.goals)) setGoals(settings.goals);
 
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
       if (mid) setMainAccountId(mid);
@@ -129,6 +130,7 @@ export function useSettings(currentUser, txHook) {
     loadRequestId.current++;
     setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
     setBudgets({});
+    setGoals([]);
     setMainAccountId(null);
     setRecurringPayments([]);
     setConfirmedRecurring({});
@@ -284,6 +286,17 @@ export function useSettings(currentUser, txHook) {
     }
   };
 
+  // ── Objetivos ─────────────────────────────────────────────────────────────
+  const handleGoalsChange = async (updatedGoals) => {
+    setGoals(updatedGoals);
+    try {
+      await dbService.updateUserSettings(currentUser.id, { goals: updatedGoals });
+    } catch (error) {
+      console.error('Error saving goals:', error);
+      toast.error('Erro ao guardar objetivos.');
+    }
+  };
+
   // ── Focus financeiro ──────────────────────────────────────────────────────
   const handleFocusChange = (focus) => {
     setFinancialFocus(focus);
@@ -295,7 +308,7 @@ export function useSettings(currentUser, txHook) {
     patrimony, setPatrimony,
     homePatrimonyView,
     budgets,
-    theme, setTheme,
+    goals,
     colorPalette, setColorPalette,
     mainAccountId,
     financialMonthStartDay,
@@ -317,6 +330,7 @@ export function useSettings(currentUser, txHook) {
     handleHomeUsesFinancialMonthChange,
     handleRecurringPaymentsChange,
     handleConfirmRecurring,
+    handleGoalsChange,
     handleFocusChange,
   };
 }

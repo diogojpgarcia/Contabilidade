@@ -34,7 +34,8 @@ function getTransferFlow(tx) {
 }
 
 const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
-  const { categories, theme } = useAppContext();
+  const { categories } = useAppContext();
+  const theme = 'fintech'; // único tema ativo; branches 'modern'/'default' são código legado
   const { showError } = useToast();
 
   const [pickerTx, setPickerTx] = useState(null);

@@ -4,10 +4,9 @@ import { createContext, useContext } from 'react';
  * AppContext — dados estáveis partilhados por toda a app.
  *
  * O que entra aqui: dados que mudam raramente e são lidos por 3+ componentes.
- *   - currentUser  → GoalsView, RecurringView, PatrimonyView, ImportTab, ProfileTab
+ *   - currentUser  → RecurringView, PatrimonyView, ImportTab, ProfileTab
  *   - categories   → HomeTab, StatsTab, AddTab, BudgetsView, CategoryHistorySheet, RecurringView
  *   - onCategoriesChange → ProfileTab
- *   - theme        → todos os tabs
  *
  * O que NÃO entra aqui: dados que mudam frequentemente (transactions, patrimony,
  * currentMonth, budgets) — esses continuam como props para evitar re-renders

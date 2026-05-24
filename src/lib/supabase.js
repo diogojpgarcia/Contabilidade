@@ -195,36 +195,29 @@ export const dbService = {
   },
 
   async updateUserSettings(userId, newSettings) {
-    // Check if settings exist
+    // Ler settings actuais para fazer merge (necessário porque Supabase não suporta
+    // jsonb merge nativo no upsert — teríamos de usar uma RPC para isso).
+    // O SELECT + UPSERT ainda tem uma janela de race condition teórica, mas usar
+    // upsert em vez de SELECT + INSERT/UPDATE elimina o caso mais comum de conflito
+    // (dois tabs a criar a linha em simultâneo).
     const { data: existing } = await supabase
       .from('user_settings')
-      .select('id, settings')
+      .select('settings')
       .eq('user_id', userId)
-      .single()
-    
-    if (existing) {
-      // Merge with existing settings
-      const mergedSettings = { ...existing.settings, ...newSettings };
-      
-      const { data, error } = await supabase
-        .from('user_settings')
-        .update({ settings: mergedSettings })
-        .eq('user_id', userId)
-        .select()
-        .single()
-      
-      if (error) throw error;
-      return data;
-    } else {
-      // Create new settings row
-      const { data, error } = await supabase
-        .from('user_settings')
-        .insert({ user_id: userId, settings: newSettings })
-        .select()
-        .single()
-      
-      if (error) throw error;
-      return data;
-    }
+      .maybeSingle();
+
+    const mergedSettings = { ...(existing?.settings || {}), ...newSettings };
+
+    const { data, error } = await supabase
+      .from('user_settings')
+      .upsert(
+        { user_id: userId, settings: mergedSettings },
+        { onConflict: 'user_id' }
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 }

@@ -8,7 +8,8 @@ import { useToast } from '../../context/ToastContext';
 import './AddTab.css';
 
 const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount }) => {
-  const { currentUser, categories, theme } = useAppContext();
+  const { currentUser, categories } = useAppContext();
+  const theme = 'fintech'; // único tema ativo; branches 'default'/'modern' são código legado
   const { showError, showWarning } = useToast();
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');

@@ -131,38 +131,27 @@ const App = () => {
     currentUser: auth.currentUser,
     categories:  tx.categories,
     onCategoriesChange: tx.handleCategoriesChange,
-    theme: s.theme,
   };
 
   return (
     <ToastProvider>
     <AppProvider value={appContextValue}>
-    <div className={`app-new ${s.theme}-ui${s.theme === 'fintech' ? ' modern-ui' : ''}`}>
+    <div className="app-new fintech-ui modern-ui">
       <main className="main-content-new" ref={mainContentRef}>
         {activeTab === 'home' && (
           <ErrorBoundary tab="Início">
             <HomeTab
               balance={balance}
-              income={monthlyIncome}
-              expenses={monthlyExpenses}
               totalBalance={totalBalance}
               transactions={filteredTransactions}
               currentMonth={s.currentMonth}
-              onMonthChange={s.setCurrentMonth}
               patrimony={patrimonyWithLiveBalances}
-              homePatrimonyView={s.homePatrimonyView}
-              onPatrimonyViewChange={s.handlePatrimonyViewChange}
-              onCategoryChange={tx.handleCategoryChange}
-              onAccountChange={tx.handleAccountChange}
-              onTransactionDeleted={tx.handleDeleteTransaction}
-              onTransactionEdited={tx.handleEditTransaction}
               financialMonthStartDay={effectiveStartDay}
               homeUsesFinancialMonth={s.homeUsesFinancialMonth}
               recurringPayments={s.recurringPayments}
               confirmedRecurring={s.confirmedRecurring}
               onNavigate={handleNavigateFromStats}
               userName={userName}
-              financialFocus={s.financialFocus}
             />
           </ErrorBoundary>
         )}
@@ -213,7 +202,7 @@ const App = () => {
               currentMonth={s.currentMonth}
               budgets={s.budgets}
               onBudgetsChange={s.handleBudgetsChange}
-              patrimony={s.patrimony}
+              patrimony={patrimonyWithLiveBalances}
               onPatrimonyChange={s.handlePatrimonyChange}
               mainAccountId={s.mainAccountId}
               onMainAccountChange={s.handleMainAccountChange}
@@ -224,6 +213,8 @@ const App = () => {
               onRecurringPaymentsChange={s.handleRecurringPaymentsChange}
               confirmedRecurring={s.confirmedRecurring}
               onConfirmRecurring={s.handleConfirmRecurring}
+              goals={s.goals}
+              onGoalsChange={s.handleGoalsChange}
             />
           </ErrorBoundary>
         )}
@@ -247,7 +238,6 @@ const App = () => {
                 s.resetForLogout();
                 tx.initFromLoad({ rows: [], accountMap: {} });
               }}
-              setTheme={s.setTheme}
               colorPalette={s.colorPalette}
               setColorPalette={s.setColorPalette}
               patrimony={patrimonyWithLiveBalances}

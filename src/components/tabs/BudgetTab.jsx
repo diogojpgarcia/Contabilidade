@@ -30,6 +30,8 @@ const BudgetTab = ({
   onRecurringPaymentsChange,
   confirmedRecurring = {},
   onConfirmRecurring,
+  goals = [],
+  onGoalsChange,
 }) => {
   const [activeView, setActiveView] = useState('budgets');
   // pendingCategoryLabel: forwarded to BudgetsView so it can open the sheet
@@ -101,7 +103,10 @@ const BudgetTab = ({
 
       {/* ── GOALS ── */}
       {activeView === 'goals' && (
-        <GoalsView />
+        <GoalsView
+          goals={goals}
+          onGoalsChange={onGoalsChange}
+        />
       )}
 
       {/* ── PATRIMONY ── */}

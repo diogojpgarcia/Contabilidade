@@ -17,7 +17,8 @@ const toFtcShape = (tx, i) => ({
 });
 
 const ImportTab = ({ onImportDone, learnedRules = [] }) => {
-  const { currentUser, theme } = useAppContext();
+  const { currentUser } = useAppContext();
+  const theme = 'fintech'; // único tema ativo
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);

@@ -1,35 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from '../../hooks/useForm';
-import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import GoalSavingsInput from './GoalSavingsInput';
-import { useAppContext } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 
 const EMPTY_GOAL = { name: '', amount: '', targetDate: '', currentSavings: '' };
 
-const GoalsView = () => {
-  const { currentUser: user } = useAppContext();
-  const { showError, showWarning } = useToast();
-  const [goals,         setGoals]         = useState([]);
+/**
+ * GoalsView — componente puro: recebe goals + onGoalsChange, sem fetch próprio.
+ * A persistência é gerida pelo useSettings (boot atómico, fonte única de verdade).
+ *
+ * Props:
+ *   goals          — array de objetivos (vem do useSettings via BudgetTab)
+ *   onGoalsChange  — (updatedGoals) => void  (persiste e atualiza estado global)
+ */
+const GoalsView = ({ goals = [], onGoalsChange }) => {
+  const { showWarning } = useToast();
   const [editingGoalId, setEditingGoalId] = useState(null);
   const { draft: newGoal, setField: setGoalField, reset: resetGoal } = useForm(EMPTY_GOAL);
-
-  useEffect(() => { loadData(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadData = async () => {
-    try {
-      const settings = await dbService.getUserSettings(user.id);
-      if (settings?.goals) setGoals(settings.goals);
-    } catch (error) { console.error('Error loading data:', error); }
-  };
-
-  const saveGoals = async (updatedGoals) => {
-    try {
-      await dbService.updateUserSettings(user.id, { goals: updatedGoals });
-      setGoals(updatedGoals);
-    } catch (error) { console.error('Error saving goals:', error); showError('Erro ao guardar objetivos.'); }
-  };
 
   const handleAddGoal = () => {
     if (!newGoal.name || !newGoal.amount) { showWarning('Preenche nome e valor.'); return; }
@@ -39,18 +27,18 @@ const GoalsView = () => {
       amount: parseFloat(newGoal.amount),
       currentSavings: parseFloat(newGoal.currentSavings) || 0,
     };
-    saveGoals([...goals, goal]);
+    onGoalsChange?.([...goals, goal]);
     resetGoal(EMPTY_GOAL);
   };
 
   // Called only from GoalSavingsInput.onBlur — never from onChange.
   const handleUpdateGoalSavings = (goalId, value) => {
-    saveGoals(goals.map(g => g.id === goalId ? { ...g, currentSavings: parseFloat(value) || 0 } : g));
+    onGoalsChange?.(goals.map(g => g.id === goalId ? { ...g, currentSavings: parseFloat(value) || 0 } : g));
   };
 
-  const handleDeleteGoal = async (goalId) => {
+  const handleDeleteGoal = (goalId) => {
     if (!confirm('Apagar este objetivo?')) return;
-    saveGoals(goals.filter(g => g.id !== goalId));
+    onGoalsChange?.(goals.filter(g => g.id !== goalId));
   };
 
   return (
