@@ -79,7 +79,7 @@
   transition: all 0.15s;
 }
 .cm-tab--on {
-  background: var(--accent, #3b82f6);
+  background: var(--accent, var(--cosmos-accent));
   border-color: transparent;
   color: #fff;
 }
@@ -159,7 +159,7 @@
   opacity: 0.55;
   transition: opacity 0.12s, background 0.12s;
 }
-.cm-edit-btn:hover { opacity: 1; background: rgba(59,130,246,0.18); }
+.cm-edit-btn:hover { opacity: 1; background: var(--cosmos-accent-dim); }
 .cm-del-btn:hover  { opacity: 1; background: rgba(239,68,68,0.18); }
 
 /* ── Edit row ── */
@@ -168,7 +168,7 @@
   align-items: stretch;
   gap: 8px;
   background: var(--bg-secondary, rgba(255,255,255,0.08));
-  border: 1px solid var(--accent, #3b82f6);
+  border: 1px solid var(--accent, var(--cosmos-accent));
 }
 
 .cm-edit-line {
@@ -188,7 +188,7 @@
   outline: none;
   min-width: 0;
 }
-.cm-edit-input:focus { border-color: var(--accent, #3b82f6); }
+.cm-edit-input:focus { border-color: var(--accent, var(--cosmos-accent)); }
 
 /* ── Shared swatch / icon buttons ── */
 .cm-swatch-btn {
@@ -234,7 +234,7 @@
   flex-shrink: 0;
   transition: opacity 0.12s;
 }
-.cm-save-btn   { background: var(--accent, #3b82f6); color: #fff; }
+.cm-save-btn   { background: var(--accent, var(--cosmos-accent)); color: #fff; }
 .cm-cancel-btn { background: var(--bg-tertiary, rgba(255,255,255,0.07)); color: var(--text-secondary, rgba(255,255,255,0.6)); }
 .cm-save-btn:disabled { opacity: 0.45; cursor: default; }
 
@@ -275,7 +275,7 @@
   line-height: 1;
 }
 .cm-emoji-btn:hover  { background: rgba(255,255,255,0.12); }
-.cm-emoji-btn--on    { border-color: var(--accent, #3b82f6); background: rgba(59,130,246,0.18); }
+.cm-emoji-btn--on    { border-color: var(--accent, var(--cosmos-accent)); background: var(--cosmos-accent-dim); }
 
 /* ── Add section ── */
 .cm-add {
@@ -314,14 +314,14 @@
   min-width: 0;
 }
 .cm-add-input::placeholder { color: var(--text-tertiary, rgba(255,255,255,0.3)); }
-.cm-add-input:focus { border-color: var(--accent, #3b82f6); }
+.cm-add-input:focus { border-color: var(--accent, var(--cosmos-accent)); }
 
 .cm-add-btn {
   width: 36px;
   height: 36px;
   border-radius: 10px;
   border: none;
-  background: var(--accent, #3b82f6);
+  background: var(--accent, var(--cosmos-accent));
   color: #fff;
   font-size: 1.2rem;
   font-weight: 300;

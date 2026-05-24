@@ -41,7 +41,7 @@
 
 .import-actions{flex-shrink:0;position:sticky;bottom:0;background:var(--bg-primary);display:flex;gap:0.75rem;padding-top:0.75rem;padding-bottom:calc(80px + env(safe-area-inset-bottom));z-index:10;}
 .btn-import-clear{flex:1;min-height:44px;padding:10px 12px;background:var(--bg-secondary);border:1.5px solid var(--separator);border-radius:12px;font-size:0.9375rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.2s ease}
-.btn-import-confirm{flex:2;min-height:44px;padding:10px 12px;background:linear-gradient(135deg,#D97706 0%,#F59E0B 100%);color:white;border:none;border-radius:12px;font-size:0.9375rem;font-weight:700;cursor:pointer;transition:all 0.2s ease;letter-spacing:-0.01em}
+.btn-import-confirm{flex:2;min-height:44px;padding:10px 12px;background:var(--cosmos-accent);color:var(--cosmos-bg);border:none;border-radius:12px;font-size:0.9375rem;font-weight:700;cursor:pointer;transition:all 0.2s ease;letter-spacing:-0.01em}
 .btn-import-confirm:disabled{opacity:0.6;cursor:not-allowed}
 .btn-import-confirm:not(:disabled):active{transform:scale(0.98)}
 
@@ -53,14 +53,14 @@
 .import-insight-value{font-size:0.9375rem;font-weight:700;color:var(--text-primary);letter-spacing:-0.02em}
 .import-insight-item.income  .import-insight-value{color:var(--success)}
 .import-insight-item.expense .import-insight-value{color:var(--danger)}
-.import-insight-item.duplicate .import-insight-value{color:#F59E0B}
+.import-insight-item.duplicate .import-insight-value{color:var(--cosmos-warning)}
 .import-insight-item.category .import-insight-value{font-size:0.8125rem}
 .import-insight-label{font-size:0.625rem;color:var(--text-tertiary);font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
 
 /* ── Duplicate row styling ─────────────────────────────────────────────────── */
 .import-row.duplicate{opacity:0.45;background:rgba(245,158,11,0.04)}
 .import-row-meta{font-size:0.75rem;color:var(--text-tertiary);font-weight:500;letter-spacing:-0.01em;display:flex;align-items:center;gap:0.4rem}
-.import-dupe-badge{background:rgba(245,158,11,0.15);color:#F59E0B;font-size:0.6rem;font-weight:700;padding:0.1rem 0.35rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em}
+.import-dupe-badge{background:var(--cosmos-warning-dim);color:var(--cosmos-warning);font-size:0.6rem;font-weight:700;padding:0.1rem 0.35rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em}
 
 /* ── Original description (shown below clean) ──────────────────────────────── */
 .import-row-original{font-size:0.6875rem;color:var(--text-tertiary);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;opacity:0.7}
@@ -69,5 +69,5 @@
 .import-insight-item.duplicate{cursor:pointer;transition:all 0.18s ease;user-select:none}
 .import-insight-item.duplicate:active{transform:scale(0.95)}
 .import-insight-item.duplicate.active{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.5)}
-.import-insight-item.duplicate.active .import-insight-value{color:#F59E0B}
-.import-insight-item.duplicate.active .import-insight-label{color:#F59E0B}
+.import-insight-item.duplicate.active .import-insight-value{color:var(--cosmos-warning)}
+.import-insight-item.duplicate.active .import-insight-label{color:var(--cosmos-warning)}

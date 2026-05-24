@@ -115,12 +115,12 @@
 }
 
 .cp-item--active .cp-item-label {
-  color: #818cf8;
+  color: var(--cosmos-accent);
   font-weight: 600;
 }
 
 .cp-item-check {
-  color: #818cf8;
+  color: var(--cosmos-accent);
   font-weight: 700;
   font-size: 0.9rem;
 }

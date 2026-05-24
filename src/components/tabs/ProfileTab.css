@@ -480,7 +480,7 @@
 .btn-danger {
   min-height: 44px;
   padding: 10px 1.5rem;
-  background: #EF4444;
+  background: var(--cosmos-expense);
   color: #fff;
   border: none;
   border-radius: 12px;

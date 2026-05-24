@@ -33,6 +33,13 @@
   --cosmos-income-dim:  rgba(52, 211, 153, 0.12);
   --cosmos-expense-dim: rgba(248, 113, 113, 0.12);
   --cosmos-neutral-dim: rgba(160, 170, 187, 0.10);
+  --cosmos-warning:      #f59e0b;
+  --cosmos-warning-dim:  rgba(245, 158, 11, 0.12);
+  --cosmos-warning-border: rgba(245, 158, 11, 0.28);
+  /* Transfer uses the accent colour — changes with palette */
+  --cosmos-transfer:     var(--cosmos-accent);
+  --cosmos-transfer-dim: var(--cosmos-accent-dim);
+  --cosmos-transfer-border: var(--cosmos-accent-border);
 
   /* ── Borders ──────────────────────────────────────────────────────────── */
   --cosmos-border-subtle:  rgba(255, 255, 255, 0.04);

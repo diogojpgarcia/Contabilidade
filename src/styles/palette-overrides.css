@@ -33,6 +33,9 @@ html[data-palette="dusk"] {
   --cosmos-income-dim:  rgba(107, 189, 142, 0.13);
   --cosmos-expense-dim: rgba(224, 120, 120, 0.13);
   --cosmos-neutral-dim: rgba(205, 192, 175, 0.09);
+  --cosmos-warning:       #d4a04a;
+  --cosmos-warning-dim:   rgba(212, 160, 74, 0.14);
+  --cosmos-warning-border: rgba(212, 160, 74, 0.30);
 
   /* Borders */
   --cosmos-border-subtle:  rgba(255, 245, 230, 0.04);
@@ -122,6 +125,9 @@ html[data-palette="stone"] {
   --cosmos-income-dim:  rgba(58, 142, 96, 0.12);
   --cosmos-expense-dim: rgba(192, 64, 64, 0.10);
   --cosmos-neutral-dim: rgba(60, 48, 38, 0.07);
+  --cosmos-warning:       #b07530;
+  --cosmos-warning-dim:   rgba(176, 117, 48, 0.12);
+  --cosmos-warning-border: rgba(176, 117, 48, 0.28);
 
   /* Borders */
   --cosmos-border-subtle:  rgba(0, 0, 0, 0.05);
@@ -193,4 +199,101 @@ html[data-palette="stone"] body {
 html[data-palette="dusk"],
 html[data-palette="dusk"] body {
   background: #121008;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PALETTE — MIDNIGHT  (default dark · charcoal · cyan)
+   Explicit block so html[data-palette="midnight"] beats any [data-theme] rule.
+   ══════════════════════════════════════════════════════════════════════════ */
+html[data-palette="midnight"] {
+  /* Surfaces */
+  --cosmos-bg:        #0b0d10;
+  --cosmos-surface-1: #111318;
+  --cosmos-surface-2: #171a21;
+  --cosmos-surface-3: #1d2029;
+
+  /* Accent — premium cyan */
+  --cosmos-accent:        #06b6d4;
+  --cosmos-accent-dim:    rgba(6, 182, 212, 0.10);
+  --cosmos-accent-hover:  rgba(6, 182, 212, 0.16);
+  --cosmos-accent-border: rgba(6, 182, 212, 0.18);
+  --cosmos-accent-glow:   rgba(6, 182, 212, 0.22);
+  --cosmos-accent-soft:   rgba(6, 182, 212, 0.06);
+
+  /* Text */
+  --cosmos-text-1:      #eaecf0;
+  --cosmos-text-2:      rgba(160, 170, 187, 0.82);
+  --cosmos-text-3:      rgba(160, 170, 187, 0.42);
+  --cosmos-text-accent: #06b6d4;
+
+  /* Semantic */
+  --cosmos-income:      #34d399;
+  --cosmos-expense:     #f87171;
+  --cosmos-income-dim:  rgba(52, 211, 153, 0.12);
+  --cosmos-expense-dim: rgba(248, 113, 113, 0.12);
+  --cosmos-warning:     #f59e0b;
+  --cosmos-warning-dim: rgba(245, 158, 11, 0.12);
+  --cosmos-warning-border: rgba(245, 158, 11, 0.28);
+
+  /* Borders */
+  --cosmos-border-subtle:  rgba(255, 255, 255, 0.05);
+  --cosmos-border-card:    rgba(6, 182, 212, 0.10);
+  --cosmos-border-hero:    rgba(6, 182, 212, 0.18);
+  --cosmos-border-divider: rgba(255, 255, 255, 0.05);
+  --cosmos-surface-border: rgba(255, 255, 255, 0.08);
+
+  /* Shadows */
+  --cosmos-shadow-card:  0 2px 16px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
+  --cosmos-shadow-hero:  0 8px 32px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.05);
+  --cosmos-shadow-sheet: 0 -6px 32px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.05);
+  --cosmos-glow-accent:  0 0 24px rgba(6, 182, 212, 0.18);
+
+  /* Nav */
+  --cosmos-nav-surface: rgba(11, 13, 16, 0.92);
+  --cosmos-nav-notch:   #0b0d10;
+
+  /* modern.css bridge */
+  --primary:        #06b6d4;
+  --primary-light:  #a0aabb;
+  --success:        #34d399;
+  --danger:         #f87171;
+  --warning:        #f59e0b;
+
+  --bg-primary:     #0b0d10;
+  --bg-secondary:   #111318;
+  --bg-tertiary:    #171a21;
+  --bg-elevated:    #1d2029;
+
+  --text-primary:   #eaecf0;
+  --text-secondary: rgba(160, 170, 187, 0.82);
+  --text-tertiary:  rgba(160, 170, 187, 0.42);
+
+  --border:         rgba(6, 182, 212, 0.10);
+  --separator:      rgba(6, 182, 212, 0.12);
+  --overlay:        rgba(11, 13, 16, 0.78);
+
+  --header-bg:      rgba(11, 13, 16, 0.92);
+  --nav-bg:         rgba(11, 13, 16, 0.94);
+  --nav-text:             #eaecf0;
+  --nav-text-secondary:   rgba(160, 170, 187, 0.82);
+
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.50);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.60);
+  --shadow-lg:  0 8px 30px rgba(0, 0, 0, 0.70);
+
+  /* Legacy aliases */
+  --card-bg:       #111318;
+  --surface-2:     #171a21;
+  --border-color:  rgba(6, 182, 212, 0.14);
+  --accent:        #06b6d4;
+  --bg-hover:      rgba(255, 255, 255, 0.06);
+  --input-bg:      #171a21;
+
+  --surface-nav:   rgba(11, 13, 16, 0.96);
+  --surface-sheet: rgba(8, 10, 13, 0.97);
+}
+
+html[data-palette="midnight"],
+html[data-palette="midnight"] body {
+  background: #0b0d10;
 }

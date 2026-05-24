@@ -85,14 +85,13 @@
 }
 
 .type-btn.active.transfer {
-  background: #6366f1;
-  color: white;
+  background: var(--cosmos-transfer);
+  color: #fff;
 }
 
 .type-btn.active.goal {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: var(--cosmos-warning);
+  color: #fff;
 }
 
 .type-icon-sf {
@@ -182,7 +181,7 @@
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23007AFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23a0aabb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
@@ -220,8 +219,8 @@
 
 .btn-submit.expense  { background: var(--danger); }
 .btn-submit.income   { background: var(--success); }
-.btn-submit.transfer { background: #6366f1; }
-.btn-submit.goal     { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.btn-submit.transfer { background: var(--cosmos-transfer); }
+.btn-submit.goal     { background: var(--cosmos-warning); }
 
 /* Helper Text */
 .helper-text {
@@ -247,14 +246,14 @@
   font-family: Inter, -apple-system, sans-serif;
   font-size: 22px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--cosmos-text-1);
   letter-spacing: -0.03em;
 }
 
 .cosmos-add-subtitle {
   font-family: Inter, -apple-system, sans-serif;
   font-size: 13px;
-  color: #475569;
+  color: var(--cosmos-text-3);
   margin-top: 2px;
   transition: color 0.2s;
 }
@@ -278,15 +277,15 @@
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
-.cosmos-amount-display.expense  { color: #F87171; }
-.cosmos-amount-display.income   { color: #4ADE80; }
-.cosmos-amount-display.transfer { color: #00DDFF; }
-.cosmos-amount-display.goal     { color: #FBBF24; }
+.cosmos-amount-display.expense  { color: var(--cosmos-expense); }
+.cosmos-amount-display.income   { color: var(--cosmos-income); }
+.cosmos-amount-display.transfer { color: var(--cosmos-transfer); }
+.cosmos-amount-display.goal     { color: var(--cosmos-warning); }
 .cosmos-amount-display::placeholder { opacity: 0.35; }
 
 .cosmos-amount-hint {
   font-size: 11px;
-  color: #334155;
+  color: var(--cosmos-text-3);
   margin-top: 4px;
   font-family: Inter, -apple-system, sans-serif;
 }
@@ -299,8 +298,8 @@
 }
 
 .cosmos-type-btn {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--cosmos-surface-1);
+  border: 1px solid var(--cosmos-border-subtle);
   border-radius: 14px;
   padding: 10px 4px 9px;
   display: flex;
@@ -312,23 +311,23 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.cosmos-type-btn .cta-ico { font-size: 18px; line-height: 1; color: #475569; }
-.cosmos-type-btn .cta-lbl { font-size: 10px; font-weight: 500; color: #475569; font-family: Inter, -apple-system, sans-serif; }
+.cosmos-type-btn .cta-ico { font-size: 18px; line-height: 1; color: var(--cosmos-text-3); }
+.cosmos-type-btn .cta-lbl { font-size: 10px; font-weight: 500; color: var(--cosmos-text-3); font-family: Inter, -apple-system, sans-serif; }
 
-.cosmos-type-btn.sel-expense  { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.35); }
-.cosmos-type-btn.sel-expense  .cta-ico, .cosmos-type-btn.sel-expense  .cta-lbl { color: #F87171; }
-.cosmos-type-btn.sel-income   { background: rgba(74,222,128,0.12);  border-color: rgba(74,222,128,0.35);  }
-.cosmos-type-btn.sel-income   .cta-ico, .cosmos-type-btn.sel-income   .cta-lbl { color: #4ADE80; }
-.cosmos-type-btn.sel-transfer { background: rgba(0,221,255,0.10);   border-color: rgba(0,221,255,0.30);   }
-.cosmos-type-btn.sel-transfer .cta-ico, .cosmos-type-btn.sel-transfer .cta-lbl { color: #00DDFF; }
-.cosmos-type-btn.sel-goal     { background: rgba(251,191,36,0.10);  border-color: rgba(251,191,36,0.30);  }
-.cosmos-type-btn.sel-goal     .cta-ico, .cosmos-type-btn.sel-goal     .cta-lbl { color: #FBBF24; }
+.cosmos-type-btn.sel-expense  { background: var(--cosmos-expense-dim); border-color: rgba(248,113,113,0.35); }
+.cosmos-type-btn.sel-expense  .cta-ico, .cosmos-type-btn.sel-expense  .cta-lbl { color: var(--cosmos-expense); }
+.cosmos-type-btn.sel-income   { background: var(--cosmos-income-dim); border-color: rgba(74,222,128,0.35);  }
+.cosmos-type-btn.sel-income   .cta-ico, .cosmos-type-btn.sel-income   .cta-lbl { color: var(--cosmos-income); }
+.cosmos-type-btn.sel-transfer { background: var(--cosmos-transfer-dim); border-color: var(--cosmos-transfer-border); }
+.cosmos-type-btn.sel-transfer .cta-ico, .cosmos-type-btn.sel-transfer .cta-lbl { color: var(--cosmos-transfer); }
+.cosmos-type-btn.sel-goal     { background: var(--cosmos-warning-dim); border-color: var(--cosmos-warning-border); }
+.cosmos-type-btn.sel-goal     .cta-ico, .cosmos-type-btn.sel-goal     .cta-lbl { color: var(--cosmos-warning); }
 
 .cosmos-fields {
   margin: 0 20px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--cosmos-r-card);
+  background: var(--cosmos-surface-1);
+  border: 1px solid var(--cosmos-border-subtle);
   overflow: hidden;
 }
 
@@ -339,7 +338,7 @@
   gap: 12px;
 }
 .cosmos-field-row:not(:last-child) {
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--cosmos-border-divider);
 }
 
 .cosmos-field-ico {
@@ -357,7 +356,7 @@
 
 .cosmos-field-label {
   font-size: 11px;
-  color: #475569;
+  color: var(--cosmos-text-3);
   font-weight: 500;
   font-family: Inter, -apple-system, sans-serif;
   margin-bottom: 2px;
@@ -371,15 +370,15 @@
   outline: none;
   font-size: 14px;
   font-weight: 500;
-  color: #FFFFFF;
+  color: var(--cosmos-text-1);
   font-family: Inter, -apple-system, sans-serif;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
   appearance: none;
   -webkit-appearance: none;
 }
-.cosmos-field-select option { background: #0B0F14; color: #FFFFFF; }
-.cosmos-field-input::placeholder { color: #334155; font-weight: 400; }
+.cosmos-field-select option { background: var(--cosmos-bg); color: var(--cosmos-text-1); }
+.cosmos-field-input::placeholder { color: var(--cosmos-text-3); font-weight: 400; }
 .cosmos-field-input[type="date"] { color-scheme: dark; }
 
 .cosmos-field-cat-btn {
@@ -396,12 +395,12 @@
 .cosmos-field-cat-text {
   font-size: 14px;
   font-weight: 500;
-  color: #FFFFFF;
+  color: var(--cosmos-text-1);
   font-family: Inter, -apple-system, sans-serif;
 }
-.cosmos-field-cat-text.ph { color: #334155; font-weight: 400; }
+.cosmos-field-cat-text.ph { color: var(--cosmos-text-3); font-weight: 400; }
 
-.cosmos-field-chevron { color: #1E293B; font-size: 18px; flex-shrink: 0; }
+.cosmos-field-chevron { color: var(--cosmos-text-3); font-size: 18px; flex-shrink: 0; }
 
 .cosmos-cta {
   margin: 16px 20px 0;
@@ -418,7 +417,7 @@
 }
 .cosmos-cta:active:not(:disabled) { opacity: 0.75; transform: scale(0.98); }
 .cosmos-cta:disabled { opacity: 0.35; cursor: not-allowed; }
-.cosmos-cta.expense  { background: rgba(248,113,113,0.9);  color: #fff; }
-.cosmos-cta.income   { background: rgba(74,222,128,0.9);   color: #052e10; }
-.cosmos-cta.transfer { background: rgba(0,221,255,0.9);    color: #001a1f; }
-.cosmos-cta.goal     { background: rgba(251,191,36,0.9);   color: #1a1000; }
+.cosmos-cta.expense  { background: var(--cosmos-expense); color: #fff; }
+.cosmos-cta.income   { background: var(--cosmos-income);  color: #052e10; }
+.cosmos-cta.transfer { background: var(--cosmos-transfer); color: var(--cosmos-bg); }
+.cosmos-cta.goal     { background: var(--cosmos-warning);  color: var(--cosmos-bg); }
