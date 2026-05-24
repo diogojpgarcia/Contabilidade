@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Clock, SlidersHorizontal, Search } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
@@ -31,7 +32,8 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, categories, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, theme = 'default', financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
+  const { categories } = useAppContext();
   console.log('REAL STATS TAB LOADED');
   console.log('RENDER STATS');
   console.log('ACTIVE THEME:', theme);
@@ -1691,10 +1693,4 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
           categories={categories}
-        />
-      )}
-    </div>
-  );
-};
-
-export default StatsTab;
+ 

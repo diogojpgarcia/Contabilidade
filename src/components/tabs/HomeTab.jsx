@@ -5,6 +5,7 @@ import HomeRecurring     from '../home/HomeRecurring';
 import QuickActionsRow   from '../QuickActionsRow';
 import AccountsSection   from '../AccountsSection';
 import InsightsSection   from '../InsightsSection';
+import { useAppContext } from '../../context/AppContext';
 import '../home/Home.css';
 
 const HomeTab = ({
@@ -12,14 +13,13 @@ const HomeTab = ({
   patrimony = {},
   financialMonthStartDay = 1,
   homeUsesFinancialMonth = true,
-  theme = 'default',
   onNavigate,
   recurringPayments,
   confirmedRecurring = {},
-  categories,
   userName = '',
   financialFocus = null,
 }) => {
+  const { categories } = useAppContext();
   const p = patrimony;
 
   /* ── Patrimony sub-totals — pure derivation, never stored ── */
@@ -104,10 +104,3 @@ const HomeTab = ({
           categories={categories}
           onNavigate={onNavigate}
         />
-
-      </div>
-    </div>
-  );
-};
-
-export default HomeTab;

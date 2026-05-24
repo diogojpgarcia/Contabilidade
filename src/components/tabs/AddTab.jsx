@@ -3,9 +3,11 @@ import { dbService } from '../../lib/supabase';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
 import CategoryPicker from '../CategoryPicker';
 import { Tag, CreditCard, FileText, Calendar, ArrowUp, ArrowDown, Target, Minus, Plus, ArrowLeftRight } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 import './AddTab.css';
 
-const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, defaultAccount, theme = 'default' }) => {
+const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount }) => {
+  const { currentUser, categories } = useAppContext();
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -22,11 +24,11 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
 
   const accounts = (patrimony?.accounts || []);
 
-  useEffect(() => { loadGoals(); }, [user]);
+  useEffect(() => { loadGoals(); }, [currentUser]);
 
   const loadGoals = async () => {
     try {
-      const settings = await dbService.getUserSettings(user.id);
+      const settings = await dbService.getUserSettings(currentUser.id);
       if (settings?.goals) setGoals(settings.goals);
     } catch (error) {
       console.error('Error loading goals:', error);
@@ -73,7 +75,7 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
         const updatedGoals = goals.map(g =>
           g.id === selectedGoal ? { ...g, currentSavings: (g.currentSavings || 0) + amountValue } : g
         );
-        await dbService.updateUserSettings(user.id, { goals: updatedGoals });
+        await dbService.updateUserSettings(currentUser.id, { goals: updatedGoals });
       } else {
         const transaction = {
           type, amount: amountValue, category,
@@ -511,11 +513,4 @@ const AddTab = ({ user, categories, onTransactionAdded, onTransfer, patrimony, d
       {/* Sticky submit button */}
       <div className="add-footer">
         <button type="button" className={`btn-submit ${type}`} onClick={handleSubmit} disabled={loading}>
-          {loading ? '◷ A guardar...' : '✓ Adicionar'}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default AddTab;
+          {loading ? '◷ A guardar...' : 

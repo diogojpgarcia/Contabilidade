@@ -3,6 +3,7 @@ import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import SwipeRevealCard from '../SwipeRevealCard';
 import RecurringCalendar from './RecurringCalendar';
+import { useAppContext } from '../../context/AppContext';
 import { Repeat, Calendar } from '../icons';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
 import {
@@ -37,14 +38,13 @@ function genId() {
 }
 
 const RecurringView = ({
-  user,
   recurringPayments,
   onRecurringPaymentsChange,
   confirmedRecurring = {},
   onConfirmRecurring,
-  categories,
   patrimony,
 }) => {
+  const { currentUser: user, categories } = useAppContext();
   const [showForm,          setShowForm]          = useState(false);
   const [showCalendar,      setShowCalendar]      = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -596,11 +596,4 @@ const RecurringView = ({
                 </div>
               </div>
             )}
-          </div>
-        </Overlay>
-      )}
-    </>
-  );
-};
-
-export default RecurringView;
+   

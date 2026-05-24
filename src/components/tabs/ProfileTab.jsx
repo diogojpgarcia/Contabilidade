@@ -4,6 +4,7 @@ import CategoryManager from '../CategoryManager';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import PageHeader from '../PageHeader';
+import { useAppContext } from '../../context/AppContext';
 import './ProfileTab.css';
 
 const PALETTES = [
@@ -12,7 +13,9 @@ const PALETTES = [
   { id: 'stone',    name: 'Stone',    bg: '#f0ebe4', accent: '#9f6b48' },
 ];
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, colorPalette = 'midnight', setColorPalette, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange }) => {
+const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, setTheme, colorPalette = 'midnight', setColorPalette, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange }) => {
+  const { currentUser, categories, onCategoriesChange } = useAppContext();
+  const user = currentUser; // alias para compatibilidade com referências existentes
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -302,15 +305,4 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
       <div className="m-danger-zone">
         <button
           className="m-danger-item"
-          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
-        >
-          Apagar todos os dados
-        </button>
-      </div>
-
-      {renderProfileModals()}
-    </div>
-  );
-};
-
-export default ProfileTab;
+          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); s

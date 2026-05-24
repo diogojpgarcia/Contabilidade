@@ -3,6 +3,7 @@ import { dbService } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import FintechTransactionCard from '../FintechTransactionCard';
+import { useAppContext } from '../../context/AppContext';
 import './ImportTab.css';
 
 /* Map a preview row to the shape FintechTransactionCard expects */
@@ -15,7 +16,8 @@ const toFtcShape = (tx, i) => ({
   category:    tx.category || (tx.type === 'income' ? 'Outros Rendimentos' : 'Outros'),
 });
 
-const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' }) => {
+const ImportTab = ({ onImportDone, learnedRules = [] }) => {
+  const { currentUser } = useAppContext();
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);
@@ -71,7 +73,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
   };
 
   const handleConfirm = async () => {
-    if (!preview.length || !user) return;
+    if (!preview.length || !currentUser) return;
     setSaving(true);
     const toSave = keepDupes ? preview : preview.filter(tx => !tx.is_duplicate);
     try {
@@ -85,7 +87,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
           category:    tx.category || (tx.type === 'income' ? 'Income' : 'Other'),
         };
         console.log('[ImportTab] BEFORE INSERT:', payload);
-        const newTx = await dbService.addTransaction(user.id, payload);
+        const newTx = await dbService.addTransaction(currentUser.id, payload);
         if (newTx) saved.push(newTx);
       }
       setSaved(true);
@@ -244,11 +246,4 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
               ? 'A guardar…'
               : `Confirmar ${nonDupe.length} transações${!keepDupes && insights?.duplicate_count > 0 ? ` (${insights.duplicate_count} duplicados excluídos)` : ''}`
             }
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default ImportTab;
+      
