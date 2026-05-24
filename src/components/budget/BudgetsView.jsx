@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useForm } from '../../hooks/useForm';
-import { dbService } from '../../lib/supabase';
 import { shiftFinancialMonth, isInFinancialMonth, getFinancialMonthRange } from '../../utils/financialMonth';
 import { formatMonthLabel, getPrediction } from '../../utils/insights';
 import { getTotalMonthlyCommitted } from '../../utils/recurringPayments';

@@ -28,7 +28,17 @@ const formatTargetDate = (dateStr) => {
  *   goals          — array de objetivos (vem do useSettings via BudgetTab)
  *   onGoalsChange  — (updatedGoals) => void  (persiste e atualiza estado global)
  */
-const GoalsView = ({ goals = [], onGoalsChange }) => {
+
+/** Soma transações com category='Objetivos' cujo description inclui o nome do objetivo. */
+const computeGoalTxSavings = (goal, transactions) =>
+  (transactions || [])
+    .filter(t =>
+      t.category === 'Objetivos' &&
+      (t.description || '').toLowerCase().includes((goal.name || '').toLowerCase())
+    )
+    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
+const GoalsView = ({ goals = [], onGoalsChange, transactions = [] }) => {
   const { showWarning } = useToast();
   const [editingGoalId, setEditingGoalId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -63,8 +73,10 @@ const GoalsView = ({ goals = [], onGoalsChange }) => {
           <div className="m-empty">Sem objetivos criados</div>
         ) : (
           goals.map(goal => {
-            const progress  = goal.amount > 0 ? Math.min((goal.currentSavings / goal.amount) * 100, 100) : 0;
-            const remaining = goal.amount - (goal.currentSavings || 0);
+            const txSavings      = computeGoalTxSavings(goal, transactions);
+            const effectiveSavings = (goal.currentSavings || 0) + txSavings;
+            const progress  = goal.amount > 0 ? Math.min((effectiveSavings / goal.amount) * 100, 100) : 0;
+            const remaining = goal.amount - effectiveSavings;
             const dateInfo = formatTargetDate(goal.targetDate);
             return (
               <div key={goal.id} className="m-goal-row">
@@ -76,7 +88,7 @@ const GoalsView = ({ goals = [], onGoalsChange }) => {
                   <div className="m-goal-bar-fill" style={{ width: `${progress}%` }} />
                 </div>
                 <div className="m-goal-meta">
-                  <span><strong>{(goal.currentSavings || 0).toFixed(2)}€</strong> / {goal.amount.toFixed(2)}€</span>
+                  <span><strong>{effectiveSavings.toFixed(2)}€</strong> / {goal.amount.toFixed(2)}€</span>
                   <span>{progress.toFixed(0)}%{remaining > 0 ? ` · faltam ${remaining.toFixed(2)}€` : ' ✓'}</span>
                 </div>
                 {dateInfo && (
@@ -86,7 +98,7 @@ const GoalsView = ({ goals = [], onGoalsChange }) => {
                   </div>
                 )}
                 <div className="m-goal-input-row">
-                  <span className="m-goal-input-label">Poupado</span>
+                  <span className="m-goal-input-label">Poupado{txSavings > 0 ? ` (+ ${txSavings.toFixed(2)}€ via transações)` : ''}</span>
                   <GoalSavingsInput
                     key={goal.id}
                     goal={goal}

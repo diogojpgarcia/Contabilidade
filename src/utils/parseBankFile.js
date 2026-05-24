@@ -49,8 +49,6 @@ function decodeBuffer(buffer) {
   const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
   const replacements = (utf8.match(/�/g) || []).length;
   if (replacements > 0) {
-    console.log('[parseBankFile] encoding: UTF-8 produced', replacements,
-      'replacement chars — retrying as windows-1252');
     return new TextDecoder('windows-1252').decode(bytes);
   }
 
@@ -239,14 +237,6 @@ function detectColumns(headers) {
     if (crs > cols.creditScore){ cols.creditScore = crs; cols.credit = h; }
   }
 
-  console.log('[parseBankFile] COLUMN DETECTION:', {
-    date:   `"${cols.date}" (score ${cols.dateScore})`,
-    desc:   `"${cols.desc}" (score ${cols.descScore})`,
-    amt:    `"${cols.amt}" (score ${cols.amtScore})`,
-    debit:  `"${cols.debit}" (score ${cols.debitScore})`,
-    credit: `"${cols.credit}" (score ${cols.creditScore})`,
-  });
-
   return cols;
 }
 
@@ -287,7 +277,6 @@ function findSignedAmountColumn(headers, dataRows) {
     .sort((a, b) => b[1] - a[1]);
 
   if (!best.length) return null;
-  console.log('[parseBankFile] signed-value column scan:', best.slice(0, 3));
   return best[0][0];
 }
 
@@ -309,7 +298,6 @@ function findDirectionColumn(headers, dataRows) {
       if (DIR_DEBIT.has(v) || DIR_CREDIT.has(v)) matches++;
     }
     if (total >= 3 && matches / total >= 0.6) {
-      console.log('[parseBankFile] direction column detected:', h);
       return h;
     }
   }
@@ -327,16 +315,10 @@ function resolveAmount(obj, cols) {
     const rawDebit  = cols.debit  ? obj[cols.debit]  : '';
     const rawCredit = cols.credit ? obj[cols.credit] : '';
 
-    console.log('[parseBankFile] DEBIT/CREDIT RAW:',
-      { debitCol: cols.debit, raw: rawDebit, creditCol: cols.credit, rawCredit });
-
     const debitVal  = rawDebit  ? parseAmount(rawDebit)  : null;
     const creditVal = rawCredit ? parseAmount(rawCredit) : null;
     const debitAbs  = debitVal  !== null ? Math.abs(debitVal)  : 0;
     const creditAbs = creditVal !== null ? Math.abs(creditVal) : 0;
-
-    console.log('[parseBankFile] DEBIT/CREDIT PARSED:',
-      { debitAbs, creditAbs });
 
     if (creditAbs > 0 && debitAbs === 0) return  creditAbs;   // income
     if (debitAbs  > 0 && creditAbs === 0) return -debitAbs;   // expense
@@ -347,7 +329,6 @@ function resolveAmount(obj, cols) {
   if (cols.amt && obj[cols.amt] !== undefined && obj[cols.amt] !== '') {
     const raw = obj[cols.amt];
     const a   = parseAmount(raw);
-    console.log('[parseBankFile] AMT COL RAW:', raw, '→ parsed:', a);
     if (a !== null) return a;
   }
 
@@ -390,15 +371,12 @@ function parseRowFallback(row) {
 export function parseCSV(text) {
   const raw = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
   const delimiter = detectDelimiter(raw.slice(0, 4096));
-  console.log('[parseBankFile] delimiter:', JSON.stringify(delimiter));
 
   const rows = tokenizeCSV(raw, delimiter);
   if (rows.length < 1) return [];
 
   const headerIdx = findHeaderRow(rows);
   const headers   = rows[headerIdx].map(h => h.trim());
-  console.log('[parseBankFile] HEADERS (raw):', headers);
-  console.log('[parseBankFile] HEADERS (normed):', headers.map(norm));
 
   const cols = detectColumns(headers);
 
@@ -409,7 +387,6 @@ export function parseCSV(text) {
   //    This overrides header-name detection when the column name is opaque.
   const signedCol = findSignedAmountColumn(headers, dataRows);
   if (signedCol) {
-    console.log('[parseBankFile] overriding amt col with signed-value col:', signedCol);
     cols.amt        = signedCol;
     cols.amtScore   = 20; // highest priority
     cols.debit      = null;
@@ -442,7 +419,6 @@ export function parseCSV(text) {
         const dir = norm(obj[dirCol]);
         if (DIR_DEBIT.has(dir) && amount > 0)  amount = -amount;
         if (DIR_CREDIT.has(dir) && amount < 0) amount = -amount;
-        console.log('[parseBankFile] direction col', dirCol, '=', dir, '→ amount', amount);
       }
 
       if (amount === null) continue;
@@ -457,9 +433,6 @@ export function parseCSV(text) {
       const type  = amount < 0 ? 'expense' : 'income';
       const entry = { date, description, amount: Math.abs(amount), type };
 
-      console.log('[parseBankFile] ROW', i, '| rawAmount:', amount,
-        '| type:', type, '| amount:', entry.amount, '| desc:', description.slice(0, 30));
-
       const key = dedupKey(entry);
       if (seen.has(key)) continue;
       seen.add(key);
@@ -467,13 +440,11 @@ export function parseCSV(text) {
     }
 
     if (result.length > 0) {
-      console.log('[parseBankFile] header-mode: parsed', result.length, 'rows');
       return result;
     }
   }
 
   // Fallback: row-based heuristic
-  console.log('[parseBankFile] switching to fallback row-heuristic mode');
   for (let i = 0; i < rows.length; i++) {
     const parsed = parseRowFallback(rows[i]);
     if (!parsed) continue;
@@ -486,7 +457,6 @@ export function parseCSV(text) {
     result.push(entry);
   }
 
-  console.log('[parseBankFile] fallback-mode: parsed', result.length, 'rows');
   return result;
 }
 
@@ -643,7 +613,6 @@ function extractTransactionsFromLines(rawLines) {
     result.push(entry);
   }
 
-  console.log('[parseBankFile] PDF line-parse: found', result.length, 'transactions from', rawLines.length, 'lines');
   return result;
 }
 
@@ -663,8 +632,6 @@ function extractTransactionsFromNormalized(text) {
     .split('\n')
     .map(l => l.trim())
     .filter(Boolean);
-
-  console.log('[parseBankFile] date-injection: produced', lines.length, 'candidate lines');
 
   // Re-use the same merge + parse + classify logic
   return extractTransactionsFromLines(lines);
@@ -741,7 +708,6 @@ export async function parsePDF(buffer) {
     if (best.length > 0) return best;
 
     // Last resort: flat single-line mode (original approach)
-    console.log('[parseBankFile] PDF all structured modes yielded 0 — falling back to flat-text mode');
     return extractTransactionsFromText(fullText);
   } catch (err) {
     console.error('[parseBankFile] PDF parse error:', err);
@@ -780,7 +746,6 @@ export async function parseXLSX(buffer) {
       blankrows: false,
     });
 
-    console.log('[parseXLSX] sheet:', sheetName, '| rows:', raw.length);
     if (raw.length < 2) return [];
 
     // Find header row (first row with 2+ recognisable column names)
@@ -795,8 +760,6 @@ export async function parseXLSX(buffer) {
     }
 
     const headers = raw[headerIdx].map(c => String(c).trim());
-    console.log('[parseXLSX] HEADERS (raw):', headers);
-    console.log('[parseXLSX] HEADERS (normed):', headers.map(norm));
 
     const cols = detectColumns(headers);
 
@@ -828,8 +791,6 @@ export async function parseXLSX(buffer) {
         const rawDebit  = cols.debit  ? obj[cols.debit]  : '';
         const rawCredit = cols.credit ? obj[cols.credit] : '';
 
-        console.log('[parseXLSX] row', i, 'DEBIT:', rawDebit, '| CREDIT:', rawCredit);
-
         const debitVal  = rawDebit  ? parseAmount(rawDebit)  : null;
         const creditVal = rawCredit ? parseAmount(rawCredit) : null;
         const debitAbs  = debitVal  !== null ? Math.abs(debitVal)  : 0;
@@ -843,7 +804,6 @@ export async function parseXLSX(buffer) {
       if (amount === null && cols.amt && obj[cols.amt]) {
         const raw = obj[cols.amt];
         amount = parseAmount(raw);
-        console.log('[parseXLSX] row', i, 'AMT col:', raw, '→', amount);
       }
 
       if (amount === null) continue;
@@ -857,16 +817,12 @@ export async function parseXLSX(buffer) {
       const type  = amount < 0 ? 'expense' : 'income';
       const entry = { date, description, amount: Math.abs(amount), type };
 
-      console.log('[parseXLSX] row', i, '| rawAmount:', amount,
-        '| type:', type, '| stored:', entry.amount, '| desc:', description.slice(0, 30));
-
       const key = dedupKey(entry);
       if (seen.has(key)) continue;
       seen.add(key);
       result.push(entry);
     }
 
-    console.log('[parseXLSX] parsed', result.length, 'transactions');
     return result;
   } catch (err) {
     console.error('[parseXLSX] error:', err);

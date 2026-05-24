@@ -59,7 +59,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const computeExpensesByCategory = (txns) => {
     const byCategory = {};
     txns.filter(t => t.type === 'expense').forEach(t => {
-      byCategory[t.category] = (byCategory[t.category] || 0) + parseFloat(t.amount);
+      byCategory[t.category] = (byCategory[t.category] || 0) + (parseFloat(t.amount) || 0);
     });
     const total = Object.values(byCategory).reduce((sum, val) => sum + val, 0);
     return Object.entries(byCategory)
@@ -104,10 +104,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       const monthTransactions = filterByFinancialMonth(transactions, month, financialMonthStartDay);
       const income = monthTransactions
         .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
       const expenses = monthTransactions
         .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
       
       return {
         month: month.substring(5) + '/' + month.substring(2, 4),
@@ -124,7 +124,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       const monthTxs = filterByFinancialMonth(transactions, month, financialMonthStartDay);
       const amount = monthTxs
         .filter(t => t.type === 'expense' && t.category === categoryName)
-        .reduce((s, t) => s + parseFloat(t.amount), 0);
+        .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
       return {
         month: month.substring(5) + '/' + month.substring(2, 4),
         amount,
@@ -246,15 +246,15 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const monthName = getFinancialMonthLabel(currentMonth, financialMonthStartDay);
 
   // ── derived totals for chips ──
-  const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
-  const monthExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+  const monthIncome   = filteredTransactions.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const monthExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const monthSaldo    = monthIncome - monthExpenses;
 
   // ── previous-month totals for delta ──
   const prevMonthKey      = shiftFinancialMonth(currentMonth, -1);
   const prevMonthTxs      = filterByFinancialMonth(transactions, prevMonthKey, financialMonthStartDay);
-  const prevMonthIncome   = prevMonthTxs.filter(t => t.type === 'income') .reduce((s, t) => s + parseFloat(t.amount), 0);
-  const prevMonthExpenses = prevMonthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+  const prevMonthIncome   = prevMonthTxs.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const prevMonthExpenses = prevMonthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const prevMonthSaldo    = prevMonthIncome - prevMonthExpenses;
   const saldoDelta        = monthSaldo - prevMonthSaldo;
 
