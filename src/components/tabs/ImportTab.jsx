@@ -18,7 +18,6 @@ const toFtcShape = (tx, i) => ({
 
 const ImportTab = ({ onImportDone, learnedRules = [] }) => {
   const { currentUser } = useAppContext();
-  const theme = 'fintech'; // único tema ativo
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);
@@ -195,8 +194,7 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
             <span className="import-preview-title">Pré-visualização</span>
             <span className="import-preview-count">{preview.length} linhas</span>
           </div>
-          {theme === 'fintech' ? (
-            <div className="ftc-list import-ftc-list">
+          <div className="ftc-list import-ftc-list">
               {preview.map((tx, i) => (
                 <FintechTransactionCard
                   key={i}
@@ -207,30 +205,6 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
                 />
               ))}
             </div>
-          ) : (
-            <div className="import-preview-list">
-              {preview.map((tx, i) => (
-                <div
-                  key={i}
-                  className={`import-row ${tx.type}${tx.is_duplicate ? ' duplicate' : ''}`}
-                >
-                  <div className="import-row-left">
-                    <span className="import-row-meta">
-                      {tx.date} · {tx.category}
-                      {tx.is_duplicate && <span className="import-dupe-badge">duplicado</span>}
-                    </span>
-                    <span className="import-row-desc">{tx.clean_description}</span>
-                    {tx.clean_description !== tx.description && (
-                      <span className="import-row-original">{tx.description}</span>
-                    )}
-                  </div>
-                  <span className={`import-row-amount ${tx.type}`}>
-                    {tx.type === 'income' ? '+' : '-'}{tx.amount.toFixed(2)}€
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
 

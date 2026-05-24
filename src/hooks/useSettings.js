@@ -34,6 +34,7 @@ export function useSettings(currentUser, txHook) {
   const [useFinancialMonth, setUseFinancialMonth] = useState(false);
   const [homeUsesFinancialMonth, setHomeUsesFinancialMonth] = useState(true);
   const [goals, setGoals] = useState([]);
+  const [migrationPending, setMigrationPending] = useState(null); // { count, accName, accountId }
   const [recurringPayments, setRecurringPayments] = useState([]);
   const [confirmedRecurring, setConfirmedRecurring] = useState({});
   const [financialFocus, setFinancialFocus] = useState(null);
@@ -172,8 +173,9 @@ export function useSettings(currentUser, txHook) {
     }
   };
 
-  // Muda a conta principal e, opcionalmente, migra transações sem conta associada.
-  // Precisa de txHook.transactions e txHook.setTransactions para a migração.
+  // Muda a conta principal. Se houver transações sem conta associada, guarda o
+  // estado em `migrationPending` para que o ProfileTab mostre um modal de confirmação
+  // (substitui o window.confirm bloqueante).
   const handleMainAccountChange = async (accountId) => {
     setMainAccountId(accountId);
     dbService.updateUserSettings(currentUser.id, { mainAccountId: accountId }).catch(e => toast.error('Erro ao guardar: ' + e.message));
@@ -185,10 +187,19 @@ export function useSettings(currentUser, txHook) {
     const unlinked = (txHook.transactions || []).filter(t => !t.account_id && t.type !== 'transfer');
     if (unlinked.length === 0) return;
 
-    const confirmed = window.confirm(
-      `${unlinked.length} transação(ões) sem conta associada.\n\nAplicar "${acc.name}" a estas transações antigas?`
-    );
-    if (!confirmed) return;
+    // Pedir confirmação via modal — não bloquear com window.confirm
+    setMigrationPending({ count: unlinked.length, accName: acc.name, accountId });
+  };
+
+  // Executar a migração depois do utilizador confirmar no modal.
+  const handleMigrateConfirm = async () => {
+    if (!migrationPending) return;
+    const { accountId } = migrationPending;
+    const acc = (patrimony.accounts || []).find(a => a.id === accountId);
+    if (!acc) { setMigrationPending(null); return; }
+
+    const unlinked = (txHook.transactions || []).filter(t => !t.account_id && t.type !== 'transfer');
+    setMigrationPending(null);
 
     try {
       await dbService.migrateUnlinkedTransactions(currentUser.id, acc.id, acc.name);
@@ -205,11 +216,14 @@ export function useSettings(currentUser, txHook) {
       });
       txHook.setTransactionAccountMap(updatedMap);
       dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+      toast.success?.(`${unlinked.length} transação(ões) ligadas a "${acc.name}".`);
     } catch (err) {
-      console.error('❌ Migration failed:', err);  // toast already shown below
+      console.error('❌ Migration failed:', err);
       toast.error('Erro na migração: ' + err.message);
     }
   };
+
+  const handleMigrateDismiss = () => setMigrationPending(null);
 
   // ── Orçamentos ────────────────────────────────────────────────────────────
   const handleBudgetsChange = async (newBudgets) => {
@@ -309,6 +323,7 @@ export function useSettings(currentUser, txHook) {
     homePatrimonyView,
     budgets,
     goals,
+    migrationPending,
     colorPalette, setColorPalette,
     mainAccountId,
     financialMonthStartDay,
@@ -325,6 +340,8 @@ export function useSettings(currentUser, txHook) {
     handlePatrimonyChange,
     handlePatrimonyViewChange,
     handleMainAccountChange,
+    handleMigrateConfirm,
+    handleMigrateDismiss,
     handleBudgetsChange,
     handleFinancialMonthChange,
     handleHomeUsesFinancialMonthChange,

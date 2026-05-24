@@ -9,7 +9,7 @@ import { useAppContext } from '../../context/AppContext';
 import '../home/Home.css';
 
 const HomeTab = ({
-  balance, totalBalance = 0, transactions, currentMonth,
+  balance, transactions, currentMonth,
   patrimony = {},
   financialMonthStartDay = 1,
   homeUsesFinancialMonth = true,

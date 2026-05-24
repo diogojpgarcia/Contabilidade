@@ -77,17 +77,6 @@ const App = () => {
     })),
   }), [s.patrimony, safeTransactions]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const totalBalance = useMemo(() =>
-    safeTransactions.reduce((acc, t) => {
-      if (!t?.type) return acc;
-      const amt = parseFloat(t.amount || 0);
-      if (t.type === 'income')  return acc + amt;
-      if (t.type === 'expense') return acc - amt;
-      return acc;
-    }, 0),
-    [safeTransactions]
-  );
-
   // ── Returns condicionais (DEPOIS de todos os hooks) ───────────────────────
   if (auth.loading) {
     return (
@@ -142,7 +131,6 @@ const App = () => {
           <ErrorBoundary tab="Início">
             <HomeTab
               balance={balance}
-              totalBalance={totalBalance}
               transactions={filteredTransactions}
               currentMonth={s.currentMonth}
               patrimony={patrimonyWithLiveBalances}
@@ -191,6 +179,8 @@ const App = () => {
               }
               patrimony={patrimonyWithLiveBalances}
               defaultAccount={defaultAccount}
+              goals={s.goals}
+              onGoalsChange={s.handleGoalsChange}
             />
           </ErrorBoundary>
         )}
@@ -250,6 +240,9 @@ const App = () => {
               onHomeUsesFinancialMonthChange={s.handleHomeUsesFinancialMonthChange}
               financialFocus={s.financialFocus}
               onFocusChange={s.handleFocusChange}
+              migrationPending={s.migrationPending}
+              onMigrateConfirm={s.handleMigrateConfirm}
+              onMigrateDismiss={s.handleMigrateDismiss}
               onDataDeleted={() => {
                 tx.initFromLoad({ rows: [], accountMap: {} });
                 s.resetForLogout();
