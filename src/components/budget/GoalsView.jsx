@@ -111,4 +111,12 @@ const GoalsView = () => {
                 <span className="calendar-icon">◷</span>
               </div>
               <button className="btn-add-goal" onClick={() => { handleAddGoal(); setEditingGoalId(null); }}>Adicionar</button>
-        
+            </div>
+          </div>
+        </Overlay>
+      )}
+    </>
+  );
+};
+
+export default GoalsView;

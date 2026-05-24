@@ -513,4 +513,11 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount }) =
       {/* Sticky submit button */}
       <div className="add-footer">
         <button type="button" className={`btn-submit ${type}`} onClick={handleSubmit} disabled={loading}>
-          {loading ? '◷ A guardar...' : 
+          {loading ? '◷ A guardar...' : '✓ Adicionar'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default AddTab;

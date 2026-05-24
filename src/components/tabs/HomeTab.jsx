@@ -104,3 +104,10 @@ const HomeTab = ({
           categories={categories}
           onNavigate={onNavigate}
         />
+
+      </div>
+    </div>
+  );
+};
+
+export default HomeTab;

@@ -305,4 +305,15 @@ const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, set
       <div className="m-danger-zone">
         <button
           className="m-danger-item"
-          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); s
+          onClick={() => { deleteSucceededRef.current = false; setShowDeleteHistory(true); resetDeleteDraft({ confirmText: '' }); setDeleteStatus(''); }}
+        >
+          Apagar todos os dados
+        </button>
+      </div>
+
+      {renderProfileModals()}
+    </div>
+  );
+};
+
+export default ProfileTab;

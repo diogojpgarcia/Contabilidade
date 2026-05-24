@@ -1693,4 +1693,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           onSelect={handlePickerSelect}
           onClose={() => setPickerTx(null)}
           categories={categories}
- 
+        />
+      )}
+    </div>
+  );
+};
+
+export default StatsTab;

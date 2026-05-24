@@ -596,4 +596,11 @@ const RecurringView = ({
                 </div>
               </div>
             )}
-   
+          </div>
+        </Overlay>
+      )}
+    </>
+  );
+};
+
+export default RecurringView;

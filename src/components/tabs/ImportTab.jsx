@@ -246,4 +246,11 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
               ? 'A guardar…'
               : `Confirmar ${nonDupe.length} transações${!keepDupes && insights?.duplicate_count > 0 ? ` (${insights.duplicate_count} duplicados excluídos)` : ''}`
             }
-      
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ImportTab;
