@@ -216,4 +216,7 @@ export const dbService = {
       .select()
       .single();
 
-    if (error) thro
+    if (error) throw error;
+    return data;
+  }
+}
