@@ -256,7 +256,8 @@ export function useSettings(currentUser, txHook) {
   // ── Recorrentes ───────────────────────────────────────────────────────────
   const handleRecurringPaymentsChange = (updated) => {
     setRecurringPayments(updated);
-    // A persistência é feita dentro do RecurringView para dar feedback imediato
+    dbService.updateUserSettings(currentUser.id, { recurring_payments: updated })
+      .catch(e => toast.error('Erro ao guardar recorrentes: ' + e.message));
   };
 
   // Confirma um pagamento recorrente: cria a transação real e regista a confirmação.

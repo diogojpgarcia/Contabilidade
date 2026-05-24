@@ -187,7 +187,6 @@ export const dbService = {
     
     if (error && error.code !== 'PGRST116') {
       // PGRST116 = no rows returned (user hasn't created settings yet)
-      console.log('No settings found for user, returning empty');
       return {};
     }
     
@@ -217,7 +216,4 @@ export const dbService = {
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
-  }
-}
+    if (error) thro

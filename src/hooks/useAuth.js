@@ -20,11 +20,9 @@ export function useAuth() {
     try {
       const user = await authService.getCurrentUser();
       if (user) {
-        console.log('✅ User session found:', user.email);
         setCurrentUser(user);
       }
     } catch {
-      console.log('No active session');
     } finally {
       setLoading(false);
     }
@@ -33,14 +31,12 @@ export function useAuth() {
   const checkRecoveryMode = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     if (hashParams.get('type') === 'recovery') {
-      console.log('🔐 Recovery mode detected!');
       setIsRecoveryMode(true);
       setLoading(false);
     }
   };
 
   const handleAuthSuccess = (user) => {
-    console.log('🎉 Auth success!', user.email);
     setCurrentUser(user);
   };
 
@@ -48,14 +44,12 @@ export function useAuth() {
     try {
       await authService.signOut();
       setCurrentUser(null);
-      console.log('👋 Logged out');
     } catch (error) {
       console.error('❌ Logout error:', error);
     }
   };
 
   const handleResetComplete = () => {
-    console.log('✅ Reset complete, reloading...');
     setIsRecoveryMode(false);
     window.location.hash = '';
     window.location.reload();

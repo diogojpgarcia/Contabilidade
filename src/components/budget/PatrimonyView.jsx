@@ -123,7 +123,6 @@ const PatrimonyView = ({
         }
       });
 
-      console.log('[PatrimonyView] PRICES STATE:', priceUpdates);
 
       if (Object.keys(priceUpdates).length === 0) {
         setRefreshingTickers(new Set());
@@ -315,7 +314,6 @@ const PatrimonyView = ({
   };
 
   const renderPatrimonyForm = () => {
-    console.log('[AssetForm] render', patrimonyFormType);
     const f   = patrimonyForm;
     const set = (k, v) => setPatrimonyField(k, v);
     const cls = 'patrimony-input';

@@ -1096,6 +1096,30 @@
 }
 .m-goal-meta strong { color: var(--text-primary); }
 
+.m-goal-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.m-goal-date-label {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  flex: 1;
+}
+.m-goal-date-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366f1;
+}
+.m-goal-date-badge.past {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
 .m-goal-input-row {
   display: flex;
   align-items: center;

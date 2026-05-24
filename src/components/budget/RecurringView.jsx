@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { dbService } from '../../lib/supabase';
 import Overlay from '../Overlay';
 import SwipeRevealCard from '../SwipeRevealCard';
 import RecurringCalendar from './RecurringCalendar';
 import { useAppContext } from '../../context/AppContext';
-import { useToast } from '../../context/ToastContext';
 import { Repeat, Calendar } from '../icons';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
 import {
@@ -45,15 +43,14 @@ const RecurringView = ({
   onConfirmRecurring,
   patrimony,
 }) => {
-  const { currentUser: user, categories } = useAppContext();
-  const { showError } = useToast();
+  const { categories } = useAppContext();
   const [showForm,          setShowForm]          = useState(false);
   const [showCalendar,      setShowCalendar]      = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAccountModal,  setShowAccountModal]  = useState(false);
   const [editingId,         setEditingId]         = useState(null);
   const [form,              setForm]              = useState(EMPTY_FORM);
-  const [saving,            setSaving]            = useState(false);
+  const [confirmDeleteId,   setConfirmDeleteId]   = useState(null);
 
   // Confirm payment modal
   const [confirmTarget,    setConfirmTarget]    = useState(null); // { payment, dueDate, monthKey }
@@ -67,18 +64,8 @@ const RecurringView = ({
   const expCats      = categories?.expense || [];
 
   // ── Helpers ────────────────────────────────────────────────────────────────
-  const persist = async (updated) => {
-    setSaving(true);
-    try {
-      await dbService.updateUserSettings(user.id, { recurring_payments: updated });
-      onRecurringPaymentsChange(updated);
-    } catch (err) {
-      console.error('[RecurringView] save error:', err);
-      showError('Erro ao guardar: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
+  // A persistência no Supabase é feita em useSettings.handleRecurringPaymentsChange.
+  const persist = (updated) => onRecurringPaymentsChange(updated);
 
   const openAdd = () => {
     setEditingId(null);
@@ -105,8 +92,8 @@ const RecurringView = ({
   };
 
   const handleDelete = (id) => {
-    if (!confirm('Apagar este pagamento recorrente?')) return;
     persist(payments.filter(p => p.id !== id));
+    setConfirmDeleteId(null);
   };
 
   const handleSave = () => {
@@ -257,7 +244,7 @@ const RecurringView = ({
                 key={p.id}
                 className="rp-row"
                 onEdit={() => openEdit(p)}
-                onDelete={() => handleDelete(p.id)}
+                onDelete={() => setConfirmDeleteId(p.id)}
               >
                 <CategoryIconBubble name={catLabel(p)} type="expense" size={32} radius="9px" />
                 <div className="rp-row-body">
@@ -343,6 +330,33 @@ const RecurringView = ({
                 >
                   {confirming ? 'A confirmar…' : 'Confirmar pagamento'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
+
+      {/* Delete confirmation modal */}
+      {confirmDeleteId && (
+        <Overlay onClose={() => setConfirmDeleteId(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>Apagar pagamento?</h4>
+              <button className="modal-close" onClick={() => setConfirmDeleteId(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '0 0 8px' }}>
+              <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
+                <strong>{payments.find(p => p.id === confirmDeleteId)?.title}</strong> será removido.
+              </p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid var(--separator)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
+                  onClick={() => setConfirmDeleteId(null)}
+                >Cancelar</button>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
+                  onClick={() => handleDelete(confirmDeleteId)}
+                >Apagar</button>
               </div>
             </div>
           </div>
@@ -521,9 +535,9 @@ const RecurringView = ({
                 <button
                   className="rp-form-save"
                   onClick={handleSave}
-                  disabled={!canSave || saving}
+                  disabled={!canSave}
                 >
-                  {saving ? 'A guardar…' : editingId ? 'Guardar' : 'Adicionar'}
+                  {editingId ? 'Guardar' : 'Adicionar'}
                 </button>
               </div>
             </div>

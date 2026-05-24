@@ -47,7 +47,6 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
       }
 
       const { transactions, insights: ins } = enrichTransactions(rows);
-      console.log('[ImportTab] enriched transactions:', transactions.length, ins);
 
       // Apply learned rules locally
       const categorized = transactions.map(tx => {
@@ -86,7 +85,6 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
           type:        tx.type,
           category:    tx.category || (tx.type === 'income' ? 'Income' : 'Other'),
         };
-        console.log('[ImportTab] BEFORE INSERT:', payload);
         const newTx = await dbService.addTransaction(currentUser.id, payload);
         if (newTx) saved.push(newTx);
       }
