@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Clock, SlidersHorizontal, Search } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-import { useToast } from '../../context/ToastContext';
 import CategoryPicker from '../CategoryPicker.jsx';
 import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
@@ -35,7 +34,6 @@ function getTransferFlow(tx) {
 
 const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
   const { categories } = useAppContext();
-  const { showError } = useToast();
 
   const [pickerTx, setPickerTx] = useState(null);
 
@@ -47,7 +45,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     const outer = statsTabRef.current?.closest('.main-content-new');
     if (outer) outer.scrollTop = 0;
   }, []); // só no mount, não em cada mudança de view
-  const [deleting, setDeleting] = useState(null);
   const [filterDate, setFilterDate] = useState(''); // Filter by specific date
   const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
   const [historyView, setHistoryView] = useState('all');
@@ -158,25 +155,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     setPickerTx(null);
   };
 
-  // Handle delete transaction — App.jsx owns the DB call and state update
-  const handleDeleteTransaction = async (transactionId) => {
-    if (!window.confirm('Tens a certeza que queres apagar esta transação?')) {
-      return;
-    }
-
-    setDeleting(transactionId);
-
-    try {
-      if (onTransactionDeleted) {
-        await onTransactionDeleted(transactionId);
-      }
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-      showError('Erro ao apagar transação: ' + error.message);
-    } finally {
-      setDeleting(null);
-    }
-  };
 
   // Derived from filteredTransactions (already filtered by currentMonth in App)
   const categoryData      = useMemo(() => computeExpensesByCategory(filteredTransactions),  [filteredTransactions]);

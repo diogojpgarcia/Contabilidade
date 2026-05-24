@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CategoryPicker from './CategoryPicker';
 import AccountPicker from './AccountPicker';
+import Overlay from './Overlay';
 
 /* ── Category icon + colour map ── */
 const CAT_ICON = {
@@ -104,6 +105,7 @@ const groupByDate = (txs) => {
 
 /* ── Component ── */
 const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange, onTransactionDeleted, categories, patrimony }) => {
+  const [confirmDeleteTx, setConfirmDeleteTx] = useState(null);
   const [expandedId,    setExpandedId]    = useState(null);
   const [pickerTx,      setPickerTx]      = useState(null);
   const [acctPickerTx,  setAcctPickerTx]  = useState(null);
@@ -217,11 +219,7 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange
                   {onTransactionDeleted && (
                     <button
                       className="ft-detail-del"
-                      onClick={async () => {
-                        if (window.confirm('Apagar esta transação?')) {
-                          await onTransactionDeleted(tx.id);
-                        }
-                      }}
+                      onClick={() => setConfirmDeleteTx(tx)}
                     >
                       🗑
                     </button>
@@ -253,5 +251,32 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange
     </>
   );
 };
+
+      {confirmDeleteTx && (
+        <Overlay onClose={() => setConfirmDeleteTx(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>Apagar transação?</h4>
+              <button className="modal-close" onClick={() => setConfirmDeleteTx(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '0 0 8px' }}>
+              <p style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                <strong>{confirmDeleteTx.description}</strong><br />
+                {confirmDeleteTx.type === 'expense' ? '-' : '+'}{Number(confirmDeleteTx.amount).toFixed(2)}€
+              </p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid var(--separator)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
+                  onClick={() => setConfirmDeleteTx(null)}
+                >Cancelar</button>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
+                  onClick={async () => { setConfirmDeleteTx(null); await onTransactionDeleted(confirmDeleteTx.id); }}
+                >Apagar</button>
+              </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
 
 export default ModernTransactionList;

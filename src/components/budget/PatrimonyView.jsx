@@ -27,6 +27,7 @@ const PatrimonyView = ({
 }) => {
   const { draft: patrimonyForm, setField: setPatrimonyField, reset: resetPatrimonyForm } = useForm({});
 
+  const [confirmDeleteAsset, setConfirmDeleteAsset] = useState(null); // { typeKey, id, name }
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingAssetId,      setEditingAssetId]      = useState(null);
@@ -217,10 +218,16 @@ const PatrimonyView = ({
 
   const totalPatrimony = PATRIMONY_TYPES.reduce((s, t) => s + getPatrimonyTypeValue(t.key), 0);
 
-  const handlePatrimonyDelete = (typeKey, id) => {
-    if (!confirm('Remover este activo?')) return;
+  const handlePatrimonyDelete = (typeKey, id, name) => {
+    setConfirmDeleteAsset({ typeKey, id, name: name || 'este activo' });
+  };
+
+  const handlePatrimonyDeleteConfirmed = () => {
+    if (!confirmDeleteAsset) return;
+    const { typeKey, id } = confirmDeleteAsset;
     const updated = { ...patrimony, [typeKey]: (patrimony[typeKey] || []).filter(x => x.id !== id) };
     onPatrimonyChange && onPatrimonyChange(updated);
+    setConfirmDeleteAsset(null);
   };
 
   const clearAssetForms = () => {
@@ -914,6 +921,31 @@ const PatrimonyView = ({
 
       {renderModal()}
     </>
+      {confirmDeleteAsset && (
+        <Overlay onClose={() => setConfirmDeleteAsset(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>Remover activo?</h4>
+              <button className="modal-close" onClick={() => setConfirmDeleteAsset(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '0 0 8px' }}>
+              <p style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                <strong>{confirmDeleteAsset.name}</strong> será removido do teu património.
+              </p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid var(--separator)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
+                  onClick={() => setConfirmDeleteAsset(null)}
+                >Cancelar</button>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
+                  onClick={handlePatrimonyDeleteConfirmed}
+                >Remover</button>
+              </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
   );
 };
 

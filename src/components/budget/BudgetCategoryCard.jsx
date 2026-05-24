@@ -70,4 +70,4 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, animated, isEdi
   );
 };
 
-export default BudgetCategoryCard;
+export default React.memo(BudgetCategoryCard);

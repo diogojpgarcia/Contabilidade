@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Overlay from './Overlay';
 import { dbService } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { CategoryIconBubble } from '../utils/categoryIcons';
@@ -29,6 +30,7 @@ const COLORS = [
 const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
   const { showError } = useToast();
   // ── Tab ────────────────────────────────────────────────────────────────────
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState(null); // { index } or null
   const [activeTab, setActiveTab] = useState('expense');
 
   // ── Saving indicator ───────────────────────────────────────────────────────
@@ -99,12 +101,17 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
   };
 
   // ── Delete ─────────────────────────────────────────────────────────────────
-  const handleDelete = async (index) => {
-    if (!confirm('Apagar esta categoria?')) return;
+  const handleDelete = (index) => {
+    setConfirmDeleteIdx(index);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (confirmDeleteIdx === null) return;
     await persist({
       ...categories,
-      [activeTab]: categories[activeTab].filter((_, i) => i !== index),
+      [activeTab]: categories[activeTab].filter((_, i) => i !== confirmDeleteIdx),
     });
+    setConfirmDeleteIdx(null);
   };
 
   // ── Add ────────────────────────────────────────────────────────────────────
@@ -285,6 +292,33 @@ const CategoryManager = ({ userId, categories, onClose, onUpdate }) => {
       </div>
 
     </div>
+      {confirmDeleteIdx !== null && (
+        <Overlay onClose={() => setConfirmDeleteIdx(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>Apagar categoria?</h4>
+              <button className="modal-close" onClick={() => setConfirmDeleteIdx(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '0 0 8px' }}>
+              <p style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                {confirmDeleteIdx !== null && categories[activeTab]?.[confirmDeleteIdx] && (
+                  <><strong>{categories[activeTab][confirmDeleteIdx].label}</strong> será apagada.</>
+                )}
+              </p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid var(--separator)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
+                  onClick={() => setConfirmDeleteIdx(null)}
+                >Cancelar</button>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
+                  onClick={handleDeleteConfirmed}
+                >Apagar</button>
+              </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
   );
 };
 
