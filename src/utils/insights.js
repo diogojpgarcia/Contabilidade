@@ -269,12 +269,6 @@ export const generateInsights = ({ transactions, budgets, categories, selectedMo
   const ranked = applyFocusBoost(items, focus)
     .sort((a, b) => b.priority - a.priority);
 
-    '[Insights] focus:', focus ?? 'none',
-    '| raw count:', items.length,
-    '| top 4:',
-    ranked.slice(0, 4).map(i => `${i.type}(${i.priority})`).join(', ')
-  );
-
   return ranked.slice(0, 4);
 };
 
