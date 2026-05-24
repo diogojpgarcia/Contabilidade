@@ -267,7 +267,7 @@ const App = () => {
               }}
             />
           </ErrorBoundary>
-        )
+        )}
       </main>
 
       {/* Bottom Navigation */}
