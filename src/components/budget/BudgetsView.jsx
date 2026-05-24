@@ -252,4 +252,12 @@ const BudgetsView = ({
         txByCategory={txByCategory}
         budgets={budgets}
         sortedItems={sortedItems}
-        animated={animat
+        animated={animated}
+        isVisible={sheetVisible}
+        onClose={closeSheet}
+      />
+    </>
+  );
+};
+
+export default BudgetsView;
