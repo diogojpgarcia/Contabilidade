@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { dbService } from '../../lib/supabase';
+import { dbService, computeImportHash } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { useAppContext } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 import './ImportTab.css';
 
 /* Map a preview row to the shape FintechTransactionCard expects */
@@ -18,6 +19,7 @@ const toFtcShape = (tx, i) => ({
 
 const ImportTab = ({ onImportDone, learnedRules = [] }) => {
   const { currentUser } = useAppContext();
+  const { showSuccess } = useToast();
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);
@@ -26,6 +28,7 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
   const [saving,      setSaving]      = useState(false);
   const [saved,       setSaved]       = useState(false);
   const [keepDupes,   setKeepDupes]   = useState(false);
+  const [skippedCount, setSkippedCount] = useState(0);
   const inputRef = useRef();
 
   const handleFile = async (file) => {
@@ -74,21 +77,23 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
   const handleConfirm = async () => {
     if (!preview.length || !currentUser) return;
     setSaving(true);
-    const toSave = keepDupes ? preview : preview.filter(tx => !tx.is_duplicate);
+    const toSave = (keepDupes ? preview : preview.filter(tx => !tx.is_duplicate))
+      .map(tx => ({
+        date:        tx.date,
+        description: tx.clean_description || tx.description,
+        amount:      tx.amount,
+        type:        tx.type,
+        category:    tx.category || (tx.type === 'income' ? 'Outros Rendimentos' : 'Outros'),
+        import_hash: computeImportHash(
+          tx.date,
+          tx.amount,
+          tx.clean_description || tx.description
+        ),
+      }));
     try {
-      const saved = [];
-      for (const tx of toSave) {
-        const payload = {
-          date:        tx.date,
-          description: tx.clean_description || tx.description,
-          amount:      tx.amount,
-          type:        tx.type,
-          category:    tx.category || (tx.type === 'income' ? 'Income' : 'Other'),
-        };
-        const newTx = await dbService.addTransaction(currentUser.id, payload);
-        if (newTx) saved.push(newTx);
-      }
+      const { saved, skipped } = await dbService.addTransactionsBulk(currentUser.id, toSave);
       setSaved(true);
+      setSkippedCount(skipped);
       setPreview([]);
       setInsights(null);
       setFileName('');
@@ -102,7 +107,7 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
 
   const handleClear = () => {
     setPreview([]); setInsights(null); setFileName('');
-    setError(''); setSaved(false);
+    setError(''); setSaved(false); setSkippedCount(0);
     if (inputRef.current) inputRef.current.value = '';
   };
 
@@ -148,7 +153,7 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
       {error && <div className="import-error">{error}</div>}
 
       {saved && (
-        <div className="import-success">✓ Transações importadas com sucesso!</div>
+        <div className="import-success">✓ Transações importadas com sucesso!{skippedCount > 0 ? ` · ${skippedCount} ignoradas (já existiam)` : ''}</div>
       )}
 
       {/* Insights bar */}

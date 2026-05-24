@@ -57,6 +57,25 @@ function mapTransaction(raw) {
   };
 }
 
+
+/**
+ * Calcula uma chave determinista para uma transação importada de banco.
+ * Usada como import_hash único para evitar re-importações duplicadas.
+ * Input: date + amount (2 decimais) + descrição normalizada (60 chars).
+ * Não usa crypto — é uma string legível e estável entre imports.
+ */
+export function computeImportHash(date, amount, description) {
+  const desc = (description || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+  return `${date}|${parseFloat(amount).toFixed(2)}|${desc}`;
+}
+
 export const dbService = {
   async getTransactions(userId) {
     const { data, error } = await supabase
@@ -219,6 +238,59 @@ export const dbService = {
     }
     
     return data?.settings || {};
+  },
+
+
+  /**
+   * Importação em massa com proteção contra re-import.
+   * Cada row deve ter import_hash — conflitos são ignorados via
+   * ON CONFLICT (import_hash) DO NOTHING.
+   * Devolve { saved: Transaction[], skipped: number }.
+   */
+  async addTransactionsBulk(userId, transactions) {
+    const rows = transactions.map(tx => {
+      const row = {
+        user_id:     userId,
+        date:        tx.date,
+        description: tx.description,
+        amount:      tx.amount,
+        type:        tx.type,
+        category:    tx.category,
+        import_hash: tx.import_hash || null,
+      };
+      if (tx.account_id   != null) row.account_id   = tx.account_id;
+      if (tx.account_name != null) row.account_name = tx.account_name;
+      return row;
+    });
+
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .upsert(rows, { onConflict: 'import_hash', ignoreDuplicates: true })
+        .select();
+
+      if (error) throw error;
+
+      const saved   = (data || []).map(mapTransaction);
+      const skipped = rows.length - saved.length;
+      return { saved, skipped };
+    } catch (err) {
+      // Se a coluna import_hash ainda não existe (antes da migração SQL),
+      // cai no modo de fallback com inserts individuais sem proteção.
+      const isColErr = err.code === 'PGRST204' || err.code === '42703' ||
+        (err.message || '').includes('import_hash');
+      if (!isColErr) throw err;
+
+      // Fallback: insert one by one sem hash (comportamento anterior)
+      const saved = [];
+      for (const tx of transactions) {
+        try {
+          const row = await this.addTransaction(userId, tx);
+          if (row) saved.push(row);
+        } catch (e) { /* ignorar erros individuais no fallback */ }
+      }
+      return { saved, skipped: 0 };
+    }
   },
 
   async updateUserSettings(userId, newSettings) {
