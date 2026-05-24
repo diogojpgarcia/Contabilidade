@@ -101,3 +101,7 @@ const ResetPassword = ({ onComplete }) => {
         </form>
       </div>
     </div>
+  );
+};
+
+export default ResetPassword;
