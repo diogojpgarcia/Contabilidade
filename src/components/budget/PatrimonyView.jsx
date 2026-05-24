@@ -920,7 +920,6 @@ const PatrimonyView = ({
       <button className="m-fab" onClick={() => setShowPatrimonyModal(true)}>+</button>
 
       {renderModal()}
-    </>
       {confirmDeleteAsset && (
         <Overlay onClose={() => setConfirmDeleteAsset(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -946,6 +945,7 @@ const PatrimonyView = ({
           </div>
         </Overlay>
       )}
+    </>
   );
 };
 
