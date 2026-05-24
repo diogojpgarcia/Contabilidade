@@ -254,7 +254,7 @@ const BudgetsView = ({
         sortedItems={sortedItems}
         animated={animated}
         isVisible={sheetVisible}
-        onClose={closeSheet}
+        onClose={closeCategorySheet}
       />
     </>
   );
