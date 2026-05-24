@@ -4,6 +4,7 @@ import CategoryManager from '../CategoryManager';
 import Overlay from '../Overlay';
 import { useForm } from '../../hooks/useForm';
 import PageHeader from '../PageHeader';
+import { useAppContext } from '../../context/AppContext';
 import './ProfileTab.css';
 
 const PALETTES = [
@@ -12,7 +13,9 @@ const PALETTES = [
   { id: 'stone',    name: 'Stone',    bg: '#f0ebe4', accent: '#9f6b48' },
 ];
 
-const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDeleted, theme, setTheme, colorPalette = 'midnight', setColorPalette, categories, onCategoriesChange, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange }) => {
+const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, colorPalette = 'midnight', setColorPalette, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange, migrationPending = null, onMigrateConfirm, onMigrateDismiss }) => {
+  const { currentUser, categories, onCategoriesChange } = useAppContext();
+  const user = currentUser; // alias para compatibilidade com referências existentes
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const deleteSucceededRef = React.useRef(false);
   const [showDeleteHistory, setShowDeleteHistory] = useState(false);
@@ -129,6 +132,35 @@ const ProfileTab = ({ user, userName, onLogout, onNavigateToImport, onDataDelete
               />
               {resetStatus && <p className={`status-message ${resetStatus.includes('✓') ? 'success' : 'error'}`}>{resetStatus}</p>}
               <button className="btn-primary full-width" onClick={handleResetPassword}>Enviar Link</button>
+            </div>
+          </div>
+        </Overlay>
+      )}
+
+      {migrationPending && (
+        <Overlay onClose={onMigrateDismiss}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Ligar Transações à Conta</h3>
+              <button className="btn-close" onClick={onMigrateDismiss}>
+                <span className="sf-icon">✕</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description">
+                Tens <strong>{migrationPending.count} transação(ões)</strong> sem conta associada.
+              </p>
+              <p className="modal-description">
+                Queres aplicar <strong>"{migrationPending.accName}"</strong> a estas transações antigas?
+              </p>
+              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                <button className="btn-primary full-width" onClick={onMigrateConfirm}>
+                  Sim, ligar todas
+                </button>
+                <button className="btn-secondary full-width" onClick={onMigrateDismiss}>
+                  Não, manter assim
+                </button>
+              </div>
             </div>
           </div>
         </Overlay>

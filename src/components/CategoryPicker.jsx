@@ -32,7 +32,6 @@ const CategoryPicker = ({ transaction, onSelect, onClose, categories, title = 'A
 
   const list = transaction.type === 'income' ? categories.income : categories.expense;
 
-  console.log('[CategoryPicker] source: prop | count:', list.length);
 
   const filtered = list.filter(c =>
     c.label.toLowerCase().includes(search.toLowerCase())

@@ -31,11 +31,7 @@ export const HAS_STOCK_KEY = TWELVE_DATA_KEY.length > 0;
 
 // ─── startup diagnostics ─────────────────────────────────────────────────────
 // Logged once on module load — visible in DevTools on any device/platform.
-console.log('[assetPrice] DEVICE:', navigator.userAgent);
-console.log('[assetPrice] API KEY:', HAS_STOCK_KEY
-  ? `set (${TWELVE_DATA_KEY.slice(0, 4)}…${TWELVE_DATA_KEY.slice(-4)})`
-  : 'NOT SET — stock prices disabled, crypto via CoinGecko fallback');
-
+      //       // 
 // ─── in-memory caches ────────────────────────────────────────────────────────
 
 /** ticker → { price, changePct, ts } */
@@ -114,8 +110,7 @@ export const fetchStockQuote = async (ticker) => {
     }
 
     const data = await res.json();
-    console.log(`[assetPrice] PRICE RESULT ${ticker}:`, data);
-
+      // 
     // Twelve Data returns { code: 400, ... } for errors
     if (data.code || data.status === 'error') {
       console.error(`[assetPrice] API ERROR ${ticker}:`, data);
@@ -176,8 +171,7 @@ export const fetchCryptoBatch = async (symbols) => {
     }
 
     const data = await res.json();
-    console.log('[assetPrice] PRICE RESULT CoinGecko:', data);
-
+      // 
     for (const { sym, id } of toFetch) {
       const coin = data[id];
       if (!coin) continue;
@@ -357,8 +351,7 @@ export const fetchPrice = async (ticker) => {
   if (inFlight.has(key)) return inFlight.get(key);
 
   const promise = (async () => {
-    console.log(`[assetPrice] FETCH API — ${key}`);
-    const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+      //     const { signal, clear } = abortAfter(FETCH_TIMEOUT);
     try {
       const res = await fetch(
         `https://api.twelvedata.com/price?symbol=${encodeURIComponent(key)}&apikey=${TWELVE_DATA_KEY}`,
@@ -418,8 +411,7 @@ export const getPrice = async (ticker, assetType = null) => {
 
   // 1 — fresh cache hit
   if (entry && age < CACHE_TTL) {
-    console.log(`[assetPrice] CACHE HIT — ${key} (${Math.round(age / 1000)}s old)`);
-    const safePrice = Number(entry.price);
+      //     const safePrice = Number(entry.price);
     return Number.isFinite(safePrice) ? safePrice : 0;
   }
 
@@ -429,8 +421,7 @@ export const getPrice = async (ticker, assetType = null) => {
 
   // 3 — stale fallback (API down / no key)
   if (entry) {
-    console.log(`[assetPrice] FALLBACK CACHE — ${key} (${Math.round(age / 60_000)}m old)`);
-    const safePrice = Number(entry.price);
+      //     const safePrice = Number(entry.price);
     return Number.isFinite(safePrice) ? safePrice : 0;
   }
 
@@ -477,8 +468,7 @@ export const fetchCryptoTwelveData = async (symbols) => {
     const res = await fetch(url, { signal });   // no Content-Type on GET — avoids CORS preflight
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    console.log('[assetPrice] PRICE RESULT crypto (TD):', data);
-
+      // 
     for (const { sym, tdSym } of toFetch) {
       // Single-symbol responses come unwrapped; multi-symbol come as { "BTC/USD": {...}, … }
       const q = toFetch.length === 1 ? data : (data[tdSym] ?? data[sym]);

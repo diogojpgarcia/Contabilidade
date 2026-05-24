@@ -5,30 +5,29 @@ import HomeRecurring     from '../home/HomeRecurring';
 import QuickActionsRow   from '../QuickActionsRow';
 import AccountsSection   from '../AccountsSection';
 import InsightsSection   from '../InsightsSection';
+import { useAppContext } from '../../context/AppContext';
 import '../home/Home.css';
 
 const HomeTab = ({
-  balance, totalBalance = 0, transactions, currentMonth,
+  balance, transactions, currentMonth,
   patrimony = {},
   financialMonthStartDay = 1,
   homeUsesFinancialMonth = true,
-  theme = 'default',
   onNavigate,
   recurringPayments,
   confirmedRecurring = {},
-  categories,
   userName = '',
-  financialFocus = null,
 }) => {
+  const { categories } = useAppContext();
   const p = patrimony;
 
   /* ── Patrimony sub-totals — pure derivation, never stored ── */
   const sumAccounts   = (p.accounts   || []).reduce((s, x) => s + (parseFloat(x.currentBalance ?? x.balance) || 0), 0);
-  const sumStocks     = (p.stocks     || []).reduce((s, x) => s + (parseFloat(x.qty)      || 0) * (parseFloat(x.avgPrice) || 0), 0);
+  const sumStocks     = (p.stocks     || []).reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.avgPrice) || 0), 0);
   const sumBonds      = (p.bonds      || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
   const sumRealestate = (p.realestate || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
   const sumVehicles   = (p.vehicles   || []).reduce((s, x) => s + (parseFloat(x.value)    || 0), 0);
-  const sumCrypto     = (p.crypto     || []).reduce((s, x) => s + (parseFloat(x.qty)      || 0) * (parseFloat(x.price) || 0), 0);
+  const sumCrypto     = (p.crypto     || []).reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.price) || 0), 0);
 
   const patrimonyTotal = sumAccounts + sumStocks + sumBonds + sumRealestate + sumVehicles + sumCrypto;
 
@@ -62,6 +61,28 @@ const HomeTab = ({
     return { diaAtual: Math.max(1, diaAtual), totalDias };
   }
 
+  /* ── Sparkline + variação mensal de despesas (dados reais) ── */
+  const _buildMonthKey = (y, m) => `${y}-${String(m + 1).padStart(2, '0')}`;
+  const _monthExp = (mk) => (transactions || [])
+    .filter(t => t.type === 'expense' && (t.date || '').startsWith(mk))
+    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const _today = new Date();
+  const _thisMonth = _buildMonthKey(_today.getFullYear(), _today.getMonth());
+  const _prevMonth = _buildMonthKey(_today.getFullYear(), _today.getMonth() - 1);
+  const _thisExp = _monthExp(_thisMonth);
+  const _prevExp = _monthExp(_prevMonth);
+  const monthlyVariacao = _prevExp > 0
+    ? Math.round(((_thisExp - _prevExp) / _prevExp) * 100)
+    : 0;
+  const sparkMonths = [];
+  const sparkLabels = [];
+  for (let _i = 5; _i >= 0; _i--) {
+    const _d = new Date(_today.getFullYear(), _today.getMonth() - _i, 1);
+    sparkMonths.push(_monthExp(_buildMonthKey(_d.getFullYear(), _d.getMonth())));
+    sparkLabels.push(_d.toLocaleDateString('pt-PT', { month: 'short' }));
+  }
+
+
   return (
     <div className="h-page">
 
@@ -77,6 +98,9 @@ const HomeTab = ({
             : undefined}
           diaAtual={getCycleDayInfo(homeUsesFinancialMonth, financialMonthStartDay).diaAtual}
           totalDias={getCycleDayInfo(homeUsesFinancialMonth, financialMonthStartDay).totalDias}
+          sparkMonths={sparkMonths}
+          sparkLabels={sparkLabels}
+          variacao={monthlyVariacao}
         />
       </div>
 

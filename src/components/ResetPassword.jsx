@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { authService } from '../lib/supabase';
+import { toast } from '../utils/toast';
 
 const ResetPassword = ({ onComplete }) => {
   const [password, setPassword] = useState('');
@@ -35,7 +36,7 @@ const ResetPassword = ({ onComplete }) => {
 
       if (error) throw error;
 
-      alert('✅ Password atualizada com sucesso!');
+      toast.success('Password atualizada com sucesso!');
       setTimeout(() => onComplete(), 1000);
 
     } catch (err) {

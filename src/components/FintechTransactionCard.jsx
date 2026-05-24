@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CategoryPicker from './CategoryPicker';
 import AccountPicker from './AccountPicker';
+import Overlay from './Overlay';
 import { getCategoryMeta } from '../utils/categoryIcons';
 import './FintechTransactionCard.css';
 
@@ -131,6 +132,7 @@ const FintechTransactionCard = ({
   const [pickerTx,       setPickerTx]       = useState(null);
   const [acctPickerOpen, setAcctPickerOpen] = useState(false);
   const [deleting,       setDeleting]       = useState(false);
+  const [confirmDelete,  setConfirmDelete]  = useState(false);
   const [logoErr,        setLogoErr]        = useState(false);
 
   // ── Inline edit state ──────────────────────────────────────────────────────
@@ -190,9 +192,13 @@ const FintechTransactionCard = ({
     setOpen(false);
   };
 
-  const handleDelete = async (e) => {
+  const handleDelete = (e) => {
     e.stopPropagation();
-    if (!window.confirm('Apagar esta transação?')) return;
+    setConfirmDelete(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    setConfirmDelete(false);
     setDeleting(true);
     try {
       if (onDelete) await onDelete(tx.id);
@@ -389,8 +395,35 @@ const FintechTransactionCard = ({
           onClose={() => setAcctPickerOpen(false)}
         />
       )}
+
+      {confirmDelete && (
+        <Overlay onClose={() => setConfirmDelete(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h4>Apagar transação?</h4>
+              <button className="modal-close" onClick={() => setConfirmDelete(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '0 0 8px' }}>
+              <p style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                <strong>{tx.description}</strong><br />
+                {tx.type === 'expense' ? '-' : '+'}{Number(tx.amount).toFixed(2)}€
+              </p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid var(--separator)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
+                  onClick={() => setConfirmDelete(false)}
+                >Cancelar</button>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
+                  onClick={handleDeleteConfirmed}
+                >Apagar</button>
+              </div>
+            </div>
+          </div>
+        </Overlay>
+      )}
     </>
   );
 };
 
-export default FintechTransactionCard;
+export default React.memo(FintechTransactionCard);

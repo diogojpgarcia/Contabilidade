@@ -1,11 +1,11 @@
 import React from 'react';
 
-const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias }) => {
+const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, sparkMonths = [], sparkLabels = [] }) => {
   const progresso = Math.round((diaAtual / totalDias) * 100);
 
-  // Dados dos últimos 6 meses (hardcoded por agora)
-  const dados = [2650, 2980, 2810, 3050, 2920, 3247];
-  const meses = ['Dez', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai'];
+  // Dados reais dos últimos 6 meses de despesas
+  const dados = sparkMonths.length === 6 ? sparkMonths : [0, 0, 0, 0, 0, 0];
+  const meses = sparkLabels.length === 6 ? sparkLabels : ['', '', '', '', '', ''];
 
   const W = 340; // viewBox width
   const H = 80;  // viewBox height da chart
@@ -58,10 +58,10 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias }) =>
             </p>
             <p style={{
               fontSize: '13px',
-              color: '#22C55E',
+              color: variacao <= 0 ? '#22C55E' : '#F87171',
               margin: 0,
             }}>
-              ↑ +2,4% vs mês passado
+              {variacao > 0 ? '↑' : variacao < 0 ? '↓' : '='} {variacao > 0 ? '+' : ''}{variacao}% vs mês passado
             </p>
           </div>
 

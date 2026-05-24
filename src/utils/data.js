@@ -30,7 +30,9 @@ export const getToday = () => {
 };
 
 // Get month key from date (YYYY-MM)
+// Returns '' for null/undefined so filters degrade gracefully instead of crashing.
 export const getMonthKey = (date) => {
+  if (!date) return '';
   return date.slice(0, 7);
 };
 

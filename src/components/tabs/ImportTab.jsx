@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { dbService } from '../../lib/supabase';
+import { dbService, computeImportHash } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import FintechTransactionCard from '../FintechTransactionCard';
+import { useAppContext } from '../../context/AppContext';
+import { useToast } from '../../context/ToastContext';
 import './ImportTab.css';
 
 /* Map a preview row to the shape FintechTransactionCard expects */
@@ -15,7 +17,9 @@ const toFtcShape = (tx, i) => ({
   category:    tx.category || (tx.type === 'income' ? 'Outros Rendimentos' : 'Outros'),
 });
 
-const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' }) => {
+const ImportTab = ({ onImportDone, learnedRules = [] }) => {
+  const { currentUser } = useAppContext();
+  const { showSuccess } = useToast();
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);
@@ -24,6 +28,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
   const [saving,      setSaving]      = useState(false);
   const [saved,       setSaved]       = useState(false);
   const [keepDupes,   setKeepDupes]   = useState(false);
+  const [skippedCount, setSkippedCount] = useState(0);
   const inputRef = useRef();
 
   const handleFile = async (file) => {
@@ -45,7 +50,6 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
       }
 
       const { transactions, insights: ins } = enrichTransactions(rows);
-      console.log('[ImportTab] enriched transactions:', transactions.length, ins);
 
       // Apply learned rules locally
       const categorized = transactions.map(tx => {
@@ -71,24 +75,25 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
   };
 
   const handleConfirm = async () => {
-    if (!preview.length || !user) return;
+    if (!preview.length || !currentUser) return;
     setSaving(true);
-    const toSave = keepDupes ? preview : preview.filter(tx => !tx.is_duplicate);
+    const toSave = (keepDupes ? preview : preview.filter(tx => !tx.is_duplicate))
+      .map(tx => ({
+        date:        tx.date,
+        description: tx.clean_description || tx.description,
+        amount:      tx.amount,
+        type:        tx.type,
+        category:    tx.category || (tx.type === 'income' ? 'Outros Rendimentos' : 'Outros'),
+        import_hash: computeImportHash(
+          tx.date,
+          tx.amount,
+          tx.clean_description || tx.description
+        ),
+      }));
     try {
-      const saved = [];
-      for (const tx of toSave) {
-        const payload = {
-          date:        tx.date,
-          description: tx.clean_description || tx.description,
-          amount:      tx.amount,
-          type:        tx.type,
-          category:    tx.category || (tx.type === 'income' ? 'Income' : 'Other'),
-        };
-        console.log('[ImportTab] BEFORE INSERT:', payload);
-        const newTx = await dbService.addTransaction(user.id, payload);
-        if (newTx) saved.push(newTx);
-      }
+      const { saved, skipped } = await dbService.addTransactionsBulk(currentUser.id, toSave);
       setSaved(true);
+      setSkippedCount(skipped);
       setPreview([]);
       setInsights(null);
       setFileName('');
@@ -102,7 +107,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
 
   const handleClear = () => {
     setPreview([]); setInsights(null); setFileName('');
-    setError(''); setSaved(false);
+    setError(''); setSaved(false); setSkippedCount(0);
     if (inputRef.current) inputRef.current.value = '';
   };
 
@@ -148,7 +153,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
       {error && <div className="import-error">{error}</div>}
 
       {saved && (
-        <div className="import-success">✓ Transações importadas com sucesso!</div>
+        <div className="import-success">✓ Transações importadas com sucesso!{skippedCount > 0 ? ` · ${skippedCount} ignoradas (já existiam)` : ''}</div>
       )}
 
       {/* Insights bar */}
@@ -192,8 +197,7 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
             <span className="import-preview-title">Pré-visualização</span>
             <span className="import-preview-count">{preview.length} linhas</span>
           </div>
-          {theme === 'fintech' ? (
-            <div className="ftc-list import-ftc-list">
+          <div className="ftc-list import-ftc-list">
               {preview.map((tx, i) => (
                 <FintechTransactionCard
                   key={i}
@@ -204,30 +208,6 @@ const ImportTab = ({ user, onImportDone, learnedRules = [], theme = 'default' })
                 />
               ))}
             </div>
-          ) : (
-            <div className="import-preview-list">
-              {preview.map((tx, i) => (
-                <div
-                  key={i}
-                  className={`import-row ${tx.type}${tx.is_duplicate ? ' duplicate' : ''}`}
-                >
-                  <div className="import-row-left">
-                    <span className="import-row-meta">
-                      {tx.date} · {tx.category}
-                      {tx.is_duplicate && <span className="import-dupe-badge">duplicado</span>}
-                    </span>
-                    <span className="import-row-desc">{tx.clean_description}</span>
-                    {tx.clean_description !== tx.description && (
-                      <span className="import-row-original">{tx.description}</span>
-                    )}
-                  </div>
-                  <span className={`import-row-amount ${tx.type}`}>
-                    {tx.type === 'income' ? '+' : '-'}{tx.amount.toFixed(2)}€
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
