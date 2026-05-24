@@ -46,19 +46,19 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
           <div className="m-sheet-stat">
             <div className="m-sheet-stat-lbl">Gasto</div>
             <div className="m-sheet-stat-val" style={{ color: isOver ? '#F87171' : '#E2E8F0' }}>
-              {catData ? catData.spent.toFixed(0) : 0}€
+              {catData ? catData.spent.toFixed(2) : 0}€
             </div>
           </div>
           <div className="m-sheet-stat">
             <div className="m-sheet-stat-lbl">Orçamento</div>
             <div className="m-sheet-stat-val" style={{ color: '#00DDFF' }}>
-              {catData && catData.limit > 0 ? catData.limit.toFixed(0) : '—'}€
+              {catData && catData.limit > 0 ? catData.limit.toFixed(2) : '—'}€
             </div>
           </div>
           <div className="m-sheet-stat">
             <div className="m-sheet-stat-lbl">Restante</div>
             <div className="m-sheet-stat-val" style={{ color: remaining >= 0 ? '#4ADE80' : '#F87171' }}>
-              {catData && catData.limit > 0 ? `${remaining >= 0 ? '' : '−'}${Math.abs(remaining).toFixed(0)}€` : '—'}
+              {catData && catData.limit > 0 ? `${remaining >= 0 ? '' : '−'}${Math.abs(remaining).toFixed(2)}€` : '—'}
             </div>
           </div>
         </div>
@@ -67,8 +67,8 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
           <div className="m-sheet-prog-wrap">
             <div className="m-sheet-prog-row">
               <span className="m-sheet-prog-lbl">{catData.percent.toFixed(0)}% do orçamento</span>
-              {catData.delta > 0.5  && <span className="m-sheet-delta up">+{catData.delta.toFixed(0)}€ ↑</span>}
-              {catData.delta < -0.5 && <span className="m-sheet-delta down">−{Math.abs(catData.delta).toFixed(0)}€ ↓</span>}
+              {catData.delta > 0.5  && <span className="m-sheet-delta up">+{catData.delta.toFixed(2)}€ ↑</span>}
+              {catData.delta < -0.5 && <span className="m-sheet-delta down">−{Math.abs(catData.delta).toFixed(2)}€ ↓</span>}
             </div>
             <div className="m-sheet-prog-track">
               <div

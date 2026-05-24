@@ -229,7 +229,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
                 ? <span style={{ fontSize: 13, color: '#334155' }}>Sem objetivos — cria um em Budget</span>
                 : <select className="cosmos-field-select" value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)}>
                     <option value="">Seleciona um objetivo</option>
-                    {goals.map(g => <option key={g.id} value={g.id}>{g.name} ({(g.currentSavings || 0).toFixed(0)}€ / {g.amount.toFixed(0)}€)</option>)}
+                    {goals.map(g => <option key={g.id} value={g.id}>{g.name} ({(g.currentSavings || 0).toFixed(2)}€ / {g.amount.toFixed(2)}€)</option>)}
                   </select>}
             </div>
           </div>
@@ -254,7 +254,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
                     }}
                   >
                     <option value="">Sem conta específica</option>
-                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€</option>)}
+                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
                   </select>}
             </div>
           </div>
@@ -270,7 +270,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
                 ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas</span>
                 : <select className="cosmos-field-select" value={accountId} onChange={handleAccountSelect}>
                     <option value="">Sem conta específica</option>
-                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(0)}€</option>)}
+                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
                   </select>}
             </div>
           </div>

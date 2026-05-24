@@ -25,13 +25,13 @@ const BudgetCategoryCard = ({ cat, limit, spent, percent, delta, animated, isEdi
         </div>
         <div className="m-gcc-right">
           {limit > 0 && <div className="m-gcc-pct" style={{ color: st.color }}>{percent.toFixed(0)}%</div>}
-          {delta > 0.5  && <div className="m-gcc-delta up">+{delta.toFixed(0)}€ ↑</div>}
-          {delta < -0.5 && <div className="m-gcc-delta down">−{Math.abs(delta).toFixed(0)}€ ↓</div>}
+          {delta > 0.5  && <div className="m-gcc-delta up">+{delta.toFixed(2)}€ ↑</div>}
+          {delta < -0.5 && <div className="m-gcc-delta down">−{Math.abs(delta).toFixed(2)}€ ↓</div>}
         </div>
       </div>
       <div className="m-gcc-name">{cat.label}</div>
       <div className="m-gcc-amounts">
-        {spent.toFixed(0)}€{limit > 0 ? <span> /{limit.toFixed(0)}€</span> : null}
+        {spent.toFixed(2)}€{limit > 0 ? <span> /{limit.toFixed(2)}€</span> : null}
       </div>
       {limit > 0 && (
         <div className="m-gcc-bar-bg">

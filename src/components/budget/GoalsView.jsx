@@ -76,8 +76,8 @@ const GoalsView = ({ goals = [], onGoalsChange }) => {
                   <div className="m-goal-bar-fill" style={{ width: `${progress}%` }} />
                 </div>
                 <div className="m-goal-meta">
-                  <span><strong>{(goal.currentSavings || 0).toFixed(0)}€</strong> / {goal.amount.toFixed(0)}€</span>
-                  <span>{progress.toFixed(0)}%{remaining > 0 ? ` · faltam ${remaining.toFixed(0)}€` : ' ✓'}</span>
+                  <span><strong>{(goal.currentSavings || 0).toFixed(2)}€</strong> / {goal.amount.toFixed(2)}€</span>
+                  <span>{progress.toFixed(0)}%{remaining > 0 ? ` · faltam ${remaining.toFixed(2)}€` : ' ✓'}</span>
                 </div>
                 {dateInfo && (
                   <div className="m-goal-date">
