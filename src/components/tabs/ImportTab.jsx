@@ -17,7 +17,7 @@ const toFtcShape = (tx, i) => ({
 });
 
 const ImportTab = ({ onImportDone, learnedRules = [] }) => {
-  const { currentUser } = useAppContext();
+  const { currentUser, theme } = useAppContext();
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);

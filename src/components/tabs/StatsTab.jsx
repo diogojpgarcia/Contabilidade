@@ -33,7 +33,7 @@ function getTransferFlow(tx) {
 }
 
 const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
-  const { categories } = useAppContext();
+  const { categories, theme } = useAppContext();
   console.log('REAL STATS TAB LOADED');
   console.log('RENDER STATS');
   console.log('ACTIVE THEME:', theme);

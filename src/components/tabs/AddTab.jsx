@@ -7,7 +7,7 @@ import { useAppContext } from '../../context/AppContext';
 import './AddTab.css';
 
 const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount }) => {
-  const { currentUser, categories } = useAppContext();
+  const { currentUser, categories, theme } = useAppContext();
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
