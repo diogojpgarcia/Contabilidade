@@ -16,19 +16,13 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const { tab, onRetry } = this.props;
+      const isTabBoundary = !!tab;
       return (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <h2>⚠️ Algo correu mal</h2>
-          <p>Erro: {this.state.error?.message}</p>
-          <button onClick={() => window.location.reload()}>
-            Recarregar App
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-export default ErrorBoundary;
+        <div style={{
+          padding: '2rem', textAlign: 'center',
+          ...(isTabBoundary ? { paddingTop: '4rem' } : {}),
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚠️</div>
+          <h3 style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>
+    
