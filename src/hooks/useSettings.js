@@ -5,6 +5,29 @@ import { getMonthKey } from '../utils/data';
 import { getCurrentFinancialMonth } from '../utils/financialMonth';
 import { toast } from '../utils/toast';
 
+// Cores de fundo de cada paleta — usadas para atualizar <meta name="theme-color">
+// e eliminar o artefacto de cor residual na zona do notch no iOS.
+const PALETTE_BG = {
+  midnight: '#0b0d10',
+  dusk:     '#121008',
+  stone:    '#f0ebe4',
+};
+const DEFAULT_BG = '#0d0f12';
+
+function applyPaletteToDOM(palette) {
+  document.documentElement.setAttribute('data-palette', palette);
+  document.documentElement.setAttribute('data-theme', palette === 'stone' ? 'light' : 'soft-future');
+  // Atualizar theme-color para iOS (notch / status bar)
+  const bg = PALETTE_BG[palette] ?? DEFAULT_BG;
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.content = bg;
+}
+
 /**
  * useSettings — responsável por TODAS as configurações do utilizador.
  *
@@ -46,8 +69,7 @@ export function useSettings(currentUser, txHook) {
 
   // Aplicar paleta ao <html> no primeiro render (antes de loadUserData)
   useEffect(() => {
-    document.documentElement.setAttribute('data-palette', colorPalette);
-    document.documentElement.setAttribute('data-theme', colorPalette === 'stone' ? 'light' : 'soft-future');
+    applyPaletteToDOM(colorPalette);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Boot atómico ──────────────────────────────────────────────────────────
@@ -102,14 +124,11 @@ export function useSettings(currentUser, txHook) {
         setConfirmedRecurring(settings.confirmed_recurring);
       }
 
-      // Cosmos é o único tema visual — soft-future excepto stone (light mode)
+      // Paleta de cor — aplica ao DOM (inclui theme-color do notch iOS)
       const currentPalette = settings?.color_palette || colorPalette;
-      document.documentElement.setAttribute('data-theme', currentPalette === 'stone' ? 'light' : 'soft-future');
-
-      // Paleta de cor
+      applyPaletteToDOM(currentPalette);
       if (settings?.color_palette) {
         setColorPaletteState(settings.color_palette);
-        document.documentElement.setAttribute('data-palette', settings.color_palette);
         localStorage.setItem('cosmos-palette', settings.color_palette);
       }
 
@@ -147,8 +166,7 @@ export function useSettings(currentUser, txHook) {
   // ── Paleta ────────────────────────────────────────────────────────────────
   const setColorPalette = useCallback((palette) => {
     setColorPaletteState(palette);
-    document.documentElement.setAttribute('data-palette', palette);
-    document.documentElement.setAttribute('data-theme', palette === 'stone' ? 'light' : 'soft-future');
+    applyPaletteToDOM(palette);
     localStorage.setItem('cosmos-palette', palette);
     if (currentUser?.id) {
       dbService.updateUserSettings(currentUser.id, { color_palette: palette }).catch(e => toast.error('Erro ao guardar paleta: ' + e.message));
