@@ -21,11 +21,11 @@
 
 /* Dark cards in fintech theme */
 .fintech-ui .ftc-card {
-  background: #1A1A1A;
+  background: var(--cosmos-surface-1);
   border-color: rgba(255,255,255,0.07);
 }
 .fintech-ui .ftc-card:active {
-  background: #222;
+  background: var(--cosmos-surface-2);
 }
 
 /* Duplicate indicator bar */
@@ -36,7 +36,7 @@
   text-transform: uppercase;
   padding: 2px 10px;
   background: rgba(249,115,22,0.15);
-  color: #f97316;
+  color: var(--cosmos-expense);
   text-align: center;
 }
 
@@ -105,11 +105,11 @@
 }
 .ftc-badge--transfer {
   background: rgba(99,102,241,0.12);
-  color: #6366f1;
+  color: var(--cosmos-accent);
 }
 .ftc-badge--adjust {
   background: rgba(249,115,22,0.12);
-  color: #ea580c;
+  color: var(--cosmos-expense);
 }
 
 .ftc-cat {
@@ -151,8 +151,8 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.ftc-amt--income  { color: #22c55e; }
-.ftc-amt--expense { color: #f87171; }
+.ftc-amt--income  { color: var(--cosmos-income); }
+.ftc-amt--expense { color: var(--cosmos-expense); }
 .ftc-amt--neutral {
   color: var(--text-secondary, #888);
   font-weight: 500;
@@ -225,26 +225,26 @@
 
 .ftc-action-btn--danger {
   background: rgba(220,38,38,0.1);
-  color: #f87171;
+  color: var(--cosmos-expense);
 }
 .fintech-ui .ftc-action-btn--danger {
   background: rgba(248,113,113,0.12);
-  color: #f87171;
+  color: var(--cosmos-expense);
 }
 
 /* ── Edit button variant ── */
 .ftc-action-btn--edit {
   background: rgba(99,102,241,0.10);
-  color: #6366f1;
+  color: var(--cosmos-accent);
 }
 .fintech-ui .ftc-action-btn--edit {
   background: rgba(99,102,241,0.16);
-  color: #a5b4fc;
+  color: var(--cosmos-accent);
 }
 
 /* ── Save button variant ── */
 .ftc-action-btn--save {
-  background: #6366f1;
+  background: var(--cosmos-accent);
   color: #fff;
 }
 .ftc-action-btn--save:disabled {
@@ -281,7 +281,7 @@
   color-scheme: dark;
 }
 .ftc-edit-input:focus {
-  border-color: #6366f1;
+  border-color: var(--cosmos-accent);
   box-shadow: 0 0 0 2px rgba(99,102,241,0.18);
 }
 .ftc-edit-input::placeholder {
