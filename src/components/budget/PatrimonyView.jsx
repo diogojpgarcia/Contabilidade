@@ -16,6 +16,8 @@ import {
   computeAccountBalance,
 } from '../../utils/budgetUtils';
 import Sparkline from './Sparkline';
+import AssetDetailSheet from './AssetDetailSheet';
+import './AssetDetailSheet.css';
 
 const PatrimonyView = ({
   transactions,
@@ -46,6 +48,7 @@ const PatrimonyView = ({
   const [stockApiResults,     setStockApiResults]     = useState([]);
   const [stockApiLoading,     setStockApiLoading]     = useState(false);
   const [livePrices,          setLivePrices]          = useState({});
+  const [detailAsset,         setDetailAsset]         = useState(null); // { item, assetKey }
 
   const patrimonyRef         = useRef(externalPatrimony);
   const onPatrimonyChangeRef = useRef(onPatrimonyChange);
@@ -744,7 +747,7 @@ const PatrimonyView = ({
         className="pat-asset-card"
         onEdit={() => handlePatrimonyEdit(assetKey, item)}
         onDelete={() => handlePatrimonyDelete(assetKey, item.id)}
-        onClick={() => handlePatrimonyEdit(assetKey, item)}
+        onClick={() => setDetailAsset({ item, assetKey })}
       >
         <div className="pat-asset-top">
           <div className="pat-asset-left">
@@ -1089,6 +1092,27 @@ const PatrimonyView = ({
           );
         })}
       </div>
+
+      {/* Asset detail sheet */}
+      {detailAsset && (() => {
+        const { item, assetKey } = detailAsset;
+        const isStock  = assetKey === 'stocks' || assetKey === 'etfs';
+        const sym      = isStock ? item.ticker : normCoin(item.coin);
+        const mPrice   = toNum(livePrices[sym]?.price ?? (isStock
+          ? (item.lastPrice ?? item.avgPrice)
+          : (item.lastPrice ?? item.price)));
+        return (
+          <AssetDetailSheet
+            open={!!detailAsset}
+            onClose={() => setDetailAsset(null)}
+            item={item}
+            assetKey={assetKey}
+            marketPrice={mPrice}
+            history={assetHistory[sym]}
+            onEdit={() => handlePatrimonyEdit(assetKey, item)}
+          />
+        );
+      })()}
 
       {/* FAB */}
       <button className="m-fab" onClick={() => setShowPatrimonyModal(true)}>+</button>

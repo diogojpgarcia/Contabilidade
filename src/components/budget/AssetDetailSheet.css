@@ -1,0 +1,208 @@
+/* ── AssetDetailSheet ─────────────────────────────────────────────────────── */
+
+.asd-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 0 8px;
+}
+
+/* Preço actual + variação */
+.asd-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 18px 12px;
+}
+
+.asd-price {
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--cosmos-text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.asd-change {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.asd-change.pos { color: var(--cosmos-income); background: rgba(74,222,128,0.12); }
+.asd-change.neg { color: var(--cosmos-expense); background: rgba(248,113,113,0.12); }
+
+.asd-change-period {
+  font-weight: 400;
+  opacity: 0.65;
+  font-size: 0.72rem;
+}
+
+/* Gráfico */
+.asd-chart-wrap {
+  padding: 0 12px 4px;
+  min-height: 130px;
+}
+
+.asd-chart-svg {
+  width: 100%;
+  height: 130px;
+  display: block;
+  color: var(--cosmos-text-3);
+  overflow: visible;
+}
+
+.asd-chart-empty {
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cosmos-text-3);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Card P&L */
+.asd-pnl-card {
+  margin: 10px 16px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  border: 1px solid;
+}
+.asd-pnl-card.pos {
+  background: rgba(74, 222, 128, 0.07);
+  border-color: rgba(74, 222, 128, 0.18);
+}
+.asd-pnl-card.neg {
+  background: rgba(248, 113, 113, 0.07);
+  border-color: rgba(248, 113, 113, 0.18);
+}
+
+.asd-pnl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.asd-pnl-title {
+  font-size: 0.7rem;
+  color: var(--cosmos-text-3);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.asd-pnl-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.asd-pnl-badge.pos { color: var(--cosmos-income); background: rgba(74,222,128,0.15); }
+.asd-pnl-badge.neg { color: var(--cosmos-expense); background: rgba(248,113,113,0.15); }
+
+.asd-pnl-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.asd-pnl-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.asd-pnl-col.right { align-items: flex-end; text-align: right; }
+
+.asd-pnl-arrow {
+  font-size: 1.1rem;
+  color: var(--cosmos-text-3);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+.asd-pnl-label {
+  font-size: 0.68rem;
+  color: var(--cosmos-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.asd-pnl-val {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cosmos-text-1);
+  font-variant-numeric: tabular-nums;
+}
+.asd-pnl-sub {
+  font-size: 0.68rem;
+  color: var(--cosmos-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.asd-pnl-gain {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.asd-pnl-gain.pos { color: var(--cosmos-income); }
+.asd-pnl-gain.neg { color: var(--cosmos-expense); }
+
+/* Hint sem preço */
+.asd-pnl-hint {
+  margin: 10px 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--cosmos-neutral-dim);
+  font-size: 0.78rem;
+  color: var(--cosmos-text-3);
+  text-align: center;
+}
+
+/* Stats grid */
+.asd-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin: 12px 16px;
+  background: var(--cosmos-border-divider);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--cosmos-border-card);
+}
+.asd-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: var(--cosmos-surface-2);
+}
+.asd-stat-label {
+  font-size: 0.65rem;
+  color: var(--cosmos-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.asd-stat-val {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cosmos-text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Botão editar */
+.asd-edit-btn {
+  margin: 6px 16px 10px;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid var(--cosmos-border-card);
+  background: var(--cosmos-neutral-dim);
+  color: var(--cosmos-text-2);
+  font-size: 0.88rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+.asd-edit-btn:active {
+  background: var(--cosmos-accent-dim);
+  color: var(--cosmos-accent);
+}
