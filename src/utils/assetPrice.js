@@ -42,6 +42,8 @@ const cryptoCache = new Map();
 const stockHistoryCache  = new Map();
 /** coinId → { prices: number[], ts } */
 const cryptoHistoryCache = new Map();
+/** `${ticker}:${period}` → { prices: number[], labels: string[], ts } */
+const periodHistoryCache = new Map();
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -283,6 +285,88 @@ export const fetchCryptoHistoryBatch = async (symbols) => {
   );
 
   return result;
+};
+
+// ─── Period history (1D / 1S / 2S / 1M / 1A) ────────────────────────────────
+//
+//  fetchPeriodHistory(sym, period, type)
+//    sym    – ticker (stocks/etfs) or coin symbol (crypto)
+//    period – '1D' | '1S' | '2S' | '1M' | '1A'
+//    type   – 'stock' | 'etf' | 'crypto'
+//  Returns { prices: number[], labels: string[] } | null
+//
+const PERIOD_TTL = 5 * 60_000;
+
+const STOCK_PERIOD_CFG = {
+  '1D': { interval: '5min',  outputsize: 78  },
+  '1S': { interval: '1day',  outputsize: 7   },
+  '2S': { interval: '1day',  outputsize: 14  },
+  '1M': { interval: '1day',  outputsize: 30  },
+  '1A': { interval: '1week', outputsize: 52  },
+};
+
+const CRYPTO_PERIOD_DAYS = { '1D': 1, '1S': 7, '2S': 14, '1M': 30, '1A': 365 };
+
+function formatLabel(dateStr, period) {
+  const d = new Date(dateStr);
+  if (period === '1D') return d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+  if (period === '1A') return d.toLocaleDateString('pt-PT', { month: 'short', year: '2-digit' });
+  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+}
+
+function formatCryptoLabel(ts, period) {
+  const d = new Date(ts);
+  if (period === '1D') return d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+  if (period === '1A') return d.toLocaleDateString('pt-PT', { month: 'short', year: '2-digit' });
+  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+}
+
+export const fetchPeriodHistory = async (sym, period, type) => {
+  if (!sym || !period) return null;
+  const cacheKey = `${sym}:${period}`;
+  const hit = periodHistoryCache.get(cacheKey);
+  if (hit && Date.now() - hit.ts < PERIOD_TTL) return { prices: hit.prices, labels: hit.labels };
+
+  try {
+    if (type === 'crypto') {
+      const id = toCoinId(sym);
+      const days = CRYPTO_PERIOD_DAYS[period] ?? 7;
+      const interval = period === '1D' ? 'hourly' : 'daily';
+      const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+      const res = await fetch(
+        `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=eur&days=${days}&interval=${interval}`,
+        { signal }
+      );
+      clear();
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!Array.isArray(data?.prices) || data.prices.length < 2) return null;
+      const prices = data.prices.map(([, p]) => p);
+      const labels = data.prices.map(([ts]) => formatCryptoLabel(ts, period));
+      periodHistoryCache.set(cacheKey, { prices, labels, ts: Date.now() });
+      return { prices, labels };
+    } else {
+      if (!HAS_STOCK_KEY) return null;
+      const cfg = STOCK_PERIOD_CFG[period] ?? STOCK_PERIOD_CFG['1S'];
+      const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+      const res = await fetch(
+        `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${cfg.interval}&outputsize=${cfg.outputsize}&apikey=${TWELVE_DATA_KEY}`,
+        { signal }
+      );
+      clear();
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.code || data.status === 'error' || !Array.isArray(data.values)) return null;
+      const reversed = [...data.values].reverse();
+      const prices = reversed.map(v => parseFloat(v.close)).filter(n => !isNaN(n));
+      const labels = reversed.map(v => formatLabel(v.datetime, period));
+      if (prices.length < 2) return null;
+      periodHistoryCache.set(cacheKey, { prices, labels, ts: Date.now() });
+      return { prices, labels };
+    }
+  } catch {
+    return null;
+  }
 };
 
 // ─── localStorage price cache ─────────────────────────────────────────────────
