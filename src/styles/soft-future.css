@@ -8,7 +8,7 @@
    Page bg:     var(--bg-primary)  (deep charcoal)
    Card:        var(--bg-secondary) → var(--bg-primary)  (layered dark grey)
    Row:         var(--bg-secondary) → var(--bg-primary)  (cool charcoal)
-   Accent:      #06b6d4  (soft cyan)
+   Accent:      var(--cosmos-accent)  (soft cyan)
    Accent light:var(--text-secondary)  (cool silver-grey)
    Accent alt:  #6b7adb  (muted indigo)
    Text:        var(--text-primary)  (light grey)
@@ -34,7 +34,7 @@
 /* Bottom nav — lifted dark panel */
 [data-theme="soft-future"] .bottom-nav {
   background: var(--surface-nav);
-  border-top: 0.5px solid rgba(6, 182, 212, 0.12);
+  border-top: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 -4px 28px rgba(13, 15, 18, 0.80);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -42,14 +42,14 @@
 [data-theme="soft-future"] .nav-label,
 [data-theme="soft-future"] .nav-icon                    { color: rgba(160, 170, 187, 0.40); }
 [data-theme="soft-future"] .nav-item.active {
-  background: rgba(6, 182, 212, 0.12);
-  box-shadow: 0 0 18px rgba(6, 182, 212, 0.15);
+  background: var(--cosmos-accent-dim);
+  box-shadow: 0 0 18px var(--cosmos-accent-glow);
 }
 [data-theme="soft-future"] .nav-item.active .nav-icon,
 [data-theme="soft-future"] .nav-item.active .nav-label  { color: var(--text-secondary); }
 
 /* Higher specificity (0,4,1 vs fintech.css 0,4,0) — guarantees Cosmos nav beats purple */
-html[data-theme="soft-future"] .nav-item.active            { background: rgba(6, 182, 212, 0.12); box-shadow: 0 0 18px rgba(6, 182, 212, 0.15); }
+html[data-theme="soft-future"] .nav-item.active            { background: var(--cosmos-accent-dim); box-shadow: 0 0 18px var(--cosmos-accent-glow); }
 html[data-theme="soft-future"] .nav-item.active .nav-icon,
 html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-secondary); }
 
@@ -61,13 +61,13 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* Hero container — premium graphite with cyan depth */
 [data-theme="soft-future"] .h-hero {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 30%, transparent 100%),
     linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
   box-shadow:
     0 8px 36px rgba(13, 15, 18, 0.40),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -1px 0 rgba(6, 182, 212, 0.08);
-  border: 0.5px solid rgba(6, 182, 212, 0.14);
+    inset 0 -1px 0 var(--cosmos-accent-soft);
+  border: 0.5px solid var(--cosmos-accent-border);
 }
 
 /* Hero text — excellent contrast on dark charcoal */
@@ -78,8 +78,8 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Balance badge — cyan accents for premium OS feel */
 [data-theme="soft-future"] .h-hero-balance-badge {
-  background: rgba(6, 182, 212, 0.10);
-  border: 0.5px solid rgba(6, 182, 212, 0.22);
+  background: var(--cosmos-accent-dim);
+  border: 0.5px solid var(--cosmos-accent-border);
   color: var(--text-secondary);
   backdrop-filter: blur(8px);
 }
@@ -96,12 +96,12 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Progress bar — cyan gradient + soft glow */
 [data-theme="soft-future"] .h-hero-progress-track {
-  background: rgba(6, 182, 212, 0.12);
+  background: var(--cosmos-accent-dim);
   border-radius: 3px;
 }
 [data-theme="soft-future"] .h-hero-progress-fill {
-  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
+  background: linear-gradient(90deg, var(--cosmos-accent), var(--cosmos-accent));
+  box-shadow: 0 0 12px var(--cosmos-accent-glow);
   border-radius: 3px;
 }
 
@@ -112,7 +112,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    hero and standard card backgrounds always win any legacy class conflict. */
 [data-theme="soft-future"] .cosmos-card--hero {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 40%, transparent 100%),
     linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 [data-theme="soft-future"] .cosmos-card--standard {
@@ -121,14 +121,14 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Month navigation — cyan accent material controls */
 [data-theme="soft-future"] .h-month-btn {
-  background: rgba(6, 182, 212, 0.10);
+  background: var(--cosmos-accent-dim);
   color: var(--text-secondary);
-  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  border: 0.5px solid var(--cosmos-accent-border);
   transition: all 0.2s ease;
 }
 [data-theme="soft-future"] .h-month-btn:active {
-  background: rgba(6, 182, 212, 0.18);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.22);
+  background: var(--cosmos-accent-border);
+  box-shadow: 0 0 12px var(--cosmos-accent-border);
 }
 
 [data-theme="soft-future"] .h-month-name {
@@ -137,8 +137,8 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 }
 
 [data-theme="soft-future"] .h-today-btn {
-  background: rgba(6, 182, 212, 0.10);
-  border: 0.5px solid rgba(6, 182, 212, 0.16);
+  background: var(--cosmos-accent-dim);
+  border: 0.5px solid var(--cosmos-accent-border);
   color: var(--text-secondary);
 }
 
@@ -158,9 +158,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 [data-theme="soft-future"] .rp-cal-btn,
 [data-theme="soft-future"] .m-insight-card {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow:
     0 4px 24px rgba(13, 15, 18, 0.70),
     inset 0 0.5px 0 rgba(255, 255, 255, 0.05);
@@ -174,9 +174,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* ── Transaction rows — dark graphite with cyan bottom depth ───────────── */
 [data-theme="soft-future"] .ft-row {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 40%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
   border-radius: 14px;
   margin-bottom: 5px;
@@ -186,22 +186,22 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* Expandable detail row */
 [data-theme="soft-future"] .ft-detail {
   background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border-top: 0.5px solid rgba(6, 182, 212, 0.10);
+  border-top: 0.5px solid var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .ft-detail-btn {
-  background: rgba(6, 182, 212, 0.10);
+  background: var(--cosmos-accent-dim);
   color: var(--text-secondary);
   box-shadow: none;
   border-radius: 9px;
 }
-[data-theme="soft-future"] .ft-detail-btn:active { background: rgba(6, 182, 212, 0.18); }
+[data-theme="soft-future"] .ft-detail-btn:active { background: var(--cosmos-accent-border); }
 
 /* ── Recurring rows — dark graphite with cyan bottom depth ────────────── */
 [data-theme="soft-future"] .rp-row {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 40%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 1px 8px rgba(13, 15, 18, 0.60);
   border-radius: 16px;
 }
@@ -210,36 +210,36 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 [data-theme="soft-future"] .rp-form-sheet,
 [data-theme="soft-future"] .rp-cal-sheet   {
   background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border-top: 0.5px solid rgba(6, 182, 212, 0.18);
+  border-top: 0.5px solid var(--cosmos-accent-border);
   box-shadow: 0 -8px 40px rgba(13, 11, 30, 0.80);
 }
 [data-theme="soft-future"] .rp-modal-panel {
   background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border-top: 0.5px solid rgba(6, 182, 212, 0.18);
+  border-top: 0.5px solid var(--cosmos-accent-border);
   box-shadow: 0 -4px 28px rgba(13, 11, 30, 0.75);
 }
 
 /* Form inputs */
 [data-theme="soft-future"] .rp-form-input {
-  background: rgba(6, 182, 212, 0.06);
-  border-color: rgba(6, 182, 212, 0.18);
+  background: var(--cosmos-accent-soft);
+  border-color: var(--cosmos-accent-border);
 }
-[data-theme="soft-future"] .rp-form-input:focus { border-color: #06b6d4; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.14); }
+[data-theme="soft-future"] .rp-form-input:focus { border-color: var(--cosmos-accent); box-shadow: 0 0 0 3px var(--cosmos-accent-border); }
 
 /* ── Patrimony cards ────────────────────────────────────────────────────── */
-[data-theme="soft-future"] .pat-cat-items   { border-top-color: rgba(6, 182, 212, 0.10); }
-[data-theme="soft-future"] .pat-cat-item    { border-bottom-color: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-cat-items   { border-top-color: var(--cosmos-accent-dim); }
+[data-theme="soft-future"] .pat-cat-item    { border-bottom-color: var(--cosmos-accent-soft); }
 [data-theme="soft-future"] .pat-alloc-bar-bg {
-  background: rgba(6, 182, 212, 0.10);
+  background: var(--cosmos-accent-dim);
   border-radius: 6px;
 }
 
 /* ── Home total-balance card — dark graphite with cyan depth ───────────── */
 [data-theme="soft-future"] .m-total-balance-inner {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
-    linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.06) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.18);
+    linear-gradient(to top, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
+    linear-gradient(135deg, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 100%);
+  border: 0.5px solid var(--cosmos-accent-border);
   box-shadow:
     0 2px 18px rgba(13, 15, 18, 0.50),
     inset 0 0.5px 0 rgba(255,255,255,0.04);
@@ -251,44 +251,44 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* ── Home summary hero card — dark graphite with cyan depth ───────────── */
 [data-theme="soft-future"] .m-summary-card {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 30%, transparent 100%),
     linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  border: 0.5px solid var(--cosmos-accent-border);
   box-shadow:
     0 8px 36px rgba(13, 15, 18, 0.50),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -1px 0 rgba(6, 182, 212, 0.08);
+    inset 0 -1px 0 var(--cosmos-accent-soft);
 }
 [data-theme="soft-future"] .m-sc-total-value  { color: var(--text-primary); }
 [data-theme="soft-future"] .m-sc-total-label  { color: rgba(160, 170, 187, 0.72); }
 [data-theme="soft-future"] .m-sc-total-sub    { color: rgba(220, 220, 230, 0.26); }
-[data-theme="soft-future"] .m-sc-divider      { background: rgba(6, 182, 212, 0.10); }
-[data-theme="soft-future"] .m-sc-col-sep      { background: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .m-sc-divider      { background: var(--cosmos-accent-dim); }
+[data-theme="soft-future"] .m-sc-col-sep      { background: var(--cosmos-accent-dim); }
 [data-theme="soft-future"] .m-sc-label        { color: rgba(160, 170, 187, 0.32); }
 [data-theme="soft-future"] .m-sc-month-label  { color: rgba(160, 170, 187, 0.36); }
 
 /* ── Patrimony hero — dark graphite with cyan depth ───────────────────────*/
 [data-theme="soft-future"] .pat-hero {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.03) 35%, transparent 100%),
-    linear-gradient(135deg, rgba(6, 182, 212, 0.10) 0%, rgba(6, 182, 212, 0.05) 100%);
-  border: 1px solid rgba(6, 182, 212, 0.18);
+    linear-gradient(to top, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
+    linear-gradient(135deg, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 100%);
+  border: 1px solid var(--cosmos-accent-border);
   box-shadow:
     0 4px 30px rgba(13, 15, 18, 0.40),
     inset 0 0.5px 0 rgba(255,255,255,0.04);
 }
-[data-theme="soft-future"] .pat-hero-label  { color: #06b6d4; }
+[data-theme="soft-future"] .pat-hero-label  { color: var(--cosmos-accent); }
 [data-theme="soft-future"] .pat-hero-chip {
-  background: rgba(6, 182, 212, 0.10);
-  border-color: rgba(6, 182, 212, 0.18);
+  background: var(--cosmos-accent-dim);
+  border-color: var(--cosmos-accent-border);
 }
 
 /* ── Income/expense chips — dark graphite with cyan bottom depth ────────── */
 [data-theme="soft-future"] .m-chip {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 45%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 45%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow:
     0 2px 10px rgba(13, 15, 18, 0.55),
     inset 0 0.5px 0 rgba(255,255,255,0.03);
@@ -301,9 +301,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* ── Patrimony row — dark graphite with cyan bottom depth ─────────────── */
 [data-theme="soft-future"] .m-patrimony-row {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.03) 40%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 40%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  border: 0.5px solid var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .m-patrimony-label           { color: rgba(160, 170, 187, 0.50); }
 [data-theme="soft-future"] .m-patrimony-select          { color: var(--text-secondary); }
@@ -312,28 +312,28 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* ── Insight cards (Budget) ─────────────────────────────────────────────── */
 [data-theme="soft-future"] .m-insight-card {
-  border-color: rgba(6, 182, 212, 0.12);
+  border-color: var(--cosmos-accent-dim);
 }
 
 /* ── Patrimony insight row ──────────────────────────────────────────────── */
 [data-theme="soft-future"] .pat-insight-row {
-  background: rgba(6, 182, 212, 0.06);
-  border: 0.5px solid rgba(6, 182, 212, 0.13);
+  background: var(--cosmos-accent-soft);
+  border: 0.5px solid var(--cosmos-accent-border);
 }
 [data-theme="soft-future"] .pat-insight-icon            { color: var(--text-secondary); }
 
 /* ── Profile cycle card — dark graphite with cyan bottom depth ────────────*/
 [data-theme="soft-future"] .m-cycle-card {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.09) 0%, rgba(6, 182, 212, 0.03) 35%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.11);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 2px 16px rgba(13, 15, 18, 0.60);
   border-radius: 18px;
 }
 [data-theme="soft-future"] .m-seg-control {
-  background: rgba(6, 182, 212, 0.08);
-  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  background: var(--cosmos-accent-soft);
+  border: 0.5px solid var(--cosmos-accent-dim);
 }
 
 
@@ -374,15 +374,15 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Recurring summary icon container */
 [data-theme="soft-future"] .rp-summary-icon {
-  background: rgba(6, 182, 212, 0.10);
+  background: var(--cosmos-accent-dim);
   color: var(--text-secondary);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.40);
 }
 
 /* Home account dot */
 [data-theme="soft-future"] .h-account-dot {
-  background: #06b6d4;
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.40);
+  background: var(--cosmos-accent);
+  box-shadow: 0 0 8px var(--cosmos-accent-glow);
 }
 
 
@@ -394,7 +394,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 [data-theme="soft-future"] .m-bcc-bar-bg,
 [data-theme="soft-future"] .m-bmc-bar-bg,
 [data-theme="soft-future"] .m-budget-bar-bg,
-[data-theme="soft-future"] .m-goal-bar-bg     { background: rgba(6, 182, 212, 0.10); border-radius: 8px; }
+[data-theme="soft-future"] .m-goal-bar-bg     { background: var(--cosmos-accent-dim); border-radius: 8px; }
 
 /* Normal fill — emerald gradient */
 [data-theme="soft-future"] .m-budget-bar-fill {
@@ -412,8 +412,8 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Goal bar — cyan gradient */
 [data-theme="soft-future"] .m-goal-bar-fill {
-  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
+  background: linear-gradient(90deg, var(--cosmos-accent), var(--cosmos-accent));
+  box-shadow: 0 0 10px var(--cosmos-accent-glow);
 }
 
 /* Budget month comparison bar */
@@ -422,7 +422,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 }
 
 /* Allocation bars */
-[data-theme="soft-future"] .pat-alloc-bar-bg  { background: rgba(6, 182, 212, 0.10); }
+[data-theme="soft-future"] .pat-alloc-bar-bg  { background: var(--cosmos-accent-dim); }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -434,17 +434,17 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 [data-theme="soft-future"] .m-today-btn,
 [data-theme="soft-future"] .m-month-nav-btn             { color: var(--text-secondary); }
 [data-theme="soft-future"] .m-today-btn {
-  background: rgba(6, 182, 212, 0.14);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
+  background: var(--cosmos-accent-border);
+  box-shadow: 0 0 12px var(--cosmos-accent-border);
 }
 [data-theme="soft-future"] .m-today-btn:active,
-[data-theme="soft-future"] .m-month-btn:active          { background: rgba(6, 182, 212, 0.18); }
+[data-theme="soft-future"] .m-month-btn:active          { background: var(--cosmos-accent-border); }
 [data-theme="soft-future"] .m-month-nav-today {
   color: var(--text-secondary);
-  background: rgba(6, 182, 212, 0.14);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
+  background: var(--cosmos-accent-border);
+  box-shadow: 0 0 12px var(--cosmos-accent-border);
 }
-[data-theme="soft-future"] .m-month-nav-today:active    { background: rgba(6, 182, 212, 0.22); }
+[data-theme="soft-future"] .m-month-nav-today:active    { background: var(--cosmos-accent-border); }
 
 /* Month / stats text */
 [data-theme="soft-future"] .m-month-name,
@@ -454,82 +454,82 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* Segmented toggle */
 [data-theme="soft-future"] .m-toggle {
   background: var(--surface-nav);
-  border: 0.5px solid rgba(6, 182, 212, 0.11);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
 }
 [data-theme="soft-future"] .m-toggle-btn                { color: var(--text-tertiary); }
 [data-theme="soft-future"] .m-toggle-btn.active {
-  background: rgba(6, 182, 212, 0.20);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
-  box-shadow: 0 0 14px rgba(6, 182, 212, 0.18), inset 0 0.5px 0 rgba(255,255,255,0.06);
+  box-shadow: 0 0 14px var(--cosmos-accent-border), inset 0 0.5px 0 rgba(255,255,255,0.06);
 }
 
 /* Log summary */
 [data-theme="soft-future"] .m-log-summary {
   background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 2px 16px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255,255,255,0.03);
 }
-[data-theme="soft-future"] .m-summary-label             { color: rgba(6, 182, 212, 0.45); }
+[data-theme="soft-future"] .m-summary-label             { color: var(--cosmos-accent-glow); }
 [data-theme="soft-future"] .m-summary-val               { color: var(--text-primary); }
 [data-theme="soft-future"] .m-summary-val.income        { color: #34d399; }
 [data-theme="soft-future"] .m-summary-val.expense       { color: #f87171; }
-[data-theme="soft-future"] .m-summary-sep               { background: rgba(6, 182, 212, 0.08); }
+[data-theme="soft-future"] .m-summary-sep               { background: var(--cosmos-accent-soft); }
 
 /* Category bars (Stats) */
-[data-theme="soft-future"] .m-cat-row         { border-bottom-color: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .m-cat-row         { border-bottom-color: var(--cosmos-accent-soft); }
 [data-theme="soft-future"] .m-cat-name        { color: rgba(237, 233, 254, 0.80); }
 [data-theme="soft-future"] .m-cat-amt         { color: rgba(237, 233, 254, 0.80); }
 [data-theme="soft-future"] .m-cat-pct         { color: rgba(237, 233, 254, 0.30); }
-[data-theme="soft-future"] .m-cat-bar-bg      { background: rgba(6, 182, 212, 0.08); }
+[data-theme="soft-future"] .m-cat-bar-bg      { background: var(--cosmos-accent-soft); }
 [data-theme="soft-future"] .m-cat-bar-fill    { background: #f87171; }
 
 /* Recurring frequency buttons */
 [data-theme="soft-future"] .rp-freq-btn.active {
-  border-color: #06b6d4;
-  background: rgba(6, 182, 212, 0.16);
+  border-color: var(--cosmos-accent);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.20);
+  box-shadow: 0 0 12px var(--cosmos-accent-border);
 }
 
 /* Recurring selector button */
 [data-theme="soft-future"] .rp-selector-btn:active {
-  border-color: #06b6d4;
-  background: rgba(6, 182, 212, 0.08);
+  border-color: var(--cosmos-accent);
+  background: var(--cosmos-accent-soft);
 }
 
 /* Recurring modal selected item */
 [data-theme="soft-future"] .rp-modal-item.active {
-  color: #06b6d4;
-  background: rgba(6, 182, 212, 0.10);
+  color: var(--cosmos-accent);
+  background: var(--cosmos-accent-dim);
 }
-[data-theme="soft-future"] .rp-modal-item.active::after { color: #06b6d4; }
+[data-theme="soft-future"] .rp-modal-item.active::after { color: var(--cosmos-accent); }
 
 /* Budget nav link */
-[data-theme="soft-future"] .rp-budget-strip-nav         { color: #06b6d4; }
+[data-theme="soft-future"] .rp-budget-strip-nav         { color: var(--cosmos-accent); }
 
 /* Patrimony account main badge */
-[data-theme="soft-future"] .pat-account-item--main      { background: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-account-item--main      { background: var(--cosmos-accent-soft); }
 [data-theme="soft-future"] .pat-account-badge--main,
 [data-theme="soft-future"] .pat-account-badge-main {
   color: var(--text-secondary);
-  background: rgba(6, 182, 212, 0.18);
+  background: var(--cosmos-accent-border);
 }
 [data-theme="soft-future"] .pat-asset-edit:hover,
-[data-theme="soft-future"] .pat-asset-edit:active       { color: #06b6d4; background: rgba(6, 182, 212, 0.18); }
+[data-theme="soft-future"] .pat-asset-edit:active       { color: var(--cosmos-accent); background: var(--cosmos-accent-border); }
 
 /* Budget save button */
 [data-theme="soft-future"] .m-budget-save {
-  background: rgba(6, 182, 212, 0.14);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.12);
+  box-shadow: 0 0 10px var(--cosmos-accent-dim);
 }
-[data-theme="soft-future"] .m-budget-save:active { background: rgba(6, 182, 212, 0.24); }
+[data-theme="soft-future"] .m-budget-save:active { background: var(--cosmos-accent-border); }
 
 /* Budget category nav ring animation */
 @keyframes sf-bcc-ring {
-  0%   { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.50), 0 4px 20px rgba(6, 182, 212, 0.18); }
-  60%  { box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.18), 0 4px 16px rgba(6, 182, 212, 0.06); }
+  0%   { box-shadow: 0 0 0 3px var(--cosmos-accent-glow), 0 4px 20px var(--cosmos-accent-border); }
+  60%  { box-shadow: 0 0 0 2px var(--cosmos-accent-border), 0 4px 16px var(--cosmos-accent-soft); }
   100% { box-shadow: none; }
 }
 [data-theme="soft-future"] .m-bcc.nav-target            { animation: sf-bcc-ring 1.6s ease-out both; }
@@ -540,7 +540,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    ════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="soft-future"] .m-fab {
-  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 4px 22px rgba(13, 15, 18, 0.58), 0 0 0 1.5px rgba(167,139,250,0.20);
 }
 [data-theme="soft-future"] .m-fab:active {
@@ -548,26 +548,26 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 }
 
 [data-theme="soft-future"] .m-submit-btn.transfer {
-  background: linear-gradient(135deg, #6d28d9, #06b6d4);
-  box-shadow: 0 3px 14px rgba(6, 182, 212, 0.40);
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
+  box-shadow: 0 3px 14px var(--cosmos-accent-glow);
 }
 
 [data-theme="soft-future"] .m-transfer-btn {
-  background: rgba(6, 182, 212, 0.10);
-  border-color: rgba(6, 182, 212, 0.24);
+  background: var(--cosmos-accent-dim);
+  border-color: var(--cosmos-accent-border);
   color: var(--text-secondary);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.10);
+  box-shadow: 0 0 12px var(--cosmos-accent-dim);
 }
 
 [data-theme="soft-future"] .rp-form-save {
-  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 3px 14px rgba(13, 15, 18, 0.38);
 }
 
 [data-theme="soft-future"] .rp-cal-btn {
-  color: #06b6d4;
+  color: var(--cosmos-accent);
   background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  border: 0.5px solid var(--cosmos-accent-border);
   box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
 }
 
@@ -578,9 +578,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 [data-theme="soft-future"] .m-balance-amount.positive   { color: #34d399; }
 [data-theme="soft-future"] .m-balance-amount.negative   { color: #f87171; }
-[data-theme="soft-future"] .m-balance-label             { color: rgba(6, 182, 212, 0.45); }
+[data-theme="soft-future"] .m-balance-label             { color: var(--cosmos-accent-glow); }
 
-[data-theme="soft-future"] .h-insight-badge.info        { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
+[data-theme="soft-future"] .h-insight-badge.info        { background: var(--cosmos-accent-dim); color: var(--cosmos-accent); }
 [data-theme="soft-future"] .h-month-btn                 { color: var(--text-secondary); }
 
 
@@ -589,19 +589,19 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    ════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="soft-future"] .m-prof-avatar {
-  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
 }
 [data-theme="soft-future"] .m-prof-chip--on {
-  color: rgba(6, 182, 212, 0.92);
-  background: rgba(6, 182, 212, 0.12);
+  color: var(--cosmos-accent);
+  background: var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .m-cycle-badge {
-  color: rgba(6, 182, 212, 0.92);
-  background: rgba(6, 182, 212, 0.12);
+  color: var(--cosmos-accent);
+  background: var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .m-pill-toggle input:checked + .m-pill-toggle-track {
-  background: linear-gradient(90deg, #6d28d9, #06b6d4);
+  background: linear-gradient(90deg, #6d28d9, var(--cosmos-accent));
 }
 
 
@@ -609,12 +609,12 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    10 · RECURRING CALENDAR
    ════════════════════════════════════════════════════════════════════════════ */
 
-[data-theme="soft-future"] .rp-cal-dot                  { background: #06b6d4; box-shadow: 0 0 5px rgba(167,139,250,0.55); }
+[data-theme="soft-future"] .rp-cal-dot                  { background: var(--cosmos-accent); box-shadow: 0 0 5px rgba(167,139,250,0.55); }
 [data-theme="soft-future"] .rp-cal-cell.today .rp-cal-day-num {
-  background: linear-gradient(135deg, #6d28d9, #06b6d4);
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 0 10px rgba(109,40,217,0.45);
 }
-[data-theme="soft-future"] .rp-cal-cell.selected        { background: rgba(6, 182, 212, 0.12); }
+[data-theme="soft-future"] .rp-cal-cell.selected        { background: var(--cosmos-accent-dim); }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -623,30 +623,30 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Home cashflow "today" quick-jump button */
 [data-theme="soft-future"] .h-today-btn {
-  background: rgba(6, 182, 212, 0.14);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.14);
+  box-shadow: 0 0 10px var(--cosmos-accent-border);
 }
 
 /* Recurring budget strip */
 [data-theme="soft-future"] .rp-budget-strip {
   background: linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 2px 12px rgba(13, 15, 18, 0.45);
 }
 
 /* Stock search dropdown */
 [data-theme="soft-future"] .pat-search-dropdown {
   background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border-color: rgba(6, 182, 212, 0.18);
+  border-color: var(--cosmos-accent-border);
   box-shadow: 0 8px 32px rgba(13, 15, 18, 0.70);
 }
 [data-theme="soft-future"] .pat-search-result:hover,
-[data-theme="soft-future"] .pat-search-result:active    { background: rgba(6, 182, 212, 0.06); }
-[data-theme="soft-future"] .pat-search-result           { border-bottom-color: rgba(6, 182, 212, 0.06); }
+[data-theme="soft-future"] .pat-search-result:active    { background: var(--cosmos-accent-soft); }
+[data-theme="soft-future"] .pat-search-result           { border-bottom-color: var(--cosmos-accent-soft); }
 [data-theme="soft-future"] .pat-search-spinner,
 [data-theme="soft-future"] .pat-stock-loading           { color: var(--text-secondary); }
-[data-theme="soft-future"] .pat-search-exch             { background: rgba(6, 182, 212, 0.08); }
+[data-theme="soft-future"] .pat-search-exch             { background: var(--cosmos-accent-soft); }
 
 /* Swipe reveal actions — softer, less jarring */
 [data-theme="soft-future"] .swipe-btn-edit              { background: rgba(124, 70, 18, 0.88); }
@@ -654,25 +654,25 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Account badge in transaction row */
 [data-theme="soft-future"] .ft-acct-badge {
-  background: rgba(6, 182, 212, 0.09);
+  background: var(--cosmos-accent-soft);
   color: rgba(196, 181, 253, 0.60);
 }
 
 /* "Transferência" inline badge in transaction sub */
 [data-theme="soft-future"] .ft-sub [style*="6366f1"],
 [data-theme="soft-future"] .ft-sub [style*="accent"] {
-  background: rgba(6, 182, 212, 0.16) !important;
+  background: var(--cosmos-accent-border) !important;
   color: var(--text-secondary) !important;
 }
 
 /* Alerts panel */
-[data-theme="soft-future"] .pat-alerts-panel            { border-color: rgba(6, 182, 212, 0.10); }
-[data-theme="soft-future"] .pat-alerts-title            { background: rgba(6, 182, 212, 0.04); border-bottom-color: rgba(6, 182, 212, 0.08); }
+[data-theme="soft-future"] .pat-alerts-panel            { border-color: var(--cosmos-accent-dim); }
+[data-theme="soft-future"] .pat-alerts-title            { background: var(--cosmos-accent-soft); border-bottom-color: var(--cosmos-accent-soft); }
 
 /* Profile chip active (financial cycle, accounts count) */
 [data-theme="soft-future"] .m-prof-chip--on {
-  color: rgba(6, 182, 212, 0.92);
-  background: rgba(6, 182, 212, 0.12);
+  color: var(--cosmos-accent);
+  background: var(--cosmos-accent-dim);
 }
 
 
@@ -684,31 +684,31 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* History sub-tabs: Diário / Património */
 [data-theme="soft-future"] .hist-sub-tabs-wrap {
   background: var(--surface-nav);
-  border: 0.5px solid rgba(6, 182, 212, 0.11);
+  border: 0.5px solid var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .hist-sub-btn              { color: var(--text-tertiary); }
 [data-theme="soft-future"] .hist-sub-btn.active {
-  background: rgba(6, 182, 212, 0.20);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
 }
 
 /* Category spend bars (StatsTab) */
 [data-theme="soft-future"] .category-bar-fill {
-  background: linear-gradient(90deg, rgba(6, 182, 212, 0.75) 0%, rgba(6, 182, 212, 0.42) 100%);
+  background: linear-gradient(90deg, var(--cosmos-accent-glow) 0%, var(--cosmos-accent-glow) 100%);
 }
 
 /* Goal / budget progress bars (BudgetTab) */
 [data-theme="soft-future"] .progress-bar-fill {
-  background: linear-gradient(90deg, rgba(6, 182, 212, 0.85) 0%, rgba(6, 182, 212, 0.50) 100%);
+  background: linear-gradient(90deg, var(--cosmos-accent-glow) 0%, var(--cosmos-accent-glow) 100%);
 }
 
 /* Budget & patrimony total summary cards (amber → charcoal + cyan depth) */
 [data-theme="soft-future"] .budget-total-card,
 [data-theme="soft-future"] .patrimony-total-card {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 35%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.14);
+  border: 0.5px solid var(--cosmos-accent-border);
   box-shadow: 0 4px 24px rgba(13, 15, 18, 0.70), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
 }
 [data-theme="soft-future"] .budget-total-card *,
@@ -717,25 +717,25 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Budget input focus ring */
 [data-theme="soft-future"] .budget-input:focus {
-  border-color: rgba(6, 182, 212, 0.50);
-  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.10);
+  border-color: var(--cosmos-accent-glow);
+  box-shadow: 0 0 0 3px var(--cosmos-accent-dim);
 }
 
 /* Transfer action button (BudgetTab) */
 [data-theme="soft-future"] .btn-transfer {
-  background: rgba(6, 182, 212, 0.18);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
-  border: 0.5px solid rgba(6, 182, 212, 0.28);
+  border: 0.5px solid var(--cosmos-accent-border);
 }
 [data-theme="soft-future"] .btn-transfer:not(:disabled):active {
-  background: rgba(6, 182, 212, 0.28);
+  background: var(--cosmos-accent-border);
 }
 
 /* Selected transaction row (BudgetTab transfer) */
 [data-theme="soft-future"] .tr-card--sel {
-  border-color: rgba(6, 182, 212, 0.38);
-  background: rgba(6, 182, 212, 0.07);
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.18);
+  border-color: var(--cosmos-accent-glow);
+  background: var(--cosmos-accent-soft);
+  box-shadow: 0 0 0 1px var(--cosmos-accent-border);
 }
 [data-theme="soft-future"] .tr-card--sel .tr-card-name { color: var(--text-secondary); }
 
@@ -746,25 +746,25 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* CSS custom properties consumed by inline template literals in StatsTab.jsx */
 [data-theme="soft-future"] {
-  --stats-bar-base:   rgba(6, 182, 212, 0.80);   /* progress bar low-spend colour */
+  --stats-bar-base:   var(--cosmos-accent-glow);   /* progress bar low-spend colour */
   --stats-ring-track: var(--bg-elevated);          /* conic-gradient empty segment  */
 }
 
 /* Saldo do mês — main balance card */
 [data-theme="soft-future"] .stats-saldo-card {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 40%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-border) 0%, var(--cosmos-accent-soft) 40%, transparent 100%),
     linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.18);
+  border: 0.5px solid var(--cosmos-accent-border);
   box-shadow: 0 8px 32px rgba(13, 15, 18, 0.55), inset 0 0.5px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* Generic dark surface cards (progress bar, top categories, financial score) */
 [data-theme="soft-future"] .stats-overview-card {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow: 0 2px 12px rgba(13, 15, 18, 0.55);
 }
 
@@ -780,9 +780,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Compact history icon-toggle active state */
 [data-theme="soft-future"] .today-btn-compact.active {
-  background: rgba(6, 182, 212, 0.22);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.18);
+  box-shadow: 0 0 8px var(--cosmos-accent-border);
 }
 
 /* Muted label text inside overview cards */
@@ -804,19 +804,19 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* Card shell */
 [data-theme="soft-future"] .fintech-ui .ftc-card {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 35%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border-color: rgba(6, 182, 212, 0.12);
+  border-color: var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .fintech-ui .ftc-card:active {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.14) 0%, rgba(6, 182, 212, 0.05) 35%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-border) 0%, var(--cosmos-accent-soft) 35%, transparent 100%),
     linear-gradient(175deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
 }
 
 /* Transfer / adjust badges */
 [data-theme="soft-future"] .ftc-badge--transfer {
-  background: rgba(6, 182, 212, 0.14);
+  background: var(--cosmos-accent-border);
   color: var(--text-secondary);
 }
 [data-theme="soft-future"] .ftc-badge--adjust {
@@ -832,19 +832,19 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Account badge */
 [data-theme="soft-future"] .fintech-ui .ftc-acct-badge {
-  background: rgba(6, 182, 212, 0.08);
+  background: var(--cosmos-accent-soft);
   color: var(--text-tertiary);
 }
 
 /* Expanded action strip */
 [data-theme="soft-future"] .fintech-ui .ftc-actions {
-  border-top-color: rgba(6, 182, 212, 0.10);
+  border-top-color: var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .fintech-ui .ftc-action-date { color: var(--text-tertiary); }
 [data-theme="soft-future"] .fintech-ui .ftc-action-btn {
-  background: rgba(6, 182, 212, 0.08);
+  background: var(--cosmos-accent-soft);
   color: var(--text-primary);
-  border: 0.5px solid rgba(6, 182, 212, 0.12);
+  border: 0.5px solid var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .fintech-ui .ftc-action-btn--danger {
   background: rgba(248, 113, 113, 0.10);
@@ -892,7 +892,7 @@ html[data-theme="soft-future"] body {
 [data-theme="soft-future"] .main-content-new {
   background:
     radial-gradient(ellipse 110% 28% at 50% 0%,
-      rgba(6, 182, 212, 0.045) 0%,
+      var(--cosmos-accent-soft) 0%,
       transparent 100%),
     var(--bg-primary);
 }
@@ -905,8 +905,8 @@ html[data-theme="soft-future"] body {
   padding: 28px 22px 38px;
   background:
     linear-gradient(to top,
-      rgba(6, 182, 212, 0.16) 0%,
-      rgba(6, 182, 212, 0.06) 45%,
+      var(--cosmos-accent-border) 0%,
+      var(--cosmos-accent-soft) 45%,
       transparent 100%),
     linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
@@ -915,8 +915,8 @@ html[data-theme="soft-future"] body {
   box-shadow:
     0 16px 60px rgba(0, 0, 0, 0.60),
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -1px 0 rgba(6, 182, 212, 0.16),
-    0 0 72px rgba(6, 182, 212, 0.24);
+    inset 0 -1px 0 var(--cosmos-accent-border),
+    0 0 72px var(--cosmos-accent-border);
 }
 
 /* Patrimony label — cyan-tinted OS label */
@@ -924,7 +924,7 @@ html[data-theme="soft-future"] body {
   font-size: 0.625rem;
   letter-spacing: 0.14em;
   margin-bottom: 12px;
-  color: rgba(6, 182, 212, 0.60);
+  color: var(--cosmos-accent);
   text-transform: uppercase;
 }
 
@@ -961,14 +961,14 @@ html[data-theme="soft-future"] body {
 }
 [data-theme="soft-future"] .cosmos-card--hero .h-hero-progress-track {
   height: 4px;
-  background: rgba(6, 182, 212, 0.10);
+  background: var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .cosmos-card--hero .h-hero-progress-fill {
-  background: linear-gradient(90deg, #06b6d4, #0ea5e9);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.50);
+  background: linear-gradient(90deg, var(--cosmos-accent), var(--cosmos-accent));
+  box-shadow: 0 0 10px var(--cosmos-accent-glow);
 }
 [data-theme="soft-future"] .h-hero-progress-pct {
-  color: rgba(6, 182, 212, 0.70);
+  color: var(--cosmos-accent-glow);
   font-size: 0.6875rem;
   font-weight: 700;
 }
@@ -993,11 +993,11 @@ html[data-theme="soft-future"] body {
 [data-theme="soft-future"] .h-quick-section {
   background:
     linear-gradient(to top,
-      rgba(6, 182, 212, 0.08) 0%,
-      rgba(6, 182, 212, 0.02) 35%,
+      var(--cosmos-accent-soft) 0%,
+      var(--cosmos-accent-soft) 35%,
       transparent 100%),
     linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border: 0.5px solid rgba(6, 182, 212, 0.10);
+  border: 0.5px solid var(--cosmos-accent-dim);
   box-shadow:
     0 4px 24px rgba(13, 15, 18, 0.60),
     inset 0 0.5px 0 rgba(255, 255, 255, 0.03);
@@ -1025,7 +1025,7 @@ html[data-theme="soft-future"] body {
 }
 
 [data-theme="soft-future"] .h-cf-col + .h-cf-col {
-  border-left-color: rgba(6, 182, 212, 0.08);
+  border-left-color: var(--cosmos-accent-soft);
 }
 
 /* Month nav controls — more presence */
@@ -1070,10 +1070,10 @@ html[data-theme="soft-future"] .nav-item.active::before {
 /* Deepen the bar itself */
 [data-theme="soft-future"] .bottom-nav {
   background: var(--surface-sheet);
-  border-top: 0.5px solid rgba(6, 182, 212, 0.14);
+  border-top: 0.5px solid var(--cosmos-accent-border);
   box-shadow:
     0 -10px 48px rgba(0, 0, 0, 0.88),
-    0 -1px 0 rgba(6, 182, 212, 0.07);
+    0 -1px 0 var(--cosmos-accent-soft);
   backdrop-filter: blur(28px) saturate(1.8);
   -webkit-backdrop-filter: blur(28px) saturate(1.8);
   padding: 10px 6px calc(10px + env(safe-area-inset-bottom));
@@ -1087,12 +1087,12 @@ html[data-theme="soft-future"] .nav-icon {
 
 /* Active items — use actual cyan, not muted silver */
 html[data-theme="soft-future"] .nav-item.active {
-  background: rgba(6, 182, 212, 0.11);
-  box-shadow: 0 0 22px rgba(6, 182, 212, 0.16);
+  background: var(--cosmos-accent-dim);
+  box-shadow: 0 0 22px var(--cosmos-accent-border);
 }
 html[data-theme="soft-future"] .nav-item.active .nav-icon,
 html[data-theme="soft-future"] .nav-item.active .nav-label {
-  color: #06b6d4;
+  color: var(--cosmos-accent);
 }
 
 /* Nav labels — legible size */
@@ -1157,9 +1157,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
   box-shadow:
     0 20px 72px rgba(0, 0, 0, 0.65),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -1px 0 rgba(6, 182, 212, 0.18),
-    0 0 80px rgba(6, 182, 212, 0.20),
-    0 0 160px rgba(6, 182, 212, 0.06);
+    inset 0 -1px 0 var(--cosmos-accent-border),
+    0 0 80px var(--cosmos-accent-border),
+    0 0 160px var(--cosmos-accent-soft);
 }
 
 
@@ -1182,10 +1182,10 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
   background:
     linear-gradient(to top,
-      rgba(6, 182, 212, 0.04) 0%,
+      var(--cosmos-accent-soft) 0%,
       transparent 100%),
     linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
-  border-color: rgba(6, 182, 212, 0.065);
+  border-color: var(--cosmos-accent-soft);
   box-shadow:
     0 3px 20px rgba(13, 15, 18, 0.50),
     inset 0 0.5px 0 rgba(255, 255, 255, 0.025);
@@ -1209,7 +1209,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
 
 /* Cashflow column separators — subtle cyan pulse */
 [data-theme="soft-future"] .h-cf-col + .h-cf-col {
-  border-left: 0.5px solid rgba(6, 182, 212, 0.08);
+  border-left: 0.5px solid var(--cosmos-accent-soft);
 }
 
 /* Insight title — confident but not dominant */
@@ -1234,10 +1234,10 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
 
 [data-theme="soft-future"] .bottom-nav {
   background: var(--surface-sheet);
-  border-top: 0.5px solid rgba(6, 182, 212, 0.12);
+  border-top: 0.5px solid var(--cosmos-accent-dim);
   box-shadow:
     0 -12px 56px rgba(0, 0, 0, 0.90),
-    0 -1px 0 rgba(6, 182, 212, 0.07),
+    0 -1px 0 var(--cosmos-accent-soft),
     inset 0 1px 0 rgba(255, 255, 255, 0.025);
   backdrop-filter: blur(32px) saturate(2);
   -webkit-backdrop-filter: blur(32px) saturate(2);
@@ -1254,20 +1254,20 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
 
 /* Active dock item — clear focal point with directional glow */
 html[data-theme="soft-future"] .nav-item.active {
-  background: rgba(6, 182, 212, 0.11);
+  background: var(--cosmos-accent-dim);
   box-shadow:
-    0 0 24px rgba(6, 182, 212, 0.18),
-    inset 0 -1px 0 rgba(6, 182, 212, 0.22);
+    0 0 24px var(--cosmos-accent-border),
+    inset 0 -1px 0 var(--cosmos-accent-border);
 }
 
 /* Active icon enlarges slightly for hierarchy */
 html[data-theme="soft-future"] .nav-item.active .nav-icon {
-  color: #06b6d4;
-  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.45));
+  color: var(--cosmos-accent);
+  filter: drop-shadow(0 0 6px var(--cosmos-accent-glow));
 }
 
 html[data-theme="soft-future"] .nav-item.active .nav-label {
-  color: #06b6d4;
+  color: var(--cosmos-accent);
 }
 
 /* Inactive nav items — deeply receded, don't compete */
@@ -1302,17 +1302,17 @@ html[data-theme="soft-future"] .nav-icon {
 [data-theme="soft-future"] .cosmos-card--hero.cosmos-card--glow {
   box-shadow:
     0 28px 88px rgba(0, 0, 0, 0.65),
-    inset 0 -2px 0 rgba(6, 182, 212, 0.24),
-    0 0 80px rgba(6, 182, 212, 0.18),
-    0 0 200px rgba(6, 182, 212, 0.07);
+    inset 0 -2px 0 var(--cosmos-accent-border),
+    0 0 80px var(--cosmos-accent-border),
+    0 0 200px var(--cosmos-accent-soft);
 }
 
 /* Hero background: deeper, more immersive */
 [data-theme="soft-future"] .cosmos-card--hero {
   background:
     linear-gradient(to top,
-      rgba(6, 182, 212, 0.18) 0%,
-      rgba(6, 182, 212, 0.07) 40%,
+      var(--cosmos-accent-border) 0%,
+      var(--cosmos-accent-soft) 40%,
       transparent 100%),
     linear-gradient(160deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
@@ -1334,7 +1334,7 @@ html[data-theme="soft-future"] .nav-icon {
   font-size: 0.5625rem;
   letter-spacing: 0.18em;
   margin-bottom: 16px;
-  color: rgba(6, 182, 212, 0.50);
+  color: var(--cosmos-accent-glow);
 }
 
 /* Balance badge: reads clearly against the hero surface */
@@ -1371,9 +1371,9 @@ html[data-theme="soft-future"] .nav-icon {
 /* Tier 1 — Cashflow: primary data module, full standard surface */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(2) {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.09) 0%, rgba(6, 182, 212, 0.02) 40%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 40%, transparent 100%),
     linear-gradient(145deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
-  border-color: rgba(6, 182, 212, 0.12);
+  border-color: var(--cosmos-accent-dim);
   box-shadow:
     0 8px 36px rgba(0, 0, 0, 0.55),
     inset 0 0.5px 0 rgba(255, 255, 255, 0.05);
@@ -1383,7 +1383,7 @@ html[data-theme="soft-future"] .nav-icon {
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) {
   background:
     linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
-  border-color: rgba(6, 182, 212, 0.055);
+  border-color: var(--cosmos-accent-soft);
   box-shadow:
     0 2px 14px rgba(0, 0, 0, 0.40);
 }
@@ -1414,13 +1414,13 @@ html[data-theme="soft-future"] .nav-icon {
   border-radius: 26px;
   /* Glass surface — all sides bordered, not just top */
   border-top: none;
-  border: 0.5px solid rgba(6, 182, 212, 0.16);
+  border: 0.5px solid var(--cosmos-accent-border);
   /* Deep dark glass */
   background: var(--surface-sheet);
   box-shadow:
     0 8px 52px rgba(0, 0, 0, 0.85),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 0 0 0.5px rgba(6, 182, 212, 0.07);
+    0 0 0 0.5px var(--cosmos-accent-soft);
   backdrop-filter: blur(36px) saturate(2.4);
   -webkit-backdrop-filter: blur(36px) saturate(2.4);
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
@@ -1440,10 +1440,10 @@ html[data-theme="soft-future"] .nav-item.active::before {
 
 /* Pill dock active item — directional glow, clear focal point */
 html[data-theme="soft-future"] .nav-item.active {
-  background: rgba(6, 182, 212, 0.13);
+  background: var(--cosmos-accent-border);
   box-shadow:
-    0 0 20px rgba(6, 182, 212, 0.16),
-    inset 0 -1.5px 0 rgba(6, 182, 212, 0.28);
+    0 0 20px var(--cosmos-accent-border),
+    inset 0 -1.5px 0 var(--cosmos-accent-border);
 }
 
 /* Pill dock icons and labels */
@@ -1676,10 +1676,10 @@ html[data-theme="soft-future"] .nav-item.active {
   padding: 18px 26px 28px;
   margin-bottom: 0;
   /* Hairline: marks the bottom shelf of the hero stage */
-  border-top: 0.5px solid rgba(6, 182, 212, 0.10);
+  border-top: 0.5px solid var(--cosmos-accent-dim);
   /* Slight gradient continuation of the hero surface tone */
   background: linear-gradient(to bottom,
-    rgba(6, 182, 212, 0.04) 0%,
+    var(--cosmos-accent-soft) 0%,
     transparent 100%
   );
   justify-content: space-evenly;
@@ -1702,7 +1702,7 @@ html[data-theme="soft-future"] .nav-item.active {
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
   margin-bottom: 20px;
   /* Elevated border: stronger signal that this is the primary data panel */
-  border-color: rgba(6, 182, 212, 0.14);
+  border-color: var(--cosmos-accent-border);
   /* Cashflow card needs more internal breathing room for the large numbers */
   padding: 20px 18px 22px;
 }
@@ -1710,7 +1710,7 @@ html[data-theme="soft-future"] .nav-item.active {
 /* Re-apply cashflow surface (was nth-child(2) in Pass 4 — now nth-child(1)) */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(1) {
   background:
-    linear-gradient(to top, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.02) 50%, transparent 100%),
+    linear-gradient(to top, var(--cosmos-accent-soft) 0%, var(--cosmos-accent-soft) 50%, transparent 100%),
     linear-gradient(145deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
 }
 
@@ -1736,7 +1736,7 @@ html[data-theme="soft-future"] .nav-item.active {
 /* Re-apply context surface (was nth-child(n+3) in Pass 4 — now nth-child(n+2)) */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) {
   background: linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
-  border-color: rgba(6, 182, 212, 0.055);
+  border-color: var(--cosmos-accent-soft);
 }
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) .cosmos-sh__title {
   color: rgba(160, 170, 187, 0.28);
@@ -1839,7 +1839,7 @@ html[data-theme="soft-future"] .nav-item.active {
 
 /* Keep active item highlight — just subdued */
 html[data-theme="soft-future"] .nav-item.active {
-  background: rgba(6, 182, 212, 0.08);
+  background: var(--cosmos-accent-soft);
   box-shadow: none;
 }
 
