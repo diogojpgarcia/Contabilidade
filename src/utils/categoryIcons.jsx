@@ -117,4 +117,7 @@ export const CategoryIconBubble = ({ name, type, size = 36, radius = '10px', cla
         flexShrink: 0,
       }}
     >
-      <Icon size={Math
+      <Icon size={Math.round(size * 0.50)} color={color} strokeWidth={2} />
+    </div>
+  );
+};
