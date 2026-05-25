@@ -36,7 +36,7 @@
   gap: 3px;
   transition: background 0.12s;
 }
-.modern-ui .nav-item.active            { background: rgba(99,102,241,0.1); }
+.modern-ui .nav-item.active            { background: var(--cosmos-accent-dim); }
 .modern-ui .nav-item.active .nav-icon,
 .modern-ui .nav-item.active .nav-label { color: var(--cosmos-accent); }
 .modern-ui .nav-item:active            { opacity: 0.7; }
@@ -151,7 +151,7 @@
   transition: background 0.1s;
   font-family: inherit;
 }
-.m-month-btn:active { background: rgba(99,102,241,0.1); }
+.m-month-btn:active { background: var(--cosmos-accent-dim); }
 .m-month-name {
   flex: 1;
   font-size: 0.9375rem;
@@ -161,7 +161,7 @@
   text-align: center;
 }
 .m-today-btn {
-  background: rgba(99,102,241,0.1);
+  background: var(--cosmos-accent-dim);
   border: none;
   color: var(--cosmos-accent);
   font-size: 0.75rem;
@@ -173,7 +173,7 @@
   transition: background 0.1s;
   font-family: inherit;
 }
-.m-today-btn:active { background: rgba(99,102,241,0.2); }
+.m-today-btn:active { background: var(--cosmos-accent-hover); }
 
 /* Balance */
 .m-balance-section { padding: 4px 16px 10px; }
@@ -309,7 +309,7 @@
   font-size: 0.65rem;
   font-weight: 500;
   color: var(--text-tertiary);
-  background: var(--bg-secondary, rgba(99,102,241,0.07));
+  background: var(--bg-secondary, var(--cosmos-accent-soft));
   border-radius: 4px;
   padding: 1px 5px;
   white-space: nowrap;
@@ -352,7 +352,7 @@
   font-weight: 500;
 }
 .ft-detail-btn {
-  background: rgba(99,102,241,0.1);
+  background: var(--cosmos-accent-dim);
   border: none;
   border-radius: 8px;
   min-height: 44px;
@@ -364,7 +364,7 @@
   white-space: nowrap;
   font-family: inherit;
 }
-.ft-detail-btn:active { background: rgba(99,102,241,0.2); }
+.ft-detail-btn:active { background: var(--cosmos-accent-hover); }
 .ft-detail-del {
   background: transparent;
   border: none;
@@ -426,7 +426,7 @@
   font-family: inherit;
   transition: background 0.1s;
 }
-.m-month-nav-btn:active   { background: rgba(99,102,241,0.1); }
+.m-month-nav-btn:active   { background: var(--cosmos-accent-dim); }
 .m-month-nav-btn:disabled { opacity: 0.35; cursor: default; }
 .m-month-nav-name {
   flex: 1;
@@ -741,7 +741,7 @@
 [data-theme="light"] .m-budget-limit-input { background: #e5e5ea; }
 .m-budget-unit { font-size: 0.72rem; color: var(--text-tertiary); }
 .m-budget-save {
-  background: rgba(99,102,241,0.1);
+  background: var(--cosmos-accent-dim);
   border: none;
   border-radius: 7px;
   color: var(--cosmos-accent);
@@ -752,7 +752,7 @@
   cursor: pointer;
   font-family: inherit;
 }
-.m-budget-save:active { background: rgba(99,102,241,0.2); }
+.m-budget-save:active { background: var(--cosmos-accent-hover); }
 
 /* ── BUDGET — MONTH NAVIGATION ────────────────────────────────────────────── */
 .m-month-nav {
@@ -790,14 +790,14 @@
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--cosmos-accent);
-  background: rgba(99,102,241,0.12);
+  background: var(--cosmos-accent-dim);
   border: none;
   border-radius: 6px;
   padding: 2px 8px;
   cursor: pointer;
   transition: background 0.12s;
 }
-.m-month-nav-today:active { background: rgba(99,102,241,0.22); }
+.m-month-nav-today:active { background: var(--cosmos-accent-hover); }
 
 /* ── BUDGET — PREMIUM CARD UI ─────────────────────────────────────────────── */
 .m-bmc {
@@ -871,8 +871,8 @@
   animation: bcc-nav-ring 1.6s ease-out both;
 }
 @keyframes bcc-nav-ring {
-  0%   { box-shadow: 0 0 0 3px rgba(99,102,241,0.55), 0 4px 20px rgba(99,102,241,0.15); }
-  60%  { box-shadow: 0 0 0 2px rgba(99,102,241,0.2),  0 4px 16px rgba(99,102,241,0.08); }
+  0%   { box-shadow: 0 0 0 3px var(--cosmos-accent-glow), 0 4px 20px var(--cosmos-accent-dim); }
+  60%  { box-shadow: 0 0 0 2px var(--cosmos-accent-hover),  0 4px 16px var(--cosmos-accent-soft); }
   100% { box-shadow: none; }
 }
 
@@ -1202,15 +1202,15 @@
 .pat-hero {
   margin: 0 16px 12px;
   padding: 22px 20px 18px;
-  background: linear-gradient(135deg, rgba(99,102,241,0.16) 0%, rgba(139,92,246,0.10) 100%);
-  border: 1px solid rgba(99,102,241,0.22);
+  background: linear-gradient(135deg, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 100%);
+  border: 1px solid var(--cosmos-accent-hover);
   border-radius: 22px;
-  box-shadow: 0 4px 28px rgba(99,102,241,0.13);
+  box-shadow: 0 4px 28px var(--cosmos-accent-soft);
 }
 [data-theme="light"] .pat-hero {
-  background: linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(139,92,246,0.06) 100%);
+  background: linear-gradient(135deg, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 100%);
   border-color: var(--cosmos-accent-dim);
-  box-shadow: 0 2px 16px rgba(99,102,241,0.10);
+  box-shadow: 0 2px 16px var(--cosmos-accent-dim);
 }
 .pat-hero-label {
   font-size: 0.67rem;
@@ -1225,7 +1225,7 @@
   font-size: 2.8rem;
   font-weight: 700;
   letter-spacing: -0.04em;
-  color: rgba(255,255,255,0.95);
+  color: var(--cosmos-text-1);
   font-variant-numeric: tabular-nums;
   line-height: 1;
   margin-bottom: 16px;
@@ -1242,8 +1242,8 @@
   border: 0.5px solid rgba(255,255,255,0.12);
   border-radius: 20px;
 }
-[data-theme="light"] .pat-hero-chip { background: rgba(99,102,241,0.07); border-color: rgba(99,102,241,0.2); }
-.pat-hero-chip-val { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.75); }
+[data-theme="light"] .pat-hero-chip { background: var(--cosmos-accent-soft); border-color: var(--cosmos-accent-hover); }
+.pat-hero-chip-val { font-size: 0.72rem; font-weight: 700; color: var(--cosmos-text-2); }
 [data-theme="light"] .pat-hero-chip-val { color: rgba(30,27,75,0.65); }
 
 /* Micro insight */
@@ -1253,7 +1253,7 @@
   gap: 10px;
   margin: 0 16px 12px;
   padding: 11px 14px;
-  background: rgba(99,102,241,0.07);
+  background: var(--cosmos-accent-soft);
   border: 0.5px solid var(--cosmos-accent-dim);
   border-radius: 12px;
 }
@@ -1347,7 +1347,7 @@
   padding: 10px 10px 10px 66px;
   gap: 8px;
 }
-.pat-account-item--main { background: rgba(99,102,241,0.05); }
+.pat-account-item--main { background: var(--cosmos-accent-soft); }
 
 .pat-account-left { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 
@@ -1550,8 +1550,8 @@
   left: 0;
   right: 0;
   z-index: 200;
-  background: #1c1c2e;
-  border: 0.5px solid rgba(255,255,255,0.12);
+  background: var(--cosmos-surface-3);
+  border: 0.5px solid var(--cosmos-border-subtle);
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,0.45);
@@ -2173,7 +2173,7 @@
   font-size: 1.5rem;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+  box-shadow: 0 4px 14px var(--cosmos-accent-glow);
   display: flex; align-items: center; justify-content: center;
   z-index: 50;
   transition: opacity 0.12s, transform 0.1s;
@@ -2251,7 +2251,7 @@
   white-space: nowrap;
 }
 .m-prof-chip--on {
-  color: #00DDFF;
+  color: var(--cosmos-accent);
   background: rgba(0,221,255,0.07);
   border-color: rgba(0,221,255,0.18);
 }
@@ -2443,7 +2443,7 @@
   transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
 }
 .m-pill-toggle input:checked + .m-pill-toggle-track { background: rgba(0,221,255,0.25); }
-.m-pill-toggle input:checked + .m-pill-toggle-track::after { background: #00DDFF; }
+.m-pill-toggle input:checked + .m-pill-toggle-track::after { background: var(--cosmos-accent); }
 .m-pill-toggle input:checked + .m-pill-toggle-track::after { transform: translateX(18px); }
 [data-theme="light"] .m-pill-toggle-track { background: rgba(60,60,67,0.2); }
 
@@ -2561,7 +2561,7 @@
   border: 1px solid rgba(255,255,255,0.08);
   font-size: 14px;
   font-weight: 500;
-  color: rgba(255,255,255,0.55);
+  color: var(--cosmos-text-2);
   cursor: pointer;
   text-align: center;
   transition: background 0.15s;
@@ -2608,33 +2608,33 @@
 
 /* ── Page background ────────────────────────────────────────────────────── */
 .fintech-ui .main-content-new {
-  background: #111;
+  background: var(--cosmos-bg);
 }
 
 /* ── Month bar ──────────────────────────────────────────────────────────── */
 .fintech-ui .m-month-name {
-  color: rgba(255,255,255,0.85);
+  color: var(--cosmos-text-1);
 }
 .fintech-ui .m-month-btn,
 .fintech-ui .m-today-btn {
   color: var(--cosmos-accent);
 }
 .fintech-ui .m-today-btn {
-  background: rgba(99,102,241,0.15);
+  background: var(--cosmos-accent-dim);
 }
 
 /* ── Monthly balance ────────────────────────────────────────────────────── */
 .fintech-ui .m-balance-amount.positive { color: #4ade80; }
 .fintech-ui .m-balance-amount.negative { color: #f87171; }
-.fintech-ui .m-balance-label           { color: rgba(255,255,255,0.35); }
+.fintech-ui .m-balance-label           { color: var(--cosmos-text-3); }
 
 /* ── Income/expense chips ───────────────────────────────────────────────── */
 .fintech-ui .m-chip {
-  background: #1A1A1A;
+  background: var(--cosmos-surface-1);
   border: 0.5px solid rgba(255,255,255,0.07);
 }
-.fintech-ui .m-chip-label  { color: rgba(255,255,255,0.35); }
-.fintech-ui .m-chip-amount { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-chip-label  { color: var(--cosmos-text-3); }
+.fintech-ui .m-chip-amount { color: var(--cosmos-text-1); }
 .fintech-ui .m-chip.income  .m-chip-amount { color: #4ade80; }
 .fintech-ui .m-chip.expense .m-chip-amount { color: #f87171; }
 
@@ -2662,8 +2662,8 @@
 /* Fintech variant — indigo gradient */
 .fintech-ui .m-total-balance-inner {
   background: linear-gradient(135deg, rgba(79,70,229,0.25) 0%, rgba(109,40,217,0.18) 100%);
-  border: 0.5px solid rgba(99,102,241,0.25);
-  box-shadow: 0 2px 12px rgba(99,102,241,0.12);
+  border: 0.5px solid var(--cosmos-border-hero);
+  box-shadow: 0 2px 12px var(--cosmos-accent-dim);
 }
 
 .m-total-balance-left {
@@ -2690,7 +2690,7 @@
   font-weight: 400;
 }
 .fintech-ui .m-total-balance-sub {
-  color: rgba(255,255,255,0.30);
+  color: var(--cosmos-text-3);
 }
 
 .m-total-balance-value {
@@ -2702,18 +2702,18 @@
   white-space: nowrap;
 }
 .fintech-ui .m-total-balance-value {
-  color: rgba(255,255,255,0.92);
+  color: var(--cosmos-text-1);
 }
 
 /* ── Patrimony row ──────────────────────────────────────────────────────── */
 .fintech-ui .m-patrimony-row {
-  background: #1A1A1A;
+  background: var(--cosmos-surface-1);
   border: 0.5px solid rgba(255,255,255,0.07);
 }
-.fintech-ui .m-patrimony-label  { color: rgba(255,255,255,0.35); }
+.fintech-ui .m-patrimony-label  { color: var(--cosmos-text-3); }
 .fintech-ui .m-patrimony-select { color: var(--cosmos-accent); }
-.fintech-ui .m-patrimony-value  { color: rgba(255,255,255,0.85); }
-.fintech-ui .m-patrimony-select option { background: #1A1A1A; }
+.fintech-ui .m-patrimony-value  { color: var(--cosmos-text-1); }
+.fintech-ui .m-patrimony-select option { background: var(--cosmos-surface-1); }
 
 /* ── Transactions section wrapper ────────────────────────────────────────── */
 .fintech-ui .m-txs {
@@ -2721,48 +2721,48 @@
 }
 
 /* ── Stats page chrome ───────────────────────────────────────────────────── */
-.fintech-ui .m-stats-title       { color: rgba(255,255,255,0.85); }
-.fintech-ui .m-month-nav-name    { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-stats-title       { color: var(--cosmos-text-1); }
+.fintech-ui .m-month-nav-name    { color: var(--cosmos-text-1); }
 .fintech-ui .m-month-nav-btn     { color: var(--cosmos-accent); }
 
 .fintech-ui .m-log-summary {
-  background: #1A1A1A;
+  background: var(--cosmos-surface-1);
   border: 0.5px solid rgba(255,255,255,0.07);
 }
-.fintech-ui .m-summary-label     { color: rgba(255,255,255,0.35); }
-.fintech-ui .m-summary-val       { color: rgba(255,255,255,0.85); }
+.fintech-ui .m-summary-label     { color: var(--cosmos-text-3); }
+.fintech-ui .m-summary-val       { color: var(--cosmos-text-1); }
 .fintech-ui .m-summary-val.income  { color: #4ade80; }
 .fintech-ui .m-summary-val.expense { color: #f87171; }
 .fintech-ui .m-summary-sep         { background: rgba(255,255,255,0.07); }
 
 .fintech-ui .m-toggle {
-  background: #1A1A1A;
+  background: var(--cosmos-surface-1);
   border: 0.5px solid rgba(255,255,255,0.07);
 }
-.fintech-ui .m-toggle-btn        { color: rgba(255,255,255,0.35); }
+.fintech-ui .m-toggle-btn        { color: var(--cosmos-text-3); }
 .fintech-ui .m-toggle-btn.active {
-  background: rgba(99,102,241,0.2);
-  color: #a5b4fc;
+  background: var(--cosmos-accent-hover);
+  color: var(--cosmos-accent);
   box-shadow: none;
 }
 
 .fintech-ui .m-cat-row           { border-bottom-color: rgba(255,255,255,0.06); }
-.fintech-ui .m-cat-name          { color: rgba(255,255,255,0.80); }
-.fintech-ui .m-cat-amt           { color: rgba(255,255,255,0.80); }
-.fintech-ui .m-cat-pct           { color: rgba(255,255,255,0.30); }
+.fintech-ui .m-cat-name          { color: var(--cosmos-text-1); }
+.fintech-ui .m-cat-amt           { color: var(--cosmos-text-1); }
+.fintech-ui .m-cat-pct           { color: var(--cosmos-text-3); }
 .fintech-ui .m-cat-bar-bg        { background: rgba(255,255,255,0.08); }
 .fintech-ui .m-cat-bar-fill      { background: #f87171; }
 
 /* ── Bottom nav ─────────────────────────────────────────────────────────── */
 .fintech-ui .bottom-nav {
-  background: #161616;
+  background: var(--cosmos-nav-surface);
   border-top-color: rgba(255,255,255,0.07);
 }
-.fintech-ui .nav-item.active            { background: rgba(99,102,241,0.15); }
+.fintech-ui .nav-item.active            { background: var(--cosmos-accent-dim); }
 .fintech-ui .nav-item.active .nav-icon,
 .fintech-ui .nav-item.active .nav-label { color: var(--cosmos-accent); }
 .fintech-ui .nav-label,
-.fintech-ui .nav-icon                   { color: rgba(255,255,255,0.40); }
+.fintech-ui .nav-icon                   { color: var(--cosmos-text-3); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    UNIFIED SUMMARY CARD  (.m-summary-card)
@@ -2803,7 +2803,7 @@
   color: var(--text-primary);
 }
 .fintech-ui .m-sc-total-value {
-  color: rgba(255,255,255,0.94);
+  color: var(--cosmos-text-1);
 }
 .m-sc-total-label {
   font-size: 0.72rem;
@@ -2821,7 +2821,7 @@
   margin-top: 2px;
 }
 .fintech-ui .m-sc-total-sub {
-  color: rgba(255,255,255,0.25);
+  color: var(--cosmos-text-3);
 }
 
 /* ── Divider ── */
@@ -2873,7 +2873,7 @@
   color: var(--text-tertiary);
 }
 .fintech-ui .m-sc-label {
-  color: rgba(255,255,255,0.28);
+  color: var(--cosmos-text-3);
 }
 
 /* ── BOTTOM: monthly balance ── */
@@ -2888,7 +2888,7 @@
   font-weight: 500;
 }
 .fintech-ui .m-sc-month-label {
-  color: rgba(255,255,255,0.32);
+  color: var(--cosmos-text-3);
 }
 .m-sc-month-value {
   font-size: 0.8125rem;  /* 13px */

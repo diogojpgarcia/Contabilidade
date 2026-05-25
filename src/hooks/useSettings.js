@@ -47,6 +47,7 @@ export function useSettings(currentUser, txHook) {
   // Aplicar paleta ao <html> no primeiro render (antes de loadUserData)
   useEffect(() => {
     document.documentElement.setAttribute('data-palette', colorPalette);
+    document.documentElement.setAttribute('data-theme', colorPalette === 'stone' ? 'light' : 'soft-future');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Boot atómico ──────────────────────────────────────────────────────────
@@ -101,8 +102,9 @@ export function useSettings(currentUser, txHook) {
         setConfirmedRecurring(settings.confirmed_recurring);
       }
 
-      // Cosmos é o único tema visual — forçar soft-future independentemente do valor guardado
-      document.documentElement.setAttribute('data-theme', 'soft-future');
+      // Cosmos é o único tema visual — soft-future excepto stone (light mode)
+      const currentPalette = settings?.color_palette || colorPalette;
+      document.documentElement.setAttribute('data-theme', currentPalette === 'stone' ? 'light' : 'soft-future');
 
       // Paleta de cor
       if (settings?.color_palette) {
@@ -146,6 +148,7 @@ export function useSettings(currentUser, txHook) {
   const setColorPalette = useCallback((palette) => {
     setColorPaletteState(palette);
     document.documentElement.setAttribute('data-palette', palette);
+    document.documentElement.setAttribute('data-theme', palette === 'stone' ? 'light' : 'soft-future');
     localStorage.setItem('cosmos-palette', palette);
     if (currentUser?.id) {
       dbService.updateUserSettings(currentUser.id, { color_palette: palette }).catch(e => toast.error('Erro ao guardar paleta: ' + e.message));
