@@ -7,6 +7,15 @@
 /* modern.css sets display:flex + flex:1/min-height:0 on .main-content-new
    and its > div children. Reset those for modern-ui so tab roots flow
    naturally (outer scroll via .main-content-new overflow-y:auto).         */
+
+/* ── GLOBAL PAGE BACKGROUND — palette-aware ─────────────────────────────── */
+/* Prevents the browser's default white body showing through in Stone (light) */
+html, body {
+  background: var(--cosmos-bg);
+  margin: 0;
+  padding: 0;
+}
+
 .modern-ui .main-content-new {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;

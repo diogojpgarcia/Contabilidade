@@ -70,7 +70,7 @@ const SpendTrendCard = ({ transactions, currentMonth, onNavigate }) => {
 
   return (
     <div
-      style={{ ...CARD_STYLE_BASE, background: 'rgba(0,221,255,0.06)', border: '1px solid rgba(0,221,255,0.15)' }}
+      style={{ ...CARD_STYLE_BASE, background: 'var(--cosmos-accent-soft)', border: '1px solid var(--cosmos-accent-border)' }}
       onClick={() => onNavigate?.('stats')}
       role="button"
       aria-label="Ver tendência de gastos nos stats"
@@ -97,7 +97,7 @@ const SpendTrendCard = ({ transactions, currentMonth, onNavigate }) => {
           />
         </svg>
       )}
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#00DDFF', marginTop: 8 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-accent)', marginTop: 8 }}>
         Ver detalhes →
       </span>
     </div>
@@ -136,7 +136,7 @@ const UpcomingCard = ({ recurringPayments, onNavigate }) => {
           {totalAmount.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
         </span>
       )}
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#00DDFF', marginTop: count > 0 && totalAmount > 0 ? 4 : 8 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-accent)', marginTop: count > 0 && totalAmount > 0 ? 4 : 8 }}>
         Ver recorrentes →
       </span>
     </div>
@@ -151,7 +151,7 @@ const InsightsSection = ({ transactions, currentMonth, recurringPayments, onNavi
         Insights
       </span>
       <button
-        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, color: '#00DDFF', WebkitTapHighlightColor: 'transparent' }}
+        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, color: 'var(--cosmos-accent)', WebkitTapHighlightColor: 'transparent' }}
         onClick={() => onNavigate?.('stats')}
       >
         Ver todos →

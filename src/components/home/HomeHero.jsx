@@ -101,15 +101,15 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
         >
           <defs>
             <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00DDFF" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#00DDFF" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--cosmos-accent)" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="var(--cosmos-accent)" stopOpacity="0" />
             </linearGradient>
           </defs>
           <path d={areaPath} fill="url(#areaGrad)" />
           <polyline
             points={linePoints}
             fill="none"
-            stroke="#00DDFF"
+            stroke="var(--cosmos-accent)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -119,7 +119,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
             cx={cx(dados.length - 1)}
             cy={cy(dados[dados.length - 1])}
             r="3"
-            fill="#00DDFF"
+            fill="var(--cosmos-accent)"
           />
         </svg>
         </div>
@@ -133,7 +133,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
           {meses.map((m, i) => (
             <span key={i} style={{
               fontSize: '10px',
-              color: i === meses.length - 1 ? '#00DDFF' : '#94A3B8',
+              color: i === meses.length - 1 ? 'var(--cosmos-accent)' : 'var(--cosmos-text-3)',
               fontWeight: i === meses.length - 1 ? 600 : 400,
             }}>
               {m}
@@ -148,7 +148,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
           <span style={{ fontSize: '11px', color: '#94A3B8' }}>
             Dia {diaAtual ?? 19} de {totalDias ?? 31}
           </span>
-          <span style={{ fontSize: '11px', color: '#00DDFF' }}>{progresso}%</span>
+          <span style={{ fontSize: '11px', color: 'var(--cosmos-accent)' }}>{progresso}%</span>
         </div>
         <div style={{
           height: '3px',
@@ -159,7 +159,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
           <div style={{
             height: '100%',
             width: `${progresso}%`,
-            background: 'linear-gradient(90deg, #0099BB, #00DDFF)',
+            background: 'linear-gradient(90deg, var(--cosmos-accent), var(--cosmos-accent))',
             borderRadius: '2px',
           }} />
         </div>

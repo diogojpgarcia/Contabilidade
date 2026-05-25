@@ -119,7 +119,7 @@
 .cbn__item--active {
   background: var(--cosmos-accent-dim);
   color: var(--cosmos-accent);
-  box-shadow: 0 0 16px rgba(6, 182, 212, 0.14);
+  box-shadow: 0 0 16px var(--cosmos-accent-dim);
 }
 
 /* ── Icon & label ── */

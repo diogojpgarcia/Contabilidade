@@ -571,7 +571,7 @@ const PatrimonyView = ({
     const sparkUp      = sparkPrices?.length >= 2
       ? sparkPrices[sparkPrices.length - 1] >= sparkPrices[0]
       : chg != null ? chg >= 0 : null;
-    const sparkColor   = sparkUp === true ? '#22c55e' : sparkUp === false ? '#ef4444' : '#6b7280';
+    const sparkColor   = sparkUp === true ? 'var(--cosmos-income)' : sparkUp === false ? 'var(--cosmos-expense)' : 'var(--cosmos-text-3)';
     const impact       = totalPatrimony > 0 ? (marketVal / totalPatrimony) * 100 : 0;
     const barWidth     = maxSingleImpact > 0 ? Math.min((impact / maxSingleImpact) * 100, 100) : 0;
     const qty          = parseFloat(item.qty) || 0;
@@ -725,7 +725,7 @@ const PatrimonyView = ({
             ? { borderColor: 'rgba(74,222,128,0.18)', boxShadow: '0 4px 20px rgba(74,222,128,0.08)' }
             : { borderColor: 'rgba(248,113,113,0.18)', boxShadow: '0 4px 20px rgba(248,113,113,0.08)' }}>
             <div className="pat-intel-forecast-label">Previsão em 12 meses</div>
-            <div className="pat-intel-forecast-amount" style={{ color: avg6 >= 0 ? '#4ade80' : '#f87171' }}>
+            <div className="pat-intel-forecast-amount" style={{ color: avg6 >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)' }}>
               {fmt(Math.round(forecast12))}<span style={{ fontSize: '1.1rem', opacity: 0.65, marginLeft: 2 }}>€</span>
             </div>
             <div className="pat-intel-forecast-sub">
@@ -737,13 +737,13 @@ const PatrimonyView = ({
 
           <div className="pat-intel-chips">
             <div className="pat-intel-chip">
-              <span className="pat-intel-chip-val" style={{ color: avg6 >= 0 ? '#4ade80' : '#f87171' }}>
+              <span className="pat-intel-chip-val" style={{ color: avg6 >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)' }}>
                 {avg6 >= 0 ? '+' : ''}{fmt(Math.round(avg6))}€
               </span>
               <span className="pat-intel-chip-label">poupança / mês</span>
             </div>
             <div className="pat-intel-chip">
-              <span className="pat-intel-chip-val" style={{ color: monthlyRate >= 0 ? '#4ade80' : '#f87171' }}>
+              <span className="pat-intel-chip-val" style={{ color: monthlyRate >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)' }}>
                 {monthlyRate >= 0 ? '+' : ''}{monthlyRate.toFixed(2)}%
               </span>
               <span className="pat-intel-chip-label">crescimento / mês</span>
@@ -752,7 +752,7 @@ const PatrimonyView = ({
 
           <div className="pat-intel-trend">
             <span className="pat-intel-trend-dot" style={{
-              background: trendStatus === 'above' ? '#4ade80' : trendStatus === 'below' ? '#f87171' : '#71717a'
+              background: trendStatus === 'above' ? 'var(--cosmos-income)' : trendStatus === 'below' ? 'var(--cosmos-expense)' : 'var(--cosmos-text-3)'
             }} />
             <span className="pat-intel-trend-msg">
               {trendStatus === 'above'
@@ -932,7 +932,7 @@ const PatrimonyView = ({
                   onClick={() => setConfirmDeleteAsset(null)}
                 >Cancelar</button>
                 <button
-                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: 'var(--cosmos-expense)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
                   onClick={handlePatrimonyDeleteConfirmed}
                 >Remover</button>
               </div>

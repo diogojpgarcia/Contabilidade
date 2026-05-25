@@ -414,7 +414,7 @@ const FintechTransactionCard = ({
                   onClick={() => setConfirmDelete(false)}
                 >Cancelar</button>
                 <button
-                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: 'var(--cosmos-expense)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
                   onClick={handleDeleteConfirmed}
                 >Apagar</button>
               </div>

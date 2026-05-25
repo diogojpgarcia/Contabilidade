@@ -75,7 +75,7 @@
 
 .cosmos-card--hero .h-hero-progress-fill {
   background: var(--cosmos-accent, #06b6d4);
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.45);
+  box-shadow: 0 0 8px var(--cosmos-accent-glow);
 }
 
 /* ── Cashflow compact month nav ── */
@@ -368,7 +368,7 @@
   height: 7px;
   border-radius: 50%;
   background: var(--cosmos-accent, #06b6d4);
-  box-shadow: 0 0 6px rgba(6, 182, 212, 0.35);
+  box-shadow: 0 0 6px var(--cosmos-accent-glow);
   flex-shrink: 0;
   margin-right: 8px;
 }

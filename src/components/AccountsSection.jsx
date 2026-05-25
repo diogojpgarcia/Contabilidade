@@ -54,7 +54,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
             fontFamily: 'Inter, -apple-system, sans-serif',
             fontSize: 13,
             fontWeight: 400,
-            color: '#00DDFF',
+            color: 'var(--cosmos-accent)',
             WebkitTapHighlightColor: 'transparent',
           }}
           aria-label="Ver todas as contas"
@@ -83,7 +83,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
 
             {/* Line 1: icon + bank name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: '#00DDFF', display: 'flex', flexShrink: 0 }}
+              <span style={{ color: 'var(--cosmos-accent)', display: 'flex', flexShrink: 0 }}
                     aria-hidden="true">
                 {account.icon}
               </span>
