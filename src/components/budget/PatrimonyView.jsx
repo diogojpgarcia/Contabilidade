@@ -320,7 +320,7 @@ const PatrimonyView = ({
       onPatrimonyChange && onPatrimonyChange(updated);
     } else {
       const id   = Date.now().toString();
-      const item = { id, ...clean };
+      const item = { id, insertedAt: new Date().toISOString(), ...clean };
       const updated = { ...patrimony, [patrimonyFormType]: [...(patrimony[patrimonyFormType] || []), item] };
       onPatrimonyChange && onPatrimonyChange(updated);
     }
@@ -451,11 +451,14 @@ const PatrimonyView = ({
                     {f.name && <span className="pat-stock-chip-name">{f.name}</span>}
                   </div>
                   <button type="button" className="pat-stock-chip-clear"
-                    onClick={() => { set('ticker',''); set('name',''); set('qty',''); set('broker',''); setStockConfirmed(false); }}>×</button>
+                    onClick={() => { set('ticker',''); set('name',''); set('qty',''); set('broker',''); set('purchasePrice',''); setStockConfirmed(false); }}>×</button>
                 </div>
                 <input className={cls} type="number" inputMode="decimal"
                   placeholder="Quantidade de ações" value={f.qty || ''}
                   onChange={e => set('qty', e.target.value)} autoFocus />
+                <input className={cls} type="number" inputMode="decimal"
+                  placeholder="Preço de compra por ação (€)" value={f.purchasePrice || ''}
+                  onChange={e => set('purchasePrice', e.target.value)} />
                 <input className={cls}
                   placeholder="Broker — ex: XTB, Degiro (opcional)" value={f.broker || ''}
                   onChange={e => set('broker', e.target.value)} autoComplete="off" />
@@ -528,11 +531,14 @@ const PatrimonyView = ({
                     {patrimonyForm.name && <span className="pat-stock-chip-name">{patrimonyForm.name}</span>}
                   </div>
                   <button type="button" className="pat-stock-chip-clear"
-                    onClick={() => { setPatrimonyField('ticker',''); setPatrimonyField('name',''); setPatrimonyField('qty',''); setPatrimonyField('broker',''); setEtfConfirmed(false); }}>×</button>
+                    onClick={() => { setPatrimonyField('ticker',''); setPatrimonyField('name',''); setPatrimonyField('qty',''); setPatrimonyField('broker',''); setPatrimonyField('purchasePrice',''); setEtfConfirmed(false); }}>×</button>
                 </div>
                 <input className={cls} type="number" inputMode="decimal"
                   placeholder="Quantidade de unidades" value={patrimonyForm.qty || ''}
                   onChange={e => setPatrimonyField('qty', e.target.value)} autoFocus />
+                <input className={cls} type="number" inputMode="decimal"
+                  placeholder="Preço de compra por unidade (€)" value={patrimonyForm.purchasePrice || ''}
+                  onChange={e => setPatrimonyField('purchasePrice', e.target.value)} />
                 <input className={cls}
                   placeholder="Broker/Plataforma (opcional)" value={patrimonyForm.broker || ''}
                   onChange={e => setPatrimonyField('broker', e.target.value)} autoComplete="off" />
@@ -616,11 +622,14 @@ const PatrimonyView = ({
                     {f.name && <span className="pat-stock-chip-name">{f.name}</span>}
                   </div>
                   <button type="button" className="pat-stock-chip-clear"
-                    onClick={() => { set('coin',''); set('name',''); set('qty',''); set('exchange',''); setCryptoConfirmed(false); }}>×</button>
+                    onClick={() => { set('coin',''); set('name',''); set('qty',''); set('exchange',''); set('purchasePrice',''); setCryptoConfirmed(false); }}>×</button>
                 </div>
                 <input className={cls} type="number" inputMode="decimal"
                   placeholder="Quantidade" value={f.qty || ''}
                   onChange={e => set('qty', e.target.value)} autoFocus />
+                <input className={cls} type="number" inputMode="decimal"
+                  placeholder="Preço de compra por moeda (€)" value={f.purchasePrice || ''}
+                  onChange={e => set('purchasePrice', e.target.value)} />
                 <input className={cls}
                   placeholder="Exchange — ex: Binance, Coinbase (opcional)" value={f.exchange || ''}
                   onChange={e => set('exchange', e.target.value)} autoComplete="off" />
@@ -718,6 +727,17 @@ const PatrimonyView = ({
     const qty          = parseFloat(item.qty) || 0;
     const qtyLabel     = assetKey === 'etfs' ? 'unidades' : isStock ? 'ações' : 'moedas';
     const priceLabel   = assetKey === 'etfs' ? 'unidade'  : isStock ? 'ação'  : 'moeda';
+
+    // ── P&L desde inserção ──────────────────────────────────────────────────
+    const purchasePrice = parseFloat(item.purchasePrice) || 0;
+    const hasPnl        = purchasePrice > 0 && hasPrice && qty > 0;
+    const pnlAbs        = hasPnl ? (marketPrice - purchasePrice) * qty : 0;
+    const pnlPct        = hasPnl ? ((marketPrice - purchasePrice) / purchasePrice) * 100 : 0;
+    const pnlPositive   = pnlAbs >= 0;
+    const insertedDate  = item.insertedAt
+      ? new Date(item.insertedAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
+      : null;
+
     return (
       <SwipeRevealCard
         key={item.id}
@@ -770,6 +790,21 @@ const PatrimonyView = ({
             </div>
           )}
         </div>
+        {hasPnl && (
+          <div className="pat-pnl-row">
+            <span className="pat-pnl-label">
+              desde inserção{insertedDate ? ` · ${insertedDate}` : ''}
+            </span>
+            <div className="pat-pnl-values">
+              <span className={`pat-pnl-abs ${pnlPositive ? 'pos' : 'neg'}`}>
+                {pnlPositive ? '+' : ''}{fmtFiat(pnlAbs)}€
+              </span>
+              <span className={`pat-pnl-pct ${pnlPositive ? 'pos' : 'neg'}`}>
+                {pnlPositive ? '+' : ''}{pnlPct.toFixed(2)}%
+              </span>
+            </div>
+          </div>
+        )}
       </SwipeRevealCard>
     );
   };

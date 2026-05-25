@@ -279,13 +279,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         alignItems: 'center',
         padding: '16px 20px 8px',
       }}>
-        <span style={{ fontSize: '24px', fontWeight: 600, color: '#FFFFFF' }}>
+        <span style={{ fontSize: '24px', fontWeight: 600, color: 'var(--cosmos-text-1)' }}>
           Estatísticas
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button onClick={goToPreviousMonth} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: '#FFFFFF', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
-          <span style={{ fontSize: '13px', color: '#94A3B8', fontWeight: 500, minWidth: '90px', textAlign: 'center' }}>{monthName}</span>
-          <button onClick={goToNextMonth} disabled={currentMonth === new Date().toISOString().slice(0, 7)} style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: '#FFFFFF', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentMonth === new Date().toISOString().slice(0, 7) ? 0.4 : 1 }}>›</button>
+          <button onClick={goToPreviousMonth} style={{ background: 'var(--cosmos-border-divider)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: 'var(--cosmos-text-1)', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+          <span style={{ fontSize: '13px', color: 'var(--cosmos-text-3)', fontWeight: 500, minWidth: '90px', textAlign: 'center' }}>{monthName}</span>
+          <button onClick={goToNextMonth} disabled={currentMonth === new Date().toISOString().slice(0, 7)} style={{ background: 'var(--cosmos-border-divider)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: 'var(--cosmos-text-1)', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentMonth === new Date().toISOString().slice(0, 7) ? 0.4 : 1 }}>›</button>
         </div>
       </div>
 
@@ -312,17 +312,17 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   alignItems: 'center',
                   gap: '5px',
                   padding: '10px 4px 9px',
-                  background: activeView === key ? 'rgba(0,221,255,0.10)' : 'rgba(255,255,255,0.04)',
-                  border: activeView === key ? '1px solid rgba(0,221,255,0.28)' : '1px solid rgba(255,255,255,0.07)',
+                  background: activeView === key ? 'var(--cosmos-accent-dim)' : 'var(--cosmos-border-subtle)',
+                  border: activeView === key ? '1px solid var(--cosmos-accent-border)' : '1px solid var(--cosmos-border-divider)',
                   borderRadius: '14px',
-                  color: activeView === key ? '#00DDFF' : '#475569',
+                  color: activeView === key ? 'var(--cosmos-accent)' : 'var(--cosmos-text-3)',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                   WebkitTapHighlightColor: 'transparent',
                   fontFamily: 'inherit',
                 }}
               >
-                <Icon size={18} strokeWidth={1.75} color={activeView === key ? '#00DDFF' : '#475569'} />
+                <Icon size={18} strokeWidth={1.75} color={activeView === key ? 'var(--cosmos-accent)' : 'var(--cosmos-text-3)'} />
                 <span style={{
                   fontSize: '9px',
                   fontWeight: 500,
@@ -339,7 +339,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       {/* ══ OVERVIEW ══ */}
       {activeView === 'overview' && (() => {
         const pct      = monthIncome > 0 ? Math.min((monthExpenses / monthIncome) * 100, 100) : 0;
-        const barColor = pct >= 90 ? '#F87171' : pct >= 70 ? '#FB923C' : '#00DDFF';
+        const barColor = pct >= 90 ? 'var(--cosmos-expense)' : pct >= 70 ? 'var(--cosmos-warning)' : 'var(--cosmos-accent)';
         const maxVal   = Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses))) || 1;
         const W = 340; const H = 72;
         const cx = (i) => (i / 5) * W;
@@ -349,15 +349,15 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         const expenseAreaPath = `M${cx(0)},${cyE(monthlyData[0]?.expenses||0)} ` + monthlyData.map((d,i) => `L${cx(i)},${cyE(d.expenses)}`).join(' ') + ` L${W},${H} L0,${H} Z`;
         const incomeLinePts  = monthlyData.map((d,i) => `${cx(i)},${cyI(d.income)}`).join(' ');
         const expenseLinePts = monthlyData.map((d,i) => `${cx(i)},${cyE(d.expenses)}`).join(' ');
-        const CAT_COLORS = ['#00DDFF', '#22C55E', '#F59E0B', '#F87171', '#8B5CF6'];
+        const CAT_COLORS = ['var(--cosmos-accent)', 'var(--cosmos-income)', 'var(--cosmos-warning)', 'var(--cosmos-expense)', '#8B5CF6'];
         return (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
 
             {/* ── 1. CARD PRINCIPAL ── */}
             <div style={{
               borderRadius: '20px',
-              background: 'linear-gradient(160deg, #141E2E 0%, #0D1520 100%)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'var(--cosmos-surface-1)',
+              border: '1px solid var(--cosmos-border-divider)',
               margin: '0 16px',
               overflow: 'hidden',
               boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
@@ -365,45 +365,45 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
               {/* Top section */}
               <div style={{ padding: '20px 20px 12px' }}>
-                <div style={{ fontSize: '11px', color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--cosmos-text-3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                   Saldo do Mês
                 </div>
-                <div style={{ fontSize: '36px', fontWeight: 700, color: monthSaldo >= 0 ? '#22C55E' : '#F87171', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '6px' }}>
+                <div style={{ fontSize: '36px', fontWeight: 700, color: monthSaldo >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '6px' }}>
                   {monthSaldo >= 0 ? '+' : '−'}{fmt(Math.abs(monthSaldo))}
                 </div>
-                <div style={{ fontSize: '13px', color: saldoDelta >= 0 ? '#22C55E' : '#F87171', marginBottom: '14px' }}>
+                <div style={{ fontSize: '13px', color: saldoDelta >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', marginBottom: '14px' }}>
                   {saldoDeltaLabel}
                 </div>
-                <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '14px' }} />
+                <div style={{ height: '1px', background: 'var(--cosmos-border-subtle)', marginBottom: '14px' }} />
 
                 {/* 3-column row */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                   {/* Receitas */}
                   <div>
-                    <div style={{ fontSize: '10px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Receitas</div>
-                    <div style={{ fontSize: '15px', fontWeight: 600, color: '#22C55E' }}>+{fmt(monthIncome)}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Receitas</div>
+                    <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cosmos-income)' }}>+{fmt(monthIncome)}</div>
                   </div>
                   {/* Barra centro */}
                   <div style={{ flex: 1, maxWidth: '120px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94A3B8', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--cosmos-text-3)', marginBottom: '4px' }}>
                       <span style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>Gasto</span>
                       <span style={{ color: barColor, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
                     </div>
-                    <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, #00DDFF, ${barColor})`, borderRadius: '3px', transition: 'width 0.4s ease' }} />
+                    <div style={{ height: '3px', background: 'var(--cosmos-border-divider)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, var(--cosmos-accent), ${barColor})`, borderRadius: '3px', transition: 'width 0.4s ease' }} />
                     </div>
                   </div>
                   {/* Despesas */}
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '10px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Despesas</div>
-                    <div style={{ fontSize: '15px', fontWeight: 600, color: '#F87171' }}>−{fmt(monthExpenses)}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Despesas</div>
+                    <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cosmos-expense)' }}>−{fmt(monthExpenses)}</div>
                   </div>
                 </div>
               </div>
 
               {/* Barra de labels — sempre renderizada, altura fixa */}
               {(() => {
-                const CAT_COLORS = ['#00DDFF','#22C55E','#F59E0B','#F87171','#8B5CF6'];
+                const CAT_COLORS = ['var(--cosmos-accent)', 'var(--cosmos-income)', 'var(--cosmos-warning)', 'var(--cosmos-expense)', '#8B5CF6'];
                 return (
                   <div>
                     {/* Labels com altura fixa — opacidade 0 quando não há seleção */}
@@ -431,7 +431,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                         <style>{`.cat-label-scroll::-webkit-scrollbar { display: none; }`}</style>
                         {selectedCategories.map(cat => {
                           const idx = categoryData.findIndex(c => c.category === cat);
-                          const color = CAT_COLORS[idx % 5] || '#00DDFF';
+                          const color = CAT_COLORS[idx % 5] || 'var(--cosmos-accent)';
                           return (
                             <div key={cat} style={{
                               display: 'flex', alignItems: 'center', gap: '4px',
@@ -447,7 +447,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       <button
                         onClick={() => setSelectedCategories([])}
                         style={{
-                          fontSize: '11px', color: '#64748B',
+                          fontSize: '11px', color: 'var(--cosmos-text-3)',
                           background: 'none', border: 'none', cursor: 'pointer',
                           flexShrink: 0, paddingLeft: '8px',
                           opacity: selectedCategories.length > 0 ? 1 : 0,
@@ -472,7 +472,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                           <defs>
                             {selectedCategories.map((cat, ci) => {
                               const idx = categoryData.findIndex(c => c.category === cat);
-                              const color = CAT_COLORS[idx % 5] || '#00DDFF';
+                              const color = CAT_COLORS[idx % 5] || 'var(--cosmos-accent)';
                               return (
                                 <linearGradient key={cat} id={`catGrad${ci}`} x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="0%" stopColor={color} stopOpacity="0.2" />
@@ -483,7 +483,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                           </defs>
                           {selectedCategories.map((cat, ci) => {
                             const idx = categoryData.findIndex(c => c.category === cat);
-                            const color = CAT_COLORS[idx % 5] || '#00DDFF';
+                            const color = CAT_COLORS[idx % 5] || 'var(--cosmos-accent)';
                             const catData = getCategoryMonthlyData(cat);
                             const pts = catData.map((d, i) => ({
                               x: (i / 5) * 340,
@@ -521,18 +521,18 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                         <svg width="100%" height={72} viewBox="0 0 340 72" preserveAspectRatio="none" style={{ display: 'block' }}>
                           <defs>
                             <linearGradient id="incGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#22C55E" stopOpacity="0.25" />
-                              <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
+                              <stop offset="0%" stopColor="var(--cosmos-income)" stopOpacity="0.25" />
+                              <stop offset="100%" stopColor="var(--cosmos-income)" stopOpacity="0" />
                             </linearGradient>
                             <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#F87171" stopOpacity="0.2" />
-                              <stop offset="100%" stopColor="#F87171" stopOpacity="0" />
+                              <stop offset="0%" stopColor="var(--cosmos-expense)" stopOpacity="0.2" />
+                              <stop offset="100%" stopColor="var(--cosmos-expense)" stopOpacity="0" />
                             </linearGradient>
                           </defs>
                           <path d={incArea} fill="url(#incGrad)" />
                           <path d={expArea} fill="url(#expGrad)" />
-                          <polyline points={incPts} fill="none" stroke="#22C55E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <polyline points={expPts} fill="none" stroke="#F87171" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <polyline points={incPts} fill="none" stroke="var(--cosmos-income)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <polyline points={expPts} fill="none" stroke="var(--cosmos-expense)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       );
                     })()}
@@ -543,7 +543,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               {/* Labels dos meses */}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 16px 14px' }}>
                 {monthlyData.map((d, i) => (
-                  <span key={i} style={{ fontSize: '10px', color: '#64748B' }}>{d.month}</span>
+                  <span key={i} style={{ fontSize: '10px', color: 'var(--cosmos-text-3)' }}>{d.month}</span>
                 ))}
               </div>
             </div>
@@ -551,7 +551,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             {/* ── 2. TOP CATEGORIAS ── */}
             {categoryData.length > 0 && (
               <div style={{ margin: '12px 16px 0' }}>
-                <div style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
                   Top Categorias
                 </div>
                 {categoryData.slice(0, 5).map((cat, i) => {
@@ -578,12 +578,12 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                       {/* Barra + % */}
                       <div style={{ width: '100px', flexShrink: 0 }}>
                         <div style={{ fontSize: '12px', color: CAT_COLORS[i % 5], textAlign: 'right', marginBottom: '3px' }}>{cat.percentage.toFixed(0)}%</div>
-                        <div style={{ height: '3px', background: 'rgba(255,255,255,0.07)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ height: '3px', background: 'var(--cosmos-border-divider)', borderRadius: '3px', overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${cat.percentage}%`, background: CAT_COLORS[i % 5], borderRadius: '3px', opacity: isSelected ? 1 : 0.7 }} />
                         </div>
                       </div>
                       {/* Valor */}
-                      <div style={{ width: '64px', fontSize: '13px', color: '#94A3B8', textAlign: 'right', flexShrink: 0 }}>{fmt(cat.amount)}</div>
+                      <div style={{ width: '64px', fontSize: '13px', color: 'var(--cosmos-text-3)', textAlign: 'right', flexShrink: 0 }}>{fmt(cat.amount)}</div>
                     </div>
                   );
                 })}
@@ -591,26 +591,26 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             )}
 
             {/* ── 3. SCORE + INSIGHTS ── */}
-            <div style={{ margin: '12px 16px 0', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '16px' }}>
+            <div style={{ margin: '12px 16px 0', background: 'var(--cosmos-border-subtle)', border: '1px solid var(--cosmos-border-divider)', borderRadius: '16px', padding: '16px' }}>
               {/* Score */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, rgba(255,255,255,0.08) ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#0D1520', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
+                  <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: 'var(--cosmos-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Score Financeiro</div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#FFFFFF' }}>{financialScore.label}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Score Financeiro</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cosmos-text-1)' }}>{financialScore.label}</div>
                 </div>
               </div>
               {/* Divisor */}
-              {insights.length > 0 && <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '12px 0' }} />}
+              {insights.length > 0 && <div style={{ height: '1px', background: 'var(--cosmos-border-subtle)', margin: '12px 0' }} />}
               {/* Insights */}
               {insights.slice(0, 3).map((item, i) => {
                 const CONFIG = {
-                  risk: { color: '#F87171', bg: 'rgba(248,113,113,0.08)', emoji: '⚠️' },
-                  warn: { color: '#FB923C', bg: 'rgba(251,146,60,0.08)',  emoji: '⚡' },
-                  good: { color: '#22C55E', bg: 'rgba(34,197,94,0.08)',   emoji: '📈' },
-                  info: { color: '#94A3B8', bg: 'rgba(148,163,184,0.06)', emoji: '💡' },
+                  risk: { color: 'var(--cosmos-expense)', bg: 'rgba(248,113,113,0.08)', emoji: '⚠️' },
+                  warn: { color: 'var(--cosmos-warning)', bg: 'rgba(251,146,60,0.08)',  emoji: '⚡' },
+                  good: { color: 'var(--cosmos-income)', bg: 'rgba(34,197,94,0.08)',   emoji: '📈' },
+                  info: { color: 'var(--cosmos-text-3)', bg: 'rgba(148,163,184,0.06)', emoji: '💡' },
                 };
                 const cfg = CONFIG[item.color] || CONFIG.info;
                 return (
@@ -628,13 +628,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   >
                     <span style={{ fontSize: '20px', lineHeight: 1, marginTop: '1px', flexShrink: 0 }}>{cfg.emoji}</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFFFFF', marginBottom: '3px' }}>{item.title}</div>
-                      <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.5 }}>{item.message}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--cosmos-text-1)', marginBottom: '3px' }}>{item.title}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--cosmos-text-3)', lineHeight: 1.5 }}>{item.message}</div>
                       {item.explanation && (
-                        <div style={{ fontSize: '11px', color: '#64748B', marginTop: '4px', lineHeight: 1.4 }}>{item.explanation}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--cosmos-text-3)', marginTop: '4px', lineHeight: 1.4 }}>{item.explanation}</div>
                       )}
                     </div>
-                    {item.meta && <span style={{ color: '#64748B', fontSize: '16px', alignSelf: 'center' }}>›</span>}
+                    {item.meta && <span style={{ color: 'var(--cosmos-text-3)', fontSize: '16px', alignSelf: 'center' }}>›</span>}
                   </div>
                 );
               })}
@@ -660,10 +660,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               { key: 'transfer', label: 'Transferências' },
             ].map(({ key, label }) => {
               const cfg = {
-                all:      { color: '#94A3B8', bg: 'rgba(255,255,255,0.06)',  border: 'rgba(255,255,255,0.11)'  },
-                expense:  { color: '#F87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)'  },
-                income:   { color: '#4ADE80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.25)'   },
-                transfer: { color: '#00DDFF', bg: 'rgba(0,221,255,0.10)',   border: 'rgba(0,221,255,0.25)'    },
+                all:      { color: 'var(--cosmos-text-3)', bg: 'rgba(255,255,255,0.06)',  border: 'rgba(255,255,255,0.11)'  },
+                expense:  { color: 'var(--cosmos-expense)', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)'  },
+                income:   { color: 'var(--cosmos-income)', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.25)'   },
+                transfer: { color: 'var(--cosmos-accent)', bg: 'var(--cosmos-accent-dim)',   border: 'var(--cosmos-accent-border)'    },
               }[key];
               const active = historyView === key;
               return (
@@ -675,7 +675,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     fontSize: 10, fontWeight: 500, cursor: 'pointer',
                     WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
                     background: active ? cfg.bg : 'rgba(255,255,255,0.03)',
-                    border: active ? `1px solid ${cfg.border}` : '1px solid rgba(255,255,255,0.07)',
+                    border: active ? `1px solid ${cfg.border}` : '1px solid var(--cosmos-border-divider)',
                     color: active ? cfg.color : '#475569',
                   }}
                 >{label}</button>
@@ -683,7 +683,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             })}
 
             {/* Separator */}
-            <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)', flexShrink: 0, marginLeft: 2 }} />
+            <div style={{ width: 1, height: 18, background: 'var(--cosmos-border-divider)', flexShrink: 0, marginLeft: 2 }} />
 
             {/* Search icon button */}
             <button
@@ -692,9 +692,9 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 flexShrink: 0, width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
                 WebkitTapHighlightColor: 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: showSearch ? 'rgba(0,221,255,0.10)' : 'rgba(255,255,255,0.03)',
-                border: showSearch ? '1px solid rgba(0,221,255,0.28)' : '1px solid rgba(255,255,255,0.07)',
-                color: showSearch ? '#00DDFF' : '#475569',
+                background: showSearch ? 'var(--cosmos-accent-dim)' : 'var(--cosmos-border-subtle)',
+                border: showSearch ? '1px solid rgba(0,221,255,0.28)' : '1px solid var(--cosmos-border-divider)',
+                color: showSearch ? 'var(--cosmos-accent)' : 'var(--cosmos-text-3)',
                 transition: 'all 0.15s',
               }}
             >
@@ -708,9 +708,9 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 flexShrink: 0, width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
                 WebkitTapHighlightColor: 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: showAccFilter ? 'rgba(251,191,36,0.10)' : 'rgba(255,255,255,0.03)',
-                border: showAccFilter ? '1px solid rgba(251,191,36,0.28)' : '1px solid rgba(255,255,255,0.07)',
-                color: showAccFilter ? '#FBBF24' : '#475569',
+                background: showAccFilter ? 'var(--cosmos-warning-dim)' : 'var(--cosmos-border-subtle)',
+                border: showAccFilter ? '1px solid rgba(251,191,36,0.28)' : '1px solid var(--cosmos-border-divider)',
+                color: showAccFilter ? 'var(--cosmos-warning)' : 'var(--cosmos-text-3)',
                 transition: 'all 0.15s',
               }}
             >
@@ -723,7 +723,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             <div style={{
               display: 'flex', alignItems: 'center', gap: 5,
               margin: '-4px 20px 8px',
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(0,221,255,0.20)',
+              background: 'var(--cosmos-border-subtle)', border: '1px solid var(--cosmos-accent-border)',
               borderRadius: 8, padding: '4px 9px',
               animation: 'expandSearch 0.15s ease',
             }}>
@@ -736,7 +736,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{
                   background: 'none', border: 'none', outline: 'none',
-                  color: '#94A3B8', fontSize: 11, width: '100%', fontFamily: 'inherit',
+                  color: 'var(--cosmos-text-3)', fontSize: 11, width: '100%', fontFamily: 'inherit',
                 }}
               />
               {searchQuery && (
@@ -763,7 +763,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                     fontSize: 10, fontWeight: 500, cursor: 'pointer',
                     WebkitTapHighlightColor: 'transparent', fontFamily: 'inherit',
                     background: selectedAccountId === acc.id ? 'rgba(251,191,36,0.10)' : 'rgba(255,255,255,0.03)',
-                    border: selectedAccountId === acc.id ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(255,255,255,0.07)',
+                    border: selectedAccountId === acc.id ? '1px solid rgba(251,191,36,0.25)' : '1px solid var(--cosmos-border-divider)',
                     color: selectedAccountId === acc.id ? '#FBBF24' : '#475569',
                   }}
                 >{acc.name}</button>
@@ -773,7 +773,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
           {/* Day-grouped transaction list */}
           {visibleTransactions.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#475569', fontSize: 13, padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', color: 'var(--cosmos-text-3)', fontSize: 13, padding: '40px 20px' }}>
               Sem transações
             </div>
           ) : (
@@ -813,7 +813,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                         marginTop: gi === 0 ? 0 : 4,
                       }}>
                         <span style={{
-                          fontSize: 10, fontWeight: 600, color: '#475569',
+                          fontSize: 10, fontWeight: 600, color: 'var(--cosmos-text-3)',
                           letterSpacing: '0.04em', textTransform: 'uppercase',
                         }}>
                           {fmtDayLabel(date)}

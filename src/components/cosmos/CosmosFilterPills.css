@@ -46,7 +46,7 @@
   background: var(--cosmos-accent-dim);
   color: var(--cosmos-accent);
   border-color: var(--cosmos-accent-border);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.14);
+  box-shadow: 0 0 12px var(--cosmos-accent-dim);
   font-weight: 600;
 }
 

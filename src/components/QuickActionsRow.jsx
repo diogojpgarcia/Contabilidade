@@ -34,17 +34,17 @@ const QuickActionsRow = ({ onNavigate }) => (
           border: 'none',
           cursor: 'pointer',
           padding: '4px 8px',
-          color: '#94A3B8',
+          color: 'var(--cosmos-text-3)',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <span aria-hidden="true" style={{ color: '#94A3B8', display: 'flex' }}>
+        <span aria-hidden="true" style={{ color: 'var(--cosmos-text-3)', display: 'flex' }}>
           {icon}
         </span>
         <span style={{
           fontSize: 10,
           fontWeight: 500,
-          color: '#94A3B8',
+          color: 'var(--cosmos-text-3)',
           letterSpacing: '0.02em',
         }}>
           {label}

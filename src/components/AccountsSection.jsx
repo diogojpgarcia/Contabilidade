@@ -41,7 +41,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
           fontFamily: 'Inter, -apple-system, sans-serif',
           fontSize: 16,
           fontWeight: 600,
-          color: '#FFFFFF',
+          color: 'var(--cosmos-text-1)',
         }}>
           Contas
         </span>
@@ -54,7 +54,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
             fontFamily: 'Inter, -apple-system, sans-serif',
             fontSize: 13,
             fontWeight: 400,
-            color: '#00DDFF',
+            color: 'var(--cosmos-accent)',
             WebkitTapHighlightColor: 'transparent',
           }}
           aria-label="Ver todas as contas"
@@ -73,8 +73,8 @@ const AccountsSection = ({ accounts, onNavigate }) => {
           <div key={account.id} style={{
             width: 160,
             flexShrink: 0,
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: 'var(--cosmos-surface-1)',
+            border: '1px solid var(--cosmos-border-card)',
             borderRadius: 14,
             padding: 14,
             display: 'flex',
@@ -83,7 +83,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
 
             {/* Line 1: icon + bank name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: '#00DDFF', display: 'flex', flexShrink: 0 }}
+              <span style={{ color: 'var(--cosmos-accent)', display: 'flex', flexShrink: 0 }}
                     aria-hidden="true">
                 {account.icon}
               </span>
@@ -91,7 +91,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
                 fontFamily: 'Inter, -apple-system, sans-serif',
                 fontSize: 11,
                 fontWeight: 400,
-                color: '#94A3B8',
+                color: 'var(--cosmos-text-3)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -105,7 +105,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
               fontFamily: 'Inter, -apple-system, sans-serif',
               fontSize: 13,
               fontWeight: 500,
-              color: '#FFFFFF',
+              color: 'var(--cosmos-text-1)',
               marginTop: 8,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -119,7 +119,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
               fontFamily: 'Inter, -apple-system, sans-serif',
               fontSize: 18,
               fontWeight: 600,
-              color: '#FFFFFF',
+              color: 'var(--cosmos-text-1)',
               marginTop: 4,
               letterSpacing: '-0.02em',
               lineHeight: 1.15,

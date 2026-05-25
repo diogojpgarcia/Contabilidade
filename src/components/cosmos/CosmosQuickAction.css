@@ -68,5 +68,5 @@
 
 .cqa--accent:active {
   background: var(--cosmos-accent-hover);
-  box-shadow: var(--cosmos-shadow-card), 0 0 18px rgba(6, 182, 212, 0.18);
+  box-shadow: var(--cosmos-shadow-card), 0 0 18px var(--cosmos-accent-border);
 }
