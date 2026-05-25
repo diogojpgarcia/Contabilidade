@@ -100,6 +100,9 @@
   position: relative;
   user-select: none;
   margin-top: 4px;
+  /* GPU layer — keeps chart animation off the main compositing layer */
+  will-change: transform;
+  contain: layout style;
 }
 .asd-svg {
   display: block;
@@ -107,6 +110,9 @@
   height: 185px;
   cursor: crosshair;
   touch-action: none;
+  /* Promote to own GPU layer so SVG attribute writes don't trigger layout */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 .asd-chart-empty {
   height: 185px;

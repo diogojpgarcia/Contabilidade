@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import CosmosSheet from '../cosmos/CosmosSheet';
 import { fetchPeriodHistory } from '../../utils/assetPrice';
 
 // ─── SVG chart constants ──────────────────────────────────────────────────────
-const W = 390, H = 185, PL = 0, PR = 0, PT = 18, PB = 18;
-
+const W = 390, H = 185, PT = 18, PB = 18;
 const PERIODS = ['1D', '1S', '1M', '6M', '1A', '5A', 'Tudo'];
 
 // ─── Catmull-Rom smooth path ──────────────────────────────────────────────────
@@ -30,9 +29,21 @@ function toPts(prices) {
   const mn = Math.min(...prices), mx = Math.max(...prices);
   const rng = mx === mn ? mx * 0.08 || 20 : mx - mn;
   return prices.map((v, i) => [
-    PL + (i / (prices.length - 1)) * (W - PL - PR),
+    (i / (prices.length - 1)) * W,
     PT + ((mx - v) / rng) * (H - PT - PB),
   ]);
+}
+
+// Linearly interpolate exact [x,y] on pts at a fractional ratio 0‒1
+function lerpPt(pts, ratio) {
+  const fi = Math.max(0, Math.min(1, ratio)) * (pts.length - 1);
+  const lo = Math.floor(fi);
+  const hi = Math.min(pts.length - 1, lo + 1);
+  const t  = fi - lo;
+  return [
+    pts[lo][0] * (1 - t) + pts[hi][0] * t,
+    pts[lo][1] * (1 - t) + pts[hi][1] * t,
+  ];
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -43,58 +54,279 @@ const fmtPrice = (n) => {
     maximumFractionDigits: n < 1 ? 6 : 2,
   });
 };
-const fmtPct  = (n) => (n >= 0 ? '+' : '') + Math.abs(n).toFixed(2) + '%';
-const fmtAbs  = (n) => (n >= 0 ? '+' : '−') + fmtPrice(Math.abs(n));
-const fmtInt  = (n) => Math.round(n).toLocaleString('pt-PT');
+const fmtPct = (n) => (n >= 0 ? '+' : '') + Math.abs(n).toFixed(2) + '%';
+const fmtAbs = (n) => (n >= 0 ? '+' : '−') + fmtPrice(Math.abs(n));
+const fmtInt = (n) => Math.round(n).toLocaleString('pt-PT');
 
-// ─── Premium Chart ────────────────────────────────────────────────────────────
-const PremiumChart = React.memo(({
-  prices, isPos, scrubIdx, clipW, onScrub, onScrubEnd,
-}) => {
-  const pts = toPts(prices);
-  if (pts.length < 2) return (
-    <div className="asd-chart-empty">Sem dados de histórico</div>
-  );
+// ─── Helper: set cx/cy on an SVG element ref ──────────────────────────────────
+function setXY(ref, cx, cy) {
+  if (!ref.current) return;
+  ref.current.setAttribute('cx', cx);
+  ref.current.setAttribute('cy', cy);
+}
+function show(ref) { ref.current && ref.current.setAttribute('visibility', 'visible'); }
+function hide(ref) { ref.current && ref.current.setAttribute('visibility', 'hidden'); }
+function setAttr(ref, attr, val) { ref.current && ref.current.setAttribute(attr, val); }
 
-  const linePath   = catmullRomPath(pts);
-  const color      = isPos ? '#30d158' : '#ff453a';
-  const scrubPt    = scrubIdx !== null && pts[scrubIdx] ? pts[scrubIdx] : null;
-  const endPt      = pts[pts.length - 1];
-  const isAnimDone = clipW >= W;
+// ─── PremiumChart ─────────────────────────────────────────────────────────────
+//
+//  Two separate RAF loops:
+//    1. animLoop  – one-shot draw-in (stops itself when done)
+//    2. scrubLoop – runs only while finger/mouse is down (stops on pointerUp)
+//
+//  ALL cursor DOM writes go through individual element refs — zero querySelectorAll
+//  in the hot path.  React state is only updated when the snapped price index
+//  actually changes, so renders are rare during scrubbing.
+//
+const PremiumChart = React.memo(({ prices, isPos, animKey, onScrubChange, onScrubEnd }) => {
+  const color    = isPos ? '#30d158' : '#ff453a';
+  const linePath = catmullRomPath(toPts(prices || []));
 
-  // X split: during animation = clipW; during scrub = scrubPt[0]
-  const splitX = scrubPt ? scrubPt[0] : Math.min(clipW, W);
+  // ptsRef always holds the latest computed points — the scrub RAF loop reads it
+  const ptsRef  = useRef([]);
+  useLayoutEffect(() => { ptsRef.current = toPts(prices || []); }, [prices]);
 
-  // Price scale: max/min
-  const mn  = Math.min(...prices), mx = Math.max(...prices);
-  const yTop = PT;       // where max price sits
-  const yBot = H - PB;   // where min price sits
+  // ── Individual element refs (no querySelectorAll in hot path) ──────────────
+  const activeRectRef    = useRef(null);  // clipPath rect for animated/active line
+  const dimRectRef       = useRef(null);  // clipPath rect for dimmed line
+  const dimPathRef       = useRef(null);  // dimmed line path
+  const spotClipRectRef  = useRef(null);  // clipPath rect for spotlight
+  const spotPathRef      = useRef(null);  // bright spotlight line segment
+  const cursorLineRef    = useRef(null);  // vertical white cursor line
+  const cursorOuter      = useRef(null);  // outermost glow ring
+  const cursorInner      = useRef(null);  // inner glow ring
+  const cursorDot        = useRef(null);  // solid filled dot
+  const endOuter         = useRef(null);  // resting end-dot outer ring
+  const endDot           = useRef(null);  // resting end-dot solid
+
+  // ── RAF handles ────────────────────────────────────────────────────────────
+  const animRAF  = useRef(null);
+  const scrubRAF = useRef(null);
+
+  // ── Scrub state (never causes React renders) ──────────────────────────────
+  const pendingRatioRef = useRef(null);
+  const isScrubbingRef  = useRef(false);
+  const lastIdxRef      = useRef(-1);
+
+  // ── Draw-in animation (re-runs each time animKey changes) ─────────────────
+  useEffect(() => {
+    const pts = ptsRef.current;
+    if (!pts.length) return;
+
+    // Cancel any running loops
+    if (animRAF.current)  cancelAnimationFrame(animRAF.current);
+    if (scrubRAF.current) cancelAnimationFrame(scrubRAF.current);
+    animRAF.current  = null;
+    scrubRAF.current = null;
+
+    // Reset scrub state
+    isScrubbingRef.current  = false;
+    pendingRatioRef.current = null;
+    lastIdxRef.current      = -1;
+
+    // Reset all element visibility
+    hide(cursorOuter); hide(cursorInner); hide(cursorDot);
+    hide(cursorLineRef); hide(dimPathRef); hide(spotPathRef);
+    hide(endOuter); hide(endDot);
+    setAttr(activeRectRef, 'width', '0');
+    setAttr(dimRectRef, 'x', String(W)); setAttr(dimRectRef, 'width', '0');
+
+    const endPt   = pts[pts.length - 1];
+    const DURATION = 520;
+    const start   = performance.now();
+
+    const animLoop = (now) => {
+      const t    = Math.min(1, (now - start) / DURATION);
+      const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      setAttr(activeRectRef, 'width', (ease * W).toFixed(1));
+
+      if (t < 1) {
+        animRAF.current = requestAnimationFrame(animLoop);
+      } else {
+        // Animation complete — show resting end dot
+        animRAF.current = null;
+        setAttr(activeRectRef, 'width', String(W));
+        setXY(endOuter, endPt[0].toFixed(1), endPt[1].toFixed(1));
+        setXY(endDot,   endPt[0].toFixed(1), endPt[1].toFixed(1));
+        show(endOuter); show(endDot);
+        // Loop stops — no more RAF until scrub starts
+      }
+    };
+
+    animRAF.current = requestAnimationFrame(animLoop);
+    return () => {
+      if (animRAF.current)  cancelAnimationFrame(animRAF.current);
+      if (scrubRAF.current) cancelAnimationFrame(scrubRAF.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animKey]);
+
+  // ── Scrub RAF loop (runs only while pointer is down) ─────────────────────
+  const startScrubLoop = useCallback(() => {
+    if (scrubRAF.current) return;           // already running
+
+    // Hide resting end dot as soon as scrub begins
+    hide(endOuter); hide(endDot);
+
+    const loop = () => {
+      if (!isScrubbingRef.current) {
+        // Pointer released — restore state and stop
+        scrubRAF.current = null;
+
+        hide(cursorOuter); hide(cursorInner); hide(cursorDot);
+        hide(cursorLineRef); hide(dimPathRef); hide(spotPathRef);
+        setAttr(activeRectRef, 'width', String(W));
+        setAttr(dimRectRef, 'x', String(W)); setAttr(dimRectRef, 'width', '0');
+
+        // Restore resting end dot
+        const pts   = ptsRef.current;
+        const endPt = pts[pts.length - 1];
+        setXY(endOuter, endPt[0].toFixed(1), endPt[1].toFixed(1));
+        setXY(endDot,   endPt[0].toFixed(1), endPt[1].toFixed(1));
+        show(endOuter); show(endDot);
+        return;                             // stop — no requestAnimationFrame
+      }
+
+      const ratio = pendingRatioRef.current;
+      if (ratio !== null) {
+        const pts      = ptsRef.current;
+        const [cx, cy] = lerpPt(pts, ratio);
+        const cxS      = cx.toFixed(1);
+        const cyS      = cy.toFixed(1);
+
+        // Active clip: 0 → cursor
+        setAttr(activeRectRef, 'width', cxS);
+
+        // Dim clip: cursor → W
+        setAttr(dimRectRef, 'x', cxS);
+        setAttr(dimRectRef, 'width', (W - cx).toFixed(1));
+        show(dimPathRef);
+
+        // Spotlight clip: cursor ± 28 px
+        const SPOT = 28;
+        setAttr(spotClipRectRef, 'x', (cx - SPOT).toFixed(1));
+        show(spotPathRef);
+
+        // Cursor vertical line
+        if (cursorLineRef.current) {
+          cursorLineRef.current.setAttribute('x1', cxS);
+          cursorLineRef.current.setAttribute('x2', cxS);
+        }
+        show(cursorLineRef);
+
+        // Cursor glow rings + dot
+        setXY(cursorOuter, cxS, cyS);
+        setXY(cursorInner, cxS, cyS);
+        setXY(cursorDot,   cxS, cyS);
+        show(cursorOuter); show(cursorInner); show(cursorDot);
+
+        // Notify React only when snapped index changes → rare renders
+        const snapIdx = Math.min(pts.length - 1, Math.max(0, Math.round(ratio * (pts.length - 1))));
+        if (snapIdx !== lastIdxRef.current) {
+          lastIdxRef.current = snapIdx;
+          onScrubChange(snapIdx, (prices || [])[snapIdx]);
+        }
+      }
+
+      scrubRAF.current = requestAnimationFrame(loop);
+    };
+
+    scrubRAF.current = requestAnimationFrame(loop);
+  }, [onScrubChange, prices]);
+
+  // ── Pointer event handlers ────────────────────────────────────────────────
+  const getRatio = (clientX, el) => {
+    const r = el.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+  };
+
+  const onDown = useCallback((e) => {
+    isScrubbingRef.current  = true;
+    pendingRatioRef.current = getRatio(e.clientX, e.currentTarget);
+    startScrubLoop();
+  }, [startScrubLoop]);
+
+  const onMove = useCallback((e) => {
+    if (!isScrubbingRef.current) return;
+    pendingRatioRef.current = getRatio(e.clientX, e.currentTarget);
+  }, []);
+
+  const onUp = useCallback((e) => {
+    isScrubbingRef.current  = false;
+    pendingRatioRef.current = null;
+    lastIdxRef.current      = -1;
+    onScrubEnd();
+    // scrubLoop will detect isScrubbingRef=false on next frame and stop itself
+  }, [onScrubEnd]);
+
+  const onTouchStart = useCallback((e) => {
+    e.preventDefault();
+    isScrubbingRef.current  = true;
+    pendingRatioRef.current = getRatio(e.touches[0].clientX, e.currentTarget);
+    startScrubLoop();
+  }, [startScrubLoop]);
+
+  const onTouchMove = useCallback((e) => {
+    e.preventDefault();
+    pendingRatioRef.current = getRatio(e.touches[0].clientX, e.currentTarget);
+  }, []);
+
+  if (!prices || prices.length < 2) {
+    return <div className="asd-chart-empty">Sem dados de histórico</div>;
+  }
+  const mn = Math.min(...prices), mx = Math.max(...prices);
+  const SPOT = 28;
 
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
       className="asd-svg"
-      onMouseDown={e  => { const r = e.currentTarget.getBoundingClientRect(); onScrub((e.clientX - r.left) / r.width); }}
-      onMouseMove={e  => { if (e.buttons) { const r = e.currentTarget.getBoundingClientRect(); onScrub((e.clientX - r.left) / r.width); } }}
-      onMouseLeave={onScrubEnd}
-      onMouseUp={onScrubEnd}
-      onTouchStart={e => { e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); onScrub((e.touches[0].clientX - r.left) / r.width); }}
-      onTouchMove={e  => { e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); onScrub((e.touches[0].clientX - r.left) / r.width); }}
-      onTouchEnd={onScrubEnd}
+      onMouseDown={onDown}
+      onMouseMove={onMove}
+      onMouseLeave={onUp}
+      onMouseUp={onUp}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onUp}
     >
       <defs>
-        {/* Clip for animated draw-in and active portion */}
-        <clipPath id="asd-clip-active">
-          <rect x="0" y="0" width={splitX.toFixed(1)} height={H} />
+        {/* Soft glow filter for cursor dot */}
+        <filter id="asd-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+
+        {/* Active (draw-in) clip */}
+        <clipPath id="asd-ca">
+          <rect ref={activeRectRef} x="0" y="0" width="0" height={H} />
         </clipPath>
-        {/* Clip for dimmed portion (after cursor / after animation) */}
-        <clipPath id="asd-clip-dim">
-          <rect x={splitX.toFixed(1)} y="0" width={W} height={H} />
+
+        {/* Dim clip — after cursor */}
+        <clipPath id="asd-cd">
+          <rect ref={dimRectRef} x={W} y="0" width="0" height={H} />
+        </clipPath>
+
+        {/* Spotlight clip — ±SPOT px around cursor */}
+        <clipPath id="asd-cs">
+          <rect ref={spotClipRectRef} x="0" y="0" width={SPOT * 2} height={H} />
         </clipPath>
       </defs>
 
-      {/* Active line segment */}
+      {/* Dimmed line after cursor */}
+      <path
+        ref={dimPathRef}
+        d={linePath}
+        fill="none"
+        stroke="rgba(255,255,255,0.18)"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        clipPath="url(#asd-cd)"
+        visibility="hidden"
+      />
+
+      {/* Active (colored) line — draw-in animates this */}
       <path
         d={linePath}
         fill="none"
@@ -102,102 +334,80 @@ const PremiumChart = React.memo(({
         strokeWidth="2.4"
         strokeLinecap="round"
         strokeLinejoin="round"
-        clipPath="url(#asd-clip-active)"
+        clipPath="url(#asd-ca)"
       />
 
-      {/* Dimmed portion — visible only when scrubbing (after animation finishes) */}
-      {(scrubPt || !isAnimDone) && (
-        <path
-          d={linePath}
-          fill="none"
-          stroke={isAnimDone ? 'rgba(255,255,255,0.18)' : 'none'}
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          clipPath="url(#asd-clip-dim)"
-        />
-      )}
+      {/* Spotlight: bright thicker line segment around cursor */}
+      <path
+        ref={spotPathRef}
+        d={linePath}
+        fill="none"
+        stroke={color}
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.85"
+        filter="url(#asd-glow)"
+        clipPath="url(#asd-cs)"
+        visibility="hidden"
+      />
 
-      {/* Price scale labels on right */}
-      <text
-        x={W - 6}
-        y={yTop + 2}
-        textAnchor="end"
-        fontSize="10"
-        fill="rgba(255,255,255,0.35)"
-        fontFamily="-apple-system, 'SF Pro Text', sans-serif"
+      {/* Price scale labels */}
+      <text x={W - 6} y={PT + 2}
+        textAnchor="end" fontSize="10"
+        fill="rgba(255,255,255,0.3)"
+        fontFamily="-apple-system,'SF Pro Text',sans-serif"
         dominantBaseline="hanging"
-      >
-        {fmtPrice(mx)}
-      </text>
-      <text
-        x={W - 6}
-        y={yBot - 2}
-        textAnchor="end"
-        fontSize="10"
-        fill="rgba(255,255,255,0.35)"
-        fontFamily="-apple-system, 'SF Pro Text', sans-serif"
+      >{fmtPrice(mx)}</text>
+      <text x={W - 6} y={H - PB - 2}
+        textAnchor="end" fontSize="10"
+        fill="rgba(255,255,255,0.3)"
+        fontFamily="-apple-system,'SF Pro Text',sans-serif"
         dominantBaseline="auto"
-      >
-        {fmtPrice(mn)}
-      </text>
+      >{fmtPrice(mn)}</text>
 
-      {/* Cursor: full-height white line + glow dot */}
-      {scrubPt && (
-        <>
-          {/* Vertical cursor line */}
-          <line
-            x1={scrubPt[0].toFixed(1)}
-            x2={scrubPt[0].toFixed(1)}
-            y1="0"
-            y2={H}
-            stroke="rgba(255,255,255,0.55)"
-            strokeWidth="1"
-          />
-          {/* Glow rings */}
-          <circle cx={scrubPt[0].toFixed(1)} cy={scrubPt[1].toFixed(1)} r="14" fill={color} opacity="0.08" />
-          <circle cx={scrubPt[0].toFixed(1)} cy={scrubPt[1].toFixed(1)} r="9"  fill={color} opacity="0.15" />
-          {/* Solid dot */}
-          <circle
-            cx={scrubPt[0].toFixed(1)}
-            cy={scrubPt[1].toFixed(1)}
-            r="5"
-            fill={color}
-            stroke="var(--cosmos-bg, #0c0e13)"
-            strokeWidth="2"
-          />
-        </>
-      )}
+      {/* Full-height cursor line */}
+      <line
+        ref={cursorLineRef}
+        x1="0" x2="0" y1="0" y2={H}
+        stroke="rgba(255,255,255,0.45)"
+        strokeWidth="1"
+        visibility="hidden"
+      />
 
-      {/* End-of-line dot when animation is complete and not scrubbing */}
-      {isAnimDone && !scrubPt && (
-        <>
-          <circle cx={endPt[0].toFixed(1)} cy={endPt[1].toFixed(1)} r="9"  fill={color} opacity="0.15" />
-          <circle
-            cx={endPt[0].toFixed(1)}
-            cy={endPt[1].toFixed(1)}
-            r="4.5"
-            fill={color}
-            stroke="var(--cosmos-bg, #0c0e13)"
-            strokeWidth="2"
-          />
-        </>
-      )}
+      {/* Cursor glow rings — individually ref'd, no querySelectorAll */}
+      <circle ref={cursorOuter} cx="0" cy="0" r="18" fill={color} opacity="0.08" visibility="hidden" />
+      <circle ref={cursorInner} cx="0" cy="0" r="10" fill={color} opacity="0.2"  visibility="hidden" />
+      <circle ref={cursorDot}   cx="0" cy="0" r="5"
+        fill={color}
+        stroke="var(--cosmos-bg,#0c0e13)"
+        strokeWidth="2.5"
+        filter="url(#asd-glow)"
+        visibility="hidden"
+      />
+
+      {/* Resting end dot */}
+      <circle ref={endOuter} cx="0" cy="0" r="9"   fill={color} opacity="0.18" visibility="hidden" />
+      <circle ref={endDot}   cx="0" cy="0" r="4.5"
+        fill={color}
+        stroke="var(--cosmos-bg,#0c0e13)"
+        strokeWidth="2"
+        visibility="hidden"
+      />
     </svg>
   );
 });
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── AssetDetailSheet ─────────────────────────────────────────────────────────
 export default function AssetDetailSheet({
   open, onClose, item, assetKey, marketPrice, history, onEdit,
 }) {
   const [period,     setPeriod]     = useState('1D');
   const [periodData, setPeriodData] = useState(null);
   const [loading,    setLoading]    = useState(false);
-  const [clipW,      setClipW]      = useState(0);
+  const [animKey,    setAnimKey]    = useState(0);
   const [scrubIdx,   setScrubIdx]   = useState(null);
   const [scrubPrice, setScrubPrice] = useState(null);
-  const animRef = useRef(null);
 
   if (!item) return null;
 
@@ -213,7 +423,6 @@ export default function AssetDetailSheet({
   const pnlAbs    = purchase > 0 && hasPrice ? marketVal - costBasis : null;
   const pnlPct    = purchase > 0 && hasPrice ? ((marketPrice - purchase) / purchase) * 100 : null;
 
-  // Overall direction for chart color
   const chartIsPos = (pnlPct !== null
     ? pnlPct
     : (periodData?.prices?.length >= 2
@@ -225,11 +434,10 @@ export default function AssetDetailSheet({
     ? new Date(item.insertedAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
     : null;
 
-
   const qtyLabel   = assetKey === 'etfs' ? 'unidades' : isStock ? 'acoes' : 'moedas';
   const priceLabel = assetKey === 'etfs' ? 'unidade'  : isStock ? 'acao'  : 'moeda';
 
-  // Fetch period data
+  // ── Fetch period data ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
@@ -250,52 +458,36 @@ export default function AssetDetailSheet({
       setPeriodData(result);
       setLoading(false);
     });
-
     return () => { cancelled = true; };
   }, [period, open, sym, type, history]);
 
-  // Animate chart line draw-in
+  // ── Trigger draw-in animation whenever new data arrives ───────────────────
   useEffect(() => {
     if (!open || !periodData) return;
-    if (animRef.current) cancelAnimationFrame(animRef.current);
-    setClipW(0);
     setScrubIdx(null);
     setScrubPrice(null);
-
-    const duration = 520;
-    const start = performance.now();
-    const step = (now) => {
-      const t    = Math.min(1, (now - start) / duration);
-      const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      setClipW(ease * W);
-      if (t < 1) animRef.current = requestAnimationFrame(step);
-      else        setClipW(W);
-    };
-    animRef.current = requestAnimationFrame(step);
-    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+    setAnimKey(k => k + 1);
   }, [periodData, open]);
 
-  // Scrub handlers
-  const handleScrub = useCallback((ratio) => {
-    if (!periodData?.prices) return;
-    const idx = Math.round(Math.max(0, Math.min(1, ratio)) * (periodData.prices.length - 1));
+  // ── Scrub callbacks (called by PremiumChart only when index changes) ───────
+  const handleScrubChange = useCallback((idx, price) => {
     setScrubIdx(idx);
-    setScrubPrice(periodData.prices[idx]);
-  }, [periodData]);
+    setScrubPrice(price);
+  }, []);
 
   const handleScrubEnd = useCallback(() => {
     setScrubIdx(null);
     setScrubPrice(null);
   }, []);
 
-  // Displayed values
-  const prices     = periodData?.prices;
-  const labels     = periodData?.labels;
-  const dispPrice  = scrubPrice ?? marketPrice;
-  const basePrice  = prices?.[0];
+  // ── Display values ─────────────────────────────────────────────────────────
+  const prices    = periodData?.prices;
+  const labels    = periodData?.labels;
+  const dispPrice = scrubPrice ?? marketPrice;
+  const basePrice = prices?.[0];
 
   const periodAbsDelta = prices && basePrice != null ? dispPrice - basePrice : null;
-  const periodPctDelta = prices && basePrice        ? ((dispPrice - basePrice) / basePrice) * 100 : null;
+  const periodPctDelta = prices && basePrice ? ((dispPrice - basePrice) / basePrice) * 100 : null;
   const deltaIsPos     = (periodPctDelta ?? 0) >= 0;
 
   const scrubLabel = scrubIdx !== null && labels ? labels[scrubIdx] : null;
@@ -320,7 +512,7 @@ export default function AssetDetailSheet({
           )}
         </div>
 
-        {/* Price display */}
+        {/* Price */}
         <div className="asd-price-block">
           <div className="asd-price">{fmtPrice(dispPrice)} &euro;</div>
           <div className="asd-delta-row">
@@ -335,9 +527,7 @@ export default function AssetDetailSheet({
               </span>
             )}
           </div>
-          {timeLabel && (
-            <div className="asd-time-lbl">{timeLabel}</div>
-          )}
+          {timeLabel && <div className="asd-time-lbl">{timeLabel}</div>}
         </div>
 
         {/* Chart */}
@@ -348,15 +538,14 @@ export default function AssetDetailSheet({
             <PremiumChart
               prices={prices}
               isPos={chartIsPos}
-              scrubIdx={scrubIdx}
-              clipW={clipW}
-              onScrub={handleScrub}
+              animKey={animKey}
+              onScrubChange={handleScrubChange}
               onScrubEnd={handleScrubEnd}
             />
           )}
         </div>
 
-        {/* Period selector - BELOW chart */}
+        {/* Period selector — below chart */}
         <div className="asd-periods">
           {PERIODS.map(p => (
             <button
@@ -367,16 +556,12 @@ export default function AssetDetailSheet({
           ))}
         </div>
 
-        {/* P&L card */}
+        {/* P&L */}
         {pnlPct !== null ? (
           <div className={`asd-pnl ${pnlPct >= 0 ? 'pos' : 'neg'}`}>
             <div className="asd-pnl-top">
-              <span className="asd-pnl-since">
-                Desde {insertedDate ? insertedDate : 'insercao'}
-              </span>
-              <span className={`asd-pnl-pct ${pnlPct >= 0 ? 'pos' : 'neg'}`}>
-                {fmtPct(pnlPct)}
-              </span>
+              <span className="asd-pnl-since">Desde {insertedDate ?? 'insercao'}</span>
+              <span className={`asd-pnl-pct ${pnlPct >= 0 ? 'pos' : 'neg'}`}>{fmtPct(pnlPct)}</span>
             </div>
             <div className="asd-pnl-cols">
               <div className="asd-pnl-col">
@@ -389,18 +574,16 @@ export default function AssetDetailSheet({
                 <span className="asd-pnl-lbl">Valor atual</span>
                 <span className="asd-pnl-val">{fmtInt(marketVal)} &euro;</span>
                 <span className={`asd-pnl-gain ${pnlAbs >= 0 ? 'pos' : 'neg'}`}>
-                  {pnlAbs >= 0 ? '+' : '-'}{fmtInt(Math.abs(pnlAbs))} &euro;
+                  {pnlAbs >= 0 ? '+' : '−'}{fmtInt(Math.abs(pnlAbs))} &euro;
                 </span>
               </div>
             </div>
           </div>
         ) : !purchase && hasPrice ? (
-          <div className="asd-pnl-hint">
-            Adiciona o preco de compra para ver o teu ganho/perda.
-          </div>
+          <div className="asd-pnl-hint">Adiciona o preco de compra para ver o teu ganho/perda.</div>
         ) : null}
 
-        {/* Stats grid */}
+        {/* Stats */}
         <div className="asd-stats">
           <div className="asd-stat">
             <span className="asd-sl">Quantidade</span>
@@ -413,7 +596,7 @@ export default function AssetDetailSheet({
           {purchase > 0 && (
             <div className="asd-stat">
               <span className="asd-sl">Preco compra</span>
-              <span className="asd-sv">{fmtPrice(purchase)} €</span>
+              <span className="asd-sv">{fmtPrice(purchase)} &euro;</span>
             </div>
           )}
           {insertedDate && (
@@ -424,11 +607,8 @@ export default function AssetDetailSheet({
           )}
         </div>
 
-        {/* Edit button */}
-        <button
-          className="asd-edit-btn"
-          onClick={() => { onClose(); setTimeout(onEdit, 180); }}
-        >
+        {/* Edit */}
+        <button className="asd-edit-btn" onClick={() => { onClose(); setTimeout(onEdit, 180); }}>
           Editar ativo
         </button>
 
