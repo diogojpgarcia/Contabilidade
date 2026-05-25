@@ -169,7 +169,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
         {/* Transfer: From + To */}
         {type === 'transfer' && (<>
           <div className="cosmos-field-row">
-            <div className="cosmos-field-ico" style={{ background: 'var(--cosmos-accent-dim)' }}><ArrowUp size={16} strokeWidth={1.75} color="var(--cosmos-accent)" /></div>
+            <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.10)' }}><ArrowUp size={16} strokeWidth={1.75} color="#00DDFF" /></div>
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">De</div>
               {accounts.length === 0
@@ -181,7 +181,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
             </div>
           </div>
           <div className="cosmos-field-row">
-            <div className="cosmos-field-ico" style={{ background: 'var(--cosmos-accent-dim)' }}><ArrowDown size={16} strokeWidth={1.75} color="var(--cosmos-accent)" /></div>
+            <div className="cosmos-field-ico" style={{ background: 'rgba(0,221,255,0.10)' }}><ArrowDown size={16} strokeWidth={1.75} color="#00DDFF" /></div>
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">Para</div>
               {accounts.length === 0

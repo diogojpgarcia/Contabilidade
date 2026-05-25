@@ -51,7 +51,7 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
           </div>
           <div className="m-sheet-stat">
             <div className="m-sheet-stat-lbl">Orçamento</div>
-            <div className="m-sheet-stat-val" style={{ color: 'var(--cosmos-accent)' }}>
+            <div className="m-sheet-stat-val" style={{ color: '#00DDFF' }}>
               {catData && catData.limit > 0 ? catData.limit.toFixed(2) : '—'}€
             </div>
           </div>

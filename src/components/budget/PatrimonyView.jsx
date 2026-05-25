@@ -37,6 +37,10 @@ const PatrimonyView = ({
   const [assetHistory,        setAssetHistory]        = useState({});
   const [stockSearchQuery,    setStockSearchQuery]    = useState('');
   const [stockConfirmed,      setStockConfirmed]      = useState(false);
+  const [etfSearchQuery,      setEtfSearchQuery]      = useState('');
+  const [etfConfirmed,        setEtfConfirmed]        = useState(false);
+  const [etfApiResults,       setEtfApiResults]       = useState([]);
+  const [etfApiLoading,       setEtfApiLoading]       = useState(false);
   const [cryptoSearchQuery,   setCryptoSearchQuery]   = useState('');
   const [cryptoConfirmed,     setCryptoConfirmed]     = useState(false);
   const [stockApiResults,     setStockApiResults]     = useState([]);
@@ -46,6 +50,7 @@ const PatrimonyView = ({
   const patrimonyRef         = useRef(externalPatrimony);
   const onPatrimonyChangeRef = useRef(onPatrimonyChange);
   const stockSearchTimerRef  = useRef(null);
+  const etfSearchTimerRef    = useRef(null);
 
   useEffect(() => { patrimonyRef.current = externalPatrimony; },  [externalPatrimony]);
   useEffect(() => { onPatrimonyChangeRef.current = onPatrimonyChange; }, [onPatrimonyChange]);
@@ -63,12 +68,30 @@ const PatrimonyView = ({
     }
     setStockApiLoading(true);
     stockSearchTimerRef.current = setTimeout(async () => {
-      const results = await fetchStockSearch(q);
+      const results = await fetchStockSearch(q, ['Common Stock']);
       setStockApiResults(results);
       setStockApiLoading(false);
     }, 350);
     return () => { if (stockSearchTimerRef.current) clearTimeout(stockSearchTimerRef.current); };
   }, [stockSearchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Debounced ETF symbol search ────────────────────────────────────────────
+  useEffect(() => {
+    if (etfSearchTimerRef.current) clearTimeout(etfSearchTimerRef.current);
+    const q = etfSearchQuery.trim();
+    if (q.length < 2) {
+      setEtfApiResults([]);
+      setEtfApiLoading(false);
+      return;
+    }
+    setEtfApiLoading(true);
+    etfSearchTimerRef.current = setTimeout(async () => {
+      const results = await fetchStockSearch(q, ['ETF']);
+      setEtfApiResults(results);
+      setEtfApiLoading(false);
+    }, 350);
+    return () => { if (etfSearchTimerRef.current) clearTimeout(etfSearchTimerRef.current); };
+  }, [etfSearchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Live asset prices ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -79,23 +102,28 @@ const PatrimonyView = ({
       if (!current) return;
 
       const stocks  = current.stocks  ?? [];
+      const etfs    = current.etfs    ?? [];
       const cryptos = current.crypto  ?? [];
       const now     = new Date().toISOString();
 
       const staleStocks = HAS_STOCK_KEY
         ? stocks.filter(s => s.ticker && isStale(s.lastUpdated))
         : [];
+      const staleEtfs = HAS_STOCK_KEY
+        ? etfs.filter(e => e.ticker && isStale(e.lastUpdated))
+        : [];
       const staleCoins = cryptos.filter(c => c.coin && isStale(c.lastUpdated));
+      const allStaleEquities = [...staleStocks, ...staleEtfs];
 
-      if (staleStocks.length === 0 && staleCoins.length === 0) return;
+      if (allStaleEquities.length === 0 && staleCoins.length === 0) return;
 
       setRefreshingTickers(new Set([
-        ...staleStocks.map(s => s.ticker),
+        ...allStaleEquities.map(s => s.ticker),
         ...staleCoins.map(c => normCoin(c.coin)),
       ]));
 
       const [stockResults, cryptoPrices] = await Promise.all([
-        Promise.allSettled(staleStocks.map(s => fetchStockQuote(s.ticker))),
+        Promise.allSettled(allStaleEquities.map(s => fetchStockQuote(s.ticker))),
         fetchCryptoTwelveData(staleCoins.map(c => normCoin(c.coin))),
       ]);
 
@@ -103,7 +131,7 @@ const PatrimonyView = ({
 
       const priceUpdates = {};
 
-      staleStocks.forEach((s, idx) => {
+      allStaleEquities.forEach((s, idx) => {
         const r = stockResults[idx];
         if (r?.status === 'fulfilled' && r.value !== null) {
           priceUpdates[s.ticker] = {
@@ -138,11 +166,15 @@ const PatrimonyView = ({
         const p = priceUpdates[s.ticker];
         return p ? { ...s, lastPrice: p.price, changePct: p.changePct, lastUpdated: now } : s;
       });
+      const updatedEtfs = etfs.map(e => {
+        const p = priceUpdates[e.ticker];
+        return p ? { ...e, lastPrice: p.price, changePct: p.changePct, lastUpdated: now } : e;
+      });
       const updatedCrypto = cryptos.map(c => {
         const p = priceUpdates[normCoin(c.coin)];
         return p ? { ...c, lastPrice: p.price, change24h: p.changePct24h, lastUpdated: now } : c;
       });
-      onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks, crypto: updatedCrypto });
+      onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks, etfs: updatedEtfs, crypto: updatedCrypto });
 
       setRefreshingTickers(new Set());
     };
@@ -159,13 +191,15 @@ const PatrimonyView = ({
     const fetchHistories = async () => {
       const current = patrimonyRef.current;
       if (!current) return;
-      const stocks  = (current.stocks  ?? []).filter(s => s.ticker);
-      const cryptos = (current.crypto  ?? []).filter(c => c.coin);
-      if (stocks.length === 0 && cryptos.length === 0) return;
+      const stocks   = (current.stocks  ?? []).filter(s => s.ticker);
+      const etfs     = (current.etfs    ?? []).filter(e => e.ticker);
+      const cryptos  = (current.crypto  ?? []).filter(c => c.coin);
+      const equities = [...stocks, ...etfs];
+      if (equities.length === 0 && cryptos.length === 0) return;
 
       const [stockResults, cryptoHistories] = await Promise.all([
         Promise.allSettled(
-          stocks.map(s => fetchStockHistory(s.ticker).then(prices => ({ ticker: s.ticker, prices })))
+          equities.map(s => fetchStockHistory(s.ticker).then(prices => ({ ticker: s.ticker, prices })))
         ),
         fetchCryptoHistoryBatch(cryptos.map(c => normCoin(c.coin))),
       ]);
@@ -191,6 +225,10 @@ const PatrimonyView = ({
     const items = patrimony[key] || [];
     if (key === 'accounts')   return items.reduce((s, x) => s + computeAccountBalanceLocal(x), 0);
     if (key === 'stocks')     return items.reduce((s, x) => {
+      const price = toNum(livePrices[x.ticker]?.price ?? x.lastPrice ?? x.avgPrice);
+      return s + toNum(x.qty) * price;
+    }, 0);
+    if (key === 'etfs')       return items.reduce((s, x) => {
       const price = toNum(livePrices[x.ticker]?.price ?? x.lastPrice ?? x.avgPrice);
       return s + toNum(x.qty) * price;
     }, 0);
@@ -223,6 +261,10 @@ const PatrimonyView = ({
     setStockConfirmed(false);
     setStockApiResults([]);
     setStockApiLoading(false);
+    setEtfSearchQuery('');
+    setEtfConfirmed(false);
+    setEtfApiResults([]);
+    setEtfApiLoading(false);
     setCryptoSearchQuery('');
     setCryptoConfirmed(false);
   };
@@ -232,6 +274,13 @@ const PatrimonyView = ({
     setPatrimonyField('name',   result.name);
     setStockSearchQuery('');
     setStockConfirmed(true);
+  };
+
+  const handleEtfSelect = (result) => {
+    setPatrimonyField('ticker', result.symbol);
+    setPatrimonyField('name',   result.name);
+    setEtfSearchQuery('');
+    setEtfConfirmed(true);
   };
 
   const handleCryptoSelect = (result) => {
@@ -246,6 +295,7 @@ const PatrimonyView = ({
     setPatrimonyFormType(typeKey);
     setEditingAssetId(item.id);
     if (typeKey === 'stocks' && item.ticker) setStockConfirmed(true);
+    if (typeKey === 'etfs'   && item.ticker) setEtfConfirmed(true);
     if (typeKey === 'crypto' && item.coin)   setCryptoConfirmed(true);
     setShowPatrimonyModal(true);
   };
@@ -293,6 +343,12 @@ const PatrimonyView = ({
       const total = (parseFloat(item.qty) || 0) * price;
       return `${item.qty}×${fmtStockPrice(price)}€ = ${fmtFiat(total)}€`;
     }
+    if (typeKey === 'etfs') {
+      const price = parseFloat(item.lastPrice ?? item.avgPrice) || null;
+      if (!price) return `${item.qty || 0} unidades · cotação pendente`;
+      const total = (parseFloat(item.qty) || 0) * price;
+      return `${item.qty}×${fmtStockPrice(price)}€ = ${fmtFiat(total)}€`;
+    }
     if (typeKey === 'bonds')      return `${fmtFiat(item.value)}€`;
     if (typeKey === 'realestate') return `${fmtFiat(item.value)}€`;
     if (typeKey === 'vehicles')   return `${fmtFiat(item.value)}€`;
@@ -308,6 +364,7 @@ const PatrimonyView = ({
   const renderPatrimonyItemLabel = (typeKey, item) => {
     if (typeKey === 'accounts')   return `${item.name}${item.bank ? ' · ' + item.bank : ''}`;
     if (typeKey === 'stocks')     return item.ticker;
+    if (typeKey === 'etfs')       return item.ticker;
     if (typeKey === 'bonds')      return `${item.series || 'Série'}${item.date ? ' · ' + item.date : ''}`;
     if (typeKey === 'realestate') return item.description;
     if (typeKey === 'vehicles')   return item.description;
@@ -331,7 +388,7 @@ const PatrimonyView = ({
 
       case 'stocks': {
         const localMatches = stockSearchQuery.trim().length >= 1
-          ? searchAssets(stockSearchQuery.trim(), ['stock', 'etf'])
+          ? searchAssets(stockSearchQuery.trim(), ['stock'])
           : [];
         const apiOnly = stockApiResults.filter(r => !localMatches.some(l => l.symbol === r.symbol));
         const suggestions = [...localMatches, ...apiOnly].slice(0, 8);
@@ -402,6 +459,83 @@ const PatrimonyView = ({
                 <input className={cls}
                   placeholder="Broker — ex: XTB, Degiro (opcional)" value={f.broker || ''}
                   onChange={e => set('broker', e.target.value)} autoComplete="off" />
+              </>
+            )}
+          </div>
+        );
+      }
+
+      case 'etfs': {
+        const localEtfMatches = etfSearchQuery.trim().length >= 1
+          ? searchAssets(etfSearchQuery.trim(), ['etf'])
+          : [];
+        const etfApiOnly = etfApiResults.filter(r => !localEtfMatches.some(l => l.symbol === r.symbol));
+        const etfSuggestions = [...localEtfMatches, ...etfApiOnly].slice(0, 8);
+        const showEtfDropdown = etfSearchQuery.trim().length >= 1 && (etfSuggestions.length > 0 || etfApiLoading);
+
+        return (
+          <div className="pat-asset-form">
+            {!etfConfirmed ? (
+              <div className="pat-search-wrap">
+                <span className="pat-search-icon">⊕</span>
+                <input
+                  className={cls}
+                  style={{ paddingLeft: '2.4rem' }}
+                  placeholder="Procurar ETF ou ticker…"
+                  value={etfSearchQuery}
+                  onChange={e => setEtfSearchQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (etfSuggestions.length > 0) {
+                        handleEtfSelect(etfSuggestions[0]);
+                      } else if (etfSearchQuery.trim()) {
+                        setPatrimonyField('ticker', etfSearchQuery.trim().toUpperCase());
+                        setPatrimonyField('name', '');
+                        setEtfSearchQuery('');
+                        setEtfConfirmed(true);
+                      }
+                    }
+                    if (e.key === 'Escape') setEtfSearchQuery('');
+                  }}
+                  onBlur={() => setTimeout(() => setEtfSearchQuery(''), 200)}
+                  autoComplete="off"
+                  autoFocus
+                />
+                {showEtfDropdown && (
+                  <div className="pat-search-dropdown">
+                    {etfSuggestions.map(r => (
+                      <div key={r.symbol} className="pat-search-result"
+                        onMouseDown={e => { e.preventDefault(); handleEtfSelect(r); }}>
+                        <span className="pat-search-sym">{r.symbol}</span>
+                        <span className="pat-search-name">{r.name}</span>
+                        {r.exchange
+                          ? <span className="pat-search-exch">{r.exchange}</span>
+                          : null}
+                      </div>
+                    ))}
+                    {etfApiLoading && (
+                      <div className="pat-search-loading">A procurar…</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="pat-stock-chip">
+                  <div className="pat-stock-chip-body">
+                    <span className="pat-stock-chip-ticker">{patrimonyForm.ticker}</span>
+                    {patrimonyForm.name && <span className="pat-stock-chip-name">{patrimonyForm.name}</span>}
+                  </div>
+                  <button type="button" className="pat-stock-chip-clear"
+                    onClick={() => { setPatrimonyField('ticker',''); setPatrimonyField('name',''); setPatrimonyField('qty',''); setPatrimonyField('broker',''); setEtfConfirmed(false); }}>×</button>
+                </div>
+                <input className={cls} type="number" inputMode="decimal"
+                  placeholder="Quantidade de unidades" value={patrimonyForm.qty || ''}
+                  onChange={e => setPatrimonyField('qty', e.target.value)} autoFocus />
+                <input className={cls}
+                  placeholder="Broker/Plataforma (opcional)" value={patrimonyForm.broker || ''}
+                  onChange={e => setPatrimonyField('broker', e.target.value)} autoComplete="off" />
               </>
             )}
           </div>
@@ -505,17 +639,22 @@ const PatrimonyView = ({
   const typeValues = PATRIMONY_TYPES.map(t => ({ ...t, value: getPatrimonyTypeValue(t.key) }));
 
   const pctOf = (key) => totalPatrimony > 0 ? getPatrimonyTypeValue(key) / totalPatrimony : 0;
+  const pctEquity = pctOf('stocks') + pctOf('etfs');
   const insightMsg =
     totalPatrimony === 0     ? 'Adiciona os teus ativos para começar a acompanhar o teu património.' :
     pctOf('accounts') > 0.6  ? 'Grande parte do património está em liquidez. Considera diversificar.' :
     pctOf('realestate') > 0.6? 'Património concentrado em imóveis — ativo ilíquido mas estável.' :
     pctOf('crypto') > 0.25   ? 'Exposição significativa a criptoativos. Alto risco, alto potencial.' :
-    pctOf('stocks') > 0.4    ? 'Portfólio com forte componente em ações. Boa diversificação de crescimento.' :
+    pctOf('etfs') > 0.4      ? 'Portfólio orientado a ETFs — diversificação passiva e eficiente.' :
+    pctEquity > 0.4          ? 'Portfólio com forte componente em ações e ETFs. Boa diversificação de crescimento.' :
                                'Portfólio distribuído por múltiplos tipos de ativos.';
 
   const assetAlerts = [
     ...(patrimony.stocks ?? [])
       .map(s => ({ sym: s.ticker, pct: livePrices[s.ticker]?.changePct  ?? (s.changePct  != null ? parseFloat(s.changePct)  : null), label: 'hoje' }))
+      .filter(x => x.pct != null && Math.abs(x.pct) >= 5),
+    ...(patrimony.etfs ?? [])
+      .map(e => ({ sym: e.ticker, pct: livePrices[e.ticker]?.changePct  ?? (e.changePct  != null ? parseFloat(e.changePct)  : null), label: 'hoje' }))
       .filter(x => x.pct != null && Math.abs(x.pct) >= 5),
     ...(patrimony.crypto ?? [])
       .map(c => ({ sym: normCoin(c.coin), pct: livePrices[normCoin(c.coin)]?.changePct24h ?? (c.change24h != null ? parseFloat(c.change24h) : null), label: '24h' }))
@@ -525,6 +664,8 @@ const PatrimonyView = ({
   const allLiveVals = [
     ...(patrimony.stocks ?? []).map(s =>
       toNum(livePrices[s.ticker]?.price      ?? s.lastPrice ?? s.avgPrice) * toNum(s.qty)),
+    ...(patrimony.etfs ?? []).map(e =>
+      toNum(livePrices[e.ticker]?.price      ?? e.lastPrice ?? e.avgPrice) * toNum(e.qty)),
     ...(patrimony.crypto ?? []).map(c =>
       toNum(livePrices[normCoin(c.coin)]?.price ?? c.lastPrice ?? c.price) * toNum(c.qty)),
   ];
@@ -550,7 +691,7 @@ const PatrimonyView = ({
 
   // ── Asset card renderer ────────────────────────────────────────────────────
   const assetCardFor = (item, assetKey) => {
-    const isStock      = assetKey === 'stocks';
+    const isStock      = assetKey === 'stocks' || assetKey === 'etfs';
     const sym          = isStock ? item.ticker : normCoin(item.coin);
     const isRefreshing = refreshingTickers.has(sym);
 
@@ -575,8 +716,8 @@ const PatrimonyView = ({
     const impact       = totalPatrimony > 0 ? (marketVal / totalPatrimony) * 100 : 0;
     const barWidth     = maxSingleImpact > 0 ? Math.min((impact / maxSingleImpact) * 100, 100) : 0;
     const qty          = parseFloat(item.qty) || 0;
-    const qtyLabel     = isStock ? 'ações' : 'moedas';
-    const priceLabel   = isStock ? 'ação'  : 'moeda';
+    const qtyLabel     = assetKey === 'etfs' ? 'unidades' : isStock ? 'ações' : 'moedas';
+    const priceLabel   = assetKey === 'etfs' ? 'unidade'  : isStock ? 'ação'  : 'moeda';
     return (
       <SwipeRevealCard
         key={item.id}
@@ -647,6 +788,7 @@ const PatrimonyView = ({
     const canSubmit = (() => {
       switch (patrimonyFormType) {
         case 'stocks':     return stockConfirmed  && !!f.qty;
+        case 'etfs':       return etfConfirmed    && !!f.qty;
         case 'crypto':     return cryptoConfirmed && !!f.qty;
         case 'accounts':   return !!f.name;
         case 'bonds':      return !!f.series && !!f.value;
@@ -841,7 +983,8 @@ const PatrimonyView = ({
               </div>
               {items.length > 0 && (
                 <div className="pat-cat-items">
-                  {key === 'accounts' ? sorted.map(item => {
+                  {key === 'etfs' ? sorted.map(item => assetCardFor(item, 'etfs'))
+                  : key === 'accounts' ? sorted.map(item => {
                     const currentBal = computeAccountBalanceLocal(item);
                     const isMain     = item.id === mainAccountId;
                     return (

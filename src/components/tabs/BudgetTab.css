@@ -269,8 +269,8 @@
   outline: none;
 }
 .m-gcc-save-btn {
-  background: var(--cosmos-accent-border);
-  border: 1px solid var(--cosmos-accent-glow);
+  background: rgba(0,221,255,0.15);
+  border: 1px solid rgba(0,221,255,0.3);
   border-radius: 8px;
   color: var(--cosmos-accent);
   font-size: 14px;
@@ -286,13 +286,13 @@
   margin: 0 12px 10px;
   padding: 10px 14px;
   border-radius: 12px;
-  background: var(--cosmos-accent-soft);
-  border: 1px solid var(--cosmos-accent-border);
+  background: rgba(0,221,255,0.06);
+  border: 1px solid rgba(0,221,255,0.18);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s;
 }
-.rp-committed-strip:active { background: var(--cosmos-accent-dim); }
+.rp-committed-strip:active { background: rgba(0,221,255,0.10); }
 .rp-committed-ico { font-size: 18px; color: var(--cosmos-accent); flex-shrink: 0; }
 .rp-committed-body { flex: 1; }
 .rp-committed-label { font-size: 10px; color: var(--cosmos-text-3); margin-bottom: 2px; }
@@ -512,7 +512,7 @@
 .b-nav-btn:active { opacity: 0.6; }
 
 .b-nav-btn.active {
-  background: var(--cosmos-accent-dim);
-  border-color: var(--cosmos-accent-border);
+  background: rgba(0, 221, 255, 0.10);
+  border-color: rgba(0, 221, 255, 0.28);
   color: var(--cosmos-accent);
 }

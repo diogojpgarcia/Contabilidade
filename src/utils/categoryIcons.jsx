@@ -15,7 +15,7 @@ import {
   ArrowRightLeft, Zap, Smartphone, Plane, BookOpen,
   Shirt, Gift, Baby, PiggyBank, TrendingUp, RefreshCw,
   Tag, Trophy, CreditCard, Scale, ShoppingBag, Receipt,
-  Music, PawPrint, Scissors, Building, Coins,
+  Music, PawPrint, Scissors, Building, Coins, BarChart2,
 } from '../components/icons';
 
 /* ── Canonical colour + icon per Portuguese category name ─────────────────── */
@@ -92,6 +92,7 @@ export function getCategoryColor(name, type) {
 export const PATRIMONY_META = {
   accounts:   { Icon: Wallet,     color: '#D97706' }, // amber
   stocks:     { Icon: TrendingUp, color: '#059669' }, // emerald
+  etfs:       { Icon: BarChart2,  color: '#2563EB' }, // blue
   bonds:      { Icon: PiggyBank,  color: '#7C3AED' }, // violet
   realestate: { Icon: Home,       color: '#DC2626' }, // red
   vehicles:   { Icon: Car,        color: '#0891B2' }, // cyan
@@ -116,7 +117,4 @@ export const CategoryIconBubble = ({ name, type, size = 36, radius = '10px', cla
         flexShrink: 0,
       }}
     >
-      <Icon size={Math.round(size * 0.50)} color={color} strokeWidth={2} />
-    </div>
-  );
-};
+      <Icon size={Math

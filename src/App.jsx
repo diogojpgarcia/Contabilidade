@@ -282,10 +282,10 @@ const App = () => {
         style={{
           position: 'fixed', bottom: '28px', left: '50%', transform: 'translateX(-50%)',
           width: '52px', height: '52px', borderRadius: '50%',
-          background: 'var(--cosmos-accent)', color: '#000',
+          background: '#00DDFF', color: '#000000',
           fontSize: '26px', fontWeight: '300',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 24px var(--cosmos-accent-glow)',
+          boxShadow: '0 0 24px rgba(0,221,255,0.5)',
           zIndex: 9999, border: 'none', cursor: 'pointer', lineHeight: 1,
         }}
       >

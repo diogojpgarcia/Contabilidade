@@ -145,7 +145,7 @@ const BudgetsView = ({
               })()}
             </span>
             <div className="m-bmc-big">
-              <span className="m-bmc-amount" style={{ color: isTotalOver ? 'var(--cosmos-expense)' : undefined }}>
+              <span className="m-bmc-amount" style={{ color: isTotalOver ? '#dc2626' : undefined }}>
                 <CountUp value={totalBudget > 0 ? Math.abs(remaining) : totalSpent} />€
               </span>
               <span className="m-bmc-sub">{isTotalOver ? 'excedido' : totalBudget > 0 ? 'disponível' : 'gasto'}</span>
@@ -157,7 +157,7 @@ const BudgetsView = ({
               </div>
               <div className="m-bmc-sep" />
               <div className="m-bmc-col">
-                <span className="m-bmc-col-val" style={{ color: isTotalOver ? 'var(--cosmos-expense)' : undefined }}>
+                <span className="m-bmc-col-val" style={{ color: isTotalOver ? '#dc2626' : undefined }}>
                   <CountUp value={totalSpent} />€
                 </span>
                 <span className="m-bmc-col-label">Gasto</span>

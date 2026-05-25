@@ -8,36 +8,36 @@ const CAT_ICON = {
   'Alimentação':              { e: '🛒', bg: 'rgba(249,115,22,0.13)', c: '#ea580c' },
   'Habitação':                { e: '🏠', bg: 'rgba(59,130,246,0.13)',  c: '#2563eb' },
   'Transporte':               { e: '🚗', bg: 'rgba(234,179,8,0.13)',   c: '#ca8a04' },
-  'Saúde':                    { e: '❤️', bg: 'var(--cosmos-expense-dim)',   c: 'var(--cosmos-expense)' },
+  'Saúde':                    { e: '❤️', bg: 'rgba(239,68,68,0.13)',   c: '#dc2626' },
   'Lazer':                    { e: '🎉', bg: 'rgba(168,85,247,0.13)',  c: '#9333ea' },
   'Lazer & Entretenimento':   { e: '🎬', bg: 'rgba(168,85,247,0.13)',  c: '#9333ea' },
-  'Educação':                 { e: '📚', bg: 'var(--cosmos-accent-dim)',  c: 'var(--cosmos-accent)' },
+  'Educação':                 { e: '📚', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
   'Roupa':                    { e: '👕', bg: 'rgba(236,72,153,0.13)',  c: '#db2777' },
   'Roupa & Calçado':          { e: '👟', bg: 'rgba(236,72,153,0.13)',  c: '#db2777' },
-  'Tecnologia':               { e: '💻', bg: 'var(--cosmos-accent-dim)',  c: 'var(--cosmos-accent)' },
-  'Subscrições':              { e: '📱', bg: 'var(--cosmos-accent-dim)',  c: 'var(--cosmos-accent)' },
+  'Tecnologia':               { e: '💻', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
+  'Subscrições':              { e: '📱', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
   'Comunicações':             { e: '📡', bg: 'rgba(14,165,233,0.13)',  c: '#0284c7' },
   'Utilities':                { e: '⚡', bg: 'rgba(234,179,8,0.13)',   c: '#ca8a04' },
-  'Serviços Financeiros':     { e: '🏦', bg: 'var(--cosmos-accent-dim)',  c: 'var(--cosmos-accent)' },
+  'Serviços Financeiros':     { e: '🏦', bg: 'rgba(99,102,241,0.13)',  c: '#6366f1' },
   'Viagens & Férias':         { e: '✈️', bg: 'rgba(14,165,233,0.13)',  c: '#0284c7' },
   'Presentes & Doações':      { e: '🎁', bg: 'rgba(236,72,153,0.13)',  c: '#db2777' },
-  'Salário':                  { e: '💰', bg: 'var(--cosmos-income-dim)',   c: 'var(--cosmos-income)' },
-  'Salário Principal':        { e: '💰', bg: 'var(--cosmos-income-dim)',   c: 'var(--cosmos-income)' },
-  'Freelance':                { e: '💼', bg: 'var(--cosmos-income-dim)',   c: 'var(--cosmos-income)' },
-  'Trabalho Extra / Freelance':{ e: '💼', bg: 'var(--cosmos-income-dim)', c: 'var(--cosmos-income)' },
-  'Investimentos':            { e: '📈', bg: 'var(--cosmos-income-dim)',   c: 'var(--cosmos-income)' },
-  'Bonus':                    { e: '🎁', bg: 'var(--cosmos-income-dim)',   c: 'var(--cosmos-income)' },
-  'Outros Rendimentos':       { e: '💵', bg: 'var(--cosmos-income-dim)',   c: 'var(--cosmos-income)' },
+  'Salário':                  { e: '💰', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Salário Principal':        { e: '💰', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Freelance':                { e: '💼', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Trabalho Extra / Freelance':{ e: '💼', bg: 'rgba(34,197,94,0.13)', c: '#16a34a' },
+  'Investimentos':            { e: '📈', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Bonus':                    { e: '🎁', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
+  'Outros Rendimentos':       { e: '💵', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' },
   'Outros':                   { e: '💳', bg: 'rgba(156,163,175,0.13)', c: '#6b7280' },
 };
 
 const getIcon = (cat, type) =>
   CAT_ICON[cat] ||
   (type === 'income'
-    ? { e: '💰', bg: 'var(--cosmos-income-dim)',   c: 'var(--cosmos-income)' }
+    ? { e: '💰', bg: 'rgba(34,197,94,0.13)',   c: '#16a34a' }
     : { e: '💳', bg: 'rgba(156,163,175,0.13)', c: '#6b7280' });
 
-const TRANSFER_ICON = { e: '↔', bg: 'var(--cosmos-accent-dim)', c: 'var(--cosmos-accent)' };
+const TRANSFER_ICON = { e: '↔', bg: 'rgba(99,102,241,0.1)', c: '#6366f1' };
 
 /* ── Transfer flow label ────────────────────────────────────────────────────
    Transfer transactions are stored as two paired records:
@@ -169,7 +169,7 @@ const ModernTransactionList = ({ transactions, onCategoryChange, onAccountChange
                     <span className="ft-title">{title}</span>
                     <span className="ft-sub">
                       {isTransfer
-                        ? <span style={{ fontSize: '0.7rem', background: 'var(--cosmos-accent-dim)', color: 'var(--cosmos-accent)', borderRadius: '4px', padding: '1px 6px' }}>↔ Transferência</span>
+                        ? <span style={{ fontSize: '0.7rem', background: 'rgba(99,102,241,0.15)', color: 'var(--accent, #6366f1)', borderRadius: '4px', padding: '1px 6px' }}>↔ Transferência</span>
                         : tx.type === 'adjustment'
                           ? <span style={{ fontSize: '0.7rem', background: '#f97316', color: '#fff', borderRadius: '4px', padding: '1px 6px' }}>⚖ Ajuste</span>
                           : tx.category}

@@ -40,7 +40,7 @@
   -webkit-backdrop-filter: blur(16px);
 }
 [data-theme="soft-future"] .nav-label,
-[data-theme="soft-future"] .nav-icon                    { color: var(--cosmos-text-3); }
+[data-theme="soft-future"] .nav-icon                    { color: rgba(160, 170, 187, 0.40); }
 [data-theme="soft-future"] .nav-item.active {
   background: var(--cosmos-accent-dim);
   box-shadow: 0 0 18px var(--cosmos-accent-glow);
@@ -72,9 +72,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Hero text — excellent contrast on dark charcoal */
 [data-theme="soft-future"] .h-hero-tab-label { color: var(--text-primary); opacity: 0.95; }
-[data-theme="soft-future"] .h-hero-patrimony-label { color: var(--cosmos-text-2); opacity: 1; }
+[data-theme="soft-future"] .h-hero-patrimony-label { color: rgba(160, 170, 187, 0.72); opacity: 1; }
 [data-theme="soft-future"] .h-hero-patrimony-value { color: var(--text-primary); opacity: 0.98; }
-[data-theme="soft-future"] .h-hero-progress-label { color: var(--cosmos-text-2); opacity: 1; }
+[data-theme="soft-future"] .h-hero-progress-label { color: rgba(160, 170, 187, 0.68); opacity: 1; }
 
 /* Balance badge — cyan accents for premium OS feel */
 [data-theme="soft-future"] .h-hero-balance-badge {
@@ -86,12 +86,12 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 [data-theme="soft-future"] .h-hero-balance-badge.positive {
   background: rgba(16, 185, 129, 0.12);
   border-color: rgba(16, 185, 129, 0.24);
-  color: var(--cosmos-income);
+  color: #6ee7b7;
 }
 [data-theme="soft-future"] .h-hero-balance-badge.negative {
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.24);
-  color: var(--cosmos-expense);
+  color: #fca5a5;
 }
 
 /* Progress bar — cyan gradient + soft glow */
@@ -244,8 +244,8 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
     0 2px 18px rgba(13, 15, 18, 0.50),
     inset 0 0.5px 0 rgba(255,255,255,0.04);
 }
-[data-theme="soft-future"] .m-total-balance-label       { color: var(--cosmos-text-2); }
-[data-theme="soft-future"] .m-total-balance-sub         { color: var(--cosmos-text-3); }
+[data-theme="soft-future"] .m-total-balance-label       { color: rgba(160, 170, 187, 0.75); }
+[data-theme="soft-future"] .m-total-balance-sub         { color: rgba(220, 220, 230, 0.30); }
 [data-theme="soft-future"] .m-total-balance-value       { color: var(--text-primary); }
 
 /* ── Home summary hero card — dark graphite with cyan depth ───────────── */
@@ -260,12 +260,12 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
     inset 0 -1px 0 var(--cosmos-accent-soft);
 }
 [data-theme="soft-future"] .m-sc-total-value  { color: var(--text-primary); }
-[data-theme="soft-future"] .m-sc-total-label  { color: var(--cosmos-text-2); }
-[data-theme="soft-future"] .m-sc-total-sub    { color: var(--cosmos-text-3); }
+[data-theme="soft-future"] .m-sc-total-label  { color: rgba(160, 170, 187, 0.72); }
+[data-theme="soft-future"] .m-sc-total-sub    { color: rgba(220, 220, 230, 0.26); }
 [data-theme="soft-future"] .m-sc-divider      { background: var(--cosmos-accent-dim); }
 [data-theme="soft-future"] .m-sc-col-sep      { background: var(--cosmos-accent-dim); }
-[data-theme="soft-future"] .m-sc-label        { color: var(--cosmos-text-3); }
-[data-theme="soft-future"] .m-sc-month-label  { color: var(--cosmos-text-3); }
+[data-theme="soft-future"] .m-sc-label        { color: rgba(160, 170, 187, 0.32); }
+[data-theme="soft-future"] .m-sc-month-label  { color: rgba(160, 170, 187, 0.36); }
 
 /* ── Patrimony hero — dark graphite with cyan depth ───────────────────────*/
 [data-theme="soft-future"] .pat-hero {
@@ -293,10 +293,10 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
     0 2px 10px rgba(13, 15, 18, 0.55),
     inset 0 0.5px 0 rgba(255,255,255,0.03);
 }
-[data-theme="soft-future"] .m-chip-label                { color: var(--cosmos-text-2); }
+[data-theme="soft-future"] .m-chip-label                { color: rgba(160, 170, 187, 0.60); }
 [data-theme="soft-future"] .m-chip-amount               { color: var(--text-primary); }
-[data-theme="soft-future"] .m-chip.income  .m-chip-amount { color: var(--cosmos-income); }
-[data-theme="soft-future"] .m-chip.expense .m-chip-amount { color: var(--cosmos-expense); }
+[data-theme="soft-future"] .m-chip.income  .m-chip-amount { color: #34d399; }
+[data-theme="soft-future"] .m-chip.expense .m-chip-amount { color: #f87171; }
 
 /* ── Patrimony row — dark graphite with cyan bottom depth ─────────────── */
 [data-theme="soft-future"] .m-patrimony-row {
@@ -305,7 +305,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
     linear-gradient(175deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 0.5px solid var(--cosmos-accent-dim);
 }
-[data-theme="soft-future"] .m-patrimony-label           { color: var(--cosmos-text-3); }
+[data-theme="soft-future"] .m-patrimony-label           { color: rgba(160, 170, 187, 0.50); }
 [data-theme="soft-future"] .m-patrimony-select          { color: var(--text-secondary); }
 [data-theme="soft-future"] .m-patrimony-value           { color: var(--text-primary); }
 [data-theme="soft-future"] .m-patrimony-select option   { background: var(--bg-primary); }
@@ -398,15 +398,15 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 
 /* Normal fill — emerald gradient */
 [data-theme="soft-future"] .m-budget-bar-fill {
-  background: linear-gradient(90deg, var(--cosmos-income), var(--cosmos-income));
+  background: linear-gradient(90deg, #34d399, #6ee7b7);
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.40);
 }
 [data-theme="soft-future"] .m-budget-bar-fill.warn {
-  background: linear-gradient(90deg, var(--cosmos-warning), var(--cosmos-warning));
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
   box-shadow: 0 0 10px rgba(251, 191, 36, 0.40);
 }
 [data-theme="soft-future"] .m-budget-bar-fill.over {
-  background: linear-gradient(90deg, var(--cosmos-expense), var(--cosmos-expense));
+  background: linear-gradient(90deg, #ef4444, #f87171);
   box-shadow: 0 0 10px rgba(248, 113, 113, 0.40);
 }
 
@@ -472,17 +472,17 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 }
 [data-theme="soft-future"] .m-summary-label             { color: var(--cosmos-accent-glow); }
 [data-theme="soft-future"] .m-summary-val               { color: var(--text-primary); }
-[data-theme="soft-future"] .m-summary-val.income        { color: var(--cosmos-income); }
-[data-theme="soft-future"] .m-summary-val.expense       { color: var(--cosmos-expense); }
+[data-theme="soft-future"] .m-summary-val.income        { color: #34d399; }
+[data-theme="soft-future"] .m-summary-val.expense       { color: #f87171; }
 [data-theme="soft-future"] .m-summary-sep               { background: var(--cosmos-accent-soft); }
 
 /* Category bars (Stats) */
 [data-theme="soft-future"] .m-cat-row         { border-bottom-color: var(--cosmos-accent-soft); }
-[data-theme="soft-future"] .m-cat-name        { color: var(--cosmos-text-1); }
-[data-theme="soft-future"] .m-cat-amt         { color: var(--cosmos-text-1); }
-[data-theme="soft-future"] .m-cat-pct         { color: var(--cosmos-text-3); }
+[data-theme="soft-future"] .m-cat-name        { color: rgba(237, 233, 254, 0.80); }
+[data-theme="soft-future"] .m-cat-amt         { color: rgba(237, 233, 254, 0.80); }
+[data-theme="soft-future"] .m-cat-pct         { color: rgba(237, 233, 254, 0.30); }
 [data-theme="soft-future"] .m-cat-bar-bg      { background: var(--cosmos-accent-soft); }
-[data-theme="soft-future"] .m-cat-bar-fill    { background: var(--cosmos-expense); }
+[data-theme="soft-future"] .m-cat-bar-fill    { background: #f87171; }
 
 /* Recurring frequency buttons */
 [data-theme="soft-future"] .rp-freq-btn.active {
@@ -540,15 +540,15 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    ════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="soft-future"] .m-fab {
-  background: linear-gradient(135deg, var(--cosmos-surface-3), var(--cosmos-accent));
-  box-shadow: 0 4px 22px rgba(13, 15, 18, 0.58), 0 0 0 1.5px var(--cosmos-accent-border);
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
+  box-shadow: 0 4px 22px rgba(13, 15, 18, 0.58), 0 0 0 1.5px rgba(167,139,250,0.20);
 }
 [data-theme="soft-future"] .m-fab:active {
   box-shadow: 0 2px 10px rgba(13, 15, 18, 0.40);
 }
 
 [data-theme="soft-future"] .m-submit-btn.transfer {
-  background: linear-gradient(135deg, var(--cosmos-surface-3), var(--cosmos-accent));
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 3px 14px var(--cosmos-accent-glow);
 }
 
@@ -560,7 +560,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 }
 
 [data-theme="soft-future"] .rp-form-save {
-  background: linear-gradient(135deg, var(--cosmos-surface-3), var(--cosmos-accent));
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 3px 14px rgba(13, 15, 18, 0.38);
 }
 
@@ -576,8 +576,8 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    8 · BALANCE & TEXT
    ════════════════════════════════════════════════════════════════════════════ */
 
-[data-theme="soft-future"] .m-balance-amount.positive   { color: var(--cosmos-income); }
-[data-theme="soft-future"] .m-balance-amount.negative   { color: var(--cosmos-expense); }
+[data-theme="soft-future"] .m-balance-amount.positive   { color: #34d399; }
+[data-theme="soft-future"] .m-balance-amount.negative   { color: #f87171; }
 [data-theme="soft-future"] .m-balance-label             { color: var(--cosmos-accent-glow); }
 
 [data-theme="soft-future"] .h-insight-badge.info        { background: var(--cosmos-accent-dim); color: var(--cosmos-accent); }
@@ -589,7 +589,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    ════════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="soft-future"] .m-prof-avatar {
-  background: linear-gradient(135deg, var(--cosmos-surface-3), var(--cosmos-accent));
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 2px 14px rgba(13, 15, 18, 0.40);
 }
 [data-theme="soft-future"] .m-prof-chip--on {
@@ -601,7 +601,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
   background: var(--cosmos-accent-dim);
 }
 [data-theme="soft-future"] .m-pill-toggle input:checked + .m-pill-toggle-track {
-  background: linear-gradient(90deg, var(--cosmos-surface-3), var(--cosmos-accent));
+  background: linear-gradient(90deg, #6d28d9, var(--cosmos-accent));
 }
 
 
@@ -609,9 +609,9 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
    10 · RECURRING CALENDAR
    ════════════════════════════════════════════════════════════════════════════ */
 
-[data-theme="soft-future"] .rp-cal-dot                  { background: var(--cosmos-accent); box-shadow: 0 0 5px var(--cosmos-accent-glow); }
+[data-theme="soft-future"] .rp-cal-dot                  { background: var(--cosmos-accent); box-shadow: 0 0 5px rgba(167,139,250,0.55); }
 [data-theme="soft-future"] .rp-cal-cell.today .rp-cal-day-num {
-  background: linear-gradient(135deg, var(--cosmos-surface-3), var(--cosmos-accent));
+  background: linear-gradient(135deg, #6d28d9, var(--cosmos-accent));
   box-shadow: 0 0 10px rgba(109,40,217,0.45);
 }
 [data-theme="soft-future"] .rp-cal-cell.selected        { background: var(--cosmos-accent-dim); }
@@ -655,7 +655,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 /* Account badge in transaction row */
 [data-theme="soft-future"] .ft-acct-badge {
   background: var(--cosmos-accent-soft);
-  color: var(--cosmos-text-2);
+  color: rgba(196, 181, 253, 0.60);
 }
 
 /* "Transferência" inline badge in transaction sub */
@@ -821,7 +821,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 }
 [data-theme="soft-future"] .ftc-badge--adjust {
   background: rgba(249, 115, 22, 0.12);
-  color: var(--cosmos-warning);
+  color: #fb923c;
 }
 
 /* Text colours */
@@ -848,7 +848,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
 }
 [data-theme="soft-future"] .fintech-ui .ftc-action-btn--danger {
   background: rgba(248, 113, 113, 0.10);
-  color: var(--cosmos-expense);
+  color: #f87171;
   border-color: rgba(248, 113, 113, 0.15);
 }
 
@@ -879,7 +879,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label { color: var(--text-s
   --bg-elevated:   #1f2330;
   --text-primary:  #e8eaed;
   --text-secondary: rgba(160, 170, 187, 0.80);
-  --text-tertiary: var(--cosmos-text-3);
+  --text-tertiary: rgba(160, 170, 187, 0.45);
   --separator:     rgba(255, 255, 255, 0.05);
 }
 
@@ -947,12 +947,12 @@ html[data-theme="soft-future"] body {
 [data-theme="soft-future"] .h-hero-balance-badge.positive {
   background: rgba(52, 211, 153, 0.12);
   border-color: rgba(52, 211, 153, 0.22);
-  color: var(--cosmos-income);
+  color: #34d399;
 }
 [data-theme="soft-future"] .h-hero-balance-badge.negative {
   background: rgba(248, 113, 113, 0.12);
   border-color: rgba(248, 113, 113, 0.22);
-  color: var(--cosmos-expense);
+  color: #f87171;
 }
 
 /* Progress — cyan fill with glow */
@@ -973,7 +973,7 @@ html[data-theme="soft-future"] body {
   font-weight: 700;
 }
 [data-theme="soft-future"] .cosmos-card--hero .h-hero-progress-label {
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.45);
   font-size: 0.6875rem;
 }
 
@@ -1020,7 +1020,7 @@ html[data-theme="soft-future"] body {
   letter-spacing: 0.09em;
   font-weight: 500;
   text-transform: uppercase;
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.38);
   margin-bottom: 5px;
 }
 
@@ -1035,7 +1035,7 @@ html[data-theme="soft-future"] body {
 [data-theme="soft-future"] .h-month-name {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--cosmos-text-2);
+  color: rgba(160, 170, 187, 0.65);
   letter-spacing: -0.01em;
 }
 
@@ -1054,7 +1054,7 @@ html[data-theme="soft-future"] body {
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.07em;
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.42);
 }
 
 
@@ -1082,7 +1082,7 @@ html[data-theme="soft-future"] .nav-item.active::before {
 /* Inactive icons — slightly more visible */
 html[data-theme="soft-future"] .nav-label,
 html[data-theme="soft-future"] .nav-icon {
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.32);
 }
 
 /* Active items — use actual cyan, not muted silver */
@@ -1193,7 +1193,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
 
 /* Context module section headers — even more receded */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .cosmos-sh__title {
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.32);
 }
 
 
@@ -1217,13 +1217,13 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
   font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: -0.015em;
-  color: var(--cosmos-text-1);
+  color: rgba(232, 234, 237, 0.90);
 }
 
 /* Insight description — clearly secondary */
 [data-theme="soft-future"] .h-insight-desc {
   font-size: 0.8125rem;
-  color: var(--cosmos-text-2);
+  color: rgba(160, 170, 187, 0.55);
   line-height: 1.5;
 }
 
@@ -1273,7 +1273,7 @@ html[data-theme="soft-future"] .nav-item.active .nav-label {
 /* Inactive nav items — deeply receded, don't compete */
 html[data-theme="soft-future"] .nav-label,
 html[data-theme="soft-future"] .nav-icon {
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.28);
 }
 
 
@@ -1339,16 +1339,16 @@ html[data-theme="soft-future"] .nav-icon {
 
 /* Balance badge: reads clearly against the hero surface */
 [data-theme="soft-future"] .h-hero-balance-badge.positive {
-  background: var(--cosmos-income-dim);
+  background: rgba(52, 211, 153, 0.13);
   border: 0.5px solid rgba(52, 211, 153, 0.24);
-  color: var(--cosmos-income);
+  color: #4ade80;
   font-size: 0.875rem;
   padding: 5px 14px;
 }
 [data-theme="soft-future"] .h-hero-balance-badge.negative {
-  background: var(--cosmos-expense-dim);
-  border: 0.5px solid var(--cosmos-expense-dim);
-  color: var(--cosmos-expense);
+  background: rgba(248, 113, 113, 0.13);
+  border: 0.5px solid rgba(248, 113, 113, 0.24);
+  color: #f87171;
   font-size: 0.875rem;
   padding: 5px 14px;
 }
@@ -1390,15 +1390,15 @@ html[data-theme="soft-future"] .nav-icon {
 
 /* Context cards: section headers nearly invisible */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .cosmos-sh__title {
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.28);
 }
 
 /* Context cards: body text also slightly more receded */
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .h-insight-title {
-  color: var(--cosmos-text-1);
+  color: rgba(232, 234, 237, 0.80);
 }
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+3) .h-insight-desc {
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.48);
 }
 
 
@@ -1739,7 +1739,7 @@ html[data-theme="soft-future"] .nav-item.active {
   border-color: var(--cosmos-accent-soft);
 }
 [data-theme="soft-future"] .h-sections > .cosmos-card--standard:nth-child(n+2) .cosmos-sh__title {
-  color: var(--cosmos-text-3);
+  color: rgba(160, 170, 187, 0.28);
 }
 
 /* ── 5. CANCEL STALE PASS 5 SELECTOR (h-quick-section no longer in h-sections) */
@@ -1858,7 +1858,7 @@ html[data-theme="soft-future"] .nav-item.active {
 /* Home root wrapper — radial gradient as second background layer */
 [data-theme="soft-future"] .h-page {
   background:
-    radial-gradient(ellipse 60% 40% at 85% 15%, var(--cosmos-accent-soft) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(0, 221, 255, 0.07) 0%, transparent 70%),
     var(--bg-primary);
 }
 
@@ -1917,23 +1917,23 @@ html[data-theme="soft-future"] .nav-item.active {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--cosmos-accent) !important;
+  background: #00DDFF !important;
   color: #000000;
   margin-top: -20px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px var(--cosmos-accent-glow);
+  box-shadow: 0 0 20px rgba(0, 221, 255, 0.4);
   /* Override active background from other rules */
-  box-shadow: 0 0 20px var(--cosmos-accent-glow) !important;
+  box-shadow: 0 0 20px rgba(0, 221, 255, 0.4) !important;
   flex-shrink: 0;
 }
 
 [data-theme="soft-future"] .nav-item--add.active,
 [data-theme="soft-future"] .nav-item--add:focus {
-  background: var(--cosmos-accent) !important;
-  box-shadow: 0 0 28px var(--cosmos-accent-glow) !important;
+  background: #00DDFF !important;
+  box-shadow: 0 0 28px rgba(0, 221, 255, 0.55) !important;
 }
 
 [data-theme="soft-future"] .nav-item--add:active {
@@ -1999,7 +1999,7 @@ html[data-theme="soft-future"] .nav-item.active {
   font-family: Inter, -apple-system, sans-serif;
   font-size: 13px;
   font-weight: 400;
-  color: var(--cosmos-accent);
+  color: #00DDFF;
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
 }
@@ -2034,7 +2034,7 @@ html[data-theme="soft-future"] .nav-item.active {
 
 /* Negative balance: soft red instead of alarm red */
 [data-theme="soft-future"] .h-cf-amount.negative {
-  color: var(--cosmos-expense) !important;
+  color: #E07070 !important;
 }
 
 

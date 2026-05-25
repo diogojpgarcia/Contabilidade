@@ -7,15 +7,6 @@
 /* modern.css sets display:flex + flex:1/min-height:0 on .main-content-new
    and its > div children. Reset those for modern-ui so tab roots flow
    naturally (outer scroll via .main-content-new overflow-y:auto).         */
-
-/* ── GLOBAL PAGE BACKGROUND — palette-aware ─────────────────────────────── */
-/* Prevents the browser's default white body showing through in Stone (light) */
-html, body {
-  background: var(--cosmos-bg);
-  margin: 0;
-  padding: 0;
-}
-
 .modern-ui .main-content-new {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -130,8 +121,8 @@ html, body {
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
-.m-chip.income  .m-chip-amount { color: var(--cosmos-income); }
-.m-chip.expense .m-chip-amount { color: var(--cosmos-expense); }
+.m-chip.income  .m-chip-amount { color: #16a34a; }
+.m-chip.expense .m-chip-amount { color: #dc2626; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    HOME TAB — MODERN
@@ -193,8 +184,8 @@ html, body {
   color: var(--text-primary);
   line-height: 1;
 }
-.m-balance-amount.positive { color: var(--cosmos-income); }
-.m-balance-amount.negative { color: var(--cosmos-expense); }
+.m-balance-amount.positive { color: #16a34a; }
+.m-balance-amount.negative { color: #dc2626; }
 .m-balance-label {
   font-size: 0.75rem;
   color: var(--text-tertiary);
@@ -332,8 +323,8 @@ html, body {
   letter-spacing: -0.02em;
   flex-shrink: 0;
 }
-.ft-amount.income  { color: var(--cosmos-income); }
-.ft-amount.expense { color: var(--cosmos-expense); }
+.ft-amount.income  { color: #16a34a; }
+.ft-amount.expense { color: #dc2626; }
 
 /* Expandable detail row */
 .ft-detail {
@@ -480,7 +471,7 @@ html, body {
   text-overflow: ellipsis;
 }
 .m-cat-bar-bg   { flex: 1; height: 4px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; }
-.m-cat-bar-fill { height: 100%; border-radius: 2px; background: var(--cosmos-expense); transition: width 0.35s ease; }
+.m-cat-bar-fill { height: 100%; border-radius: 2px; background: #dc2626; transition: width 0.35s ease; }
 .m-cat-amt { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); width: 54px; text-align: right; flex-shrink: 0; }
 .m-cat-pct { font-size: 0.68rem; color: var(--text-tertiary); width: 28px; text-align: right; flex-shrink: 0; }
 
@@ -526,12 +517,12 @@ html, body {
   flex-direction: column;
   gap: 5px;
 }
-[data-theme="light"] .m-log-summary { background: var(--cosmos-surface-2); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .m-log-summary { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .m-summary-row   { display: flex; justify-content: space-between; align-items: center; }
 .m-summary-label { font-size: 0.8rem; color: var(--text-tertiary); font-weight: 500; }
 .m-summary-val   { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); }
-.m-summary-val.income  { color: var(--cosmos-income); }
-.m-summary-val.expense { color: var(--cosmos-expense); }
+.m-summary-val.income  { color: #16a34a; }
+.m-summary-val.expense { color: #dc2626; }
 .m-summary-sep   { height: 0.5px; background: var(--separator); }
 
 /* Transaction rows wrapper inside stats (no extra side padding — ft-* handles it) */
@@ -602,7 +593,7 @@ html, body {
   flex-direction: column;
   gap: 5px;
 }
-[data-theme="light"] .m-field-card { background: var(--cosmos-surface-2); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .m-field-card { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
 
 .m-field-label {
   font-size: 0.68rem;
@@ -678,10 +669,10 @@ html, body {
 }
 .m-submit-btn:active   { opacity: 0.85; transform: scale(0.98); }
 .m-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.m-submit-btn.expense  { background: var(--cosmos-expense); color: #fff; box-shadow: 0 3px 12px rgba(220,38,38,0.28); }
-.m-submit-btn.income   { background: var(--cosmos-income); color: #fff; box-shadow: 0 3px 12px rgba(22,163,74,0.28); }
+.m-submit-btn.expense  { background: #dc2626; color: #fff; box-shadow: 0 3px 12px rgba(220,38,38,0.28); }
+.m-submit-btn.income   { background: #16a34a; color: #fff; box-shadow: 0 3px 12px rgba(22,163,74,0.28); }
 .m-submit-btn.transfer { background: var(--cosmos-accent); color: #fff; box-shadow: 0 3px 12px var(--cosmos-accent-glow); }
-.m-submit-btn.goal     { background: var(--cosmos-accent); color: #fff; box-shadow: 0 3px 12px var(--cosmos-accent-glow); }
+.m-submit-btn.goal     { background: #7c3aed; color: #fff; box-shadow: 0 3px 12px rgba(124,58,237,0.28); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BUDGET TAB — MODERN
@@ -720,15 +711,15 @@ html, body {
   white-space: nowrap;
 }
 .m-budget-spent.warn { color: var(--cosmos-warning); }
-.m-budget-spent.over { color: var(--cosmos-expense); }
+.m-budget-spent.over { color: #dc2626; }
 .m-budget-alert { font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 3px; flex-shrink: 0; }
 .m-budget-alert.warn { background: var(--cosmos-warning-dim); color: var(--cosmos-warning); }
-.m-budget-alert.over { background: var(--cosmos-expense-dim); color: var(--cosmos-expense); }
+.m-budget-alert.over { background: rgba(220,38,38,0.15); color: #dc2626; }
 
 .m-budget-bar-bg   { height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
-.m-budget-bar-fill { height: 100%; border-radius: 4px; background: var(--cosmos-income); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+.m-budget-bar-fill { height: 100%; border-radius: 4px; background: #10B981; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
 .m-budget-bar-fill.warn { background: var(--cosmos-warning); }
-.m-budget-bar-fill.over { background: var(--cosmos-expense); }
+.m-budget-bar-fill.over { background: #dc2626; }
 
 .m-budget-input-row {
   display: flex;
@@ -816,7 +807,7 @@ html, body {
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.05);
 }
-[data-theme="light"] .m-bmc { background: var(--cosmos-surface-2); border-color: var(--cosmos-border-card); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .m-bmc { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
 
 .m-bmc-label {
   display: block;
@@ -865,13 +856,13 @@ html, body {
   background: var(--bg-secondary);
   border-radius: 18px;
   padding: 16px 18px;
-  border: 1px solid var(--cosmos-border-divider);
+  border: 1px solid rgba(255,255,255,0.05);
   display: flex;
   flex-direction: column;
   gap: 10px;
   transition: transform 0.18s ease, box-shadow 0.2s ease;
 }
-[data-theme="light"] .m-bcc { background: var(--cosmos-surface-2); border-color: var(--cosmos-border-card); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .m-bcc { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
 .m-bcc:active { transform: scale(0.97); }
 .m-bcc.expanded:active { transform: none; }
 
@@ -898,14 +889,14 @@ html, body {
 .m-bcc-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
 .m-bcc-badge { font-size: 0.6rem; font-weight: 700; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
 .m-bcc-badge.warn { background: var(--cosmos-warning-dim); color: var(--cosmos-warning); }
-.m-bcc-badge.over { background: var(--cosmos-expense-dim); color: var(--cosmos-expense); }
+.m-bcc-badge.over { background: rgba(220,38,38,0.15); color: #dc2626; }
 .m-bcc-meta-row { display: flex; align-items: center; gap: 6px; }
 .m-bcc-spent { font-size: 0.78rem; color: var(--text-tertiary); font-weight: 500; font-variant-numeric: tabular-nums; }
 .m-bcc-spent.warn { color: var(--cosmos-warning); }
-.m-bcc-spent.over { color: var(--cosmos-expense); }
+.m-bcc-spent.over { color: #dc2626; }
 .m-bcc-delta { font-size: 0.7rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.m-bcc-delta.up   { color: var(--cosmos-expense); }
-.m-bcc-delta.down { color: var(--cosmos-income); }
+.m-bcc-delta.up   { color: #ef4444; }
+.m-bcc-delta.down { color: #22c55e; }
 
 .m-bcc-prediction {
   display: flex;
@@ -919,7 +910,7 @@ html, body {
 .m-bcc-prediction-warn {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--cosmos-expense);
+  color: #ef4444;
 }
 
 /* Gradient progress bar inside BudgetCategoryCard */
@@ -972,10 +963,10 @@ html, body {
   font-family: inherit;
   outline: none;
 }
-.m-bcc-input:focus { border-color: var(--cosmos-income); }
+.m-bcc-input:focus { border-color: #10B981; }
 [data-theme="light"] .m-bcc-input { background: #f2f2f7; }
 .m-bcc-save {
-  background: var(--cosmos-income); border: none; border-radius: 10px;
+  background: #10B981; border: none; border-radius: 10px;
   color: #fff; font-weight: 700; font-size: 1rem;
   min-width: 44px; min-height: 44px;
   cursor: pointer; transition: opacity 0.12s;
@@ -1045,7 +1036,7 @@ html, body {
 .m-bcc-tx-amount {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--cosmos-expense);
+  color: #ef4444;
   font-variant-numeric: tabular-nums;
 }
 .m-bcc-tx-date {
@@ -1067,7 +1058,7 @@ html, body {
   padding: 13px 14px;
   margin-bottom: 8px;
 }
-[data-theme="light"] .m-goal-row { background: var(--cosmos-surface-2); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .m-goal-row { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
 
 .m-goal-top {
   display: flex;
@@ -1121,12 +1112,12 @@ html, body {
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 20px;
-  background: var(--cosmos-accent-dim);
+  background: rgba(99, 102, 241, 0.15);
   color: var(--cosmos-accent);
 }
 .m-goal-date-badge.past {
   background: rgba(239, 68, 68, 0.12);
-  color: var(--cosmos-expense);
+  color: #ef4444;
 }
 
 .m-goal-input-row {
@@ -1226,7 +1217,7 @@ html, body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--cosmos-text-2);
+  color: rgba(165,180,252,0.75);
   margin-bottom: 8px;
 }
 [data-theme="light"] .pat-hero-label { color: var(--cosmos-accent); }
@@ -1239,7 +1230,7 @@ html, body {
   line-height: 1;
   margin-bottom: 16px;
 }
-[data-theme="light"] .pat-hero-amount { color: var(--cosmos-text-1); }
+[data-theme="light"] .pat-hero-amount { color: #1e1b4b; }
 .pat-hero-eur { font-size: 1.6rem; font-weight: 600; opacity: 0.7; margin-left: 2px; }
 .pat-hero-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .pat-hero-chip {
@@ -1280,7 +1271,7 @@ html, body {
   flex-direction: column;
   gap: 11px;
 }
-[data-theme="light"] .pat-alloc { background: var(--cosmos-surface-2); border-color: var(--cosmos-border-card); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .pat-alloc { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
 .pat-alloc-title {
   font-size: 0.65rem;
   font-weight: 700;
@@ -1312,7 +1303,7 @@ html, body {
   overflow: hidden;
   transition: box-shadow 0.18s ease;
 }
-[data-theme="light"] .pat-cat-card { background: var(--cosmos-surface-2); border-color: var(--cosmos-border-card); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .pat-cat-card { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
 .pat-cat-header {
   display: flex;
   align-items: center;
@@ -1377,7 +1368,7 @@ html, body {
   border-radius: 6px; touch-action: manipulation;
   -webkit-tap-highlight-color: transparent; transition: color 0.1s;
 }
-.pat-account-btn-main.active { color: var(--cosmos-warning); }
+.pat-account-btn-main.active { color: #f59e0b; }
 .pat-account-btn-main:active { background: var(--border-color); }
 
 /* ── Stock item enhancements ──────────────────────────────────────────────── */
@@ -1465,10 +1456,10 @@ html, body {
 .pat-stock-chip-ticker {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--cosmos-income);
+  color: #34d399;
   letter-spacing: 0.04em;
 }
-[data-theme="light"] .pat-stock-chip-ticker { color: var(--cosmos-income); }
+[data-theme="light"] .pat-stock-chip-ticker { color: #059669; }
 .pat-stock-chip-name {
   font-size: 0.72rem;
   color: var(--text-secondary);
@@ -1492,7 +1483,7 @@ html, body {
   flex-shrink: 0;
   transition: all 0.15s;
 }
-.pat-stock-chip-clear:hover { background: var(--cosmos-expense-dim); color: var(--cosmos-expense); border-color: rgba(239,68,68,0.3); }
+.pat-stock-chip-clear:hover { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
 [data-theme="light"] .pat-stock-chip-clear { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.04); }
 
 /* ── Crypto quick-pick coin chips ────────────────────────────────────────── */
@@ -1518,11 +1509,11 @@ html, body {
 .pat-coin-chip.active {
   border-color: var(--cosmos-warning);
   background: rgba(245,158,11,0.14);
-  color: var(--cosmos-warning);
+  color: #fbbf24;
   box-shadow: 0 0 12px rgba(245,158,11,0.2);
 }
 [data-theme="light"] .pat-coin-chip { border-color: rgba(0,0,0,0.1); background: rgba(0,0,0,0.03); }
-[data-theme="light"] .pat-coin-chip.active { border-color: var(--cosmos-warning); background: rgba(245,158,11,0.08); color: var(--cosmos-warning); }
+[data-theme="light"] .pat-coin-chip.active { border-color: #d97706; background: rgba(245,158,11,0.08); color: #b45309; }
 
 /* ── Stock search autocomplete ───────────────────────────────────────────── */
 .pat-search-wrap {
@@ -1622,12 +1613,12 @@ html, body {
   margin-top: 4px;
   padding: 5px 10px;
   font-size: 0.7rem;
-  color: var(--cosmos-income);
+  color: #4ade80;
   background: rgba(74,222,128,0.08);
   border-radius: 6px;
   border: 0.5px solid rgba(74,222,128,0.2);
 }
-[data-theme="light"] .pat-search-selected { color: var(--cosmos-income); background: rgba(34,197,94,0.08); }
+[data-theme="light"] .pat-search-selected { color: #15803d; background: rgba(34,197,94,0.08); }
 
 /* ── Exchange chip selector (crypto form) ────────────────────────────────── */
 .pat-exchange-field {
@@ -1671,9 +1662,9 @@ html, body {
   background: rgba(0,0,0,0.03);
 }
 [data-theme="light"] .pat-exchange-chip.active {
-  border-color: var(--cosmos-warning);
+  border-color: #d97706;
   background: rgba(245,158,11,0.08);
-  color: var(--cosmos-warning);
+  color: #d97706;
 }
 
 /* ── Exchange group header inside crypto card ────────────────────────────── */
@@ -1694,7 +1685,7 @@ html, body {
   text-transform: uppercase;
   color: var(--cosmos-warning);
 }
-[data-theme="light"] .pat-exchange-name { color: var(--cosmos-warning); }
+[data-theme="light"] .pat-exchange-name { color: #d97706; }
 .pat-exchange-count {
   font-size: 0.62rem;
   color: var(--text-tertiary);
@@ -1960,17 +1951,17 @@ html, body {
   white-space: nowrap;
 }
 .pat-alert-badge.pos {
-  color: var(--cosmos-income);
+  color: #22c55e;
   background: rgba(34,197,94,0.15);
   box-shadow: 0 0 8px rgba(34,197,94,0.2);
 }
 .pat-alert-badge.neg {
-  color: var(--cosmos-expense);
-  background: var(--cosmos-expense-dim);
+  color: #ef4444;
+  background: rgba(239,68,68,0.15);
   box-shadow: 0 0 8px rgba(239,68,68,0.2);
 }
-[data-theme="light"] .pat-alert-badge.pos { color: var(--cosmos-income); background: rgba(34,197,94,0.18); }
-[data-theme="light"] .pat-alert-badge.neg { color: var(--cosmos-expense); background: rgba(239,68,68,0.18); }
+[data-theme="light"] .pat-alert-badge.pos { color: #15803d; background: rgba(34,197,94,0.18); }
+[data-theme="light"] .pat-alert-badge.neg { color: #dc2626; background: rgba(239,68,68,0.18); }
 
 /* Stock / crypto name row with inline change badge */
 .pat-stock-name-row {
@@ -1990,19 +1981,19 @@ html, body {
   line-height: 1.5;
 }
 .pat-change-badge.pos {
-  color: var(--cosmos-income);
+  color: #22c55e;
   background: rgba(34, 197, 94, 0.12);
 }
 .pat-change-badge.neg {
-  color: var(--cosmos-expense);
+  color: #ef4444;
   background: rgba(239, 68, 68, 0.12);
 }
 [data-theme="light"] .pat-change-badge.pos {
-  color: var(--cosmos-income);
+  color: #15803d;
   background: rgba(34, 197, 94, 0.15);
 }
 [data-theme="light"] .pat-change-badge.neg {
-  color: var(--cosmos-expense);
+  color: #dc2626;
   background: rgba(239, 68, 68, 0.15);
 }
 
@@ -2198,8 +2189,8 @@ html, body {
   width: 100%;
   min-height: 44px;
   padding: 11px 16px;
-  background: var(--cosmos-accent-dim);
-  border: 1.5px solid var(--cosmos-accent-border);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1.5px solid rgba(99, 102, 241, 0.25);
   border-radius: 12px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -2238,7 +2229,7 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   font-weight: 600;
-  color: var(--cosmos-text-1);
+  color: #E8EAF0;
   flex-shrink: 0;
 }
 .m-prof-id    { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
@@ -2261,8 +2252,8 @@ html, body {
 }
 .m-prof-chip--on {
   color: var(--cosmos-accent);
-  background: var(--cosmos-accent-soft);
-  border-color: var(--cosmos-accent-border);
+  background: rgba(0,221,255,0.07);
+  border-color: rgba(0,221,255,0.18);
 }
 
 /* ── Appearance — inline, no card frame ─────────────────────────────────── */
@@ -2331,7 +2322,7 @@ html, body {
   overflow: hidden;
   margin-bottom: 14px;
 }
-[data-theme="light"] .m-cycle-card { background: var(--cosmos-surface-2); box-shadow: var(--cosmos-shadow-card); }
+[data-theme="light"] .m-cycle-card { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
 
 .m-cycle-header {
   display: flex;
@@ -2349,8 +2340,8 @@ html, body {
 .m-cycle-badge {
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--cosmos-accent);
-  background: var(--cosmos-accent-dim);
+  color: rgba(99, 102, 241, 0.9);
+  background: rgba(99, 102, 241, 0.1);
   border-radius: 6px;
   padding: 2px 7px;
   font-variant-numeric: tabular-nums;
@@ -2451,7 +2442,7 @@ html, body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
 }
-.m-pill-toggle input:checked + .m-pill-toggle-track { background: var(--cosmos-accent-hover); }
+.m-pill-toggle input:checked + .m-pill-toggle-track { background: rgba(0,221,255,0.25); }
 .m-pill-toggle input:checked + .m-pill-toggle-track::after { background: var(--cosmos-accent); }
 .m-pill-toggle input:checked + .m-pill-toggle-track::after { transform: translateX(18px); }
 [data-theme="light"] .m-pill-toggle-track { background: rgba(60,60,67,0.2); }
@@ -2510,7 +2501,7 @@ html, body {
 }
 .m-focus-btn--on {
   border-color: var(--primary);
-  background: var(--cosmos-accent-dim);
+  background: rgba(6, 182, 212, 0.10);
 }
 .m-focus-btn-icon { font-size: 1rem; line-height: 1; }
 .m-focus-btn-label {
@@ -2633,8 +2624,8 @@ html, body {
 }
 
 /* ── Monthly balance ────────────────────────────────────────────────────── */
-.fintech-ui .m-balance-amount.positive { color: var(--cosmos-income); }
-.fintech-ui .m-balance-amount.negative { color: var(--cosmos-expense); }
+.fintech-ui .m-balance-amount.positive { color: #4ade80; }
+.fintech-ui .m-balance-amount.negative { color: #f87171; }
 .fintech-ui .m-balance-label           { color: var(--cosmos-text-3); }
 
 /* ── Income/expense chips ───────────────────────────────────────────────── */
@@ -2644,8 +2635,8 @@ html, body {
 }
 .fintech-ui .m-chip-label  { color: var(--cosmos-text-3); }
 .fintech-ui .m-chip-amount { color: var(--cosmos-text-1); }
-.fintech-ui .m-chip.income  .m-chip-amount { color: var(--cosmos-income); }
-.fintech-ui .m-chip.expense .m-chip-amount { color: var(--cosmos-expense); }
+.fintech-ui .m-chip.income  .m-chip-amount { color: #4ade80; }
+.fintech-ui .m-chip.expense .m-chip-amount { color: #f87171; }
 
 /* ── Total balance card ──────────────────────────────────────────────────── */
 .m-total-balance-card {
@@ -2670,7 +2661,7 @@ html, body {
 
 /* Fintech variant — indigo gradient */
 .fintech-ui .m-total-balance-inner {
-  background: linear-gradient(135deg, var(--cosmos-accent-dim) 0%, var(--cosmos-accent-soft) 100%);
+  background: linear-gradient(135deg, rgba(79,70,229,0.25) 0%, rgba(109,40,217,0.18) 100%);
   border: 0.5px solid var(--cosmos-border-hero);
   box-shadow: 0 2px 12px var(--cosmos-accent-dim);
 }
@@ -2690,7 +2681,7 @@ html, body {
   color: var(--text-tertiary);
 }
 .fintech-ui .m-total-balance-label {
-  color: var(--cosmos-text-2); /* indigo-300 muted */
+  color: rgba(165,180,252,0.75); /* indigo-300 muted */
 }
 
 .m-total-balance-sub {
@@ -2740,8 +2731,8 @@ html, body {
 }
 .fintech-ui .m-summary-label     { color: var(--cosmos-text-3); }
 .fintech-ui .m-summary-val       { color: var(--cosmos-text-1); }
-.fintech-ui .m-summary-val.income  { color: var(--cosmos-income); }
-.fintech-ui .m-summary-val.expense { color: var(--cosmos-expense); }
+.fintech-ui .m-summary-val.income  { color: #4ade80; }
+.fintech-ui .m-summary-val.expense { color: #f87171; }
 .fintech-ui .m-summary-sep         { background: rgba(255,255,255,0.07); }
 
 .fintech-ui .m-toggle {
@@ -2760,7 +2751,7 @@ html, body {
 .fintech-ui .m-cat-amt           { color: var(--cosmos-text-1); }
 .fintech-ui .m-cat-pct           { color: var(--cosmos-text-3); }
 .fintech-ui .m-cat-bar-bg        { background: rgba(255,255,255,0.08); }
-.fintech-ui .m-cat-bar-fill      { background: var(--cosmos-expense); }
+.fintech-ui .m-cat-bar-fill      { background: #f87171; }
 
 /* ── Bottom nav ─────────────────────────────────────────────────────────── */
 .fintech-ui .bottom-nav {
@@ -2793,8 +2784,8 @@ html, body {
 
 /* Fintech: dark indigo gradient */
 .fintech-ui .m-summary-card {
-  background: linear-gradient(145deg, var(--cosmos-surface-1) 0%, var(--cosmos-surface-2) 100%);
-  border: 0.5px solid var(--cosmos-accent-border);
+  background: linear-gradient(145deg, #111827 0%, #1E1B4B 100%);
+  border: 0.5px solid rgba(139,92,246,0.20);
   box-shadow: 0 8px 32px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
@@ -2822,7 +2813,7 @@ html, body {
   color: var(--text-tertiary);
 }
 .fintech-ui .m-sc-total-label {
-  color: var(--cosmos-text-2);
+  color: rgba(165,180,252,0.70); /* indigo-300 muted */
 }
 .m-sc-total-sub {
   font-size: 0.68rem;
@@ -2871,8 +2862,8 @@ html, body {
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.m-sc-amount.income  { color: var(--cosmos-income); }
-.m-sc-amount.expense { color: var(--cosmos-expense); }
+.m-sc-amount.income  { color: #22c55e; }
+.m-sc-amount.expense { color: #f87171; }
 
 .m-sc-label {
   font-size: 0.68rem;
@@ -2905,8 +2896,8 @@ html, body {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
-.m-sc-month-value.positive { color: var(--cosmos-income); }
-.m-sc-month-value.negative { color: var(--cosmos-expense); }
+.m-sc-month-value.positive { color: #22c55e; }
+.m-sc-month-value.negative { color: #f87171; }
 
 /* ── BUDGET — INSIGHTS FEED ───────────────────────────────────────────────── */
 .m-insights-list {
@@ -2983,5 +2974,5 @@ html, body {
 
 .m-insights-empty-icon {
   font-size: 2rem;
-  color: var(--cosmos-income);
+  color: #22c55e;
 }

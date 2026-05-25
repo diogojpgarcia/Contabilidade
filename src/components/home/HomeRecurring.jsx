@@ -43,7 +43,7 @@ const HomeRecurring = ({ recurringPayments, confirmedRecurring = {}, categories,
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <CosmosSectionHeader title="Próximos pagamentos" style={{ margin: 0 }} />
         <button
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, color: 'var(--cosmos-accent)', WebkitTapHighlightColor: 'transparent' }}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, color: '#00DDFF', WebkitTapHighlightColor: 'transparent' }}
           onClick={() => onNavigate?.('budget', { view: 'recurring' })}
         >
           Ver todos →

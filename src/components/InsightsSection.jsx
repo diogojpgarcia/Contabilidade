@@ -65,23 +65,23 @@ const SpendTrendCard = ({ transactions, currentMonth, onNavigate }) => {
     };
   }, [transactions, currentMonth]);
 
-  const color = isDown ? 'var(--cosmos-income)' : 'var(--cosmos-expense)';
+  const color = isDown ? '#22C55E' : '#F87171';
   const hasData = sparkPoints.some(v => v > 0);
 
   return (
     <div
-      style={{ ...CARD_STYLE_BASE, background: 'var(--cosmos-accent-soft)', border: '1px solid var(--cosmos-accent-border)' }}
+      style={{ ...CARD_STYLE_BASE, background: 'rgba(0,221,255,0.06)', border: '1px solid rgba(0,221,255,0.15)' }}
       onClick={() => onNavigate?.('stats')}
       role="button"
       aria-label="Ver tendência de gastos nos stats"
     >
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: 'var(--cosmos-text-3)' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: '#94A3B8' }}>
         Tendência de Gastos
       </span>
       <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 20, fontWeight: 600, color, marginTop: 6, letterSpacing: '-0.02em' }}>
         {pct === 0 ? '—' : `${isDown ? '−' : '+'}${pct}%`}
       </span>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-text-3)', marginTop: 2 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#94A3B8', marginTop: 2 }}>
         vs mês anterior
       </span>
       {hasData && (
@@ -97,7 +97,7 @@ const SpendTrendCard = ({ transactions, currentMonth, onNavigate }) => {
           />
         </svg>
       )}
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-accent)', marginTop: 8 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#00DDFF', marginTop: 8 }}>
         Ver detalhes →
       </span>
     </div>
@@ -117,26 +117,26 @@ const UpcomingCard = ({ recurringPayments, onNavigate }) => {
 
   return (
     <div
-      style={{ ...CARD_STYLE_BASE, background: 'var(--cosmos-surface-1)', border: '1px solid var(--cosmos-border-card)' }}
+      style={{ ...CARD_STYLE_BASE, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
       onClick={() => onNavigate?.('budget', { view: 'recurring' })}
       role="button"
       aria-label="Ver próximos pagamentos recorrentes"
     >
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: 'var(--cosmos-text-3)' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: '#94A3B8' }}>
         Próximos Pagamentos
       </span>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 20, fontWeight: 600, color: 'var(--cosmos-text-1)', marginTop: 6, letterSpacing: '-0.02em' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 20, fontWeight: 600, color: '#FFFFFF', marginTop: 6, letterSpacing: '-0.02em' }}>
         {count}
       </span>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-text-3)', marginTop: 2 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#94A3B8', marginTop: 2 }}>
         {count === 1 ? 'pagamento esta semana' : 'pagamentos esta semana'}
       </span>
       {totalAmount > 0 && (
-        <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, fontWeight: 600, color: 'var(--cosmos-expense)', marginTop: 8 }}>
+        <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, fontWeight: 600, color: '#F87171', marginTop: 8 }}>
           {totalAmount.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
         </span>
       )}
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-accent)', marginTop: count > 0 && totalAmount > 0 ? 4 : 8 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#00DDFF', marginTop: count > 0 && totalAmount > 0 ? 4 : 8 }}>
         Ver recorrentes →
       </span>
     </div>
@@ -147,11 +147,11 @@ const UpcomingCard = ({ recurringPayments, onNavigate }) => {
 const InsightsSection = ({ transactions, currentMonth, recurringPayments, onNavigate }) => (
   <section aria-label="Insights financeiros" style={{ padding: '0 20px', marginTop: 24 }}>
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 16, fontWeight: 600, color: 'var(--cosmos-text-1)' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 16, fontWeight: 600, color: '#FFFFFF' }}>
         Insights
       </span>
       <button
-        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, color: 'var(--cosmos-accent)', WebkitTapHighlightColor: 'transparent' }}
+        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, color: '#00DDFF', WebkitTapHighlightColor: 'transparent' }}
         onClick={() => onNavigate?.('stats')}
       >
         Ver todos →

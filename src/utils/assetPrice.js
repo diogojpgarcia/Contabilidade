@@ -507,10 +507,13 @@ export const fetchCryptoTwelveData = async (symbols) => {
 // ─── stock symbol search (Twelve Data) ───────────────────────────────────────
 
 /**
- * Search for stocks by name or ticker (Twelve Data /symbol_search).
- * Returns [{ symbol, name, exchange }] — max 8 results — or [] on any failure.
+ * Search for stocks/ETFs by name or ticker (Twelve Data /symbol_search).
+ * @param {string}   query         — search query
+ * @param {string[]} instrumentTypes — filter to these Twelve Data instrument_type values
+ *   e.g. ['Common Stock'] for ações, ['ETF'] for ETFs, ['Common Stock','ETF'] for both
+ * Returns [{ symbol, name, exchange, type }] — max 8 results — or [] on any failure.
  */
-export const fetchStockSearch = async (query) => {
+export const fetchStockSearch = async (query, instrumentTypes = ['Common Stock', 'ETF']) => {
   if (!HAS_STOCK_KEY || !query?.trim()) return [];
 
   const { signal, clear } = abortAfter(5_000);
@@ -524,9 +527,14 @@ export const fetchStockSearch = async (query) => {
     if (!Array.isArray(data?.data)) return [];
 
     return data.data
-      .filter(r => !r.instrument_type || r.instrument_type === 'Common Stock' || r.instrument_type === 'ETF')
+      .filter(r => !r.instrument_type || instrumentTypes.includes(r.instrument_type))
       .slice(0, 8)
-      .map(r => ({ symbol: r.symbol, name: r.instrument_name ?? r.symbol, exchange: r.exchange ?? '' }));
+      .map(r => ({
+        symbol:   r.symbol,
+        name:     r.instrument_name ?? r.symbol,
+        exchange: r.exchange ?? '',
+        type:     r.instrument_type === 'ETF' ? 'etf' : 'stock',
+      }));
   } catch {
     return [];
   } finally {
