@@ -19,7 +19,7 @@ const HomeGreeting = ({ name = 'Diogo' }) => (
       fontFamily: 'Inter, -apple-system, sans-serif',
       fontSize: '14px',
       fontWeight: 400,
-      color: '#94A3B8',
+      color: 'var(--cosmos-text-3)',
     }}>
       {getGreeting()}, {name}
     </span>

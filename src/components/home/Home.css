@@ -117,7 +117,7 @@
   background: var(--cosmos-accent);
   border-radius: 0 0 24px 24px;
   padding: 20px 20px 22px;
-  color: #fff;
+  color: var(--cosmos-text-1);
   margin-bottom: 16px;
 }
 

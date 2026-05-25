@@ -65,7 +65,7 @@ const SpendTrendCard = ({ transactions, currentMonth, onNavigate }) => {
     };
   }, [transactions, currentMonth]);
 
-  const color = isDown ? '#22C55E' : '#F87171';
+  const color = isDown ? 'var(--cosmos-income)' : 'var(--cosmos-expense)';
   const hasData = sparkPoints.some(v => v > 0);
 
   return (
@@ -75,13 +75,13 @@ const SpendTrendCard = ({ transactions, currentMonth, onNavigate }) => {
       role="button"
       aria-label="Ver tendência de gastos nos stats"
     >
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: '#94A3B8' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: 'var(--cosmos-text-3)' }}>
         Tendência de Gastos
       </span>
       <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 20, fontWeight: 600, color, marginTop: 6, letterSpacing: '-0.02em' }}>
         {pct === 0 ? '—' : `${isDown ? '−' : '+'}${pct}%`}
       </span>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#94A3B8', marginTop: 2 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-text-3)', marginTop: 2 }}>
         vs mês anterior
       </span>
       {hasData && (
@@ -117,22 +117,22 @@ const UpcomingCard = ({ recurringPayments, onNavigate }) => {
 
   return (
     <div
-      style={{ ...CARD_STYLE_BASE, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ ...CARD_STYLE_BASE, background: 'var(--cosmos-surface-1)', border: '1px solid var(--cosmos-border-card)' }}
       onClick={() => onNavigate?.('budget', { view: 'recurring' })}
       role="button"
       aria-label="Ver próximos pagamentos recorrentes"
     >
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: '#94A3B8' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 11, color: 'var(--cosmos-text-3)' }}>
         Próximos Pagamentos
       </span>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 20, fontWeight: 600, color: '#FFFFFF', marginTop: 6, letterSpacing: '-0.02em' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 20, fontWeight: 600, color: 'var(--cosmos-text-1)', marginTop: 6, letterSpacing: '-0.02em' }}>
         {count}
       </span>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: '#94A3B8', marginTop: 2 }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 10, color: 'var(--cosmos-text-3)', marginTop: 2 }}>
         {count === 1 ? 'pagamento esta semana' : 'pagamentos esta semana'}
       </span>
       {totalAmount > 0 && (
-        <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, fontWeight: 600, color: '#F87171', marginTop: 8 }}>
+        <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 13, fontWeight: 600, color: 'var(--cosmos-expense)', marginTop: 8 }}>
           {totalAmount.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
         </span>
       )}
@@ -147,7 +147,7 @@ const UpcomingCard = ({ recurringPayments, onNavigate }) => {
 const InsightsSection = ({ transactions, currentMonth, recurringPayments, onNavigate }) => (
   <section aria-label="Insights financeiros" style={{ padding: '0 20px', marginTop: 24 }}>
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 16, fontWeight: 600, color: '#FFFFFF' }}>
+      <span style={{ fontFamily: 'Inter, -apple-system, sans-serif', fontSize: 16, fontWeight: 600, color: 'var(--cosmos-text-1)' }}>
         Insights
       </span>
       <button
