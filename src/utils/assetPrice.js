@@ -298,14 +298,20 @@ export const fetchCryptoHistoryBatch = async (symbols) => {
 const PERIOD_TTL = 5 * 60_000;
 
 const STOCK_PERIOD_CFG = {
-  '1D': { interval: '5min',  outputsize: 78  },
-  '1S': { interval: '1day',  outputsize: 7   },
-  '2S': { interval: '1day',  outputsize: 14  },
-  '1M': { interval: '1day',  outputsize: 30  },
-  '1A': { interval: '1week', outputsize: 52  },
+  '1D':   { interval: '5min',   outputsize: 78  },
+  '1S':   { interval: '1day',   outputsize: 7   },
+  '2S':   { interval: '1day',   outputsize: 14  },
+  '1M':   { interval: '1day',   outputsize: 30  },
+  '6M':   { interval: '1week',  outputsize: 26  },
+  '1A':   { interval: '1week',  outputsize: 52  },
+  '5A':   { interval: '1month', outputsize: 60  },
+  'Tudo': { interval: '1month', outputsize: 120 },
 };
 
-const CRYPTO_PERIOD_DAYS = { '1D': 1, '1S': 7, '2S': 14, '1M': 30, '1A': 365 };
+const CRYPTO_PERIOD_DAYS = {
+  '1D': 1, '1S': 7, '2S': 14, '1M': 30,
+  '6M': 180, '1A': 365, '5A': 1825, 'Tudo': 'max',
+};
 
 function formatLabel(dateStr, period) {
   const d = new Date(dateStr);
@@ -334,7 +340,7 @@ export const fetchPeriodHistory = async (sym, period, type) => {
       const interval = period === '1D' ? 'hourly' : 'daily';
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=eur&days=${days}&interval=${interval}`,
+        `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=eur&days=${days}${days !== 'max' ? `&interval=${interval}` : ''}`,
         { signal }
       );
       clear();

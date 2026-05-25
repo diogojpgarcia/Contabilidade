@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import CosmosSheet from '../cosmos/CosmosSheet';
 import { fetchPeriodHistory } from '../../utils/assetPrice';
 
-// ─── Catmull-Rom smooth SVG path ──────────────────────────────────────────────
+// ─── SVG chart constants ──────────────────────────────────────────────────────
+const W = 390, H = 185, PL = 0, PR = 0, PT = 18, PB = 18;
+
+const PERIODS = ['1D', '1S', '1M', '6M', '1A', '5A', 'Tudo'];
+
+// ─── Catmull-Rom smooth path ──────────────────────────────────────────────────
 function catmullRomPath(pts) {
   if (pts.length < 2) return '';
   let d = `M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
@@ -20,9 +25,6 @@ function catmullRomPath(pts) {
   return d;
 }
 
-// ─── Map price array → SVG coordinate points ─────────────────────────────────
-const W = 358, H = 160, PL = 10, PR = 10, PT = 14, PB = 20;
-
 function toPts(prices) {
   if (!prices || prices.length < 2) return [];
   const mn = Math.min(...prices), mx = Math.max(...prices);
@@ -33,120 +35,154 @@ function toPts(prices) {
   ]);
 }
 
-const PERIODS = ['1D', '1S', '2S', '1M', '1A'];
-
+// ─── Formatters ───────────────────────────────────────────────────────────────
 const fmtPrice = (n) => {
-  if (!n && n !== 0) return '—';
-  return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: n < 1 ? 6 : 2 });
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return n.toLocaleString('pt-PT', {
+    minimumFractionDigits: n < 1 ? 4 : 2,
+    maximumFractionDigits: n < 1 ? 6 : 2,
+  });
 };
-const fmtInt = (n) => Math.round(n).toLocaleString('pt-PT');
-const fmtPct = (n) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+const fmtPct  = (n) => (n >= 0 ? '+' : '') + Math.abs(n).toFixed(2) + '%';
+const fmtAbs  = (n) => (n >= 0 ? '+' : '−') + fmtPrice(Math.abs(n));
+const fmtInt  = (n) => Math.round(n).toLocaleString('pt-PT');
 
-// ─── Chart component ──────────────────────────────────────────────────────────
+// ─── Premium Chart ────────────────────────────────────────────────────────────
 const PremiumChart = React.memo(({
-  prices, labels, purchasePrice, isPos, scrubIdx, clipW, onScrub, onScrubEnd,
+  prices, isPos, scrubIdx, clipW, onScrub, onScrubEnd,
 }) => {
   const pts = toPts(prices);
   if (pts.length < 2) return (
     <div className="asd-chart-empty">Sem dados de histórico</div>
   );
 
-  const linePath = catmullRomPath(pts);
-  const areaPath = linePath
-    + ` L${pts[pts.length - 1][0].toFixed(2)},${H - PB}`
-    + ` L${pts[0][0].toFixed(2)},${H - PB} Z`;
+  const linePath   = catmullRomPath(pts);
+  const color      = isPos ? '#30d158' : '#ff453a';
+  const scrubPt    = scrubIdx !== null && pts[scrubIdx] ? pts[scrubIdx] : null;
+  const endPt      = pts[pts.length - 1];
+  const isAnimDone = clipW >= W;
 
-  const color = isPos ? '#30d158' : '#ff453a';
-  const gradId = isPos ? 'asd-gpos' : 'asd-gneg';
+  // X split: during animation = clipW; during scrub = scrubPt[0]
+  const splitX = scrubPt ? scrubPt[0] : Math.min(clipW, W);
 
-  // Purchase price line
-  const mn = Math.min(...prices), mx = Math.max(...prices);
-  const rng = mx === mn ? mx * 0.08 || 20 : mx - mn;
-  const purchY = purchasePrice && purchasePrice >= mn && purchasePrice <= mx
-    ? PT + ((mx - purchasePrice) / rng) * (H - PT - PB)
-    : null;
-
-  const scrubPt = scrubIdx !== null && pts[scrubIdx] ? pts[scrubIdx] : null;
-  const endPt = pts[pts.length - 1];
-
-  // Split x for dim/active
-  const splitX = scrubPt ? scrubPt[0] : clipW;
+  // Price scale: max/min
+  const mn  = Math.min(...prices), mx = Math.max(...prices);
+  const yTop = PT;       // where max price sits
+  const yBot = H - PB;   // where min price sits
 
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
       className="asd-svg"
-      style={{ touchAction: 'none' }}
-      onMouseDown={e => { const r = e.currentTarget.getBoundingClientRect(); onScrub((e.clientX - r.left) / r.width); }}
-      onMouseMove={e => { if (e.buttons) { const r = e.currentTarget.getBoundingClientRect(); onScrub((e.clientX - r.left) / r.width); } }}
+      onMouseDown={e  => { const r = e.currentTarget.getBoundingClientRect(); onScrub((e.clientX - r.left) / r.width); }}
+      onMouseMove={e  => { if (e.buttons) { const r = e.currentTarget.getBoundingClientRect(); onScrub((e.clientX - r.left) / r.width); } }}
       onMouseLeave={onScrubEnd}
       onMouseUp={onScrubEnd}
       onTouchStart={e => { e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); onScrub((e.touches[0].clientX - r.left) / r.width); }}
-      onTouchMove={e => { e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); onScrub((e.touches[0].clientX - r.left) / r.width); }}
+      onTouchMove={e  => { e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); onScrub((e.touches[0].clientX - r.left) / r.width); }}
       onTouchEnd={onScrubEnd}
     >
       <defs>
-        <linearGradient id="asd-gpos" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#30d158" stopOpacity="0.22" />
-          <stop offset="80%" stopColor="#30d158" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="asd-gneg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ff453a" stopOpacity="0.18" />
-          <stop offset="80%" stopColor="#ff453a" stopOpacity="0" />
-        </linearGradient>
-        <clipPath id="asd-clip-a">
+        {/* Clip for animated draw-in and active portion */}
+        <clipPath id="asd-clip-active">
           <rect x="0" y="0" width={splitX.toFixed(1)} height={H} />
         </clipPath>
-        <clipPath id="asd-clip-d">
+        {/* Clip for dimmed portion (after cursor / after animation) */}
+        <clipPath id="asd-clip-dim">
           <rect x={splitX.toFixed(1)} y="0" width={W} height={H} />
         </clipPath>
       </defs>
 
-      {/* Area — only on active portion */}
-      <path d={areaPath} fill={`url(#${gradId})`} clipPath="url(#asd-clip-a)" />
+      {/* Active line segment */}
+      <path
+        d={linePath}
+        fill="none"
+        stroke={color}
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        clipPath="url(#asd-clip-active)"
+      />
 
-      {/* Line — active */}
-      <path d={linePath} fill="none" stroke={color} strokeWidth="2.2"
-        strokeLinecap="round" strokeLinejoin="round" clipPath="url(#asd-clip-a)" />
-
-      {/* Line — dimmed (only when scrubbing) */}
-      {scrubPt && (
-        <path d={linePath} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2.2"
-          strokeLinecap="round" strokeLinejoin="round" clipPath="url(#asd-clip-d)" />
+      {/* Dimmed portion — visible only when scrubbing (after animation finishes) */}
+      {(scrubPt || !isAnimDone) && (
+        <path
+          d={linePath}
+          fill="none"
+          stroke={isAnimDone ? 'rgba(255,255,255,0.18)' : 'none'}
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          clipPath="url(#asd-clip-dim)"
+        />
       )}
 
-      {/* Purchase price dashed line */}
-      {purchY !== null && (
+      {/* Price scale labels on right */}
+      <text
+        x={W - 6}
+        y={yTop + 2}
+        textAnchor="end"
+        fontSize="10"
+        fill="rgba(255,255,255,0.35)"
+        fontFamily="-apple-system, 'SF Pro Text', sans-serif"
+        dominantBaseline="hanging"
+      >
+        {fmtPrice(mx)}
+      </text>
+      <text
+        x={W - 6}
+        y={yBot - 2}
+        textAnchor="end"
+        fontSize="10"
+        fill="rgba(255,255,255,0.35)"
+        fontFamily="-apple-system, 'SF Pro Text', sans-serif"
+        dominantBaseline="auto"
+      >
+        {fmtPrice(mn)}
+      </text>
+
+      {/* Cursor: full-height white line + glow dot */}
+      {scrubPt && (
         <>
-          <line x1={PL} y1={purchY.toFixed(1)} x2={W - PR} y2={purchY.toFixed(1)}
-            stroke="rgba(255,190,50,0.5)" strokeWidth="1" strokeDasharray="5,4" />
-          <text x={W - PR - 4} y={(purchY - 5).toFixed(1)} textAnchor="end"
-            fontSize="9" fill="rgba(255,190,50,0.7)" fontFamily="-apple-system,sans-serif">
-            preço compra
-          </text>
+          {/* Vertical cursor line */}
+          <line
+            x1={scrubPt[0].toFixed(1)}
+            x2={scrubPt[0].toFixed(1)}
+            y1="0"
+            y2={H}
+            stroke="rgba(255,255,255,0.55)"
+            strokeWidth="1"
+          />
+          {/* Glow rings */}
+          <circle cx={scrubPt[0].toFixed(1)} cy={scrubPt[1].toFixed(1)} r="14" fill={color} opacity="0.08" />
+          <circle cx={scrubPt[0].toFixed(1)} cy={scrubPt[1].toFixed(1)} r="9"  fill={color} opacity="0.15" />
+          {/* Solid dot */}
+          <circle
+            cx={scrubPt[0].toFixed(1)}
+            cy={scrubPt[1].toFixed(1)}
+            r="5"
+            fill={color}
+            stroke="var(--cosmos-bg, #0c0e13)"
+            strokeWidth="2"
+          />
         </>
       )}
 
-      {/* Cursor vertical line */}
-      {scrubPt && (
-        <line x1={scrubPt[0].toFixed(1)} x2={scrubPt[0].toFixed(1)} y1={6} y2={H - 6}
-          stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+      {/* End-of-line dot when animation is complete and not scrubbing */}
+      {isAnimDone && !scrubPt && (
+        <>
+          <circle cx={endPt[0].toFixed(1)} cy={endPt[1].toFixed(1)} r="9"  fill={color} opacity="0.15" />
+          <circle
+            cx={endPt[0].toFixed(1)}
+            cy={endPt[1].toFixed(1)}
+            r="4.5"
+            fill={color}
+            stroke="var(--cosmos-bg, #0c0e13)"
+            strokeWidth="2"
+          />
+        </>
       )}
-
-      {/* End / cursor dot */}
-      {(() => {
-        const pt = scrubPt || (clipW >= W - PR ? endPt : null);
-        if (!pt) return null;
-        return (
-          <>
-            <circle cx={pt[0].toFixed(1)} cy={pt[1].toFixed(1)} r="9"
-              fill={color} opacity="0.15" />
-            <circle cx={pt[0].toFixed(1)} cy={pt[1].toFixed(1)} r="4.5"
-              fill={color} stroke="var(--cosmos-bg, #0c0e13)" strokeWidth="2.5" />
-          </>
-        );
-      })()}
     </svg>
   );
 });
@@ -155,21 +191,20 @@ const PremiumChart = React.memo(({
 export default function AssetDetailSheet({
   open, onClose, item, assetKey, marketPrice, history, onEdit,
 }) {
-  const [period, setPeriod]   = useState('1S');
-  const [periodData, setPeriodData] = useState(null); // { prices, labels }
-  const [loading, setLoading] = useState(false);
-  const [clipW, setClipW]     = useState(0);
-  const [scrubIdx, setScrubIdx] = useState(null);
+  const [period,     setPeriod]     = useState('1D');
+  const [periodData, setPeriodData] = useState(null);
+  const [loading,    setLoading]    = useState(false);
+  const [clipW,      setClipW]      = useState(0);
+  const [scrubIdx,   setScrubIdx]   = useState(null);
   const [scrubPrice, setScrubPrice] = useState(null);
   const animRef = useRef(null);
-  const prevPeriod = useRef(null);
 
   if (!item) return null;
 
   const isStock  = assetKey === 'stocks' || assetKey === 'etfs';
   const type     = isStock ? 'stock' : 'crypto';
   const sym      = isStock ? item.ticker : (item.coin ?? '');
-  const qty      = parseFloat(item.qty) || 0;
+  const qty      = parseFloat(item.qty)           || 0;
   const purchase = parseFloat(item.purchasePrice) || 0;
   const hasPrice = marketPrice > 0;
 
@@ -177,23 +212,28 @@ export default function AssetDetailSheet({
   const costBasis = qty * purchase;
   const pnlAbs    = purchase > 0 && hasPrice ? marketVal - costBasis : null;
   const pnlPct    = purchase > 0 && hasPrice ? ((marketPrice - purchase) / purchase) * 100 : null;
-  const isPos     = (pnlPct !== null ? pnlPct : (periodData?.prices
-    ? periodData.prices[periodData.prices.length - 1] - periodData.prices[0]
-    : 0)) >= 0;
+
+  // Overall direction for chart color
+  const chartIsPos = (pnlPct !== null
+    ? pnlPct
+    : (periodData?.prices?.length >= 2
+        ? periodData.prices[periodData.prices.length - 1] - periodData.prices[0]
+        : 0)
+  ) >= 0;
 
   const insertedDate = item.insertedAt
     ? new Date(item.insertedAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
     : null;
 
-  const qtyLabel   = assetKey === 'etfs' ? 'unidades' : isStock ? 'ações' : 'moedas';
-  const priceLabel = assetKey === 'etfs' ? 'unidade'  : isStock ? 'ação'  : 'moeda';
 
-  // ── Fetch period data ────────────────────────────────────────────────────────
+  const qtyLabel   = assetKey === 'etfs' ? 'unidades' : isStock ? 'acoes' : 'moedas';
+  const priceLabel = assetKey === 'etfs' ? 'unidade'  : isStock ? 'acao'  : 'moeda';
+
+  // Fetch period data
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
 
-    // 1S: reuse the sparkline history we already have
     if (period === '1S' && history?.length >= 2) {
       const labels = history.map((_, i) => {
         const d = new Date();
@@ -214,7 +254,7 @@ export default function AssetDetailSheet({
     return () => { cancelled = true; };
   }, [period, open, sym, type, history]);
 
-  // ── Animate chart line on period change ──────────────────────────────────────
+  // Animate chart line draw-in
   useEffect(() => {
     if (!open || !periodData) return;
     if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -222,20 +262,20 @@ export default function AssetDetailSheet({
     setScrubIdx(null);
     setScrubPrice(null);
 
-    const duration = 550;
+    const duration = 520;
     const start = performance.now();
-    function step(now) {
-      const t = Math.min(1, (now - start) / duration);
+    const step = (now) => {
+      const t    = Math.min(1, (now - start) / duration);
       const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       setClipW(ease * W);
       if (t < 1) animRef.current = requestAnimationFrame(step);
-      else setClipW(W);
-    }
+      else        setClipW(W);
+    };
     animRef.current = requestAnimationFrame(step);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, [periodData, open]);
 
-  // ── Scrub handler ────────────────────────────────────────────────────────────
+  // Scrub handlers
   const handleScrub = useCallback((ratio) => {
     if (!periodData?.prices) return;
     const idx = Math.round(Math.max(0, Math.min(1, ratio)) * (periodData.prices.length - 1));
@@ -248,15 +288,19 @@ export default function AssetDetailSheet({
     setScrubPrice(null);
   }, []);
 
-  // ── Displayed price & delta ──────────────────────────────────────────────────
-  const prices    = periodData?.prices;
-  const labels    = periodData?.labels;
-  const dispPrice = scrubPrice ?? marketPrice;
-  const basePrice = prices?.[0];
-  const periodDelta = prices && basePrice
-    ? ((dispPrice - basePrice) / basePrice) * 100
-    : null;
-  const dispLabel = scrubIdx !== null && labels ? labels[scrubIdx] : null;
+  // Displayed values
+  const prices     = periodData?.prices;
+  const labels     = periodData?.labels;
+  const dispPrice  = scrubPrice ?? marketPrice;
+  const basePrice  = prices?.[0];
+
+  const periodAbsDelta = prices && basePrice != null ? dispPrice - basePrice : null;
+  const periodPctDelta = prices && basePrice        ? ((dispPrice - basePrice) / basePrice) * 100 : null;
+  const deltaIsPos     = (periodPctDelta ?? 0) >= 0;
+
+  const scrubLabel = scrubIdx !== null && labels ? labels[scrubIdx] : null;
+  const lastLabel  = labels ? labels[labels.length - 1] : null;
+  const timeLabel  = scrubLabel ?? (period === '1D' ? lastLabel : null);
 
   return (
     <CosmosSheet open={open} onClose={onClose} title="" showClose divider={false}>
@@ -276,22 +320,43 @@ export default function AssetDetailSheet({
           )}
         </div>
 
-        {/* Price */}
+        {/* Price display */}
         <div className="asd-price-block">
-          <div className="asd-price">{fmtPrice(dispPrice)}€</div>
-          <div className="asd-price-row">
-            {periodDelta !== null && (
-              <span className={`asd-badge ${periodDelta >= 0 ? 'pos' : 'neg'}`}>
-                {periodDelta >= 0 ? '▲' : '▼'} {Math.abs(periodDelta).toFixed(2)}%
+          <div className="asd-price">{fmtPrice(dispPrice)} &euro;</div>
+          <div className="asd-delta-row">
+            {periodAbsDelta !== null && (
+              <span className={`asd-delta-abs ${deltaIsPos ? 'pos' : 'neg'}`}>
+                {fmtAbs(periodAbsDelta)} &euro;
               </span>
             )}
-            <span className="asd-period-lbl">
-              {dispLabel ?? period}
-            </span>
+            {periodPctDelta !== null && (
+              <span className={`asd-delta-pct ${deltaIsPos ? 'pos' : 'neg'}`}>
+                {deltaIsPos ? '▲' : '▼'} {Math.abs(periodPctDelta).toFixed(2)}%
+              </span>
+            )}
           </div>
+          {timeLabel && (
+            <div className="asd-time-lbl">{timeLabel}</div>
+          )}
         </div>
 
-        {/* Period selector */}
+        {/* Chart */}
+        <div className="asd-chart-wrap">
+          {loading ? (
+            <div className="asd-chart-loading"><span className="asd-spinner" /></div>
+          ) : (
+            <PremiumChart
+              prices={prices}
+              isPos={chartIsPos}
+              scrubIdx={scrubIdx}
+              clipW={clipW}
+              onScrub={handleScrub}
+              onScrubEnd={handleScrubEnd}
+            />
+          )}
+        </div>
+
+        {/* Period selector - BELOW chart */}
         <div className="asd-periods">
           {PERIODS.map(p => (
             <button
@@ -302,53 +367,40 @@ export default function AssetDetailSheet({
           ))}
         </div>
 
-        {/* Chart */}
-        <div className="asd-chart-wrap">
-          {loading && <div className="asd-chart-loading"><span className="asd-spinner" /></div>}
-          {!loading && (
-            <PremiumChart
-              prices={prices}
-              labels={labels}
-              purchasePrice={purchase || null}
-              isPos={isPos}
-              scrubIdx={scrubIdx}
-              clipW={clipW}
-              onScrub={handleScrub}
-              onScrubEnd={handleScrubEnd}
-            />
-          )}
-        </div>
-
         {/* P&L card */}
         {pnlPct !== null ? (
           <div className={`asd-pnl ${pnlPct >= 0 ? 'pos' : 'neg'}`}>
             <div className="asd-pnl-top">
-              <span className="asd-pnl-since">Desde inserção{insertedDate ? ` · ${insertedDate}` : ''}</span>
-              <span className={`asd-pnl-pct ${pnlPct >= 0 ? 'pos' : 'neg'}`}>{fmtPct(pnlPct)}</span>
+              <span className="asd-pnl-since">
+                Desde {insertedDate ? insertedDate : 'insercao'}
+              </span>
+              <span className={`asd-pnl-pct ${pnlPct >= 0 ? 'pos' : 'neg'}`}>
+                {fmtPct(pnlPct)}
+              </span>
             </div>
             <div className="asd-pnl-cols">
               <div className="asd-pnl-col">
                 <span className="asd-pnl-lbl">Custo total</span>
-                <span className="asd-pnl-val">{fmtInt(costBasis)}€</span>
-                <span className="asd-pnl-sub">a {fmtPrice(purchase)}€/{priceLabel}</span>
+                <span className="asd-pnl-val">{fmtInt(costBasis)} &euro;</span>
+                <span className="asd-pnl-sub">a {fmtPrice(purchase)} &euro;/{priceLabel}</span>
               </div>
               <div className="asd-pnl-sep" />
               <div className="asd-pnl-col right">
                 <span className="asd-pnl-lbl">Valor atual</span>
-                <span className="asd-pnl-val">{fmtInt(marketVal)}€</span>
+                <span className="asd-pnl-val">{fmtInt(marketVal)} &euro;</span>
                 <span className={`asd-pnl-gain ${pnlAbs >= 0 ? 'pos' : 'neg'}`}>
-                  {pnlAbs >= 0 ? '+' : ''}{fmtInt(pnlAbs)}€
+                  {pnlAbs >= 0 ? '+' : '-'}{fmtInt(Math.abs(pnlAbs))} &euro;
                 </span>
               </div>
             </div>
           </div>
         ) : !purchase && hasPrice ? (
           <div className="asd-pnl-hint">
-            Adiciona o preço de compra para ver o teu ganho/perda.
+            Adiciona o preco de compra para ver o teu ganho/perda.
           </div>
         ) : null}
 
-        {/* Stats */}
+        {/* Stats grid */}
         <div className="asd-stats">
           <div className="asd-stat">
             <span className="asd-sl">Quantidade</span>
@@ -356,12 +408,12 @@ export default function AssetDetailSheet({
           </div>
           <div className="asd-stat">
             <span className="asd-sl">Valor total</span>
-            <span className="asd-sv">{hasPrice ? `${fmtInt(marketVal)}€` : '—'}</span>
+            <span className="asd-sv">{hasPrice ? `${fmtInt(marketVal)} €` : '—'}</span>
           </div>
           {purchase > 0 && (
             <div className="asd-stat">
-              <span className="asd-sl">Preço compra</span>
-              <span className="asd-sv">{fmtPrice(purchase)}€</span>
+              <span className="asd-sl">Preco compra</span>
+              <span className="asd-sv">{fmtPrice(purchase)} €</span>
             </div>
           )}
           {insertedDate && (
@@ -373,7 +425,10 @@ export default function AssetDetailSheet({
         </div>
 
         {/* Edit button */}
-        <button className="asd-edit-btn" onClick={() => { onClose(); setTimeout(onEdit, 180); }}>
+        <button
+          className="asd-edit-btn"
+          onClick={() => { onClose(); setTimeout(onEdit, 180); }}
+        >
           Editar ativo
         </button>
 
