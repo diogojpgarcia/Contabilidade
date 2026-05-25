@@ -25,10 +25,10 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
     <div style={{
       margin: '0 16px',
       borderRadius: '20px',
-      background: 'linear-gradient(160deg, #141E2E 0%, #0D1520 100%)',
-      border: '1px solid rgba(255,255,255,0.07)',
+      background: 'var(--cosmos-surface-2)',
+      border: '1px solid var(--cosmos-border-card)',
       overflow: 'hidden',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+      boxShadow: 'var(--cosmos-shadow-card)',
     }}>
 
       {/* TOPO: label + número + trend */}
@@ -39,7 +39,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
             <p style={{
               fontSize: '11px',
               fontWeight: 400,
-              color: '#94A3B8',
+              color: 'var(--cosmos-text-3)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               margin: '0 0 6px 0',
@@ -49,7 +49,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
             <p style={{
               fontSize: '36px',
               fontWeight: 700,
-              color: '#FFFFFF',
+              color: 'var(--cosmos-text-1)',
               letterSpacing: '-0.02em',
               lineHeight: 1,
               margin: '0 0 8px 0',
@@ -58,7 +58,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
             </p>
             <p style={{
               fontSize: '13px',
-              color: variacao <= 0 ? '#22C55E' : '#F87171',
+              color: variacao <= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)',
               margin: 0,
             }}>
               {variacao > 0 ? '↑' : variacao < 0 ? '↓' : '='} {variacao > 0 ? '+' : ''}{variacao}% vs mês passado
@@ -70,14 +70,14 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
-            background: 'rgba(231,76,60,0.12)',
-            border: '1px solid rgba(231,76,60,0.25)',
+            background: 'var(--cosmos-expense-dim)',
+            border: '1px solid var(--cosmos-expense-dim)',
             borderRadius: '20px',
             padding: '5px 10px',
             marginTop: '2px',
           }}>
-            <span style={{ color: '#E74C3C', fontSize: '12px' }}>↓</span>
-            <span style={{ color: '#E74C3C', fontSize: '12px', fontWeight: 500 }}>
+            <span style={{ color: 'var(--cosmos-expense)', fontSize: '12px' }}>↓</span>
+            <span style={{ color: 'var(--cosmos-expense)', fontSize: '12px', fontWeight: 500 }}>
               {despesasMes ?? '-308,00€'}
             </span>
           </div>
@@ -145,14 +145,14 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
       {/* BARRA DE PROGRESSO DO MÊS */}
       <div style={{ padding: '0 20px 16px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '11px', color: '#94A3B8' }}>
+          <span style={{ fontSize: '11px', color: 'var(--cosmos-text-3)' }}>
             Dia {diaAtual ?? 19} de {totalDias ?? 31}
           </span>
           <span style={{ fontSize: '11px', color: 'var(--cosmos-accent)' }}>{progresso}%</span>
         </div>
         <div style={{
           height: '3px',
-          background: 'rgba(255,255,255,0.08)',
+          background: 'var(--cosmos-border-divider)',
           borderRadius: '2px',
           overflow: 'hidden',
         }}>
