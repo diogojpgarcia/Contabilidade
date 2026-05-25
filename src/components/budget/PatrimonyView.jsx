@@ -744,6 +744,7 @@ const PatrimonyView = ({
         className="pat-asset-card"
         onEdit={() => handlePatrimonyEdit(assetKey, item)}
         onDelete={() => handlePatrimonyDelete(assetKey, item.id)}
+        onClick={() => handlePatrimonyEdit(assetKey, item)}
       >
         <div className="pat-asset-top">
           <div className="pat-asset-left">

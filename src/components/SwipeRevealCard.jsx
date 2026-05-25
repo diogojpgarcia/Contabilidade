@@ -11,7 +11,7 @@ let globalSwipeClose = null;
 const SWIPE_OPEN_PX   = 80;
 const SWIPE_THRESHOLD = 30;
 
-const SwipeRevealCard = ({ onEdit, onDelete, className = '', children }) => {
+const SwipeRevealCard = ({ onEdit, onDelete, onClick, className = '', children }) => {
   const rowRef    = useRef(null);
   const closeRef  = useRef(null);
   const isOpenRef = useRef(false);
@@ -97,7 +97,7 @@ const SwipeRevealCard = ({ onEdit, onDelete, className = '', children }) => {
           if (isOpenRef.current) { e.stopPropagation(); e.preventDefault(); closeRef.current?.(); }
         }}
       >
-        <div className={className}>{children}</div>
+        <div className={className} onClick={onClick ? (e) => { if (!isOpenRef.current) onClick(e); } : undefined}>{children}</div>
         <div className="swipe-actions">
           <button
             className="swipe-btn swipe-btn-edit"
