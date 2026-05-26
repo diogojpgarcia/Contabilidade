@@ -84,15 +84,28 @@ const abortAfter = (ms) => {
 // Extend freely; unknown symbols fall back to lowercase symbol.
 
 const COIN_IDS = {
-  BTC: 'bitcoin',       ETH: 'ethereum',       BNB: 'binancecoin',
-  SOL: 'solana',        ADA: 'cardano',         XRP: 'ripple',
-  DOT: 'polkadot',      DOGE: 'dogecoin',       AVAX: 'avalanche-2',
-  MATIC: 'matic-network', LINK: 'chainlink',    LTC: 'litecoin',
-  ATOM: 'cosmos',       UNI: 'uniswap',         ALGO: 'algorand',
-  XLM: 'stellar',       VET: 'vechain',         FIL: 'filecoin',
-  SAND: 'the-sandbox',  MANA: 'decentraland',   NEAR: 'near',
-  ICP: 'internet-computer', APE: 'apecoin',     OP: 'optimism',
-  ARB: 'arbitrum',      INJ: 'injective-protocol',
+  // Layer 1
+  BTC:   'bitcoin',              ETH:   'ethereum',           BNB:  'binancecoin',
+  SOL:   'solana',               ADA:   'cardano',             XRP:  'ripple',
+  DOT:   'polkadot',             DOGE:  'dogecoin',            AVAX: 'avalanche-2',
+  LTC:   'litecoin',             BCH:   'bitcoin-cash',        ETC:  'ethereum-classic',
+  XMR:   'monero',               XLM:   'stellar',             VET:  'vechain',
+  ALGO:  'algorand',             NEAR:  'near',                ICP:  'internet-computer',
+  APT:   'aptos',                SUI:   'sui',                 TRX:  'tron',
+  TON:   'the-open-network',     ATOM:  'cosmos',              FIL:  'filecoin',
+  // Layer 2 & DeFi
+  MATIC: 'matic-network',        LINK:  'chainlink',           UNI:  'uniswap',
+  OP:    'optimism',             ARB:   'arbitrum',            INJ:  'injective-protocol',
+  AAVE:  'aave',                 MKR:   'maker',               CRV:  'curve-dao-token',
+  SNX:   'havven',               LDO:   'lido-dao',            RUNE: 'thorchain',
+  GRT:   'the-graph',            JUP:   'jupiter-exchange-solana',
+  // AI / Infra
+  RNDR:  'render-token',         FET:   'fetch-ai',
+  // NFT / Gaming / Metaverse
+  APE:   'apecoin',              SAND:  'the-sandbox',         MANA: 'decentraland',
+  // Meme
+  SHIB:  'shiba-inu',            PEPE:  'pepe',
+  WIF:   'dogwifcoin',           BONK:  'bonk',
 };
 
 const toCoinId = (symbol) =>
@@ -133,6 +146,14 @@ const UCITS_EUR_TICKER = {
   PANX:  'PANX.PA',   // Nasdaq-100 UCITS — Euronext Paris EUR
   // SPDR
   SPXS:  'SPXS.DE',   // S&P 500 UCITS — XETRA EUR
+  // ── Ações portuguesas (Euronext Lisboa, EUR) ─────────────────────────────
+  EDP:   'EDP.LS',    // EDP — Energias de Portugal
+  GALP:  'GALP.LS',   // Galp Energia
+  BCP:   'BCP.LS',    // Millennium BCP
+  JMT:   'JMT.LS',    // Jerónimo Martins
+  SON:   'SON.LS',    // Sonae SGPS
+  NOS:   'NOS.LS',    // NOS SGPS
+  EGL:   'EGL.LS',    // Greenvolt
 };
 
 /**
@@ -216,7 +237,7 @@ export const fetchCryptoBatch = async (symbols) => {
   for (const sym of symbols) {
     const id  = toCoinId(sym);
     const hit = cryptoCache.get(id);
-    if (hit && Date.now() - hit.ts < CACHE_TTL) {
+    if (hit && Date.now() - hit.ts < CRYPTO_CACHE_TTL) {
       result[sym] = hit;
     } else {
       toFetch.push({ sym, id });
@@ -260,6 +281,13 @@ export const fetchCryptoBatch = async (symbols) => {
 
   return result;
 };
+
+/**
+ * Alias mantido para compatibilidade com PatrimonyView.
+ * CoinGecko devolve preços em EUR diretamente — melhor que converter de USD.
+ * Se no futuro quisermos usar Twelve Data para crypto basta substituir aqui.
+ */
+export const fetchCryptoTwelveData = fetchCryptoBatch;
 
 /**
  * Batch-fetch quotes for multiple stock/ETF tickers in ONE HTTP request.
@@ -504,9 +532,10 @@ export const fetchPeriodHistory = async (sym, period, type) => {
     } else {
       if (!HAS_STOCK_KEY) return null;
       const cfg = STOCK_PERIOD_CFG[period] ?? STOCK_PERIOD_CFG['1S'];
+      const resolvedSym = resolveEquityTicker(sym); // resolve UCITS bare tickers (e.g. VWCE → VWCE.DE)
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
       const res = await fetch(
-        `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${cfg.interval}&outputsize=${cfg.outputsize}&apikey=${TWELVE_DATA_KEY}`,
+        `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(resolvedSym)}&interval=${cfg.interval}&outputsize=${cfg.outputsize}&apikey=${TWELVE_DATA_KEY}`,
         { signal }
       );
       clear();

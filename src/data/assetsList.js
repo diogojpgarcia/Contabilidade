@@ -47,16 +47,18 @@ export const ASSETS = [
   { type: 'stock', symbol: 'SBUX',  name: 'Starbucks Corp.' },
 
   // ── European Stocks ───────────────────────────────────────────────────────
-  { type: 'stock', symbol: 'ASML',  name: 'ASML Holding N.V.' },
-  { type: 'stock', symbol: 'SAP',   name: 'SAP SE' },
-  { type: 'stock', symbol: 'NVO',   name: 'Novo Nordisk A/S' },
-  { type: 'stock', symbol: 'EDP',   name: 'EDP — Energias de Portugal' },
-  { type: 'stock', symbol: 'GALP',  name: 'Galp Energia SGPS' },
-  { type: 'stock', symbol: 'BCP',   name: 'Millennium BCP' },
-  { type: 'stock', symbol: 'JMT',   name: 'Jerónimo Martins SGPS' },
-  { type: 'stock', symbol: 'SON',   name: 'Sonae SGPS' },
-  { type: 'stock', symbol: 'NOS',   name: 'NOS SGPS' },
-  { type: 'stock', symbol: 'EGL',   name: 'Greenvolt — Energias Renováveis' },
+  // ASML e SAP têm listagem em NASDAQ/NYSE — sem sufixo funciona (preço USD)
+  { type: 'stock', symbol: 'ASML',     name: 'ASML Holding N.V.' },
+  { type: 'stock', symbol: 'SAP',      name: 'SAP SE' },
+  { type: 'stock', symbol: 'NVO',      name: 'Novo Nordisk A/S (NYSE ADR)' },
+  // Ações portuguesas — Euronext Lisboa (.LS), preços em EUR
+  { type: 'stock', symbol: 'EDP.LS',   name: 'EDP — Energias de Portugal' },
+  { type: 'stock', symbol: 'GALP.LS',  name: 'Galp Energia SGPS' },
+  { type: 'stock', symbol: 'BCP.LS',   name: 'Millennium BCP' },
+  { type: 'stock', symbol: 'JMT.LS',   name: 'Jerónimo Martins SGPS' },
+  { type: 'stock', symbol: 'SON.LS',   name: 'Sonae SGPS' },
+  { type: 'stock', symbol: 'NOS.LS',   name: 'NOS SGPS' },
+  { type: 'stock', symbol: 'EGL.LS',   name: 'Greenvolt — Energias Renováveis' },
 
   // ── US ETFs ───────────────────────────────────────────────────────────────
   { type: 'etf', symbol: 'SPY',  name: 'S&P 500 ETF (SPDR)' },
