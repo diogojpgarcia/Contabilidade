@@ -554,29 +554,3 @@ export const fetchPeriodHistory = async (sym, period, type) => {
   }
 };
 
-// ─── localStorage price cache ─────────────────────────────────────────────────
-//
-//  Schema (per ticker, key = "price_AAPL"):
-//    { price: number, timestamp: number }
-//
-//  Flow for getPrice(ticker):
-//    1. getCachedPrice()  →  fresh hit (< CACHE_TTL)  →  return cached price
-//    2. fetchPrice()      →  API call + persist         →  return fresh price
-//    3. API failure       →  getCachedPrice() stale     →  FALLBACK CACHE
-//
-//  In-flight deduplication: concurrent calls for the same ticker share one
-//  Promise, so the API is never hit more than once simultaneously per symbol.
-
-const LS_PREFIX = 'price_';
-
-/** In-flight fetch promises keyed by normalised ticker. */
-const inFlight = new Map();
-
-// ── helpers ────────────────────────────────────────────────────────────────────
-
-const lsKey = (ticker) => LS_PREFIX + ticker.toUpperCase();
-
-const lsWrite = (ticker, price) => {
-  try {
-    localStorage.setItem(lsKey(ticker), JSON.stringify({ price, timestamp: Date.now() }));
-  } catch { /* storage 
