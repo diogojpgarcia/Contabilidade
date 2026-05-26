@@ -68,17 +68,23 @@ export const ASSETS = [
   { type: 'etf', symbol: 'VGT',  name: 'Vanguard Info Technology ETF' },
   { type: 'etf', symbol: 'ARKK', name: 'ARK Innovation ETF' },
 
-  // ── UCITS ETFs (popular in PT/EU) ─────────────────────────────────────────
-  { type: 'etf', symbol: 'VWCE', name: 'Vanguard FTSE All-World UCITS ETF' },
-  { type: 'etf', symbol: 'IWDA', name: 'iShares Core MSCI World UCITS ETF' },
-  { type: 'etf', symbol: 'CSPX', name: 'iShares Core S&P 500 UCITS ETF' },
-  { type: 'etf', symbol: 'VUSA', name: 'Vanguard S&P 500 UCITS ETF' },
-  { type: 'etf', symbol: 'XDWD', name: 'Xtrackers MSCI World Swap UCITS ETF' },
-  { type: 'etf', symbol: 'SXR8', name: 'iShares Core S&P 500 (Acc) EUR' },
-  { type: 'etf', symbol: 'EUNL', name: 'iShares Core MSCI World UCITS (EUR)' },
-  { type: 'etf', symbol: 'EXSA', name: 'iShares Core EURO STOXX 50 UCITS ETF' },
-  { type: 'etf', symbol: 'MEUD', name: 'Amundi MSCI Europe UCITS ETF' },
-  { type: 'etf', symbol: 'AGGH', name: 'iShares Core Global Aggregate Bond UCITS ETF' },
+  // ── UCITS ETFs (popular em PT/EU) ────────────────────────────────────────
+  // Símbolos com sufixo de bolsa para preços corretos em EUR via Twelve Data.
+  // .DE = XETRA (EUR), .AS = Euronext Amsterdam (EUR), .PA = Euronext Paris (EUR)
+  // O resolveEquityTicker() em assetPrice.js faz o mesmo mapeamento automaticamente
+  // para ETFs já guardados na base de dados sem sufixo.
+  { type: 'etf', symbol: 'VWCE.DE', name: 'Vanguard FTSE All-World UCITS ETF' },
+  { type: 'etf', symbol: 'IWDA.AS', name: 'iShares Core MSCI World UCITS ETF' },
+  { type: 'etf', symbol: 'EUNL.DE', name: 'iShares Core MSCI World UCITS (XETRA)' },
+  { type: 'etf', symbol: 'CSPX.L',  name: 'iShares Core S&P 500 UCITS ETF (London)' },
+  { type: 'etf', symbol: 'SXR8.DE', name: 'iShares Core S&P 500 UCITS ETF (EUR)' },
+  { type: 'etf', symbol: 'VUSA.DE', name: 'Vanguard S&P 500 UCITS ETF (EUR)' },
+  { type: 'etf', symbol: 'XDWD.DE', name: 'Xtrackers MSCI World Swap UCITS ETF' },
+  { type: 'etf', symbol: 'EXSA.DE', name: 'iShares Core EURO STOXX 50 UCITS ETF' },
+  { type: 'etf', symbol: 'MEUD.PA', name: 'Amundi MSCI Europe UCITS ETF' },
+  { type: 'etf', symbol: 'AGGH.L',  name: 'iShares Core Global Aggregate Bond UCITS ETF' },
+  { type: 'etf', symbol: 'IS3N.DE', name: 'iShares Core MSCI EM IMI UCITS ETF' },
+  { type: 'etf', symbol: 'SPPW.DE', name: 'SPDR MSCI World UCITS ETF' },
 
   // ── Crypto — Layer 1 ──────────────────────────────────────────────────────
   // symbol = base ticker only; fetchCryptoTwelveData appends "/USD" internally

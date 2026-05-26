@@ -98,6 +98,54 @@ const COIN_IDS = {
 const toCoinId = (symbol) =>
   COIN_IDS[symbol?.toUpperCase()] ?? symbol?.toLowerCase() ?? '';
 
+// ─── UCITS ETF exchange map ──────────────────────────────────────────────────
+// Maps bare UCITS ETF tickers → their EUR-denominated Twelve Data symbol.
+// XETRA (.DE) is preferred: liquid, EUR, well supported by Twelve Data free tier.
+// When a user has "VWCE" saved (no suffix), we resolve it to "VWCE.DE" automatically.
+const UCITS_EUR_TICKER = {
+  // Vanguard
+  VWCE:  'VWCE.DE',   // FTSE All-World Acc — XETRA EUR
+  VUSA:  'VUSA.DE',   // S&P 500 UCITS — XETRA EUR
+  VWRL:  'VWRL.AS',   // FTSE All-World Dist — Euronext Amsterdam EUR
+  VAGP:  'VAGP.L',    // Global Aggregate Bond — London USD (best available)
+  VEUR:  'VEUR.AS',   // FTSE Developed Europe — Euronext Amsterdam EUR
+  VERX:  'VERX.AS',   // FTSE Developed Europe ex UK — Euronext Amsterdam EUR
+  VFEM:  'VFEM.AS',   // FTSE Emerging Markets — Euronext Amsterdam EUR
+  // iShares (BlackRock)
+  IWDA:  'IWDA.AS',   // MSCI World Acc — Euronext Amsterdam EUR
+  EUNL:  'EUNL.DE',   // MSCI World (same as IWDA, XETRA) — XETRA EUR
+  CSPX:  'CSPX.L',    // Core S&P 500 Acc — London USD (only liquid listing)
+  SXR8:  'SXR8.DE',   // Core S&P 500 Acc EUR-hedged — XETRA EUR
+  EXSA:  'EXSA.DE',   // Core EURO STOXX 50 — XETRA EUR
+  IEMA:  'IEMA.AS',   // Core MSCI EM IMI — Euronext Amsterdam EUR
+  AGGH:  'AGGH.L',    // Core Global Aggregate Bond — London USD
+  IAGG:  'IAGG.DE',   // Core Global Aggregate Bond EUR-hedged — XETRA EUR
+  IDTL:  'IDTL.L',    // $ Treasury Bond 20+yr — London USD
+  IS3N:  'IS3N.DE',   // Core MSCI EM IMI — XETRA EUR
+  SPPW:  'SPPW.DE',   // Core MSCI World — XETRA EUR
+  // Xtrackers (DWS)
+  XDWD:  'XDWD.DE',   // MSCI World Swap Acc — XETRA EUR
+  XDEM:  'XDEM.DE',   // MSCI World Momentum — XETRA EUR
+  DBXW:  'DBXW.DE',   // MSCI World Swap — XETRA EUR
+  // Amundi / Lyxor
+  MEUD:  'MEUD.PA',   // MSCI Europe — Euronext Paris EUR
+  LCWD:  'LCWD.PA',   // MSCI World — Euronext Paris EUR
+  PANX:  'PANX.PA',   // Nasdaq-100 UCITS — Euronext Paris EUR
+  // SPDR
+  SPXS:  'SPXS.DE',   // S&P 500 UCITS — XETRA EUR
+};
+
+/**
+ * Resolve a potentially bare ETF/stock ticker to its Twelve Data symbol.
+ * If the ticker already has an exchange suffix (contains "."), returns as-is.
+ * Otherwise checks UCITS_EUR_TICKER map, falling back to the original ticker.
+ */
+export const resolveEquityTicker = (ticker) => {
+  if (!ticker) return ticker;
+  if (ticker.includes('.')) return ticker;             // already has exchange suffix
+  return UCITS_EUR_TICKER[ticker.toUpperCase()] ?? ticker;
+};
+
 // ─── stocks (Twelve Data) ────────────────────────────────────────────────────
 
 /**
@@ -107,36 +155,44 @@ const toCoinId = (symbol) =>
 export const fetchStockQuote = async (ticker) => {
   if (!HAS_STOCK_KEY || !ticker) return null;
 
-  const hit = stockCache.get(ticker);
+  // Resolve bare UCITS tickers to their EUR exchange variant (e.g. VWCE → VWCE.DE)
+  const resolved = resolveEquityTicker(ticker);
+
+  const hit = stockCache.get(resolved);
   if (hit && Date.now() - hit.ts < CACHE_TTL) return hit;
 
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(ticker)}&apikey=${TWELVE_DATA_KEY}`;
-    const res = await fetch(url, { signal });   // no Content-Type on GET — avoids CORS preflight
+    const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(resolved)}&apikey=${TWELVE_DATA_KEY}`;
+    const res = await fetch(url, { signal });
     if (!res.ok) {
-      console.error(`[assetPrice] fetchStockQuote HTTP ${res.status} — ${ticker}`);
+      console.error(`[assetPrice] fetchStockQuote HTTP ${res.status} — ${resolved}`);
       return null;
     }
 
     const data = await res.json();
-      // 
-    // Twelve Data returns { code: 400, ... } for errors
     if (data.code || data.status === 'error') {
-      console.error(`[assetPrice] API ERROR ${ticker}:`, data);
+      console.error(`[assetPrice] API ERROR ${resolved}:`, data);
       return null;
     }
 
-    const price     = parseFloat(data.close)           || null;  // NaN || null → null ✓
+    const price     = parseFloat(data.close) || null;
     const _chg      = parseFloat(data.percent_change);
-    const changePct = Number.isFinite(_chg) ? _chg : null;       // NaN → null (never store NaN)
+    const changePct = Number.isFinite(_chg) ? _chg : null;
+    const currency  = data.currency ?? '?';
     if (price === null) return null;
 
-    const entry = { price, changePct, ts: Date.now() };
-    stockCache.set(ticker, entry);
+    if (currency !== 'EUR' && currency !== '?') {
+      console.warn(`[assetPrice] ${resolved} priced in ${currency} — não EUR. Considera usar a versão EUR da bolsa.`);
+    }
+
+    const entry = { price, changePct, currency, ts: Date.now() };
+    // Cache under both original and resolved ticker so callers using either key get a hit
+    stockCache.set(resolved, entry);
+    if (resolved !== ticker) stockCache.set(ticker, entry);
     return entry;
   } catch (err) {
-    console.error(`[assetPrice] FETCH FAILED ${ticker}:`, err);
+    console.error(`[assetPrice] FETCH FAILED ${resolved}:`, err);
     return null;
   } finally {
     clear();
@@ -217,11 +273,16 @@ export const fetchStockQuoteBatch = async (tickers) => {
   if (!HAS_STOCK_KEY || !tickers?.length) return {};
 
   const result  = {};
+  // Map: resolved ticker → original ticker (so we return results keyed by original)
+  const resolvedMap = new Map(); // resolvedTicker → originalTicker
   const toFetch = [];
 
   for (const ticker of tickers) {
     if (!ticker) continue;
-    const hit = stockCache.get(ticker);
+    const resolved = resolveEquityTicker(ticker);
+    resolvedMap.set(resolved, ticker);
+    // Check cache under resolved key
+    const hit = stockCache.get(resolved) ?? stockCache.get(ticker);
     if (hit && Date.now() - hit.ts < CACHE_TTL) {
       result[ticker] = hit;
     } else {
@@ -231,7 +292,9 @@ export const fetchStockQuoteBatch = async (tickers) => {
 
   if (!toFetch.length) return result;
 
-  const symbolList = toFetch.join(',');
+  // Use resolved tickers in the API request
+  const resolvedTickers = toFetch.map(t => resolveEquityTicker(t));
+  const symbolList = resolvedTickers.join(',');
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
 
   try {
@@ -244,24 +307,34 @@ export const fetchStockQuoteBatch = async (tickers) => {
 
     const data = await res.json();
 
-    // Single-symbol response comes unwrapped; multi-symbol as { "AAPL": {...}, "MSFT": {...} }
-    const parse = (q, ticker) => {
+    // Parse one quote object; store under both resolved and original ticker keys
+    const parse = (q, resolvedTicker, originalTicker) => {
       if (!q || q.code || q.status === 'error') return;
       const price     = parseFloat(q.close) || null;
       const _chg      = parseFloat(q.percent_change);
       const changePct = Number.isFinite(_chg) ? _chg : null;
+      const currency  = q.currency ?? '?';
       if (price === null) return;
-      const entry = { price, changePct, ts: Date.now() };
-      stockCache.set(ticker, entry);
-      result[ticker] = entry;
+
+      if (currency !== 'EUR' && currency !== '?') {
+        console.warn(`[assetPrice] ${resolvedTicker} cotado em ${currency} — não EUR. Verifica a bolsa do ETF.`);
+      }
+
+      const entry = { price, changePct, currency, ts: Date.now() };
+      stockCache.set(resolvedTicker, entry);
+      if (resolvedTicker !== originalTicker) stockCache.set(originalTicker, entry);
+      result[originalTicker] = entry;
     };
 
     if (toFetch.length === 1) {
-      parse(data, toFetch[0]);
+      parse(data, resolvedTickers[0], toFetch[0]);
     } else {
-      for (const ticker of toFetch) {
-        parse(data[ticker], ticker);
-      }
+      toFetch.forEach((origTicker, i) => {
+        const resolved = resolvedTickers[i];
+        // Twelve Data keys multi-symbol responses by the resolved ticker
+        const q = data[resolved] ?? data[origTicker];
+        parse(q, resolved, origTicker);
+      });
     }
   } catch (err) {
     console.error('[assetPrice] fetchStockQuoteBatch FAILED:', err);
@@ -281,13 +354,14 @@ export const fetchStockQuoteBatch = async (tickers) => {
 export const fetchStockHistory = async (ticker) => {
   if (!HAS_STOCK_KEY || !ticker) return null;
 
-  const hit = stockHistoryCache.get(ticker);
+  const resolved = resolveEquityTicker(ticker);
+  const hit = stockHistoryCache.get(resolved) ?? stockHistoryCache.get(ticker);
   if (hit && Date.now() - hit.ts < HISTORY_TTL) return hit.prices;
 
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
     const res = await fetch(
-      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(ticker)}&interval=1day&outputsize=8&apikey=${TWELVE_DATA_KEY}`,
+      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(resolved)}&interval=1day&outputsize=8&apikey=${TWELVE_DATA_KEY}`,
       { signal }
     );
     if (!res.ok) return null;
@@ -303,7 +377,8 @@ export const fetchStockHistory = async (ticker) => {
     if (prices.length < 2) return null;
 
     const entry = { prices, ts: Date.now() };
-    stockHistoryCache.set(ticker, entry);
+    stockHistoryCache.set(resolved, entry);
+    if (resolved !== ticker) stockHistoryCache.set(ticker, entry);
     return prices;
   } catch {
     return null;
