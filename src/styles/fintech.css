@@ -34,7 +34,7 @@ html, body {
   border-top: 0.5px solid var(--separator);
   border-radius: 20px 20px 0 0;
   box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.08);
-  padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+  padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
 }
 [data-theme="dark"]  .modern-ui .bottom-nav,
 [data-theme="gray"]  .modern-ui .bottom-nav { box-shadow: 0 -2px 20px rgba(0,0,0,0.35); }
@@ -2999,4 +2999,66 @@ html, body {
   border-radius: 16px;
   padding: 14px 16px;
   border: 1px solid rgba(255,255,255,0.05);
-  d
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+[data-theme="light"] .m-insight-card {
+  background: #fff;
+  border-color: rgba(0,0,0,0.06);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+
+.m-insight-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.m-insight-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.m-insight-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-insight-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.m-insight-msg {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.m-insights-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+}
+
+.m-insights-empty-icon {
+  font-size: 2rem;
+  color: var(--cosmos-income);
+}
