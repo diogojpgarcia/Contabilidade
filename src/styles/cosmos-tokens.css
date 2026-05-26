@@ -86,6 +86,8 @@
 
   /* ── Bottom nav ───────────────────────────────────────────────────────── */
   --cosmos-nav-h:       52px;
+  --cosmos-nav-item-py: 5px;     /* padding vertical dos itens */
+  --cosmos-nav-bar-pt:  4px;     /* padding-top da barra */
   --cosmos-nav-safe:    calc(var(--cosmos-nav-h) + env(safe-area-inset-bottom));
   --cosmos-nav-surface: rgba(17, 19, 26, 1.00);   /* floating bar fill */
   --cosmos-nav-notch:   #0d0f12;                   /* page-bg colour used for notch cutout */

@@ -29,28 +29,80 @@ html, body {
 }
 
 /* ── BOTTOM NAV ─────────────────────────────────────────────────────────── */
-.modern-ui .bottom-nav {
-  background: var(--bg-secondary);
-  border-top: 0.5px solid var(--separator);
+/* .modern-ui nav overrides — movido para bloco unificado abaixo */
+/* ════════════════════════════════════════════════════════════════════════════
+   BOTTOM NAV — fonte única de verdade
+   Tokens em cosmos-tokens.css  →  --cosmos-nav-surface, --cosmos-nav-item-py
+   Regras de layout/posição aqui; NÃO duplicar em modern.css ou soft-future.css
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  z-index: 1000;
+  background: var(--cosmos-nav-surface);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.07);
   border-radius: 20px 20px 0 0;
-  box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.08);
-  padding: 4px 4px env(safe-area-inset-bottom);
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.18);
+  /* padding-top fixo; padding-bottom = safe-area apenas (sem valor extra) */
+  padding: var(--cosmos-nav-bar-pt, 4px) 0 env(safe-area-inset-bottom);
+  /* SEM backdrop-filter: surface é opaco */
 }
-[data-theme="dark"]  .modern-ui .bottom-nav,
-[data-theme="gray"]  .modern-ui .bottom-nav { box-shadow: 0 -2px 20px rgba(0,0,0,0.35); }
 
-.modern-ui .nav-item {
-  border-radius: 12px;
-  padding: 4px 6px;
+/* Stone (light) palette — sombra mais suave */
+[data-palette="stone"] .bottom-nav {
+  box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.08);
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 3px;
-  transition: background 0.12s;
+  padding: var(--cosmos-nav-item-py, 5px) 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 12px;
+  margin: 2px 2px 0;
+  color: var(--cosmos-text-3);
+  transition: background 0.12s, color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 0; /* deixar o conteúdo ditar a altura */
 }
-.modern-ui .nav-item.active            { background: var(--cosmos-accent-dim); }
-.modern-ui .nav-item.active .nav-icon,
-.modern-ui .nav-item.active .nav-label { color: var(--cosmos-accent); }
-.modern-ui .nav-item:active            { opacity: 0.7; }
 
-/* nav-item-add / nav-icon-large overrides removed — + is now a standard nav item */
+.nav-item:active { opacity: 0.7; }
+
+.nav-item.active {
+  background: var(--cosmos-accent-dim);
+  color: var(--cosmos-accent);
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+}
+
+.nav-item.active .nav-icon { transform: scale(1.05); }
+
+.nav-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: inherit;
+  line-height: 1;
+}
+
+
 
 /* ── PAGE WRAPPER (all modern tab roots) ────────────────────────────────── */
 .m-page {
@@ -2840,15 +2892,7 @@ html, body {
 .fintech-ui .m-cat-bar-fill      { background: var(--cosmos-expense); }
 
 /* ── Bottom nav ─────────────────────────────────────────────────────────── */
-.fintech-ui .bottom-nav {
-  background: var(--cosmos-nav-surface);
-  border-top-color: rgba(255,255,255,0.07);
-}
-.fintech-ui .nav-item.active            { background: var(--cosmos-accent-dim); }
-.fintech-ui .nav-item.active .nav-icon,
-.fintech-ui .nav-item.active .nav-label { color: var(--cosmos-accent); }
-.fintech-ui .nav-label,
-.fintech-ui .nav-icon                   { color: var(--cosmos-text-3); }
+/* .fintech-ui nav overrides — movido para bloco unificado */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    UNIFIED SUMMARY CARD  (.m-summary-card)
