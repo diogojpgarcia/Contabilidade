@@ -34,14 +34,14 @@ html, body {
   border-top: 0.5px solid var(--separator);
   border-radius: 20px 20px 0 0;
   box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.08);
-  padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  padding: 4px 4px env(safe-area-inset-bottom);
 }
 [data-theme="dark"]  .modern-ui .bottom-nav,
 [data-theme="gray"]  .modern-ui .bottom-nav { box-shadow: 0 -2px 20px rgba(0,0,0,0.35); }
 
 .modern-ui .nav-item {
   border-radius: 12px;
-  padding: 8px 6px;
+  padding: 4px 6px;
   gap: 3px;
   transition: background 0.12s;
 }
