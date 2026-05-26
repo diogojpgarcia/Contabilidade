@@ -18,12 +18,12 @@
   pointer-events: all;
   width: calc(100% - 24px);
   max-width: 480px;
-  height: 50px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: space-around;
   /* margin-bottom empurra a barra acima do home indicator */
-  margin-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  margin-bottom: calc(env(safe-area-inset-bottom) + 2px);
   border-radius: 20px;
   background: var(--cosmos-nav-surface);
   border: 0.5px solid var(--cosmos-accent-border);
@@ -52,7 +52,7 @@
   pointer-events: all;
   position: fixed;
   /* safe-area + margin-bar(8) + altura-bar(56) - raio-FAB(22) + protrusion(2) = safe+44 */
-  bottom: calc(env(safe-area-inset-bottom) + 38px);
+  bottom: calc(env(safe-area-inset-bottom) + 28px);
   left: 50%;
   transform: translateX(-50%);
   width: 44px;
@@ -96,7 +96,7 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  padding: 6px 4px;
+  padding: 3px 4px;
   background: transparent;
   border: none;
   color: var(--cosmos-text-3);
