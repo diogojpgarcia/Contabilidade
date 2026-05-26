@@ -291,9 +291,14 @@ const PremiumChart = React.memo(({ prices, isPos, animKey, onScrubChange, onScru
       onTouchEnd={onUp}
     >
       <defs>
-        {/* Soft glow filter for cursor dot */}
-        <filter id="asd-glow" x="-100%" y="-100%" width="300%" height="300%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="blur" />
+        {/* Tight glow filter for cursor dot — matches Revolut */}
+        <filter id="asd-glow" x="-150%" y="-150%" width="400%" height="400%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        {/* Wider glow for the intersection halo */}
+        <filter id="asd-halo" x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
 
@@ -313,15 +318,16 @@ const PremiumChart = React.memo(({ prices, isPos, animKey, onScrubChange, onScru
         </clipPath>
       </defs>
 
-      {/* Dimmed line after cursor */}
+      {/* Dimmed line after cursor — Revolut usa opacidade ~25% */}
       <path
         ref={dimPathRef}
         d={linePath}
         fill="none"
-        stroke="rgba(255,255,255,0.18)"
+        stroke={color}
         strokeWidth="2.4"
         strokeLinecap="round"
         strokeLinejoin="round"
+        opacity="0.22"
         clipPath="url(#asd-cd)"
         visibility="hidden"
       />
@@ -337,18 +343,13 @@ const PremiumChart = React.memo(({ prices, isPos, animKey, onScrubChange, onScru
         clipPath="url(#asd-ca)"
       />
 
-      {/* Spotlight: bright thicker line segment around cursor */}
+      {/* Spotlight: reservado (desativado — o glow fica no dot como no Revolut) */}
       <path
         ref={spotPathRef}
         d={linePath}
         fill="none"
-        stroke={color}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.85"
-        filter="url(#asd-glow)"
-        clipPath="url(#asd-cs)"
+        stroke="transparent"
+        strokeWidth="0"
         visibility="hidden"
       />
 
@@ -366,22 +367,25 @@ const PremiumChart = React.memo(({ prices, isPos, animKey, onScrubChange, onScru
         dominantBaseline="auto"
       >{fmtPrice(mn)}</text>
 
-      {/* Full-height cursor line */}
+      {/* Full-height cursor line — bright white like Revolut */}
       <line
         ref={cursorLineRef}
         x1="0" x2="0" y1="0" y2={H}
-        stroke="rgba(255,255,255,0.45)"
-        strokeWidth="1"
+        stroke="rgba(255,255,255,0.88)"
+        strokeWidth="1.5"
         visibility="hidden"
       />
 
-      {/* Cursor glow rings — individually ref'd, no querySelectorAll */}
-      <circle ref={cursorOuter} cx="0" cy="0" r="18" fill={color} opacity="0.08" visibility="hidden" />
-      <circle ref={cursorInner} cx="0" cy="0" r="10" fill={color} opacity="0.2"  visibility="hidden" />
-      <circle ref={cursorDot}   cx="0" cy="0" r="5"
+      {/* Cursor dot — Revolut style: halo + tight glow + solid dot */}
+      {/* Outer halo (large, very soft) */}
+      <circle ref={cursorOuter} cx="0" cy="0" r="14" fill={color} opacity="0.13" filter="url(#asd-halo)" visibility="hidden" />
+      {/* Inner ring */}
+      <circle ref={cursorInner} cx="0" cy="0" r="8"  fill={color} opacity="0.28" visibility="hidden" />
+      {/* Solid dot */}
+      <circle ref={cursorDot}   cx="0" cy="0" r="4.5"
         fill={color}
-        stroke="var(--cosmos-bg,#0c0e13)"
-        strokeWidth="2.5"
+        stroke="rgba(255,255,255,0.95)"
+        strokeWidth="2"
         filter="url(#asd-glow)"
         visibility="hidden"
       />
