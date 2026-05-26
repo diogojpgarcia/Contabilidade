@@ -588,3 +588,12 @@ export const fetchStockSearch = async (query, types) => {
   }
 };
 
+
+// ─── symbol search ───────────────────────────────────────────────────────────
+
+/**
+ * Search Twelve Data /symbol_search for autocomplete.
+ * @param {string} query — partial ticker or name
+ * @param {string[]} [types] — e.g. ['Common Stock'], ['ETF'] (optional filter)
+ * @returns {Array<{symbol,name,exchange,type}>} — empty array on failure/no key
+ */
