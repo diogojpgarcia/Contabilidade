@@ -554,3 +554,37 @@ export const fetchPeriodHistory = async (sym, period, type) => {
   }
 };
 
+// ─── symbol search ───────────────────────────────────────────────────────────
+
+/**
+ * Search Twelve Data /symbol_search for autocomplete.
+ * @param {string} query — partial ticker or name
+ * @param {string[]} [types] — e.g. ['Common Stock'], ['ETF'] (optional filter)
+ * @returns {Array<{symbol,name,exchange,type}>} — empty array on failure/no key
+ */
+export const fetchStockSearch = async (query, types) => {
+  if (!HAS_STOCK_KEY || !query?.trim()) return [];
+  const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/symbol_search?symbol=${encodeURIComponent(query)}&apikey=${TWELVE_DATA_KEY}`,
+      { signal }
+    );
+    clear();
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data?.data)) return [];
+    const results = data.data.map(d => ({
+      symbol:   d.symbol,
+      name:     d.instrument_name,
+      exchange: d.exchange,
+      type:     d.instrument_type,
+    }));
+    if (types?.length) return results.filter(r => types.includes(r.type));
+    return results;
+  } catch {
+    clear();
+    return [];
+  }
+};
+
