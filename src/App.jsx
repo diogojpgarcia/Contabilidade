@@ -280,7 +280,7 @@ const App = () => {
         onClick={() => setActiveTab('add')}
         aria-label="Adicionar transação"
         style={{
-          position: 'fixed', bottom: '28px', left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom) + 24px)', left: '50%', transform: 'translateX(-50%)',
           width: '52px', height: '52px', borderRadius: '50%',
           background: 'var(--cosmos-accent)', color: '#000',
           fontSize: '26px', fontWeight: '300',
