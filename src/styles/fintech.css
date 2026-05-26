@@ -1429,6 +1429,43 @@ html, body {
 }
 .pat-form-row .patrimony-input { flex: 1; min-width: 0; }
 
+/* ── Certificado de Aforro form helpers ──────────────────────────────────── */
+.pat-bond-rate-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--cosmos-accent-soft, rgba(120,100,255,0.08));
+  border: 1px solid var(--cosmos-accent-hover, rgba(120,100,255,0.20));
+  border-radius: 10px;
+}
+.pat-bond-rate-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cosmos-accent, #7864ff);
+  white-space: nowrap;
+}
+.pat-bond-rate-value {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pat-bond-calc-preview {
+  padding: 9px 14px;
+  background: var(--cosmos-surface-2, rgba(255,255,255,0.04));
+  border: 1px solid var(--cosmos-border-subtle, rgba(255,255,255,0.08));
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.pat-bond-calc-preview strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
 /* Stock form container */
 .pat-stock-form,
 .pat-crypto-form {
@@ -2962,66 +2999,4 @@ html, body {
   border-radius: 16px;
   padding: 14px 16px;
   border: 1px solid rgba(255,255,255,0.05);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-[data-theme="light"] .m-insight-card {
-  background: #fff;
-  border-color: rgba(0,0,0,0.06);
-  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-}
-
-.m-insight-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.m-insight-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.m-insight-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.m-insight-value {
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-
-.m-insight-msg {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-
-.m-insights-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 48px 16px;
-  text-align: center;
-  color: var(--text-tertiary);
-  font-size: 0.875rem;
-}
-
-.m-insights-empty-icon {
-  font-size: 2rem;
-  color: var(--cosmos-income);
-}
+  d

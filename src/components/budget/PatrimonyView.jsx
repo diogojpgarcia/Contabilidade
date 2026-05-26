@@ -8,6 +8,10 @@ import {
   fetchCryptoHistoryBatch, fetchStockSearch, formatAge,
   HAS_STOCK_KEY, CACHE_TTL, CRYPTO_CACHE_TTL, HISTORY_TTL, isStale, isStaleCrypto,
 } from '../../utils/assetPrice';
+import {
+  BOND_SERIES_INFO, fetchEuribor3M, calcSerieERate,
+  calcBondValue, calcAccruedInterest, formatBondAge,
+} from '../../utils/certificadoAforro';
 import { shiftMonth } from '../../utils/insights';
 import { filterByFinancialMonth } from '../../utils/financialMonth';
 import {
@@ -49,6 +53,7 @@ const PatrimonyView = ({
   const [stockApiLoading,     setStockApiLoading]     = useState(false);
   const [livePrices,          setLivePrices]          = useState({});
   const [detailAsset,         setDetailAsset]         = useState(null); // { item, assetKey }
+  const [euribor3M,           setEuribor3M]           = useState(null); // taxa Euribor 3M atual (%)
 
   const patrimonyRef         = useRef(externalPatrimony);
   const onPatrimonyChangeRef = useRef(onPatrimonyChange);
@@ -226,6 +231,21 @@ const PatrimonyView = ({
     return () => { cancelled = true; clearInterval(id); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Taxa Euribor 3M para Certificados de Aforro Série E ───────────────────
+  useEffect(() => {
+    let cancelled = false;
+    const EURIBOR_TTL_MS = 24 * 60 * 60_000; // 24h — ECB publica uma vez por dia
+
+    const refresh = async () => {
+      const rate = await fetchEuribor3M();
+      if (!cancelled && rate !== null) setEuribor3M(rate);
+    };
+
+    refresh();
+    const id = setInterval(refresh, EURIBOR_TTL_MS);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
   // Wrapper local — usa a função partilhada de budgetUtils com as transações da prop.
   const computeAccountBalanceLocal = (acc) => computeAccountBalance(acc, transactions);
 
@@ -240,7 +260,18 @@ const PatrimonyView = ({
       const price = toNum(livePrices[x.ticker]?.price ?? x.lastPrice ?? x.avgPrice);
       return s + toNum(x.qty) * price;
     }, 0);
-    if (key === 'bonds')      return items.reduce((s, x) => s + toNum(x.value), 0);
+    if (key === 'bonds')      return items.reduce((s, x) => {
+      const faceValue    = parseFloat(x.faceValue || x.value) || 0;
+      const purchaseDate = x.purchaseDate || x.date || null;
+      const isSerieE     = x.series?.toUpperCase() === 'E';
+      const rate         = isSerieE
+        ? (euribor3M !== null ? calcSerieERate(euribor3M) : parseFloat(x.annualRate) || null)
+        : (parseFloat(x.annualRate) || null);
+      const val = (purchaseDate && rate !== null)
+        ? calcBondValue(faceValue, purchaseDate, rate)
+        : faceValue;
+      return s + val;
+    }, 0);
     if (key === 'realestate') return items.reduce((s, x) => s + toNum(x.value), 0);
     if (key === 'vehicles')   return items.reduce((s, x) => s + toNum(x.value), 0);
     if (key === 'crypto')     return items.reduce((s, x) => {
@@ -357,7 +388,18 @@ const PatrimonyView = ({
       const total = (parseFloat(item.qty) || 0) * price;
       return `${item.qty}×${fmtStockPrice(price)}€ = ${fmtFiat(total)}€`;
     }
-    if (typeKey === 'bonds')      return `${fmtFiat(item.value)}€`;
+    if (typeKey === 'bonds') {
+      const faceValue    = parseFloat(item.faceValue || item.value) || 0;
+      const purchaseDate = item.purchaseDate || item.date || null;
+      const isSerieE     = item.series?.toUpperCase() === 'E';
+      const rate         = isSerieE
+        ? (euribor3M !== null ? calcSerieERate(euribor3M) : parseFloat(item.annualRate) || null)
+        : (parseFloat(item.annualRate) || null);
+      const currentVal   = (purchaseDate && rate !== null)
+        ? calcBondValue(faceValue, purchaseDate, rate)
+        : faceValue;
+      return `${fmtFiat(currentVal)}€`;
+    }
     if (typeKey === 'realestate') return `${fmtFiat(item.value)}€`;
     if (typeKey === 'vehicles')   return `${fmtFiat(item.value)}€`;
     if (typeKey === 'crypto') {
@@ -373,7 +415,10 @@ const PatrimonyView = ({
     if (typeKey === 'accounts')   return `${item.name}${item.bank ? ' · ' + item.bank : ''}`;
     if (typeKey === 'stocks')     return item.ticker;
     if (typeKey === 'etfs')       return item.ticker;
-    if (typeKey === 'bonds')      return `${item.series || 'Série'}${item.date ? ' · ' + item.date : ''}`;
+    if (typeKey === 'bonds') {
+      const age = formatBondAge(item.purchaseDate || item.date);
+      return `Cert. Aforro Série ${item.series || '?'}${age ? ' · ' + age : ''}`;
+    }
     if (typeKey === 'realestate') return item.description;
     if (typeKey === 'vehicles')   return item.description;
     if (typeKey === 'crypto')     return item.coin;
@@ -556,12 +601,62 @@ const PatrimonyView = ({
         );
       }
 
-      case 'bonds':
+      case 'bonds': {
+        const serieInfo = BOND_SERIES_INFO[f.series?.toUpperCase()] ?? null;
+        const isSerieE  = f.series?.toUpperCase() === 'E';
+        const serieERate = euribor3M !== null ? calcSerieERate(euribor3M) : null;
         return (<>
-          <input className={cls} placeholder="Série (ex: E)"       value={f.series || ''} onChange={e => set('series', e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Valor actual (€)" value={f.value  || ''} onChange={e => set('value',  e.target.value)} />
-          <input className={cls} type="date" value={f.date || ''} onChange={e => set('date', e.target.value)} />
+          {/* Série */}
+          <select className={cls} value={f.series || ''} onChange={e => set('series', e.target.value)}>
+            <option value="">Seleciona a série…</option>
+            {Object.entries(BOND_SERIES_INFO).map(([k, v]) => (
+              <option key={k} value={k}>{v.label}</option>
+            ))}
+          </select>
+
+          {/* Valor subscrito (capital inicial) */}
+          <input className={cls} type="number" inputMode="decimal"
+            placeholder="Valor subscrito (€) — capital inicial"
+            value={f.faceValue || ''}
+            onChange={e => set('faceValue', e.target.value)} />
+
+          {/* Data de subscrição */}
+          <input className={cls} type="date"
+            placeholder="Data de subscrição"
+            value={f.purchaseDate || f.date || ''}
+            onChange={e => { set('purchaseDate', e.target.value); set('date', e.target.value); }} />
+
+          {/* Taxa anual — auto para Série E, manual para outras */}
+          {isSerieE ? (
+            <div className="pat-bond-rate-info">
+              <span className="pat-bond-rate-label">Taxa Série E</span>
+              <span className="pat-bond-rate-value">
+                {serieERate !== null
+                  ? `${serieERate.toFixed(1)}% (Euribor 3M ${euribor3M?.toFixed(2)}% + 1%)`
+                  : 'A carregar taxa…'}
+              </span>
+            </div>
+          ) : serieInfo && !serieInfo.variable ? (
+            <input className={cls} type="number" inputMode="decimal"
+              placeholder="Taxa anual (%) — ver caderneta"
+              value={f.annualRate || ''}
+              onChange={e => set('annualRate', e.target.value)} />
+          ) : null}
+
+          {/* Nota sobre valor calculado automaticamente */}
+          {f.faceValue && f.purchaseDate && (
+            <div className="pat-bond-calc-preview">
+              {(() => {
+                const rate = isSerieE ? serieERate : parseFloat(f.annualRate) || null;
+                if (!rate) return <span>Introduz a taxa anual para ver o valor estimado.</span>;
+                const val = calcBondValue(parseFloat(f.faceValue), f.purchaseDate, rate);
+                const accrued = val - parseFloat(f.faceValue);
+                return <span>Valor estimado atual: <strong>{val.toFixed(2)} €</strong> (juros: +{accrued.toFixed(2)} €)</span>;
+              })()}
+            </div>
+          )}
         </>);
+      }
 
       case 'realestate':
         return (<>
@@ -835,7 +930,7 @@ const PatrimonyView = ({
         case 'etfs':       return etfConfirmed    && !!f.qty;
         case 'crypto':     return cryptoConfirmed && !!f.qty;
         case 'accounts':   return !!f.name;
-        case 'bonds':      return !!f.series && !!f.value;
+        case 'bonds':      return !!f.series && !!(f.faceValue || f.value);
         case 'realestate': return !!f.description && !!f.value;
         case 'vehicles':   return !!f.description && !!f.value;
         default:           return true;
