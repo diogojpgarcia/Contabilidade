@@ -4,9 +4,9 @@ import Overlay from '../Overlay';
 import SwipeRevealCard from '../SwipeRevealCard';
 import { searchAssets } from '../../utils/searchAssets';
 import {
-  fetchStockQuote, fetchCryptoTwelveData, fetchStockHistory,
+  fetchStockQuoteBatch, fetchCryptoTwelveData, fetchStockHistory,
   fetchCryptoHistoryBatch, fetchStockSearch, formatAge,
-  HAS_STOCK_KEY, CACHE_TTL, HISTORY_TTL, isStale,
+  HAS_STOCK_KEY, CACHE_TTL, CRYPTO_CACHE_TTL, HISTORY_TTL, isStale, isStaleCrypto,
 } from '../../utils/assetPrice';
 import { shiftMonth } from '../../utils/insights';
 import { filterByFinancialMonth } from '../../utils/financialMonth';
@@ -109,13 +109,15 @@ const PatrimonyView = ({
       const cryptos = current.crypto  ?? [];
       const now     = new Date().toISOString();
 
+      // Stocks/ETFs: use CACHE_TTL (8min) to stay within 800 credits/day
       const staleStocks = HAS_STOCK_KEY
         ? stocks.filter(s => s.ticker && isStale(s.lastUpdated))
         : [];
       const staleEtfs = HAS_STOCK_KEY
         ? etfs.filter(e => e.ticker && isStale(e.lastUpdated))
         : [];
-      const staleCoins = cryptos.filter(c => c.coin && isStale(c.lastUpdated));
+      // Crypto: use CRYPTO_CACHE_TTL (2min) — CoinGecko is free/generous
+      const staleCoins = cryptos.filter(c => c.coin && isStaleCrypto(c.lastUpdated));
       const allStaleEquities = [...staleStocks, ...staleEtfs];
 
       if (allStaleEquities.length === 0 && staleCoins.length === 0) return;
@@ -125,8 +127,9 @@ const PatrimonyView = ({
         ...staleCoins.map(c => normCoin(c.coin)),
       ]));
 
-      const [stockResults, cryptoPrices] = await Promise.all([
-        Promise.allSettled(allStaleEquities.map(s => fetchStockQuote(s.ticker))),
+      // ONE batch call for all stocks/ETFs (1 HTTP round-trip) + crypto in parallel
+      const [stockPrices, cryptoPrices] = await Promise.all([
+        fetchStockQuoteBatch(allStaleEquities.map(s => s.ticker)),
         fetchCryptoTwelveData(staleCoins.map(c => normCoin(c.coin))),
       ]);
 
@@ -134,12 +137,12 @@ const PatrimonyView = ({
 
       const priceUpdates = {};
 
-      allStaleEquities.forEach((s, idx) => {
-        const r = stockResults[idx];
-        if (r?.status === 'fulfilled' && r.value !== null) {
+      allStaleEquities.forEach(s => {
+        const data = stockPrices[s.ticker];
+        if (data?.price != null) {
           priceUpdates[s.ticker] = {
-            price:      r.value.price,
-            changePct:  r.value.changePct ?? null,
+            price:       data.price,
+            changePct:   data.changePct ?? null,
             lastUpdated: now,
           };
         }
@@ -183,7 +186,9 @@ const PatrimonyView = ({
     };
 
     runRefresh();
-    const interval = setInterval(runRefresh, CACHE_TTL);
+    // Poll at the shortest TTL so crypto (2min) refreshes on time;
+    // isStale / isStaleCrypto guards inside runRefresh prevent unnecessary API calls.
+    const interval = setInterval(runRefresh, CRYPTO_CACHE_TTL);
     return () => { cancelled = true; clearInterval(interval); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

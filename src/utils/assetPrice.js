@@ -21,9 +21,14 @@
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
-export const CACHE_TTL    = 5 * 60_000;  // 5 minutes — price refresh interval
-export const HISTORY_TTL  = 5 * 60_000;  // 5 minutes — history changes slowly
-const        FETCH_TIMEOUT = 12_000;  // 12 s — extra headroom for slow mobile networks
+// Free Twelve Data: 8 credits/min, 800/day.
+// With batch calls (1 HTTP request for all symbols), each refresh costs N credits
+// but resolves in a single round-trip — much faster than N parallel calls.
+// 800 credits/day ÷ ~5 symbols = 160 refreshes/day → safe at 8-min intervals.
+export const CACHE_TTL       = 8 * 60_000;  // 8 min — stocks/ETFs (Twelve Data credits)
+export const CRYPTO_CACHE_TTL = 2 * 60_000; // 2 min — crypto via CoinGecko (free/generous)
+export const HISTORY_TTL     = 10 * 60_000; // 10 min — sparkline history changes slowly
+const        FETCH_TIMEOUT   = 12_000;       // 12 s — headroom for slow mobile networks
 
 const TWELVE_DATA_KEY = import.meta.env.VITE_TWELVE_DATA_KEY ?? '';
 /** True when a Twelve Data API key is configured. */
@@ -53,6 +58,9 @@ const periodHistoryCache = new Map();
  */
 export const isStale = (lastUpdated, ttl = CACHE_TTL) =>
   !lastUpdated || (Date.now() - new Date(lastUpdated).getTime()) > ttl;
+
+/** isStale variant using the shorter crypto TTL */
+export const isStaleCrypto = (lastUpdated) => isStale(lastUpdated, CRYPTO_CACHE_TTL);
 
 /** "agora mesmo", "3m", "1h", "2d" — null when no date. */
 export const formatAge = (lastUpdated) => {
@@ -190,6 +198,73 @@ export const fetchCryptoBatch = async (symbols) => {
   } catch (err) {
     console.error('[assetPrice] FETCH FAILED CoinGecko:', err);
     // return whatever was cached
+  } finally {
+    clear();
+  }
+
+  return result;
+};
+
+/**
+ * Batch-fetch quotes for multiple stock/ETF tickers in ONE HTTP request.
+ * Returns { [ticker]: { price, changePct } } — missing tickers are omitted.
+ *
+ * Free Twelve Data: 1 credit per symbol, but only 1 round-trip regardless of
+ * how many symbols you request → much faster than N parallel fetchStockQuote calls.
+ * Respects the in-memory cache (CACHE_TTL) to avoid redundant API credits.
+ */
+export const fetchStockQuoteBatch = async (tickers) => {
+  if (!HAS_STOCK_KEY || !tickers?.length) return {};
+
+  const result  = {};
+  const toFetch = [];
+
+  for (const ticker of tickers) {
+    if (!ticker) continue;
+    const hit = stockCache.get(ticker);
+    if (hit && Date.now() - hit.ts < CACHE_TTL) {
+      result[ticker] = hit;
+    } else {
+      toFetch.push(ticker);
+    }
+  }
+
+  if (!toFetch.length) return result;
+
+  const symbolList = toFetch.join(',');
+  const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+
+  try {
+    const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${TWELVE_DATA_KEY}`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) {
+      console.error(`[assetPrice] fetchStockQuoteBatch HTTP ${res.status}`);
+      return result;
+    }
+
+    const data = await res.json();
+
+    // Single-symbol response comes unwrapped; multi-symbol as { "AAPL": {...}, "MSFT": {...} }
+    const parse = (q, ticker) => {
+      if (!q || q.code || q.status === 'error') return;
+      const price     = parseFloat(q.close) || null;
+      const _chg      = parseFloat(q.percent_change);
+      const changePct = Number.isFinite(_chg) ? _chg : null;
+      if (price === null) return;
+      const entry = { price, changePct, ts: Date.now() };
+      stockCache.set(ticker, entry);
+      result[ticker] = entry;
+    };
+
+    if (toFetch.length === 1) {
+      parse(data, toFetch[0]);
+    } else {
+      for (const ticker of toFetch) {
+        parse(data[ticker], ticker);
+      }
+    }
+  } catch (err) {
+    console.error('[assetPrice] fetchStockQuoteBatch FAILED:', err);
   } finally {
     clear();
   }
@@ -441,7 +516,7 @@ export const fetchPrice = async (ticker) => {
   if (inFlight.has(key)) return inFlight.get(key);
 
   const promise = (async () => {
-      //     const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+    const { signal, clear } = abortAfter(FETCH_TIMEOUT);
     try {
       const res = await fetch(
         `https://api.twelvedata.com/price?symbol=${encodeURIComponent(key)}&apikey=${TWELVE_DATA_KEY}`,
@@ -501,7 +576,7 @@ export const getPrice = async (ticker, assetType = null) => {
 
   // 1 — fresh cache hit
   if (entry && age < CACHE_TTL) {
-      //     const safePrice = Number(entry.price);
+    const safePrice = Number(entry.price);
     return Number.isFinite(safePrice) ? safePrice : 0;
   }
 
@@ -511,7 +586,7 @@ export const getPrice = async (ticker, assetType = null) => {
 
   // 3 — stale fallback (API down / no key)
   if (entry) {
-      //     const safePrice = Number(entry.price);
+    const safePrice = Number(entry.price);
     return Number.isFinite(safePrice) ? safePrice : 0;
   }
 
