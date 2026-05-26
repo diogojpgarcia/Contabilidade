@@ -306,4 +306,4 @@ const App = () => {
   );
 };
 
-export def
+export default App;
