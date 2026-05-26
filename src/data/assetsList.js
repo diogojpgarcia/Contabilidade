@@ -134,4 +134,15 @@ export const ASSETS = [
   { type: 'crypto', symbol: 'INJ',   name: 'Injective' },
   { type: 'crypto', symbol: 'FIL',   name: 'Filecoin' },
 
-  // ── Crypto — Meme & Culture ────────────────────────
+  // ── Crypto — Meme & Culture ───────────────────────────────────────────────
+  { type: 'crypto', symbol: 'DOGE',  name: 'Dogecoin' },
+  { type: 'crypto', symbol: 'SHIB',  name: 'Shiba Inu' },
+  { type: 'crypto', symbol: 'PEPE',  name: 'Pepe' },
+  { type: 'crypto', symbol: 'WIF',   name: 'Dogwifhat' },
+  { type: 'crypto', symbol: 'BONK',  name: 'Bonk' },
+
+  // ── Crypto — Gaming / Metaverse ───────────────────────────────────────────
+  { type: 'crypto', symbol: 'SAND',  name: 'The Sandbox' },
+  { type: 'crypto', symbol: 'MANA',  name: 'Decentraland' },
+  { type: 'crypto', symbol: 'APE',   name: 'ApeCoin' },
+];
