@@ -515,4 +515,5 @@
 .b-nav-btn.active {
   background: var(--cosmos-accent-dim);
   border-color: var(--cosmos-accent-border);
-  color: var(--c
+  color: var(--cosmos-accent);
+}

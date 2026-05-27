@@ -849,4 +849,3 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
 
 export default StatsTab;
-                 
