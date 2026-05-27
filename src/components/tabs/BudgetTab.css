@@ -306,7 +306,7 @@
   background: rgba(0,0,0,0);
   pointer-events: none;
   transition: background 0.3s;
-  z-index: 200;
+  z-index: 1050; /* acima da bottom-nav (z-index: 1000) */
 }
 .m-sheet-backdrop.open {
   background: rgba(0,0,0,0.65);
@@ -322,10 +322,10 @@
   margin: 0 auto;
   background: #0F1823;
   border-radius: 22px 22px 0 0;
-  border-top: 1px solid rgba(255,2ဵ5,255,0.10);
+  border-top: 1px solid rgba(255,255,255,0.10);
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.32,0,0.67,0);
-  z-index: 201;
+  z-index: 1100; /* acima do backdrop e da bottom-nav */
   max-height: 88vh;
   display: flex;
   flex-direction: column;
@@ -423,7 +423,7 @@
   overflow-y: auto;
   flex: 1;
   scrollbar-width: none;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding-bottom: calc(24px + max(0px, env(safe-area-inset-bottom)));
 }
 .m-sheet-txs-list::-webkit-scrollbar { display: none; }
 
@@ -512,7 +512,4 @@
 .b-nav-btn:active { opacity: 0.6; }
 
 .b-nav-btn.active {
-  background: var(--cosmos-accent-dim);
-  border-color: var(--cosmos-accent-border);
-  color: var(--cosmos-accent);
-}
+  background: var(--cosmos
