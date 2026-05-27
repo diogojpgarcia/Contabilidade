@@ -55,7 +55,7 @@ function ToastContainer({ toasts, onRemove }) {
   if (toasts.length === 0) return null;
   return (
     <div style={{
-      position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom) + 8px)',
+      position: 'fixed', bottom: 'calc(var(--cosmos-nav-h, 55px) + max(0px, env(safe-area-inset-bottom)) + 8px)',
       left: '50%', transform: 'translateX(-50%)',
       display: 'flex', flexDirection: 'column', gap: 8,
       zIndex: 9999, width: 'min(360px, 92vw)', pointerEvents: 'none',
@@ -80,7 +80,4 @@ function ToastContainer({ toasts, onRemove }) {
           }}>×</button>
         </div>
       ))}
-      <style>{`@keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }`}</style>
-    </div>
-  );
-}
+      <style>{`@keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; }

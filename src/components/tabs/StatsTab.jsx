@@ -269,7 +269,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       display: 'flex',
       flexDirection: 'column',
       background: 'transparent',
-      paddingBottom: 'calc(88px + env(safe-area-inset-bottom))',
+      paddingBottom: 'var(--bottom-clearance)',
     }}>
 
       {/* ── HEADER ── */}
@@ -849,3 +849,4 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
 
 export default StatsTab;
+                 
