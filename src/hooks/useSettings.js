@@ -311,9 +311,7 @@ export function useSettings(currentUser, txHook) {
     };
     setConfirmedRecurring(updated);
 
-    // Merge both saves into ONE call to avoid the READ→merge→WRITE race condition:
-    // two concurrent updateUserSettings each read the DB before the other writes,
-    // so whichever finishes last silently overwrites the other's data.
+    // Merge ambos os saves num só para evitar race condition (READ→merge→WRITE concorrente)
     const settingsUpdate = { confirmed_recurring: updated };
     if (accountId && newTx.id) {
       const updatedMap = {
@@ -368,4 +366,12 @@ export function useSettings(currentUser, txHook) {
     handleMainAccountChange,
     handleMigrateConfirm,
     handleMigrateDismiss,
-    handleBudgetsChange
+    handleBudgetsChange,
+    handleFinancialMonthChange,
+    handleHomeUsesFinancialMonthChange,
+    handleRecurringPaymentsChange,
+    handleConfirmRecurring,
+    handleGoalsChange,
+    handleFocusChange,
+  };
+}
