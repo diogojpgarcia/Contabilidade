@@ -10,6 +10,21 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
   const { Icon: CatIcon, color: catColor } = catData ? getCategoryMeta(catData.cat.label) : { Icon: () => null, color: '#475569' };
   const st = catData ? STATUS(catData.percent) : STATUS(0);
 
+  // Lock body scroll while sheet is open (prevents background scroll bleed-through)
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isVisible]);
+
   useEffect(() => {
     if (!isVisible) { setTxVisible([]); return; }
     setTxVisible([]);

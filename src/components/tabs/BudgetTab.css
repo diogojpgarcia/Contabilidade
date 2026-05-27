@@ -311,6 +311,7 @@
 .m-sheet-backdrop.open {
   background: rgba(0,0,0,0.65);
   pointer-events: auto;
+  touch-action: none;
 }
 
 .m-sheet {
@@ -424,6 +425,8 @@
   flex: 1;
   min-height: 0;
   scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: calc(24px + max(0px, env(safe-area-inset-bottom)));
 }
 .m-sheet-txs-list::-webkit-scrollbar { display: none; }
