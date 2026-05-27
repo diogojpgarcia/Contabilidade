@@ -310,16 +310,20 @@ export function useSettings(currentUser, txHook) {
       },
     };
     setConfirmedRecurring(updated);
-    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated }).catch(e => toast.error('Erro ao guardar: ' + e.message));
 
+    // Merge both saves into ONE call to avoid the READ→merge→WRITE race condition:
+    // two concurrent updateUserSettings each read the DB before the other writes,
+    // so whichever finishes last silently overwrites the other's data.
+    const settingsUpdate = { confirmed_recurring: updated };
     if (accountId && newTx.id) {
       const updatedMap = {
         ...txHook.transactionAccountMap,
         [newTx.id]: { account_id: accountId, account_name: account?.name || null },
       };
       txHook.setTransactionAccountMap(updatedMap);
-      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+      settingsUpdate.transactionAccountMap = updatedMap;
     }
+    dbService.updateUserSettings(currentUser.id, settingsUpdate).catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
   // ── Objetivos ─────────────────────────────────────────────────────────────
@@ -364,12 +368,4 @@ export function useSettings(currentUser, txHook) {
     handleMainAccountChange,
     handleMigrateConfirm,
     handleMigrateDismiss,
-    handleBudgetsChange,
-    handleFinancialMonthChange,
-    handleHomeUsesFinancialMonthChange,
-    handleRecurringPaymentsChange,
-    handleConfirmRecurring,
-    handleGoalsChange,
-    handleFocusChange,
-  };
-}
+    handleBudgetsChange
