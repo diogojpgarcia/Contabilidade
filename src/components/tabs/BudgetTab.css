@@ -320,7 +320,7 @@
   right: 0;
   max-width: 600px;
   margin: 0 auto;
-  background: #0F1823;
+  background: var(--cosmos-surface-2);
   border-radius: 22px 22px 0 0;
   border-top: 1px solid rgba(255,255,255,0.10);
   transform: translateY(100%);
@@ -436,7 +436,7 @@
 }
 .m-sheet-tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .m-sheet-tx-info { flex: 1; min-width: 0; }
-.m-sheet-tx-name { font-size: 13px; font-weight: 500; color: #CBD5E1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-sheet-tx-name { font-size: 13px; font-weight: 500; color: var(--cosmos-text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .m-sheet-tx-acc  { font-size: 10px; color: var(--cosmos-text-3); margin-top: 1px; }
 .m-sheet-tx-right { text-align: right; flex-shrink: 0; }
 .m-sheet-tx-amount { font-size: 13px; font-weight: 700; color: var(--cosmos-expense); letter-spacing: -0.02em; }
@@ -511,5 +511,4 @@
 
 .b-nav-btn:active { opacity: 0.6; }
 
-.b-nav-btn.active {
-  background: var(--cosmos
+.b-nav-btn.active

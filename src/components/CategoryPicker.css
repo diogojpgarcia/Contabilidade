@@ -3,7 +3,7 @@
 
 .cp-sheet {
   width: 100%;
-  background: var(--card-bg, #1c1c1e);
+  background: var(--cosmos-surface-1);
   border-radius: 18px 18px 0 0;
   padding: 8px 0 env(safe-area-inset-bottom, 16px);
   max-height: 75vh;
@@ -15,7 +15,7 @@
 .cp-handle {
   width: 36px;
   height: 4px;
-  background: var(--border-color, #3a3a3c);
+  background: var(--cosmos-surface-border);
   border-radius: 2px;
   margin: 4px auto 12px;
   flex-shrink: 0;
@@ -32,13 +32,13 @@
 .cp-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-primary, #fff);
+  color: var(--cosmos-text-1);
 }
 
 .cp-close {
-  background: var(--border-color, #3a3a3c);
+  background: var(--cosmos-surface-border);
   border: none;
-  color: var(--text-secondary, #aaa);
+  color: var(--cosmos-text-2);
   min-width: 44px;
   min-height: 44px;
   border-radius: 50%;
@@ -55,17 +55,17 @@
 .cp-search {
   margin: 0 16px 10px;
   padding: 10px 14px;
-  background: var(--input-bg, #2c2c2e);
-  border: 1px solid var(--border-color, #3a3a3c);
+  background: var(--cosmos-surface-2);
+  border: 1px solid var(--cosmos-surface-border);
   border-radius: 10px;
-  color: var(--text-primary, #fff);
+  color: var(--cosmos-text-1);
   font-size: 0.9rem;
   outline: none;
   flex-shrink: 0;
 }
 
 .cp-search::placeholder {
-  color: var(--text-secondary, #888);
+  color: var(--cosmos-text-2);
 }
 
 .cp-list {
@@ -92,7 +92,7 @@
 }
 
 .cp-item:active {
-  background: var(--border-color, #3a3a3c);
+  background: var(--cosmos-surface-border);
 }
 
 .cp-item--active {
@@ -111,7 +111,7 @@
 .cp-item-label {
   flex: 1;
   font-size: 0.9rem;
-  color: var(--text-primary, #fff);
+  color: var(--cosmos-text-1);
 }
 
 .cp-item--active .cp-item-label {
@@ -127,7 +127,7 @@
 
 .cp-empty {
   text-align: center;
-  color: var(--text-secondary, #888);
+  color: var(--cosmos-text-2);
   font-size: 0.85rem;
   padding: 24px 0;
 }

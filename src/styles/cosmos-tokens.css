@@ -110,6 +110,16 @@
   --bg-hover:      rgba(255, 255, 255, 0.06);
   --input-bg:      #15181d;
   --primary-light: #a0aabb;
+
+  /* ── bg-*/text-*/separator aliases (usados em Recurring.css, AccountPicker, etc.)
+     Estavam apenas definidos nos palettes Dusk/Stone — faltavam no Cosmos default */
+  --bg-primary:     var(--cosmos-bg);
+  --bg-secondary:   var(--cosmos-surface-1);
+  --bg-tertiary:    var(--cosmos-surface-2);
+  --text-primary:   var(--cosmos-text-1);
+  --text-secondary: var(--cosmos-text-2);
+  --text-tertiary:  var(--cosmos-text-3);
+  --separator:      var(--cosmos-surface-border);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -284,18 +294,4 @@ html[data-palette="stone"] {
   --text-tertiary:  rgba(60, 48, 38, 0.38);
 
   --border:     rgba(159, 107, 72, 0.12);
-  --separator:  rgba(159, 107, 72, 0.14);
-  --overlay:    rgba(200, 185, 170, 0.70);
-
-  --header-bg:  rgba(240, 235, 228, 0.92);
-  --nav-bg:     rgba(240, 235, 228, 0.98);
-  --nav-text:         #1e1812;
-  --nav-text-secondary: rgba(60, 48, 38, 0.68);
-
-  --shadow-sm:  0 1px 4px rgba(120, 90, 60, 0.12);
-  --shadow-md:  0 4px 16px rgba(120, 90, 60, 0.16);
-  --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
-
-  /* Legacy aliases */
-  --card-bg:       #faf7f2;
-  --surface-2:     rgba(0, 0, 0, 
+  --separa
