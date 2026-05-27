@@ -491,6 +491,9 @@ input::placeholder {
   width: 100%;
   margin: 0 auto;
   min-height: 0;
+  /* Garante que o scroll nunca fica cortado pela bottom-nav em qualquer sub-view */
+  padding-bottom: var(--bottom-clearance);
+  box-sizing: border-box;
 }
 
 .main-content-new > div {
@@ -510,11 +513,4 @@ input::placeholder {
   margin: -1px -4px;
   transition: background 0.12s;
 }
-.transaction-category--editable:active {
-  background: var(--border-color, #3a3a3c);
-}
-.category-edit-hint {
-  font-size: 0.65rem;
-  color: var(--text-tertiary, #888);
-  opacity: 0.55;
-}
+.transaction-category--editable:a

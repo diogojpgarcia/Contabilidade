@@ -161,7 +161,7 @@
   border-radius: 24px 24px 0 0;
   width: 100%;
   max-width: 480px;
-  padding: 0 0 env(safe-area-inset-bottom, 16px);
+  padding: 0 0 calc(24px + max(0px, env(safe-area-inset-bottom)));
   animation: slideUp 0.25s ease;
   max-height: 88vh;
   overflow-y: auto;
@@ -422,7 +422,7 @@
   border-radius: 24px 24px 0 0;
   width: 100%;
   max-width: 480px;
-  padding: 0 0 env(safe-area-inset-bottom, 16px);
+  padding: 0 0 calc(24px + max(0px, env(safe-area-inset-bottom)));
   animation: slideUp 0.25s ease;
   max-height: 88vh;
   overflow-y: auto;
