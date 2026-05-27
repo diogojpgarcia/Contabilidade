@@ -86,10 +86,9 @@
 
   /* ── Bottom nav ───────────────────────────────────────────────────────── */
   --cosmos-nav-h:       55px;    /* 6px top + ~43px items + 6px bottom (Android) */
-  --cosmos-nav-item-py: 4px;
-  --cosmos-nav-bar-pt:  6px;
+  --cosmos-nav-item-py: 4px;     /* padding vertical dos itens */
+  --cosmos-nav-bar-pt:  6px;     /* padding-top da barra */
   --cosmos-nav-safe:    calc(var(--cosmos-nav-h) + max(0px, env(safe-area-inset-bottom)));
-  /* Clearance total para conteúdo scrollável — nav + safe area + 16px folga */
   --bottom-clearance:   calc(var(--cosmos-nav-h) + max(0px, env(safe-area-inset-bottom)) + 16px);
   --cosmos-nav-surface: rgba(17, 19, 26, 1.00);   /* floating bar fill */
   --cosmos-nav-notch:   #0d0f12;                   /* page-bg colour used for notch cutout */
@@ -111,8 +110,8 @@
   --input-bg:      #15181d;
   --primary-light: #a0aabb;
 
-  /* ── bg-*/text-*/separator aliases (usados em Recurring.css, AccountPicker, etc.)
-     Estavam apenas definidos nos palettes Dusk/Stone — faltavam no Cosmos default */
+  /* bg-* / text-* / separator — usados em Recurring.css, AccountPicker, etc.
+     Apenas definidos em Dusk/Stone — agora também em Cosmos (default) */
   --bg-primary:     var(--cosmos-bg);
   --bg-secondary:   var(--cosmos-surface-1);
   --bg-tertiary:    var(--cosmos-surface-2);
@@ -294,4 +293,24 @@ html[data-palette="stone"] {
   --text-tertiary:  rgba(60, 48, 38, 0.38);
 
   --border:     rgba(159, 107, 72, 0.12);
-  --separa
+  --separator:  rgba(159, 107, 72, 0.14);
+  --overlay:    rgba(200, 185, 170, 0.70);
+
+  --header-bg:  rgba(240, 235, 228, 0.92);
+  --nav-bg:     rgba(240, 235, 228, 0.98);
+  --nav-text:         #1e1812;
+  --nav-text-secondary: rgba(60, 48, 38, 0.68);
+
+  --shadow-sm:  0 1px 4px rgba(120, 90, 60, 0.12);
+  --shadow-md:  0 4px 16px rgba(120, 90, 60, 0.16);
+  --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
+
+  /* Legacy aliases */
+  --card-bg:       #faf7f2;
+  --surface-2:     rgba(0, 0, 0, 0.04);
+  --border-color:  rgba(159, 107, 72, 0.18);
+  --accent:        #9f6b48;
+  --bg-hover:      rgba(0, 0, 0, 0.05);
+  --input-bg:      #f4efe9;
+  --primary-light: #c49a80;
+}
