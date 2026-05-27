@@ -115,87 +115,118 @@ const toCoinId = (symbol) =>
 // Maps bare UCITS ETF tickers → their EUR-denominated Twelve Data symbol.
 // XETRA (.DE) is preferred: liquid, EUR, well supported by Twelve Data free tier.
 // When a user has "VWCE" saved (no suffix), we resolve it to "VWCE.DE" automatically.
+// ─── UCITS ETF → Twelve Data symbol map ─────────────────────────────────────
+// Twelve Data uses the format SYMBOL:EXCHANGE (e.g. VOW3:XETRA — their docs).
+// NOT the Yahoo Finance dot format (.DE, .AS, .L, etc.) which Twelve Data
+// does NOT recognise. Bare UCITS tickers are resolved to their canonical
+// Twelve Data symbol here.
 const UCITS_EUR_TICKER = {
   // Vanguard
-  VWCE:  'VWCE.DE',   // FTSE All-World Acc — XETRA EUR
-  VUSA:  'VUSA.DE',   // S&P 500 UCITS — XETRA EUR
-  VWRL:  'VWRL.AS',   // FTSE All-World Dist — Euronext Amsterdam EUR
-  VAGP:  'VAGP.L',    // Global Aggregate Bond — London USD (best available)
-  VEUR:  'VEUR.AS',   // FTSE Developed Europe — Euronext Amsterdam EUR
-  VERX:  'VERX.AS',   // FTSE Developed Europe ex UK — Euronext Amsterdam EUR
-  VFEM:  'VFEM.AS',   // FTSE Emerging Markets — Euronext Amsterdam EUR
+  VWCE:  'VWCE:XETRA',   // FTSE All-World Acc — XETRA EUR
+  VUSA:  'VUSA:XETRA',   // S&P 500 UCITS — XETRA EUR
+  VWRL:  'VWRL:XAMS',    // FTSE All-World Dist — Euronext Amsterdam EUR
+  VAGP:  'VAGP:XLON',    // Global Aggregate Bond — London USD
+  VEUR:  'VEUR:XAMS',    // FTSE Developed Europe — Euronext Amsterdam EUR
+  VERX:  'VERX:XAMS',    // FTSE Developed Europe ex UK — Euronext Amsterdam EUR
+  VFEM:  'VFEM:XAMS',    // FTSE Emerging Markets — Euronext Amsterdam EUR
   // iShares (BlackRock)
-  IWDA:  'IWDA.AS',   // MSCI World Acc — Euronext Amsterdam EUR
-  EUNL:  'EUNL.DE',   // MSCI World (same as IWDA, XETRA) — XETRA EUR
-  CSPX:  'CSPX.L',    // Core S&P 500 Acc — London USD (only liquid listing)
-  SXR8:  'SXR8.DE',   // Core S&P 500 Acc EUR-hedged — XETRA EUR
-  EXSA:  'EXSA.DE',   // Core EURO STOXX 50 — XETRA EUR
-  IEMA:  'IEMA.AS',   // Core MSCI EM IMI — Euronext Amsterdam EUR
-  AGGH:  'AGGH.L',    // Core Global Aggregate Bond — London USD
-  IAGG:  'IAGG.DE',   // Core Global Aggregate Bond EUR-hedged — XETRA EUR
-  IDTL:  'IDTL.L',    // $ Treasury Bond 20+yr — London USD
-  IS3N:  'IS3N.DE',   // Core MSCI EM IMI — XETRA EUR
-  SPPW:  'SPPW.DE',   // Core MSCI World — XETRA EUR
+  IWDA:  'IWDA:XAMS',    // MSCI World Acc — Euronext Amsterdam EUR
+  EUNL:  'EUNL:XETRA',   // MSCI World (same as IWDA, XETRA) — XETRA EUR
+  CSPX:  'CSPX:XLON',    // Core S&P 500 Acc — London USD
+  SXR8:  'SXR8:XETRA',   // Core S&P 500 Acc EUR-hedged — XETRA EUR
+  EXSA:  'EXSA:XETRA',   // Core EURO STOXX 50 — XETRA EUR
+  IEMA:  'IEMA:XAMS',    // Core MSCI EM IMI — Euronext Amsterdam EUR
+  AGGH:  'AGGH:XLON',    // Core Global Aggregate Bond — London USD
+  IAGG:  'IAGG:XETRA',   // Core Global Aggregate Bond EUR-hedged — XETRA EUR
+  IDTL:  'IDTL:XLON',    // $ Treasury Bond 20+yr — London USD
+  IS3N:  'IS3N:XETRA',   // Core MSCI EM IMI — XETRA EUR
+  SPPW:  'SPPW:XETRA',   // Core MSCI World — XETRA EUR
   // Xtrackers (DWS)
-  XDWD:  'XDWD.DE',   // MSCI World Swap Acc — XETRA EUR
-  XDEM:  'XDEM.DE',   // MSCI World Momentum — XETRA EUR
-  DBXW:  'DBXW.DE',   // MSCI World Swap — XETRA EUR
+  XDWD:  'XDWD:XETRA',   // MSCI World Swap Acc — XETRA EUR
+  XDEM:  'XDEM:XETRA',   // MSCI World Momentum — XETRA EUR
+  DBXW:  'DBXW:XETRA',   // MSCI World Swap — XETRA EUR
   // Amundi / Lyxor
-  MEUD:  'MEUD.PA',   // MSCI Europe — Euronext Paris EUR
-  LCWD:  'LCWD.PA',   // MSCI World — Euronext Paris EUR
-  PANX:  'PANX.PA',   // Nasdaq-100 UCITS — Euronext Paris EUR
+  MEUD:  'MEUD:XPAR',    // MSCI Europe — Euronext Paris EUR
+  LCWD:  'LCWD:XPAR',    // MSCI World — Euronext Paris EUR
+  PANX:  'PANX:XPAR',    // Nasdaq-100 UCITS — Euronext Paris EUR
   // SPDR
-  SPXS:  'SPXS.DE',   // S&P 500 UCITS — XETRA EUR
+  SPXS:  'SPXS:XETRA',   // S&P 500 UCITS — XETRA EUR
   // ── Ações portuguesas (Euronext Lisboa, EUR) ─────────────────────────────
-  EDP:   'EDP.LS',    // EDP — Energias de Portugal
-  GALP:  'GALP.LS',   // Galp Energia
-  BCP:   'BCP.LS',    // Millennium BCP
-  JMT:   'JMT.LS',    // Jerónimo Martins
-  SON:   'SON.LS',    // Sonae SGPS
-  NOS:   'NOS.LS',    // NOS SGPS
-  EGL:   'EGL.LS',    // Greenvolt
+  EDP:   'EDP:XLIS',     // EDP — Energias de Portugal
+  GALP:  'GALP:XLIS',    // Galp Energia
+  BCP:   'BCP:XLIS',     // Millennium BCP
+  JMT:   'JMT:XLIS',     // Jerónimo Martins
+  SON:   'SON:XLIS',     // Sonae SGPS
+  NOS:   'NOS:XLIS',     // NOS SGPS
+  EGL:   'EGL:XLIS',     // Greenvolt
 };
 
-// ─── MIC code → exchange dot-suffix ─────────────────────────────────────────
+// ─── MIC code → Twelve Data :EXCHANGE suffix ─────────────────────────────────
 // Twelve Data /symbol_search returns bare tickers + mic_code.
-// This map converts MIC codes to the dot-suffix format used by /quote.
-const MIC_TO_SUFFIX = {
-  XETR: '.DE',   // XETRA (Germany)
-  XFRA: '.DE',   // Frankfurt
-  XAMS: '.AS',   // Euronext Amsterdam
-  XPAR: '.PA',   // Euronext Paris
-  XBRU: '.BR',   // Euronext Brussels
-  XLON: '.L',    // London Stock Exchange
-  XLIS: '.LS',   // Euronext Lisbon
-  XMIL: '.MI',   // Milan (Borsa Italiana)
-  XMAD: '.MC',   // Madrid
-  XHEL: '.HE',   // Helsinki
-  XCSE: '.CO',   // Copenhagen
-  XSTO: '.ST',   // Stockholm
-  XOSL: '.OL',   // Oslo
+// This maps MIC codes to the ":EXCHANGE" suffix used by Twelve Data /quote.
+// (Twelve Data uses SYMBOL:EXCHANGE format, not Yahoo Finance's SYMBOL.XX format)
+const MIC_TO_TD_EXCHANGE = {
+  XETR: ':XETRA',   // XETRA (Germany)
+  XFRA: ':XETRA',   // Frankfurt (routed via XETRA for ETFs)
+  XAMS: ':XAMS',    // Euronext Amsterdam
+  XPAR: ':XPAR',    // Euronext Paris
+  XBRU: ':XBRU',    // Euronext Brussels
+  XLON: ':XLON',    // London Stock Exchange
+  XLIS: ':XLIS',    // Euronext Lisbon
+  XMIL: ':XMIL',    // Milan (Borsa Italiana)
+  XMAD: ':XMAD',    // Madrid
+  XHEL: ':XHEL',    // Helsinki
+  XCSE: ':XCSE',    // Copenhagen
+  XSTO: ':XSTO',    // Stockholm
+  XOSL: ':XOSL',    // Oslo
+};
+
+// Yahoo Finance dot-suffix → Twelve Data :EXCHANGE suffix
+// Handles tickers previously stored with .DE / .AS / .L etc.
+const DOT_TO_TD = {
+  '.DE': ':XETRA',
+  '.AS': ':XAMS',
+  '.PA': ':XPAR',
+  '.L':  ':XLON',
+  '.LS': ':XLIS',
+  '.MI': ':XMIL',
+  '.MC': ':XMAD',
+  '.HE': ':XHEL',
+  '.CO': ':XCSE',
+  '.ST': ':XSTO',
+  '.OL': ':XOSL',
+  '.BR': ':XBRU',
 };
 
 /**
  * Given a bare ticker + mic_code from Twelve Data /symbol_search,
- * returns the properly qualified symbol (e.g. "VWCE" + "XETR" → "VWCE.DE").
+ * returns the properly qualified Twelve Data symbol (e.g. "VWCE" + "XETR" → "VWCE:XETRA").
  * Falls back to resolveEquityTicker (UCITS map) if mic_code not known.
  */
 export const qualifyTicker = (symbol, micCode) => {
   if (!symbol) return symbol;
-  if (symbol.includes('.')) return symbol; // already qualified
-  const suffix = micCode ? MIC_TO_SUFFIX[micCode?.toUpperCase()] : null;
-  if (suffix) return symbol + suffix;
+  if (symbol.includes(':')) return symbol; // already in Twelve Data :EXCHANGE format
+  if (symbol.includes('.')) return resolveEquityTicker(symbol); // convert .DE → :XETRA
+  const tdExchange = micCode ? MIC_TO_TD_EXCHANGE[micCode?.toUpperCase()] : null;
+  if (tdExchange) return symbol + tdExchange;
   return resolveEquityTicker(symbol); // fall back to UCITS map
 };
 
 /**
- * Resolve a potentially bare ETF/stock ticker to its Twelve Data symbol.
- * If the ticker already has an exchange suffix (contains "."), returns as-is.
- * Otherwise checks UCITS_EUR_TICKER map, falling back to the original ticker.
+ * Resolve a potentially bare or Yahoo-format ticker to Twelve Data's SYMBOL:EXCHANGE format.
+ * - SYMBOL:EXCHANGE → returned as-is (already Twelve Data format)
+ * - SYMBOL.DE (Yahoo format) → converted to SYMBOL:XETRA
+ * - SYMBOL (bare) → looked up in UCITS_EUR_TICKER, falls back to bare ticker
  */
 export const resolveEquityTicker = (ticker) => {
   if (!ticker) return ticker;
-  if (ticker.includes('.')) return ticker;             // already has exchange suffix
+  if (ticker.includes(':')) return ticker;   // already SYMBOL:EXCHANGE — Twelve Data format
+  // Convert Yahoo Finance dot-suffix to Twelve Data colon format
+  for (const [dotSuffix, tdSuffix] of Object.entries(DOT_TO_TD)) {
+    if (ticker.endsWith(dotSuffix)) {
+      return ticker.slice(0, -dotSuffix.length) + tdSuffix;
+    }
+  }
   return UCITS_EUR_TICKER[ticker.toUpperCase()] ?? ticker;
 };
 
