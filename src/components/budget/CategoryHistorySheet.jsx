@@ -113,6 +113,7 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
               </div>
             ))
           )}
+          <div style={{ height: 'calc(24px + max(0px, env(safe-area-inset-bottom)))' }} />
         </div>
       </div>
     </>
