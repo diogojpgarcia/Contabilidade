@@ -156,6 +156,38 @@ const UCITS_EUR_TICKER = {
   EGL:   'EGL.LS',    // Greenvolt
 };
 
+// ─── MIC code → exchange dot-suffix ─────────────────────────────────────────
+// Twelve Data /symbol_search returns bare tickers + mic_code.
+// This map converts MIC codes to the dot-suffix format used by /quote.
+const MIC_TO_SUFFIX = {
+  XETR: '.DE',   // XETRA (Germany)
+  XFRA: '.DE',   // Frankfurt
+  XAMS: '.AS',   // Euronext Amsterdam
+  XPAR: '.PA',   // Euronext Paris
+  XBRU: '.BR',   // Euronext Brussels
+  XLON: '.L',    // London Stock Exchange
+  XLIS: '.LS',   // Euronext Lisbon
+  XMIL: '.MI',   // Milan (Borsa Italiana)
+  XMAD: '.MC',   // Madrid
+  XHEL: '.HE',   // Helsinki
+  XCSE: '.CO',   // Copenhagen
+  XSTO: '.ST',   // Stockholm
+  XOSL: '.OL',   // Oslo
+};
+
+/**
+ * Given a bare ticker + mic_code from Twelve Data /symbol_search,
+ * returns the properly qualified symbol (e.g. "VWCE" + "XETR" → "VWCE.DE").
+ * Falls back to resolveEquityTicker (UCITS map) if mic_code not known.
+ */
+export const qualifyTicker = (symbol, micCode) => {
+  if (!symbol) return symbol;
+  if (symbol.includes('.')) return symbol; // already qualified
+  const suffix = micCode ? MIC_TO_SUFFIX[micCode?.toUpperCase()] : null;
+  if (suffix) return symbol + suffix;
+  return resolveEquityTicker(symbol); // fall back to UCITS map
+};
+
 /**
  * Resolve a potentially bare ETF/stock ticker to its Twelve Data symbol.
  * If the ticker already has an exchange suffix (contains "."), returns as-is.
@@ -553,15 +585,6 @@ export const fetchPeriodHistory = async (sym, period, type) => {
     return null;
   }
 };
-
-// ─── symbol search ───────────────────────────────────────────────────────────
-
-/**
- * Search Twelve Data /symbol_search for autocomplete.
- * @param {string} query — partial ticker or name
- * @param {string[]} [types] — e.g. ['Common Stock'], ['ETF'] (optional filter)
- * @returns {Array<{symbol,name,exchange,type}>} — empty array on failure/no key
- */
 export const fetchStockSearch = async (query, types) => {
   if (!HAS_STOCK_KEY || !query?.trim()) return [];
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
@@ -575,10 +598,12 @@ export const fetchStockSearch = async (query, types) => {
     const data = await res.json();
     if (!Array.isArray(data?.data)) return [];
     const results = data.data.map(d => ({
-      symbol:   d.symbol,
-      name:     d.instrument_name,
-      exchange: d.exchange,
-      type:     d.instrument_type,
+      symbol:     d.symbol,
+      fullSymbol: qualifyTicker(d.symbol, d.mic_code),
+      name:       d.instrument_name,
+      exchange:   d.exchange,
+      mic_code:   d.mic_code,
+      type:       d.instrument_type,
     }));
     if (types?.length) return results.filter(r => types.includes(r.type));
     return results;
@@ -587,13 +612,3 @@ export const fetchStockSearch = async (query, types) => {
     return [];
   }
 };
-
-
-// ─── symbol search ───────────────────────────────────────────────────────────
-
-/**
- * Search Twelve Data /symbol_search for autocomplete.
- * @param {string} query — partial ticker or name
- * @param {string[]} [types] — e.g. ['Common Stock'], ['ETF'] (optional filter)
- * @returns {Array<{symbol,name,exchange,type}>} — empty array on failure/no key
- */

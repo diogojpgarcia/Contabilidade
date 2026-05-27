@@ -57,6 +57,7 @@ const PatrimonyView = ({
 
   const patrimonyRef         = useRef(externalPatrimony);
   const onPatrimonyChangeRef = useRef(onPatrimonyChange);
+  const triggerRefreshRef    = useRef(null); // allows re-triggering refresh from outside the interval effect
   const stockSearchTimerRef  = useRef(null);
   const etfSearchTimerRef    = useRef(null);
 
@@ -190,12 +191,19 @@ const PatrimonyView = ({
       setRefreshingTickers(new Set());
     };
 
+    triggerRefreshRef.current = runRefresh;
     runRefresh();
     // Poll at the shortest TTL so crypto (2min) refreshes on time;
     // isStale / isStaleCrypto guards inside runRefresh prevent unnecessary API calls.
     const interval = setInterval(runRefresh, CRYPTO_CACHE_TTL);
-    return () => { cancelled = true; clearInterval(interval); };
+    return () => { cancelled = true; triggerRefreshRef.current = null; clearInterval(interval); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-trigger price fetch when patrimony loads from Supabase (fixes race condition
+  // where initial runRefresh fires before etfs/stocks are populated in the ref).
+  useEffect(() => {
+    triggerRefreshRef.current?.();
+  }, [externalPatrimony]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 7-day price history for sparklines ────────────────────────────────────
   useEffect(() => {
@@ -309,14 +317,17 @@ const PatrimonyView = ({
   };
 
   const handleStockSelect = (result) => {
-    setPatrimonyField('ticker', result.symbol);
+    // Use fullSymbol (with exchange suffix from MIC code) when available, so
+    // Twelve Data /quote can resolve the correct exchange (e.g. VWCE → VWCE.DE)
+    setPatrimonyField('ticker', result.fullSymbol ?? result.symbol);
     setPatrimonyField('name',   result.name);
     setStockSearchQuery('');
     setStockConfirmed(true);
   };
 
   const handleEtfSelect = (result) => {
-    setPatrimonyField('ticker', result.symbol);
+    // Use fullSymbol (with exchange suffix from MIC code) when available
+    setPatrimonyField('ticker', result.fullSymbol ?? result.symbol);
     setPatrimonyField('name',   result.name);
     setEtfSearchQuery('');
     setEtfConfirmed(true);
