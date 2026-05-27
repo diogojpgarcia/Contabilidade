@@ -511,4 +511,8 @@
 
 .b-nav-btn:active { opacity: 0.6; }
 
-.b-nav-btn.active
+.b-nav-btn.active {
+  background: var(--cosmos-accent-dim);
+  border-color: var(--cosmos-accent-border);
+  color: var(--cosmos-accent);
+}
