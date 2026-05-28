@@ -237,6 +237,8 @@ body {
   flex-direction: column;
   overflow-x: hidden;
   background: var(--bg-primary);
+  /* Safe area: push content below notch/Dynamic Island on all iPhone models */
+  padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
