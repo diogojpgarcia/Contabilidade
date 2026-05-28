@@ -513,4 +513,11 @@ input::placeholder {
   margin: -1px -4px;
   transition: background 0.12s;
 }
-.transaction-category--editable:a
+.transaction-category--editable:active {
+  background: var(--border-color, #3a3a3c);
+}
+.category-edit-hint {
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #888);
+  opacity: 0.55;
+}

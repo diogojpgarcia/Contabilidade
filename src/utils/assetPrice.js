@@ -198,6 +198,83 @@ const DOT_TO_TD = {
   '.BR': ':XBRU',
 };
 
+// ─── Twelve Data :EXCHANGE → Yahoo Finance suffix ─────────────────────────────
+// Yahoo Finance uses SYMBOL.DE / SYMBOL.AS etc. for European listings.
+// Twelve Data free tier does NOT support European exchange ETFs (XETRA/Euronext/LSE),
+// so we fall back to Yahoo Finance for any ticker that has a European :EXCHANGE suffix.
+const TD_TO_YAHOO = {
+  ':XETRA': '.DE',
+  ':XAMS':  '.AS',
+  ':XPAR':  '.PA',
+  ':XLON':  '.L',
+  ':XLIS':  '.LS',
+  ':XMIL':  '.MI',
+  ':XMAD':  '.MC',
+  ':XHEL':  '.HE',
+  ':XCSE':  '.CO',
+  ':XSTO':  '.ST',
+  ':XOSL':  '.OL',
+  ':XBRU':  '.BR',
+};
+
+/** Convert SYMBOL:EXCHANGE (Twelve Data) → SYMBOL.XX (Yahoo Finance). Returns null for US tickers. */
+const toYahooTicker = (tdTicker) => {
+  if (!tdTicker?.includes(':')) return null;
+  const colonIdx = tdTicker.indexOf(':');
+  const sym    = tdTicker.slice(0, colonIdx);
+  const exc    = tdTicker.slice(colonIdx);   // e.g. ':XETRA'
+  const suffix = TD_TO_YAHOO[exc];
+  return suffix ? sym + suffix : null;
+};
+
+/**
+ * Batch-fetch quotes from Yahoo Finance for European ETFs / stocks.
+ * Falls back silently on CORS failures, rate limits, or any network error.
+ *
+ * @param {Map<string,string>} resolvedToOrig  resolvedTicker → originalTicker
+ * @returns {{ [originalTicker]: { price, changePct, currency } }}
+ */
+const fetchYahooQuoteBatch = async (resolvedToOrig) => {
+  const yahooMap = new Map(); // yahooTicker → originalTicker
+  for (const [resolved, original] of resolvedToOrig) {
+    const yt = toYahooTicker(resolved);
+    if (yt) yahooMap.set(yt, original);
+  }
+  if (!yahooMap.size) return {};
+
+  const symbols = [...yahooMap.keys()].join(',');
+  const result  = {};
+  const { signal, clear } = abortAfter(FETCH_TIMEOUT);
+  try {
+    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}&fields=regularMarketPrice,regularMarketChangePercent,currency`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) {
+      console.warn(`[assetPrice] Yahoo Finance HTTP ${res.status}`);
+      return result;
+    }
+    const data   = await res.json();
+    const quotes = data?.quoteResponse?.result ?? [];
+    for (const q of quotes) {
+      const orig = yahooMap.get(q.symbol);
+      if (!orig) continue;
+      const price     = q.regularMarketPrice        ?? null;
+      const changePct = q.regularMarketChangePercent ?? null;
+      if (price == null) continue;
+      const entry = { price, changePct, currency: q.currency ?? 'EUR', ts: Date.now() };
+      stockCache.set(orig, entry);
+      result[orig] = entry;
+    }
+    if (Object.keys(result).length) {
+      console.log('[assetPrice] Yahoo Finance fallback OK:', Object.keys(result));
+    }
+  } catch (err) {
+    console.warn('[assetPrice] Yahoo Finance fallback failed:', err?.message ?? err);
+  } finally {
+    clear();
+  }
+  return result;
+};
+
 /**
  * Given a bare ticker + mic_code from Twelve Data /symbol_search,
  * returns the properly qualified Twelve Data symbol (e.g. "VWCE" + "XETR" → "VWCE:XETRA").
@@ -264,7 +341,15 @@ export const fetchStockQuote = async (ticker) => {
     const _chg      = parseFloat(data.percent_change);
     const changePct = Number.isFinite(_chg) ? _chg : null;
     const currency  = data.currency ?? '?';
-    if (price === null) return null;
+    if (price === null) {
+      // Try Yahoo Finance as fallback for European ETFs not covered by Twelve Data free tier
+      const yt = toYahooTicker(resolved);
+      if (yt) {
+        const yRes = await fetchYahooQuoteBatch(new Map([[resolved, ticker]]));
+        return yRes[ticker] ?? null;
+      }
+      return null;
+    }
 
     if (currency !== 'EUR' && currency !== '?') {
       console.warn(`[assetPrice] ${resolved} priced in ${currency} — não EUR. Considera usar a versão EUR da bolsa.`);
@@ -431,6 +516,21 @@ export const fetchStockQuoteBatch = async (tickers) => {
     console.error('[assetPrice] fetchStockQuoteBatch FAILED:', err);
   } finally {
     clear();
+  }
+
+  // ── Yahoo Finance fallback: European ETFs not supported by Twelve Data free tier ──
+  const missingTickers = toFetch.filter(t => !result[t]);
+  if (missingTickers.length) {
+    const missingMap = new Map(
+      missingTickers.map(t => [resolveEquityTicker(t), t])
+    );
+    const yahooResult = await fetchYahooQuoteBatch(missingMap);
+    Object.assign(result, yahooResult);
+    // Also populate stock cache under resolved keys for future hits
+    for (const [t, entry] of Object.entries(yahooResult)) {
+      const resolved = resolveEquityTicker(t);
+      if (resolved !== t) stockCache.set(resolved, entry);
+    }
   }
 
   return result;

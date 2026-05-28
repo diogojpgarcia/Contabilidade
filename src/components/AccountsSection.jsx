@@ -1,30 +1,11 @@
 import React from 'react';
-import { Building2, PiggyBank } from 'lucide-react';
-
-/* ── Placeholder accounts — replaced by real data via props when available ── */
-const PLACEHOLDER_ACCOUNTS = [
-  {
-    id: 'main',
-    icon: <Building2 size={16} strokeWidth={1.75} />,
-    bank: 'Caixa Geral',
-    name: 'Conta Principal',
-    balance: 3247.00,
-  },
-  {
-    id: 'savings',
-    icon: <PiggyBank size={16} strokeWidth={1.75} />,
-    bank: 'High Yield',
-    name: 'Poupança',
-    balance: 0.00,
-  },
-];
 
 function fmtBalance(value) {
   return (parseFloat(value) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
 }
 
 const AccountsSection = ({ accounts, onNavigate }) => {
-  const items = (accounts && accounts.length > 0) ? accounts : PLACEHOLDER_ACCOUNTS;
+  const items = accounts || [];
 
   return (
     <section aria-label="Contas" style={{ marginTop: 8 }}>
@@ -65,6 +46,23 @@ const AccountsSection = ({ accounts, onNavigate }) => {
       </div>
 
       {/* Horizontal scroll — padding keeps cards away from edges without clipping */}
+      {items.length === 0 ? (
+        <div style={{
+          padding: '16px 20px',
+          color: 'var(--cosmos-text-3)',
+          fontSize: 13,
+          textAlign: 'center',
+        }}>
+          Ainda não tens contas configuradas.{' '}
+          <button
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                     color: 'var(--cosmos-accent)', fontSize: 13, fontWeight: 500 }}
+            onClick={() => onNavigate?.('patrimony')}
+          >
+            Adicionar conta →
+          </button>
+        </div>
+      ) : (
       <div
         className="accounts-scroll-row"
         style={{ paddingLeft: 20, paddingRight: 20 }}
@@ -130,6 +128,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
           </div>
         ))}
       </div>
+      )}
 
     </section>
   );

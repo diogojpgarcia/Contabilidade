@@ -54,7 +54,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
               lineHeight: 1,
               margin: '0 0 8px 0',
             }}>
-              {patrimonio ?? '3 247,00€'}
+              {patrimonio ?? '0,00€'}
             </p>
             <p style={{
               fontSize: '13px',
@@ -78,7 +78,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
           }}>
             <span style={{ color: 'var(--cosmos-expense)', fontSize: '12px' }}>↓</span>
             <span style={{ color: 'var(--cosmos-expense)', fontSize: '12px', fontWeight: 500 }}>
-              {despesasMes ?? '-308,00€'}
+              {despesasMes ?? '0,00€'}
             </span>
           </div>
         </div>
