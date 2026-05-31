@@ -1,93 +1,49 @@
 /**
- * api/quote.js — Vercel serverless function
- * Proxy para cotações via Stooq — sem dependências externas, sem CORS.
+ * api/quote.js — Vercel serverless function (ES module)
+ * Proxy para cotações via yahoo-finance2.
+ * Suporta ETFs europeus (VWCE.DE, EUNL.DE, SXR8.DE), ações US e PT.
  *
- * GET /api/quote?symbols=VWCE.DE,EDP.LS,AAPL
+ * GET /api/quote?symbols=VWCE.DE,EUNL.DE,AAPL
+ * Aceita tanto formato Yahoo (.DE) como Twelve Data (:XETRA) — converte automaticamente.
  * Returns: { "VWCE.DE": { price, changePct, currency }, ... }
  */
 
-import https from 'https';
+import yahooFinance from 'yahoo-finance2';
 
-// Twelve Data MIC code → Stooq suffix
-const MIC_SUFFIX = {
-  XETRA: '.de', XFRA: '.de',
-  XLON:  '.uk', XLIS: '.ls',
-  XPAR:  '.fr', XAMS: '.nl',
-  XMIL:  '.it', XMAD: '.es',
-  XBRU:  '.be', XHEL: '.fi',
-  XSTO:  '.se', XCSE: '.dk',
-  XOSL:  '.no',
+// ─── Twelve Data :EXCHANGE → Yahoo Finance suffix ────────────────────────────
+const TD_TO_YAHOO = {
+  ':XETRA': '.DE',
+  ':XAMS':  '.AS',
+  ':XPAR':  '.PA',
+  ':XLON':  '.L',
+  ':XLIS':  '.LS',
+  ':XMIL':  '.MI',
+  ':XMAD':  '.MC',
+  ':XHEL':  '.HE',
+  ':XCSE':  '.CO',
+  ':XSTO':  '.ST',
+  ':XOSL':  '.OL',
+  ':XBRU':  '.BR',
 };
 
-// Stooq suffix → ISO currency
-const SUFFIX_CCY = {
-  de: 'EUR', ls: 'EUR', fr: 'EUR', nl: 'EUR',
-  it: 'EUR', es: 'EUR', be: 'EUR', fi: 'EUR',
-  uk: 'GBP', se: 'SEK', dk: 'DKK', no: 'NOK',
-  us: 'USD',
-};
-
-/**
- * Convert our internal ticker to a Stooq ticker (always lowercase).
- * Handles:
- *   VWCE.DE    → vwce.de       (dot-exchange suffix)
- *   VWCE:XETRA → vwce.de       (MIC code)
- *   EDP.LS     → edp.ls        (Portuguese stock)
- *   AAPL       → aapl.us       (US stock, bare)
- */
-function toStooq(sym) {
+/** Convert any ticker format → Yahoo Finance ticker */
+function toYahoo(sym) {
   if (!sym) return null;
-  // Already has dot-exchange suffix (e.g. VWCE.DE, EDP.LS, CSPX.L)
-  if (/\.[A-Za-z]{1,3}$/.test(sym)) return sym.toLowerCase();
-  // MIC code format (e.g. VWCE:XETRA)
-  const micMatch = sym.match(/^([^:]+):([A-Z]+)$/);
-  if (micMatch) {
-    const suffix = MIC_SUFFIX[micMatch[2]];
-    return suffix
-      ? (micMatch[1] + suffix).toLowerCase()
-      : micMatch[1].toLowerCase() + '.us';
+
+  // Already has Yahoo dot-exchange suffix (e.g. VWCE.DE, EDP.LS)
+  if (/\.[A-Z]{1,3}$/i.test(sym)) return sym.toUpperCase();
+
+  // Twelve Data colon format (e.g. VWCE:XETRA → VWCE.DE)
+  const colonIdx = sym.indexOf(':');
+  if (colonIdx > 0) {
+    const base = sym.slice(0, colonIdx);
+    const exc  = sym.slice(colonIdx); // e.g. ':XETRA'
+    const suffix = TD_TO_YAHOO[exc.toUpperCase()];
+    return suffix ? base.toUpperCase() + suffix : base.toUpperCase(); // US fallback (no suffix)
   }
-  // Bare ticker — assume US
-  return sym.toLowerCase() + '.us';
-}
 
-function httpsGet(url) {
-  return new Promise((resolve) => {
-    const req = https.get(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': '*/*' },
-    }, (res) => {
-      let body = '';
-      res.on('data', d => (body += d));
-      res.on('end', () => resolve({ status: res.statusCode, body }));
-    });
-    req.setTimeout(9000, () => { req.destroy(); resolve({ status: 408, body: '' }); });
-    req.on('error', () => resolve({ status: 0, body: '' }));
-  });
-}
-
-/**
- * Parse Stooq CSV with format code sd2t2ohlcvp:
- * Columns: Symbol, Date, Time, Open, High, Low, Close, Volume, %Chg
- * Positions:  0      1     2     3     4     5    6      7       8
- */
-function parseStooq(stooqSym, body) {
-  const lines = body.trim().split('\n');
-  if (lines.length < 2) return null;
-  const vals = lines[1].split(',');
-  if (vals.length < 7) return null;
-
-  const close = parseFloat(vals[6]);
-  if (!close || isNaN(close) || close <= 0) return null;
-
-  const changePct = vals.length > 8 ? parseFloat(vals[8]) : null;
-  const suffix    = (stooqSym.match(/\.([a-z]+)$/) || [])[1] || 'us';
-  const currency  = SUFFIX_CCY[suffix] ?? 'EUR';
-
-  return {
-    price:     close,
-    changePct: (changePct != null && !isNaN(changePct)) ? changePct : null,
-    currency,
-  };
+  // Bare ticker — assume US (Yahoo uses bare tickers for US stocks)
+  return sym.toUpperCase();
 }
 
 export default async function handler(req, res) {
@@ -98,6 +54,7 @@ export default async function handler(req, res) {
   try {
     const symList = ((req.query || {}).symbols || '')
       .split(',').map(s => s.trim()).filter(Boolean);
+
     if (!symList.length) return res.status(200).json({});
 
     const result = {};
@@ -105,26 +62,22 @@ export default async function handler(req, res) {
     await Promise.allSettled(
       symList.map(async (sym) => {
         try {
-          const stooqSym = toStooq(sym);
-          if (!stooqSym) return;
+          const yahooSym = toYahoo(sym);
+          if (!yahooSym) return;
 
-          // sd2t2ohlcvp → Symbol,Date,Time,Open,High,Low,Close,Volume,%Chg
-          const url = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqSym)}&f=sd2t2ohlcvp&e=csv`;
-          const { status, body } = await httpsGet(url);
+          const q = await yahooFinance.quote(yahooSym, {}, { validateResult: false });
 
-          if (status !== 200 || !body.includes(',')) {
-            console.warn(`[quote] ${sym}→${stooqSym}: HTTP ${status}`);
+          const price = q?.regularMarketPrice ?? null;
+          if (price == null || isNaN(price)) {
+            console.warn(`[quote] ${sym}→${yahooSym}: sem preço`);
             return;
           }
 
-          const parsed = parseStooq(stooqSym, body);
-          if (!parsed) {
-            console.warn(`[quote] ${sym}→${stooqSym}: dados inválidos ou mercado fechado`);
-            return;
-          }
+          const changePct = q?.regularMarketChangePercent ?? null;
+          const currency  = q?.currency ?? 'EUR';
 
-          result[sym] = parsed;
-          console.log(`[quote] ${sym}→${stooqSym} = ${parsed.price} ${parsed.currency} (${parsed.changePct}%)`);
+          result[sym] = { price, changePct, currency };
+          console.log(`[quote] ${sym}→${yahooSym} = ${price} ${currency} (${changePct?.toFixed(2)}%)`);
         } catch (e) {
           console.warn(`[quote] ${sym} erro:`, e.message);
         }
@@ -137,4 +90,4 @@ export default async function handler(req, res) {
     console.error('[quote] FATAL:', err.message);
     return res.status(200).json({});
   }
-};
+}

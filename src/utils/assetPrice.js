@@ -228,25 +228,26 @@ const toStooqTicker = (tdTicker) => {
 };
 
 /**
- * Batch-fetch quotes from Stooq (via /api/quote proxy) for European ETFs / stocks.
+ * Batch-fetch quotes via /api/quote proxy (Yahoo Finance) for European ETFs / stocks.
  * Falls back silently on CORS failures, rate limits, or any network error.
  *
  * @param {Map<string,string>} resolvedToOrig  resolvedTicker → originalTicker
  * @returns {{ [originalTicker]: { price, changePct, currency } }}
  */
 const fetchStooqQuoteBatch = async (resolvedToOrig) => {
-  const stooqMap = new Map(); // stooqTicker → originalTicker
+  // Build map: resolvedTicker → originalTicker (only European tickers that Stooq/Yahoo supports)
+  const euroMap = new Map(); // resolvedTicker (SYMBOL:XETRA) → originalTicker
   for (const [resolved, original] of resolvedToOrig) {
-    const yt = toStooqTicker(resolved);
-    if (yt) stooqMap.set(yt, original);
+    // Send the resolved ticker as-is; api/quote converts :XETRA → .DE internally
+    euroMap.set(resolved, original);
   }
-  if (!stooqMap.size) return {};
+  if (!euroMap.size) return {};
 
-  const symbols = [...stooqMap.keys()].join(',');
+  const symbols = [...euroMap.keys()].join(',');
   const result  = {};
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    // Chama o proxy server-side /api/quote (Stooq, sem CORS)
+    // Chama o proxy server-side /api/quote (Yahoo Finance, sem CORS)
     const url = `/api/quote?symbols=${encodeURIComponent(symbols)}`;
     const res = await fetch(url, { signal });
     if (!res.ok) {
@@ -254,19 +255,22 @@ const fetchStooqQuoteBatch = async (resolvedToOrig) => {
       return result;
     }
     const data = await res.json();
-    // data = { "vwce.de": { price, changePct, currency }, ... }
-    for (const [yahooSym, orig] of stooqMap) {
-      const q = data[yahooSym];
+    // data = { "EUNL:XETRA": { price, changePct, currency }, ... }
+    for (const [resolved, orig] of euroMap) {
+      const q = data[resolved];
       if (!q?.price) continue;
       const entry = { price: q.price, changePct: q.changePct ?? null, currency: q.currency ?? 'EUR', ts: Date.now() };
       stockCache.set(orig, entry);
+      stockCache.set(resolved, entry);
       result[orig] = entry;
     }
     if (Object.keys(result).length) {
       console.log('[assetPrice] /api/quote proxy OK:', Object.keys(result));
+    } else {
+      console.warn('[assetPrice] /api/quote proxy retornou vazio para:', symbols);
     }
   } catch (err) {
-    console.warn('[assetPrice] Stooq fallback failed:', err?.message ?? err);
+    console.warn('[assetPrice] Yahoo fallback failed:', err?.message ?? err);
   } finally {
     clear();
   }
