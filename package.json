@@ -14,7 +14,7 @@
     "@supabase/supabase-js": "^2.39.0",
     "lucide-react": "^0.395.0",
     "pdfjs-dist": "^4.4.168",
-    "xlsx": "^0.18.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
