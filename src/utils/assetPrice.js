@@ -117,7 +117,7 @@ const toCoinId = (symbol) =>
 // When a user has "VWCE" saved (no suffix), we resolve it to "VWCE.DE" automatically.
 // ─── UCITS ETF → Twelve Data symbol map ─────────────────────────────────────
 // Twelve Data uses the format SYMBOL:EXCHANGE (e.g. VOW3:XETRA — their docs).
-// NOT the Yahoo Finance dot format (.DE, .AS, .L, etc.) which Twelve Data
+// NOT the Stooq dot format (.de, .as, .uk, etc.) which Twelve Data
 // does NOT recognise. Bare UCITS tickers are resolved to their canonical
 // Twelve Data symbol here.
 const UCITS_EUR_TICKER = {
@@ -164,7 +164,7 @@ const UCITS_EUR_TICKER = {
 // ─── MIC code → Twelve Data :EXCHANGE suffix ─────────────────────────────────
 // Twelve Data /symbol_search returns bare tickers + mic_code.
 // This maps MIC codes to the ":EXCHANGE" suffix used by Twelve Data /quote.
-// (Twelve Data uses SYMBOL:EXCHANGE format, not Yahoo Finance's SYMBOL.XX format)
+// (Twelve Data uses SYMBOL:EXCHANGE format, not Stooq SYMBOL.xx format)
 const MIC_TO_TD_EXCHANGE = {
   XETR: ':XETRA',   // XETRA (Germany)
   XFRA: ':XETRA',   // Frankfurt (routed via XETRA for ETFs)
@@ -181,7 +181,7 @@ const MIC_TO_TD_EXCHANGE = {
   XOSL: ':XOSL',    // Oslo
 };
 
-// Yahoo Finance dot-suffix → Twelve Data :EXCHANGE suffix
+// Stooq dot-suffix → Twelve Data :EXCHANGE suffix
 // Handles tickers previously stored with .DE / .AS / .L etc.
 const DOT_TO_TD = {
   '.DE': ':XETRA',
@@ -198,55 +198,55 @@ const DOT_TO_TD = {
   '.BR': ':XBRU',
 };
 
-// ─── Twelve Data :EXCHANGE → Yahoo Finance suffix ─────────────────────────────
-// Yahoo Finance uses SYMBOL.DE / SYMBOL.AS etc. for European listings.
+// ─── Twelve Data :EXCHANGE → Stooq suffix ────────────────────────────────────────
+// Stooq uses SYMBOL.de / SYMBOL.as etc. for European listings.
 // Twelve Data free tier does NOT support European exchange ETFs (XETRA/Euronext/LSE),
-// so we fall back to Yahoo Finance for any ticker that has a European :EXCHANGE suffix.
-const TD_TO_YAHOO = {
-  ':XETRA': '.DE',
-  ':XAMS':  '.AS',
-  ':XPAR':  '.PA',
-  ':XLON':  '.L',
-  ':XLIS':  '.LS',
-  ':XMIL':  '.MI',
-  ':XMAD':  '.MC',
-  ':XHEL':  '.HE',
-  ':XCSE':  '.CO',
-  ':XSTO':  '.ST',
-  ':XOSL':  '.OL',
-  ':XBRU':  '.BR',
+// so we fall back to Stooq (via /api/quote proxy) for any ticker with a European :EXCHANGE suffix.
+const TD_TO_STOOQ = {
+  ':XETRA': '.de',
+  ':XAMS':  '.as',
+  ':XPAR':  '.pa',
+  ':XLON':  '.uk',
+  ':XLIS':  '.ls',
+  ':XMIL':  '.it',
+  ':XMAD':  '.es',
+  ':XHEL':  '.fi',
+  ':XCSE':  '.dk',
+  ':XSTO':  '.se',
+  ':XOSL':  '.no',
+  ':XBRU':  '.be',
 };
 
-/** Convert SYMBOL:EXCHANGE (Twelve Data) → SYMBOL.XX (Yahoo Finance). Returns null for US tickers. */
-const toYahooTicker = (tdTicker) => {
+/** Convert SYMBOL:EXCHANGE (Twelve Data) → SYMBOL.xx (Stooq format). Returns null for US tickers. */
+const toStooqTicker = (tdTicker) => {
   if (!tdTicker?.includes(':')) return null;
   const colonIdx = tdTicker.indexOf(':');
   const sym    = tdTicker.slice(0, colonIdx);
   const exc    = tdTicker.slice(colonIdx);   // e.g. ':XETRA'
-  const suffix = TD_TO_YAHOO[exc];
+  const suffix = TD_TO_STOOQ[exc];
   return suffix ? sym + suffix : null;
 };
 
 /**
- * Batch-fetch quotes from Yahoo Finance for European ETFs / stocks.
+ * Batch-fetch quotes from Stooq (via /api/quote proxy) for European ETFs / stocks.
  * Falls back silently on CORS failures, rate limits, or any network error.
  *
  * @param {Map<string,string>} resolvedToOrig  resolvedTicker → originalTicker
  * @returns {{ [originalTicker]: { price, changePct, currency } }}
  */
-const fetchYahooQuoteBatch = async (resolvedToOrig) => {
-  const yahooMap = new Map(); // yahooTicker → originalTicker
+const fetchStooqQuoteBatch = async (resolvedToOrig) => {
+  const stooqMap = new Map(); // stooqTicker → originalTicker
   for (const [resolved, original] of resolvedToOrig) {
-    const yt = toYahooTicker(resolved);
-    if (yt) yahooMap.set(yt, original);
+    const yt = toStooqTicker(resolved);
+    if (yt) stooqMap.set(yt, original);
   }
-  if (!yahooMap.size) return {};
+  if (!stooqMap.size) return {};
 
-  const symbols = [...yahooMap.keys()].join(',');
+  const symbols = [...stooqMap.keys()].join(',');
   const result  = {};
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    // Chama o proxy server-side /api/quote (evita CORS do Yahoo Finance no browser)
+    // Chama o proxy server-side /api/quote (Stooq, sem CORS)
     const url = `/api/quote?symbols=${encodeURIComponent(symbols)}`;
     const res = await fetch(url, { signal });
     if (!res.ok) {
@@ -254,8 +254,8 @@ const fetchYahooQuoteBatch = async (resolvedToOrig) => {
       return result;
     }
     const data = await res.json();
-    // data = { "VWCE.DE": { price, changePct, currency }, ... }
-    for (const [yahooSym, orig] of yahooMap) {
+    // data = { "vwce.de": { price, changePct, currency }, ... }
+    for (const [yahooSym, orig] of stooqMap) {
       const q = data[yahooSym];
       if (!q?.price) continue;
       const entry = { price: q.price, changePct: q.changePct ?? null, currency: q.currency ?? 'EUR', ts: Date.now() };
@@ -266,7 +266,7 @@ const fetchYahooQuoteBatch = async (resolvedToOrig) => {
       console.log('[assetPrice] /api/quote proxy OK:', Object.keys(result));
     }
   } catch (err) {
-    console.warn('[assetPrice] Yahoo Finance fallback failed:', err?.message ?? err);
+    console.warn('[assetPrice] Stooq fallback failed:', err?.message ?? err);
   } finally {
     clear();
   }
@@ -288,15 +288,15 @@ export const qualifyTicker = (symbol, micCode) => {
 };
 
 /**
- * Resolve a potentially bare or Yahoo-format ticker to Twelve Data's SYMBOL:EXCHANGE format.
+ * Resolve a potentially bare or Stooq-format ticker to Twelve Data's SYMBOL:EXCHANGE format.
  * - SYMBOL:EXCHANGE → returned as-is (already Twelve Data format)
- * - SYMBOL.DE (Yahoo format) → converted to SYMBOL:XETRA
+ * - SYMBOL.de (Stooq format) → converted to SYMBOL:XETRA
  * - SYMBOL (bare) → looked up in UCITS_EUR_TICKER, falls back to bare ticker
  */
 export const resolveEquityTicker = (ticker) => {
   if (!ticker) return ticker;
   if (ticker.includes(':')) return ticker;   // already SYMBOL:EXCHANGE — Twelve Data format
-  // Convert Yahoo Finance dot-suffix to Twelve Data colon format
+  // Convert Stooq dot-suffix to Twelve Data colon format
   for (const [dotSuffix, tdSuffix] of Object.entries(DOT_TO_TD)) {
     if (ticker.endsWith(dotSuffix)) {
       return ticker.slice(0, -dotSuffix.length) + tdSuffix;
@@ -340,10 +340,10 @@ export const fetchStockQuote = async (ticker) => {
     const changePct = Number.isFinite(_chg) ? _chg : null;
     const currency  = data.currency ?? '?';
     if (price === null) {
-      // Try Yahoo Finance as fallback for European ETFs not covered by Twelve Data free tier
-      const yt = toYahooTicker(resolved);
+      // Try Stooq as fallback for European ETFs not covered by Twelve Data free tier
+      const yt = toStooqTicker(resolved);
       if (yt) {
-        const yRes = await fetchYahooQuoteBatch(new Map([[resolved, ticker]]));
+        const yRes = await fetchStooqQuoteBatch(new Map([[resolved, ticker]]));
         return yRes[ticker] ?? null;
       }
       return null;
@@ -475,8 +475,8 @@ export const fetchStockQuoteBatch = async (tickers) => {
     const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${TWELVE_DATA_KEY}`;
     const res = await fetch(url, { signal });
     if (!res.ok) {
-      console.warn(`[assetPrice] fetchStockQuoteBatch HTTP ${res.status} — a tentar Yahoo fallback`);
-      // Não retorna — continua para o bloco Yahoo Finance abaixo
+      console.warn(`[assetPrice] fetchStockQuoteBatch HTTP ${res.status} — a tentar Stooq fallback`);
+      // Não retorna — continua para o bloco Stooq abaixo
     } else {
 
     const data = await res.json();
@@ -512,21 +512,21 @@ export const fetchStockQuoteBatch = async (tickers) => {
     }
     } // end else (Twelve Data ok)
   } catch (err) {
-    console.warn('[assetPrice] fetchStockQuoteBatch FAILED (a tentar Yahoo fallback):', err);
+    console.warn('[assetPrice] fetchStockQuoteBatch FAILED (a tentar Stooq fallback):', err);
   } finally {
     clear();
   }
 
-  // ── Yahoo Finance fallback: European ETFs not supported by Twelve Data free tier ──
+  // ── Stooq fallback: European ETFs not supported by Twelve Data free tier ──
   const missingTickers = toFetch.filter(t => !result[t]);
   if (missingTickers.length) {
     const missingMap = new Map(
       missingTickers.map(t => [resolveEquityTicker(t), t])
     );
-    const yahooResult = await fetchYahooQuoteBatch(missingMap);
-    Object.assign(result, yahooResult);
+    const stooqResult = await fetchStooqQuoteBatch(missingMap);
+    Object.assign(result, stooqResult);
     // Also populate stock cache under resolved keys for future hits
-    for (const [t, entry] of Object.entries(yahooResult)) {
+    for (const [t, entry] of Object.entries(stooqResult)) {
       const resolved = resolveEquityTicker(t);
       if (resolved !== t) stockCache.set(resolved, entry);
     }
