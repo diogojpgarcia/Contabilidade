@@ -61,32 +61,57 @@ export const ASSETS = [
   { type: 'stock', symbol: 'EGL.LS',   name: 'Greenvolt — Energias Renováveis' },
 
   // ── US ETFs ───────────────────────────────────────────────────────────────
-  { type: 'etf', symbol: 'SPY',  name: 'S&P 500 ETF (SPDR)' },
-  { type: 'etf', symbol: 'QQQ',  name: 'Nasdaq-100 ETF (Invesco)' },
-  { type: 'etf', symbol: 'VOO',  name: 'Vanguard S&P 500 ETF' },
-  { type: 'etf', symbol: 'VTI',  name: 'Vanguard Total Market ETF' },
-  { type: 'etf', symbol: 'GLD',  name: 'SPDR Gold Shares ETF' },
-  { type: 'etf', symbol: 'TLT',  name: 'iShares 20+ Year Treasury ETF' },
-  { type: 'etf', symbol: 'VGT',  name: 'Vanguard Info Technology ETF' },
-  { type: 'etf', symbol: 'ARKK', name: 'ARK Innovation ETF' },
+  // Nota: estes ETFs cotam em USD. Para versões UCITS (EUR) ver secção abaixo.
+  { type: 'etf', symbol: 'SPY',  name: 'S&P 500 ETF (SPDR) · NASDAQ · USD' },
+  { type: 'etf', symbol: 'QQQ',  name: 'Nasdaq-100 ETF (Invesco) · NASDAQ · USD' },
+  { type: 'etf', symbol: 'VOO',  name: 'Vanguard S&P 500 ETF · NYSE · USD' },
+  { type: 'etf', symbol: 'VTI',  name: 'Vanguard Total Market ETF · NYSE · USD' },
+  { type: 'etf', symbol: 'GLD',  name: 'SPDR Gold Shares ETF · NYSE · USD' },
+  { type: 'etf', symbol: 'TLT',  name: 'iShares 20+ Year Treasury ETF · NASDAQ · USD' },
+  { type: 'etf', symbol: 'VGT',  name: 'Vanguard Info Technology ETF · NYSE · USD' },
+  { type: 'etf', symbol: 'ARKK', name: 'ARK Innovation ETF · NYSE · USD' },
+  { type: 'etf', symbol: 'SMH',  name: 'VanEck Semiconductor ETF · NASDAQ · USD' },
 
-  // ── UCITS ETFs (popular em PT/EU) ────────────────────────────────────────
-  // Símbolos com sufixo de bolsa para preços corretos em EUR via Twelve Data.
-  // .DE = XETRA (EUR), .AS = Euronext Amsterdam (EUR), .PA = Euronext Paris (EUR)
-  // O resolveEquityTicker() em assetPrice.js faz o mesmo mapeamento automaticamente
-  // para ETFs já guardados na base de dados sem sufixo.
-  { type: 'etf', symbol: 'VWCE.DE', name: 'Vanguard FTSE All-World UCITS ETF' },
-  { type: 'etf', symbol: 'IWDA.AS', name: 'iShares Core MSCI World UCITS ETF' },
-  { type: 'etf', symbol: 'EUNL.DE', name: 'iShares Core MSCI World UCITS (XETRA)' },
-  { type: 'etf', symbol: 'CSPX.L',  name: 'iShares Core S&P 500 UCITS ETF (London)' },
-  { type: 'etf', symbol: 'SXR8.DE', name: 'iShares Core S&P 500 UCITS ETF (EUR)' },
-  { type: 'etf', symbol: 'VUSA.DE', name: 'Vanguard S&P 500 UCITS ETF (EUR)' },
-  { type: 'etf', symbol: 'XDWD.DE', name: 'Xtrackers MSCI World Swap UCITS ETF' },
-  { type: 'etf', symbol: 'EXSA.DE', name: 'iShares Core EURO STOXX 50 UCITS ETF' },
-  { type: 'etf', symbol: 'MEUD.PA', name: 'Amundi MSCI Europe UCITS ETF' },
-  { type: 'etf', symbol: 'AGGH.L',  name: 'iShares Core Global Aggregate Bond UCITS ETF' },
-  { type: 'etf', symbol: 'IS3N.DE', name: 'iShares Core MSCI EM IMI UCITS ETF' },
-  { type: 'etf', symbol: 'SPPW.DE', name: 'SPDR MSCI World UCITS ETF' },
+  // ── UCITS ETFs (Europa — EUR) ─────────────────────────────────────────────
+  // Sufixo de bolsa garante preço correto em EUR.
+  // .DE = XETRA · .AS = Euronext Amsterdam · .PA = Euronext Paris · .L = Londres
+  // ── Vanguard ──────────────────────────────────────────────────────────────
+  { type: 'etf', symbol: 'VWCE.DE', name: 'Vanguard FTSE All-World Acc UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'VUSA.DE', name: 'Vanguard S&P 500 UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'VWRL.AS', name: 'Vanguard FTSE All-World Dist UCITS · Amsterdam · EUR' },
+  { type: 'etf', symbol: 'VEUR.AS', name: 'Vanguard FTSE Developed Europe UCITS · Amsterdam · EUR' },
+  { type: 'etf', symbol: 'VFEM.AS', name: 'Vanguard FTSE Emerging Markets UCITS · Amsterdam · EUR' },
+  // ── iShares (BlackRock) ───────────────────────────────────────────────────
+  { type: 'etf', symbol: 'IWDA.AS', name: 'iShares MSCI World Acc UCITS · Amsterdam · EUR' },
+  { type: 'etf', symbol: 'EUNL.DE', name: 'iShares MSCI World UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'SXR8.DE', name: 'iShares Core S&P 500 UCITS (EUR hedged) · XETRA · EUR' },
+  { type: 'etf', symbol: 'CSPX.L',  name: 'iShares Core S&P 500 Acc UCITS · Londres · USD' },
+  { type: 'etf', symbol: 'IS3N.DE', name: 'iShares Core MSCI EM IMI UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'IEMA.AS', name: 'iShares Core MSCI EM IMI UCITS · Amsterdam · EUR' },
+  { type: 'etf', symbol: 'EXSA.DE', name: 'iShares Core EURO STOXX 50 UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'AGGH.L',  name: 'iShares Core Global Aggregate Bond UCITS · Londres · USD' },
+  { type: 'etf', symbol: 'IAGG.DE', name: 'iShares Core Global Agg Bond EUR Hedged · XETRA · EUR' },
+  { type: 'etf', symbol: 'IDTL.L',  name: 'iShares $ Treasury Bond 20+yr UCITS · Londres · USD' },
+  // ── Xtrackers (DWS) ───────────────────────────────────────────────────────
+  { type: 'etf', symbol: 'XDWD.DE', name: 'Xtrackers MSCI World Swap UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'XDEM.DE', name: 'Xtrackers MSCI World Momentum UCITS · XETRA · EUR' },
+  // ── Amundi / Lyxor ────────────────────────────────────────────────────────
+  { type: 'etf', symbol: 'MEUD.PA', name: 'Amundi MSCI Europe UCITS · Paris · EUR' },
+  { type: 'etf', symbol: 'LCWD.PA', name: 'Amundi MSCI World UCITS · Paris · EUR' },
+  { type: 'etf', symbol: 'PANX.PA', name: 'Amundi Nasdaq-100 UCITS · Paris · EUR' },
+  // ── SPDR ──────────────────────────────────────────────────────────────────
+  { type: 'etf', symbol: 'SPPW.DE', name: 'SPDR MSCI World UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'SPXS.DE', name: 'SPDR S&P 500 UCITS · XETRA · EUR' },
+  // ── VanEck UCITS ──────────────────────────────────────────────────────────
+  { type: 'etf', symbol: 'SMH.AS',  name: 'VanEck Semiconductor UCITS · Amsterdam · EUR' },
+  { type: 'etf', symbol: 'MOAT.AS', name: 'VanEck Morningstar US Wide Moat UCITS · Amsterdam · EUR' },
+  { type: 'etf', symbol: 'DAPP.DE', name: 'VanEck Digital Assets Equity UCITS · XETRA · EUR' },
+  // ── Invesco UCITS ─────────────────────────────────────────────────────────
+  { type: 'etf', symbol: 'EQQQ.DE', name: 'Invesco Nasdaq-100 UCITS · XETRA · EUR' },
+  { type: 'etf', symbol: 'QQQM.AS', name: 'Invesco Nasdaq-100 UCITS (Dist) · Amsterdam · EUR' },
+  // ── WisdomTree ────────────────────────────────────────────────────────────
+  { type: 'etf', symbol: 'WGLD.DE', name: 'WisdomTree Physical Gold · XETRA · EUR' },
+  { type: 'etf', symbol: 'PHAU.L',  name: 'WisdomTree Physical Gold · Londres · USD' },
 
   // ── Crypto — Layer 1 ──────────────────────────────────────────────────────
   // symbol = base ticker only; fetchCryptoTwelveData appends "/USD" internally
