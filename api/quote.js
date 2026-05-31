@@ -6,7 +6,7 @@
  * Returns: { "VWCE.DE": { price, changePct, currency }, ... }
  */
 
-const https = require('https');
+import https from 'https';
 
 // Twelve Data MIC code → Stooq suffix
 const MIC_SUFFIX = {
@@ -90,7 +90,7 @@ function parseStooq(stooqSym, body) {
   };
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
