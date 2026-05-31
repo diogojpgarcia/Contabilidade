@@ -246,26 +246,24 @@ const fetchYahooQuoteBatch = async (resolvedToOrig) => {
   const result  = {};
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}&fields=regularMarketPrice,regularMarketChangePercent,currency`;
+    // Chama o proxy server-side /api/quote (evita CORS do Yahoo Finance no browser)
+    const url = `/api/quote?symbols=${encodeURIComponent(symbols)}`;
     const res = await fetch(url, { signal });
     if (!res.ok) {
-      console.warn(`[assetPrice] Yahoo Finance HTTP ${res.status}`);
+      console.warn(`[assetPrice] /api/quote HTTP ${res.status}`);
       return result;
     }
-    const data   = await res.json();
-    const quotes = data?.quoteResponse?.result ?? [];
-    for (const q of quotes) {
-      const orig = yahooMap.get(q.symbol);
-      if (!orig) continue;
-      const price     = q.regularMarketPrice        ?? null;
-      const changePct = q.regularMarketChangePercent ?? null;
-      if (price == null) continue;
-      const entry = { price, changePct, currency: q.currency ?? 'EUR', ts: Date.now() };
+    const data = await res.json();
+    // data = { "VWCE.DE": { price, changePct, currency }, ... }
+    for (const [yahooSym, orig] of yahooMap) {
+      const q = data[yahooSym];
+      if (!q?.price) continue;
+      const entry = { price: q.price, changePct: q.changePct ?? null, currency: q.currency ?? 'EUR', ts: Date.now() };
       stockCache.set(orig, entry);
       result[orig] = entry;
     }
     if (Object.keys(result).length) {
-      console.log('[assetPrice] Yahoo Finance fallback OK:', Object.keys(result));
+      console.log('[assetPrice] /api/quote proxy OK:', Object.keys(result));
     }
   } catch (err) {
     console.warn('[assetPrice] Yahoo Finance fallback failed:', err?.message ?? err);
