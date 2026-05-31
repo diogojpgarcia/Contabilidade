@@ -103,7 +103,7 @@ export const ASSETS = [
   { type: 'etf', symbol: 'SPPW.DE', name: 'SPDR MSCI World UCITS · XETRA · EUR' },
   { type: 'etf', symbol: 'SPXS.DE', name: 'SPDR S&P 500 UCITS · XETRA · EUR' },
   // ── VanEck UCITS ──────────────────────────────────────────────────────────
-  { type: 'etf', symbol: 'SMH.AS',  name: 'VanEck Semiconductor UCITS · Amsterdam · EUR' },
+  { type: 'etf', symbol: 'SMH.DE',  name: 'VanEck Semiconductor UCITS · XETRA · EUR' },
   { type: 'etf', symbol: 'MOAT.AS', name: 'VanEck Morningstar US Wide Moat UCITS · Amsterdam · EUR' },
   { type: 'etf', symbol: 'DAPP.DE', name: 'VanEck Digital Assets Equity UCITS · XETRA · EUR' },
   // ── Invesco UCITS ─────────────────────────────────────────────────────────
