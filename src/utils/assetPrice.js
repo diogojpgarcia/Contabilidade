@@ -149,6 +149,10 @@ const UCITS_EUR_TICKER = {
   MEUD:  'MEUD:XPAR',    // MSCI Europe — Euronext Paris EUR
   LCWD:  'LCWD:XPAR',    // MSCI World — Euronext Paris EUR
   PANX:  'PANX:XPAR',    // Nasdaq-100 UCITS — Euronext Paris EUR
+  // VanEck UCITS
+  SMH:   'SMH:XAMS',     // Semiconductor UCITS ETF — Euronext Amsterdam EUR
+  MOAT:  'MOAT:XAMS',    // Morningstar US Wide Moat UCITS — Euronext Amsterdam EUR
+  SMHX:  'SMHX:XETRA',   // Semiconductor ex-US UCITS — XETRA EUR
   // SPDR
   SPXS:  'SPXS:XETRA',   // S&P 500 UCITS — XETRA EUR
   // ── Ações portuguesas (Euronext Lisboa, EUR) ─────────────────────────────
