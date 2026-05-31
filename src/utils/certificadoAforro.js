@@ -47,11 +47,22 @@ export const fetchEuribor3M = async () => {
     const ctrl = new AbortController();
     const t    = setTimeout(() => ctrl.abort(), 10_000);
 
-    // ECB SDMX API — tenta v2.1 (novo endpoint) com fallback para URL anterior
-    const url = 'https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.RT0.MM.EURIBOR3MD_.HSTA'
-      + '?lastNObservations=1&format=jsondata';
+    // ECB SDMX API — requer Accept header específico para SDMX JSON
+    const urls = [
+      'https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.RT0.MM.EURIBOR3MD_.HSTA?lastNObservations=1&format=jsondata',
+      'https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.RT0.MM.EURIBOR3MD_?lastNObservations=1&format=jsondata',
+    ];
 
-    const res = await fetch(url, { signal: ctrl.signal });
+    let res = null;
+    for (const url of urls) {
+      try {
+        res = await fetch(url, {
+          signal: ctrl.signal,
+          headers: { 'Accept': 'application/vnd.sdmx.data+json;version=1.0, application/json' },
+        });
+        if (res.ok) break;
+      } catch { /* continua */ }
+    }
     clearTimeout(t);
 
     if (!res.ok) throw new Error(`ECB HTTP ${res.status}`);
