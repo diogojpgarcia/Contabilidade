@@ -47,8 +47,9 @@ export const fetchEuribor3M = async () => {
     const ctrl = new AbortController();
     const t    = setTimeout(() => ctrl.abort(), 10_000);
 
+    // ECB SDMX API — tenta v2.1 (novo endpoint) com fallback para URL anterior
     const url = 'https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.RT0.MM.EURIBOR3MD_.HSTA'
-      + '?detail=dataonly&lastNObservations=1&format=jsondata';
+      + '?lastNObservations=1&format=jsondata';
 
     const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);

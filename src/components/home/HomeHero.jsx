@@ -13,7 +13,7 @@ const HomeHero = ({ patrimonio, variacao, despesasMes, diaAtual, totalDias, spar
   const max = Math.max(...dados) * 1.01;
 
   const cx = (i) => (i / (dados.length - 1)) * W;
-  const cy = (v) => H - ((v - min) / (max - min)) * H;
+  const cy = (v) => (max === min) ? H / 2 : H - ((v - min) / (max - min)) * H;
 
   const linePoints = dados.map((v, i) => `${cx(i)},${cy(v)}`).join(' ');
   const areaPath =

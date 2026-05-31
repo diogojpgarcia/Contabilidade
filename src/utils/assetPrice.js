@@ -606,7 +606,7 @@ export const fetchCryptoHistoryBatch = async (symbols) => {
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
       try {
         const res = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=eur&days=7&interval=daily`,
+          `/api/crypto-history?coin=${encodeURIComponent(id)}&days=7`,
           { signal }
         );
         if (!res.ok) return;
@@ -680,7 +680,7 @@ export const fetchPeriodHistory = async (sym, period, type) => {
       const interval = period === '1D' ? 'hourly' : 'daily';
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=eur&days=${days}${days !== 'max' ? `&interval=${interval}` : ''}`,
+        `/api/crypto-history?coin=${encodeURIComponent(id)}&days=${days}`,
         { signal }
       );
       clear();
