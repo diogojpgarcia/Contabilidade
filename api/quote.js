@@ -1,14 +1,14 @@
 /**
  * api/quote.js — Vercel serverless function (ES module)
- * Proxy para cotações via yahoo-finance2.
- * Suporta ETFs europeus (VWCE.DE, EUNL.DE, SXR8.DE), ações US e PT.
+ * Proxy para cotações via Yahoo Finance chart API.
+ * Sem dependências externas. Funciona para ETFs europeus (VWCE.DE, EUNL.DE, SXR8.DE),
+ * ações US e PT. Devolve último preço conhecido (funciona ao fim-de-semana).
  *
- * GET /api/quote?symbols=VWCE.DE,EUNL.DE,AAPL
- * Aceita tanto formato Yahoo (.DE) como Twelve Data (:XETRA) — converte automaticamente.
- * Returns: { "VWCE.DE": { price, changePct, currency }, ... }
+ * GET /api/quote?symbols=EUNL:XETRA,VWCE:XETRA,AAPL
+ * Returns: { "EUNL:XETRA": { price, changePct, currency }, ... }
  */
 
-import yahooFinance from 'yahoo-finance2';
+import https from 'https';
 
 // ─── Twelve Data :EXCHANGE → Yahoo Finance suffix ────────────────────────────
 const TD_TO_YAHOO = {
@@ -29,21 +29,61 @@ const TD_TO_YAHOO = {
 /** Convert any ticker format → Yahoo Finance ticker */
 function toYahoo(sym) {
   if (!sym) return null;
-
   // Already has Yahoo dot-exchange suffix (e.g. VWCE.DE, EDP.LS)
-  if (/\.[A-Z]{1,3}$/i.test(sym)) return sym.toUpperCase();
-
+  if (/\.[A-Za-z]{1,2}$/.test(sym)) return sym.toUpperCase();
   // Twelve Data colon format (e.g. VWCE:XETRA → VWCE.DE)
   const colonIdx = sym.indexOf(':');
   if (colonIdx > 0) {
-    const base = sym.slice(0, colonIdx);
-    const exc  = sym.slice(colonIdx); // e.g. ':XETRA'
+    const base   = sym.slice(0, colonIdx);
+    const exc    = sym.slice(colonIdx); // e.g. ':XETRA'
     const suffix = TD_TO_YAHOO[exc.toUpperCase()];
-    return suffix ? base.toUpperCase() + suffix : base.toUpperCase(); // US fallback (no suffix)
+    return suffix ? (base + suffix).toUpperCase() : base.toUpperCase();
   }
-
-  // Bare ticker — assume US (Yahoo uses bare tickers for US stocks)
+  // Bare US ticker — Yahoo uses bare (e.g. AAPL, SMH, PFE)
   return sym.toUpperCase();
+}
+
+function httpsGet(url) {
+  return new Promise((resolve) => {
+    const req = https.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+      },
+    }, (res) => {
+      let body = '';
+      res.on('data', d => (body += d));
+      res.on('end', () => resolve({ status: res.statusCode, body }));
+    });
+    req.setTimeout(9000, () => { req.destroy(); resolve({ status: 408, body: '' }); });
+    req.on('error', () => resolve({ status: 0, body: '' }));
+  });
+}
+
+/**
+ * Fetch price from Yahoo Finance chart API (no auth needed).
+ * Returns { price, changePct, currency } or null.
+ */
+async function fetchYahooChart(yahooSym) {
+  // v8/finance/chart — returns regularMarketPrice in meta, no crumb needed
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?interval=1d&range=5d`;
+  const { status, body } = await httpsGet(url);
+  if (status !== 200 || !body) return null;
+
+  let data;
+  try { data = JSON.parse(body); } catch { return null; }
+
+  const meta = data?.chart?.result?.[0]?.meta;
+  if (!meta) return null;
+
+  const price = meta.regularMarketPrice ?? meta.chartPreviousClose ?? null;
+  if (!price || isNaN(price)) return null;
+
+  const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? price;
+  const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : null;
+  const currency  = meta.currency ?? 'EUR';
+
+  return { price, changePct, currency };
 }
 
 export default async function handler(req, res) {
@@ -65,19 +105,14 @@ export default async function handler(req, res) {
           const yahooSym = toYahoo(sym);
           if (!yahooSym) return;
 
-          const q = await yahooFinance.quote(yahooSym, {}, { validateResult: false });
-
-          const price = q?.regularMarketPrice ?? null;
-          if (price == null || isNaN(price)) {
-            console.warn(`[quote] ${sym}→${yahooSym}: sem preço`);
+          const q = await fetchYahooChart(yahooSym);
+          if (!q) {
+            console.warn(`[quote] ${sym}→${yahooSym}: sem dados`);
             return;
           }
 
-          const changePct = q?.regularMarketChangePercent ?? null;
-          const currency  = q?.currency ?? 'EUR';
-
-          result[sym] = { price, changePct, currency };
-          console.log(`[quote] ${sym}→${yahooSym} = ${price} ${currency} (${changePct?.toFixed(2)}%)`);
+          result[sym] = q;
+          console.log(`[quote] ${sym}→${yahooSym} = ${q.price} ${q.currency} (${q.changePct?.toFixed(2)}%)`);
         } catch (e) {
           console.warn(`[quote] ${sym} erro:`, e.message);
         }

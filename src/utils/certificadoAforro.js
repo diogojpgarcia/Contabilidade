@@ -47,37 +47,16 @@ export const fetchEuribor3M = async () => {
     const ctrl = new AbortController();
     const t    = setTimeout(() => ctrl.abort(), 10_000);
 
-    // ECB SDMX API — requer Accept header específico para SDMX JSON
-    const urls = [
-      'https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.RT0.MM.EURIBOR3MD_.HSTA?lastNObservations=1&format=jsondata',
-      'https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.RT0.MM.EURIBOR3MD_?lastNObservations=1&format=jsondata',
-    ];
-
-    let res = null;
-    for (const url of urls) {
-      try {
-        res = await fetch(url, {
-          signal: ctrl.signal,
-          headers: { 'Accept': 'application/vnd.sdmx.data+json;version=1.0, application/json' },
-        });
-        if (res.ok) break;
-      } catch { /* continua */ }
-    }
+    // Usa o proxy server-side /api/euribor (evita CORS do ECB e tenta múltiplos endpoints)
+    const res = await fetch('/api/euribor', { signal: ctrl.signal });
     clearTimeout(t);
 
-    if (!res.ok) throw new Error(`ECB HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`proxy HTTP ${res.status}`);
 
     const data = await res.json();
+    const rate = data?.rate ?? null;
 
-    // Estrutura: dataSets[0].series["0:0:0:0:0:0:0"].observations = { "N": [value] }
-    const seriesKey = Object.keys(data?.dataSets?.[0]?.series ?? {})[0];
-    if (!seriesKey) throw new Error('ECB: série não encontrada');
-
-    const observations = data.dataSets[0].series[seriesKey].observations ?? {};
-    const lastObs      = observations[String(Math.max(...Object.keys(observations).map(Number)))];
-    const rate         = Array.isArray(lastObs) ? Number(lastObs[0]) : null;
-
-    if (!Number.isFinite(rate)) throw new Error('ECB: valor inválido');
+    if (!Number.isFinite(rate)) throw new Error('Euribor: valor inválido ou indisponível');
 
     euriborCache = { value: rate, ts: Date.now() };
     return rate;
