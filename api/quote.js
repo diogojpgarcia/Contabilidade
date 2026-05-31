@@ -1,11 +1,11 @@
 /**
  * api/quote.js — Vercel serverless function (ES module)
  * Proxy para cotações via Yahoo Finance chart API.
- * Sem dependências externas. Funciona para ETFs europeus (VWCE.DE, EUNL.DE, SXR8.DE),
- * ações US e PT. Devolve último preço conhecido (funciona ao fim-de-semana).
+ * Converte automaticamente USD → EUR (e GBP → EUR) para que o frontend
+ * receba sempre preços em EUR, independentemente da bolsa do ativo.
  *
- * GET /api/quote?symbols=EUNL:XETRA,VWCE:XETRA,AAPL
- * Returns: { "EUNL:XETRA": { price, changePct, currency }, ... }
+ * GET /api/quote?symbols=EUNL:XETRA,VWCE:XETRA,AAPL,SMH
+ * Returns: { "SMH": { price: 212.50, changePct: 1.2, currency: "EUR" }, ... }
  */
 
 import https from 'https';
@@ -29,17 +29,14 @@ const TD_TO_YAHOO = {
 /** Convert any ticker format → Yahoo Finance ticker */
 function toYahoo(sym) {
   if (!sym) return null;
-  // Already has Yahoo dot-exchange suffix (e.g. VWCE.DE, EDP.LS)
   if (/\.[A-Za-z]{1,2}$/.test(sym)) return sym.toUpperCase();
-  // Twelve Data colon format (e.g. VWCE:XETRA → VWCE.DE)
   const colonIdx = sym.indexOf(':');
   if (colonIdx > 0) {
     const base   = sym.slice(0, colonIdx);
-    const exc    = sym.slice(colonIdx); // e.g. ':XETRA'
+    const exc    = sym.slice(colonIdx);
     const suffix = TD_TO_YAHOO[exc.toUpperCase()];
     return suffix ? (base + suffix).toUpperCase() : base.toUpperCase();
   }
-  // Bare US ticker — Yahoo uses bare (e.g. AAPL, SMH, PFE)
   return sym.toUpperCase();
 }
 
@@ -61,11 +58,10 @@ function httpsGet(url) {
 }
 
 /**
- * Fetch price from Yahoo Finance chart API (no auth needed).
+ * Fetch price from Yahoo Finance chart API.
  * Returns { price, changePct, currency } or null.
  */
 async function fetchYahooChart(yahooSym) {
-  // v8/finance/chart — returns regularMarketPrice in meta, no crumb needed
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?interval=1d&range=5d`;
   const { status, body } = await httpsGet(url);
   if (status !== 200 || !body) return null;
@@ -81,9 +77,31 @@ async function fetchYahooChart(yahooSym) {
 
   const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? price;
   const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : null;
-  const currency  = meta.currency ?? 'EUR';
+  const currency  = meta.currency ?? 'USD';
 
   return { price, changePct, currency };
+}
+
+/**
+ * Fetch FX rate from Yahoo Finance (e.g. USDEUR=X → how many EUR per 1 USD).
+ * Returns the rate or null.
+ */
+async function fetchFxRate(fromCurrency, toCurrency = 'EUR') {
+  if (fromCurrency === toCurrency) return 1;
+  const pair = `${fromCurrency}${toCurrency}=X`;
+  const q = await fetchYahooChart(pair);
+  return q?.price ?? null;
+}
+
+// Cache FX rates for the lifetime of the function invocation
+const fxCache = {};
+
+async function getRate(currency) {
+  if (currency === 'EUR') return 1;
+  if (fxCache[currency] !== undefined) return fxCache[currency];
+  const rate = await fetchFxRate(currency, 'EUR');
+  fxCache[currency] = rate;
+  return rate;
 }
 
 export default async function handler(req, res) {
@@ -111,8 +129,26 @@ export default async function handler(req, res) {
             return;
           }
 
-          result[sym] = q;
-          console.log(`[quote] ${sym}→${yahooSym} = ${q.price} ${q.currency} (${q.changePct?.toFixed(2)}%)`);
+          let { price, changePct, currency } = q;
+
+          // Converter para EUR se necessário (USD, GBp=pence→GBP→EUR, etc.)
+          if (currency !== 'EUR') {
+            // London Stock Exchange preços em pence (GBp) — converter para GBP primeiro
+            const reportCurrency = currency === 'GBp' ? 'GBP' : currency;
+            let fxRate = await getRate(reportCurrency);
+
+            if (fxRate && fxRate > 0) {
+              const rawPrice = currency === 'GBp' ? price / 100 : price;
+              price    = rawPrice * fxRate;
+              currency = 'EUR';
+              console.log(`[quote] ${sym}: ${q.price} ${q.currency} → ${price.toFixed(4)} EUR (rate: ${fxRate})`);
+            } else {
+              console.warn(`[quote] ${sym}: não foi possível obter taxa ${currency}→EUR`);
+            }
+          }
+
+          result[sym] = { price, changePct, currency };
+          console.log(`[quote] ${sym}→${yahooSym} = ${price.toFixed(4)} ${currency} (${changePct?.toFixed(2)}%)`);
         } catch (e) {
           console.warn(`[quote] ${sym} erro:`, e.message);
         }

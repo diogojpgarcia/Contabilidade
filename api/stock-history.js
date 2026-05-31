@@ -97,6 +97,23 @@ export default async function handler(req, res) {
 
     const timestamps = result.timestamp ?? [];
     const closes     = result.indicators?.quote?.[0]?.close ?? [];
+    const currency   = result.meta?.currency ?? 'USD';
+
+    // Converter para EUR se necessário
+    let fxRate = 1;
+    if (currency !== 'EUR') {
+      const reportCurrency = currency === 'GBp' ? 'GBP' : currency;
+      const fxUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${reportCurrency}EUR=X?interval=1d&range=5d`;
+      try {
+        const { status: fxStatus, body: fxBody } = await httpsGet(fxUrl);
+        if (fxStatus === 200 && fxBody) {
+          const fxData = JSON.parse(fxBody);
+          const fxPrice = fxData?.chart?.result?.[0]?.meta?.regularMarketPrice;
+          if (fxPrice && !isNaN(fxPrice)) fxRate = fxPrice;
+        }
+      } catch { /* usa rate=1 */ }
+      if (currency === 'GBp') fxRate = fxRate / 100; // pence → GBP → EUR
+    }
 
     const prices = [];
     const labels = [];
@@ -104,7 +121,7 @@ export default async function handler(req, res) {
     for (let i = 0; i < timestamps.length; i++) {
       const p = closes[i];
       if (p == null || isNaN(p)) continue;
-      prices.push(p);
+      prices.push(p * fxRate);
       labels.push(formatLabel(timestamps[i], period));
     }
 
