@@ -45,7 +45,7 @@ export const fetchEuribor3M = async () => {
 
   try {
     const ctrl = new AbortController();
-    const t    = setTimeout(() => ctrl.abort(), 10_000);
+    const t    = setTimeout(() => ctrl.abort(), 20_000); // 20s — proxy tenta múltiplos endpoints ECB
 
     // Usa o proxy server-side /api/euribor (evita CORS do ECB e tenta múltiplos endpoints)
     const res = await fetch('/api/euribor', { signal: ctrl.signal });

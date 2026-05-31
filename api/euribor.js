@@ -25,7 +25,7 @@ function httpsGet(url, extraHeaders = {}) {
         resolve({ status: res.statusCode, body });
       });
     });
-    req.setTimeout(10000, () => { req.destroy(); resolve({ status: 408, body: '' }); });
+    req.setTimeout(4000, () => { req.destroy(); resolve({ status: 408, body: '' }); });
     req.on('error', (e) => {
       console.warn(`[euribor] request error: ${e.message}`);
       resolve({ status: 0, body: '' });
