@@ -448,18 +448,14 @@ export const fetchCryptoTwelveData = fetchCryptoBatch;
  * Respects the in-memory cache (CACHE_TTL) to avoid redundant API credits.
  */
 export const fetchStockQuoteBatch = async (tickers) => {
-  if (!HAS_STOCK_KEY || !tickers?.length) return {};
+  if (!tickers?.length) return {};
 
   const result  = {};
-  // Map: resolved ticker → original ticker (so we return results keyed by original)
-  const resolvedMap = new Map(); // resolvedTicker → originalTicker
   const toFetch = [];
 
   for (const ticker of tickers) {
     if (!ticker) continue;
     const resolved = resolveEquityTicker(ticker);
-    resolvedMap.set(resolved, ticker);
-    // Check cache under resolved key
     const hit = stockCache.get(resolved) ?? stockCache.get(ticker);
     if (hit && Date.now() - hit.ts < CACHE_TTL) {
       result[ticker] = hit;
@@ -470,76 +466,15 @@ export const fetchStockQuoteBatch = async (tickers) => {
 
   if (!toFetch.length) return result;
 
-  // ── Separar tickers europeus (Twelve Data free não suporta) de tickers US ──
-  // Tickers europeus têm sufixo :EXCHANGE (e.g. EUNL:XETRA) → vão directamente para /api/quote
-  // Tickers US são bare (e.g. AAPL, SMH) → Twelve Data ou /api/quote como fallback
-  const resolvedTickers = toFetch.map(t => resolveEquityTicker(t));
-  const EUROPEAN_EXCHANGES = new Set([
-    ':XETRA',':XAMS',':XPAR',':XLON',':XLIS',':XMIL',':XMAD',':XHEL',':XCSE',':XSTO',':XOSL',':XBRU',
-  ]);
-  const isEuropean = (resolved) => EUROPEAN_EXCHANGES.has(resolved.slice(resolved.indexOf(':')));
-
-  const euroTickers   = toFetch.filter((_, i) => isEuropean(resolvedTickers[i]));
-  const usTickers     = toFetch.filter((_, i) => !isEuropean(resolvedTickers[i]));
-
-  // Tickers europeus → /api/quote directamente (sem tentar Twelve Data)
-  if (euroTickers.length) {
-    const euroMap = new Map(euroTickers.map(t => [resolveEquityTicker(t), t]));
-    const euroResult = await fetchStooqQuoteBatch(euroMap);
-    Object.assign(result, euroResult);
-    for (const [t, entry] of Object.entries(euroResult)) {
-      const resolved = resolveEquityTicker(t);
-      if (resolved !== t) stockCache.set(resolved, entry);
-    }
-  }
-
-  // Tickers US → Twelve Data com fallback para /api/quote
-  if (usTickers.length) {
-    const usResolved = usTickers.map(t => resolveEquityTicker(t));
-    const symbolList = usResolved.join(',');
-    const { signal, clear } = abortAfter(FETCH_TIMEOUT);
-
-    try {
-      const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${TWELVE_DATA_KEY}`;
-      const res = await fetch(url, { signal });
-      if (!res.ok) {
-        console.warn(`[assetPrice] Twelve Data HTTP ${res.status} — fallback /api/quote`);
-      } else {
-        const data = await res.json();
-        const parse = (q, resolvedTicker, originalTicker) => {
-          if (!q || q.code || q.status === 'error') return;
-          const price     = parseFloat(q.close) || null;
-          const _chg      = parseFloat(q.percent_change);
-          const changePct = Number.isFinite(_chg) ? _chg : null;
-          const currency  = q.currency ?? '?';
-          if (price === null) return;
-          const entry = { price, changePct, currency, ts: Date.now() };
-          stockCache.set(resolvedTicker, entry);
-          if (resolvedTicker !== originalTicker) stockCache.set(originalTicker, entry);
-          result[originalTicker] = entry;
-        };
-        if (usTickers.length === 1) {
-          parse(data, usResolved[0], usTickers[0]);
-        } else {
-          usTickers.forEach((origTicker, i) => {
-            const q = data[usResolved[i]] ?? data[origTicker];
-            parse(q, usResolved[i], origTicker);
-          });
-        }
-      }
-    } catch (err) {
-      console.warn('[assetPrice] Twelve Data FAILED:', err.message);
-    } finally {
-      clear();
-    }
-
-    // Fallback /api/quote para US que ainda faltam (429, 404, etc.)
-    const missingUS = usTickers.filter(t => !result[t]);
-    if (missingUS.length) {
-      const missingMap = new Map(missingUS.map(t => [resolveEquityTicker(t), t]));
-      const fallbackResult = await fetchStooqQuoteBatch(missingMap);
-      Object.assign(result, fallbackResult);
-    }
+  // Todos os tickers → /api/quote (Yahoo Finance, com conversão USD→EUR automática)
+  // Evita Twelve Data que: (a) 429/404 para tickers europeus, (b) devolve USD sem converter
+  const proxyMap = new Map(toFetch.map(t => [resolveEquityTicker(t), t]));
+  const proxyResult = await fetchStooqQuoteBatch(proxyMap);
+  Object.assign(result, proxyResult);
+  for (const [t, entry] of Object.entries(proxyResult)) {
+    const resolved = resolveEquityTicker(t);
+    stockCache.set(resolved, entry);
+    if (resolved !== t) stockCache.set(t, entry);
   }
 
   return result;
