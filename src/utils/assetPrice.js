@@ -542,11 +542,11 @@ export const fetchStockQuoteBatch = async (tickers) => {
 // ─── history (sparkline data) ────────────────────────────────────────────────
 
 /**
- * Fetch 7-day daily close prices for a stock (Twelve Data time_series).
- * Returns number[] oldest→newest, or null on failure / no key.
+ * Fetch 7-day daily close prices for a stock via /api/stock-history proxy (Yahoo Finance).
+ * Returns number[] oldest→newest, or null on failure.
  */
 export const fetchStockHistory = async (ticker) => {
-  if (!HAS_STOCK_KEY || !ticker) return null;
+  if (!ticker) return null;
 
   const resolved = resolveEquityTicker(ticker);
   const hit = stockHistoryCache.get(resolved) ?? stockHistoryCache.get(ticker);
@@ -555,19 +555,12 @@ export const fetchStockHistory = async (ticker) => {
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
     const res = await fetch(
-      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(resolved)}&interval=1day&outputsize=8&apikey=${TWELVE_DATA_KEY}`,
+      `/api/stock-history?symbol=${encodeURIComponent(resolved)}&period=1S`,
       { signal }
     );
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.code || data.status === 'error' || !Array.isArray(data.values)) return null;
-
-    // values are newest-first → reverse to oldest-first, take last 7
-    const prices = data.values
-      .slice(0, 7)
-      .reverse()
-      .map(v => parseFloat(v.close))
-      .filter(n => !isNaN(n));
+    const prices = data?.prices ?? [];
     if (prices.length < 2) return null;
 
     const entry = { prices, ts: Date.now() };
@@ -696,21 +689,17 @@ export const fetchPeriodHistory = async (sym, period, type) => {
       periodHistoryCache.set(cacheKey, { prices, labels, ts: Date.now() });
       return { prices, labels };
     } else {
-      if (!HAS_STOCK_KEY) return null;
-      const cfg = STOCK_PERIOD_CFG[period] ?? STOCK_PERIOD_CFG['1S'];
-      const resolvedSym = resolveEquityTicker(sym); // resolve UCITS bare tickers (e.g. VWCE → VWCE.DE)
+      const resolvedSym = resolveEquityTicker(sym);
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
       const res = await fetch(
-        `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(resolvedSym)}&interval=${cfg.interval}&outputsize=${cfg.outputsize}&apikey=${TWELVE_DATA_KEY}`,
+        `/api/stock-history?symbol=${encodeURIComponent(resolvedSym)}&period=${encodeURIComponent(period)}`,
         { signal }
       );
       clear();
       if (!res.ok) return null;
       const data = await res.json();
-      if (data.code || data.status === 'error' || !Array.isArray(data.values)) return null;
-      const reversed = [...data.values].reverse();
-      const prices = reversed.map(v => parseFloat(v.close)).filter(n => !isNaN(n));
-      const labels = reversed.map(v => formatLabel(v.datetime, period));
+      const prices = data?.prices ?? [];
+      const labels = data?.labels ?? [];
       if (prices.length < 2) return null;
       periodHistoryCache.set(cacheKey, { prices, labels, ts: Date.now() });
       return { prices, labels };
