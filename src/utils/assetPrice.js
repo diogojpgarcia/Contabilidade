@@ -475,9 +475,9 @@ export const fetchStockQuoteBatch = async (tickers) => {
     const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${TWELVE_DATA_KEY}`;
     const res = await fetch(url, { signal });
     if (!res.ok) {
-      console.error(`[assetPrice] fetchStockQuoteBatch HTTP ${res.status}`);
-      return result;
-    }
+      console.warn(`[assetPrice] fetchStockQuoteBatch HTTP ${res.status} — a tentar Yahoo fallback`);
+      // Não retorna — continua para o bloco Yahoo Finance abaixo
+    } else {
 
     const data = await res.json();
 
@@ -510,8 +510,9 @@ export const fetchStockQuoteBatch = async (tickers) => {
         parse(q, resolved, origTicker);
       });
     }
+    } // end else (Twelve Data ok)
   } catch (err) {
-    console.error('[assetPrice] fetchStockQuoteBatch FAILED:', err);
+    console.warn('[assetPrice] fetchStockQuoteBatch FAILED (a tentar Yahoo fallback):', err);
   } finally {
     clear();
   }
