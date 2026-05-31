@@ -494,7 +494,8 @@ export const fetchStockQuoteBatch = async (tickers) => {
       const currency  = q.currency ?? '?';
       if (price === null) return;
 
-      if (currency !== 'EUR' && currency !== '?') {
+      // Avisa apenas para ETFs europeus (com :EXCHANGE) cotados em moeda inesperada
+      if (currency !== 'EUR' && currency !== '?' && resolvedTicker.includes(':')) {
         console.warn(`[assetPrice] ${resolvedTicker} cotado em ${currency} — não EUR. Verifica a bolsa do ETF.`);
       }
 
