@@ -3,6 +3,32 @@
    All overrides here; default theme is completely untouched.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ── GLOBAL TOUCH / TAP FIX ─────────────────────────────────────────────────
+   Applies to ALL buttons and role="button" elements app-wide.
+   • touch-action: manipulation — elimina o delay de 300ms no iOS Safari
+   • -webkit-tap-highlight-color: transparent — remove o flash azul ao tocar
+   • user-select: none — evita seleção acidental de texto ao tocar
+   ─────────────────────────────────────────────────────────────────────────── */
+button,
+[role="button"],
+.nav-item,
+.m-fab,
+.swipe-btn,
+.pat-coin-quick,
+.pat-type-chip,
+.pat-stock-chip-clear,
+.period-btn,
+.patrimony-type-btn,
+.btn-patrimony-back,
+.modal-close,
+.cat-pill,
+.filter-pill,
+.quick-action-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
 /* ── SCROLL ──────────────────────────────────────────────────────────────── */
 /* modern.css sets display:flex + flex:1/min-height:0 on .main-content-new
    and its > div children. Reset those for modern-ui so tab roots flow
