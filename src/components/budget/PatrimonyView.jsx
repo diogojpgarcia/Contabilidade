@@ -758,7 +758,7 @@ const PatrimonyView = ({
   };
 
   // ── Patrimony JSX ──────────────────────────────────────────────────────────
-  const fmt = (v) => toNum(v).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const fmt = (v) => toNum(v).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const typeValues = PATRIMONY_TYPES.map(t => ({ ...t, value: getPatrimonyTypeValue(t.key) }));
 
   const pctOf = (key) => totalPatrimony > 0 ? getPatrimonyTypeValue(key) / totalPatrimony : 0;
