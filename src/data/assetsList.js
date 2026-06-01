@@ -105,6 +105,8 @@ export const ASSETS = [
   // ── VanEck UCITS ──────────────────────────────────────────────────────────
   { type: 'etf', symbol: 'VVSM.DE', name: 'VanEck Semiconductor UCITS · XETRA · EUR' },
   { type: 'etf', symbol: 'SMH.PA',  name: 'VanEck Semiconductor UCITS · Paris · EUR' },
+  { type: 'etf', symbol: 'SMH.MI',  name: 'VanEck Semiconductor UCITS · Milão · EUR' },
+  { type: 'etf', symbol: 'SMH.L',   name: 'VanEck Semiconductor UCITS · Londres · USD' },
   { type: 'etf', symbol: 'MOAT.AS', name: 'VanEck Morningstar US Wide Moat UCITS · Amsterdam · EUR' },
   { type: 'etf', symbol: 'DAPP.DE', name: 'VanEck Digital Assets Equity UCITS · XETRA · EUR' },
   // ── Invesco UCITS ─────────────────────────────────────────────────────────
