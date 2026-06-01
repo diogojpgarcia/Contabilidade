@@ -1935,16 +1935,16 @@ html, body {
 }
 
 /* ── Swipe-to-reveal action buttons ────────────────────────────────────────
-   Flex-row approach: .swipe-row is calc(100%+80px) wide inside an
+   Flex-row approach: .swipe-row is calc(100%+144px) wide inside an
    overflow:hidden container — actions are genuinely off-screen at rest.     */
 .swipe-reveal { overflow: hidden; }
 .swipe-row {
   display: flex;
-  width: calc(100% + 80px);
+  width: calc(100% + 144px);
 }
 .swipe-row > :first-child { flex: 1; min-width: 0; }
 .swipe-actions {
-  flex: 0 0 80px;
+  flex: 0 0 144px;
   display: flex;
   align-items: stretch;
 }

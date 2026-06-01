@@ -8,7 +8,7 @@ import { useRef, useEffect } from 'react';
    Module-level `globalSwipeClose` ensures only one row is open at a time.  */
 
 let globalSwipeClose = null;
-const SWIPE_OPEN_PX   = 80;
+const SWIPE_OPEN_PX   = 144;  // 2 × 72px buttons — large enough to tap reliably
 const SWIPE_THRESHOLD = 30;
 
 const SwipeRevealCard = ({ onEdit, onDelete, onClick, className = '', children }) => {
@@ -88,25 +88,53 @@ const SwipeRevealCard = ({ onEdit, onDelete, onClick, className = '', children }
     };
   }, []);
 
+  // Only close when tapping the content area (not the action buttons)
+  const handleRowClick = (e) => {
+    if (!isOpenRef.current) return;
+    if (e.target.closest('.swipe-actions')) return; // let button handle it
+    e.stopPropagation();
+    e.preventDefault();
+    closeRef.current?.();
+  };
+
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    closeRef.current?.();
+    setTimeout(onEdit, 50);
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    closeRef.current?.();
+    setTimeout(onDelete, 50);
+  };
+
   return (
     <div className="swipe-reveal">
       <div
         ref={rowRef}
         className="swipe-row"
-        onClickCapture={e => {
-          if (isOpenRef.current) { e.stopPropagation(); e.preventDefault(); closeRef.current?.(); }
-        }}
+        onClickCapture={handleRowClick}
       >
-        <div className={className} onClick={onClick ? (e) => { if (!isOpenRef.current) onClick(e); } : undefined}>{children}</div>
+        <div
+          className={className}
+          onClick={onClick ? (e) => { if (!isOpenRef.current) onClick(e); } : undefined}
+        >
+          {children}
+        </div>
         <div className="swipe-actions">
           <button
             className="swipe-btn swipe-btn-edit"
-            onPointerDown={e => { e.stopPropagation(); closeRef.current?.(); setTimeout(onEdit, 30); }}
+            onClick={handleEdit}
+            onPointerDown={e => e.stopPropagation()}
             aria-label="Editar"
           >✎</button>
           <button
             className="swipe-btn swipe-btn-delete"
-            onPointerDown={e => { e.stopPropagation(); closeRef.current?.(); setTimeout(onDelete, 30); }}
+            onClick={handleDelete}
+            onPointerDown={e => e.stopPropagation()}
             aria-label="Remover"
           >✕</button>
         </div>
