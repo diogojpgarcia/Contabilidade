@@ -150,7 +150,8 @@ const UCITS_EUR_TICKER = {
   LCWD:  'LCWD:XPAR',    // MSCI World — Euronext Paris EUR
   PANX:  'PANX:XPAR',    // Nasdaq-100 UCITS — Euronext Paris EUR
   // VanEck UCITS
-  SMH:   'SMH:XETRA',    // Semiconductor UCITS ETF — XETRA EUR (SMH.DE)
+  SMH:   'VVSM:XETRA',   // VanEck Semiconductor UCITS — XETRA EUR (VVSM.DE)
+  VVSM:  'VVSM:XETRA',   // VanEck Semiconductor UCITS — XETRA EUR (VVSM.DE)
   MOAT:  'MOAT:XAMS',    // Morningstar US Wide Moat UCITS — Euronext Amsterdam EUR
   SMHX:  'SMHX:XETRA',  // Semiconductor ex-US UCITS — XETRA EUR
   DAPP:  'DAPP:XETRA',   // Digital Assets Equity UCITS — XETRA EUR
