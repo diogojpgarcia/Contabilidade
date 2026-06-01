@@ -23,6 +23,24 @@ import Sparkline from './Sparkline';
 import AssetDetailSheet from './AssetDetailSheet';
 import './AssetDetailSheet.css';
 
+// ── Vehicle depreciation (standalone, used in total calc + card render) ───────
+const VEHICLE_RESIDUAL = [1, 0.82, 0.70, 0.60, 0.52, 0.45, 0.39, 0.34, 0.30, 0.26, 0.23, 0.20];
+export const estimateVehicleMarketValue = (purchaseValue, year, km) => {
+  if (!purchaseValue || !year) return null;
+  const age = new Date().getFullYear() - parseInt(year, 10);
+  if (age < 0) return null;
+  const residual = age < VEHICLE_RESIDUAL.length ? VEHICLE_RESIDUAL[age] : 0.18;
+  const avgKm = parseInt(km, 10) || 0;
+  const expectedKm = Math.max(0, age) * 15000;
+  const kmDelta = avgKm - expectedKm;
+  const kmPenalty = Math.min(0.15, Math.max(0, kmDelta / 100000) * 0.05);
+  return purchaseValue * (residual - kmPenalty);
+};
+const vehicleStandVirtualUrl = (desc) =>
+  `https://www.standvirtual.com/carros?q=${encodeURIComponent((desc || '').trim())}`;
+const vehicleAutoScout24Url = (desc) =>
+  `https://www.autoscout24.pt/lst?fullTextSearch=${encodeURIComponent((desc || '').trim())}`;
+
 const PatrimonyView = ({
   transactions,
   patrimony: externalPatrimony,
@@ -281,7 +299,10 @@ const PatrimonyView = ({
       return s + val;
     }, 0);
     if (key === 'realestate') return items.reduce((s, x) => s + toNum(x.value), 0);
-    if (key === 'vehicles')   return items.reduce((s, x) => s + toNum(x.value), 0);
+    if (key === 'vehicles')   return items.reduce((s, x) => {
+      const est = estimateVehicleMarketValue(toNum(x.value), x.year, x.km);
+      return s + (est ?? toNum(x.value));
+    }, 0);
     if (key === 'crypto')     return items.reduce((s, x) => {
       const price = toNum(livePrices[normCoin(x.coin)]?.price ?? x.lastPrice ?? x.price);
       return s + toNum(x.qty) * price;
@@ -677,8 +698,17 @@ const PatrimonyView = ({
 
       case 'vehicles':
         return (<>
-          <input className={cls} placeholder="Descrição (ex: BMW X3 2020)" value={f.description || ''} onChange={e => set('description', e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Valor estimado (€)" value={f.value || ''} onChange={e => set('value', e.target.value)} />
+          <input className={cls} placeholder="Descrição (ex: BMW X3 2020)" value={f.description || ''} onChange={e => {
+            set('description', e.target.value);
+            // auto-fill year from description if found
+            const m = e.target.value.match(/\b(19|20)\d{2}\b/);
+            if (m && !f.year) set('year', m[0]);
+          }} />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input className={cls} type="number" inputMode="numeric" placeholder="Ano (ex: 2020)" value={f.year || ''} onChange={e => set('year', e.target.value)} style={{ flex: 1 }} />
+            <input className={cls} type="number" inputMode="numeric" placeholder="Km (ex: 45000)" value={f.km || ''} onChange={e => set('km', e.target.value)} style={{ flex: 1 }} />
+          </div>
+          <input className={cls} type="number" inputMode="decimal" placeholder="Valor de compra / estimado (€)" value={f.value || ''} onChange={e => set('value', e.target.value)} />
         </>);
 
       case 'crypto': {
@@ -1184,6 +1214,54 @@ const PatrimonyView = ({
                     ]);
                   })() : sorted.map(item => {
                     if (key === 'stocks') return assetCardFor(item, 'stocks');
+
+                    // ── Vehicle card with depreciation estimate ─────────────
+                    if (key === 'vehicles') {
+                      const purchaseVal  = toNum(item.value);
+                      const estVal       = estimateVehicleMarketValue(purchaseVal, item.year, item.km);
+                      const age          = item.year ? new Date().getFullYear() - parseInt(item.year, 10) : null;
+                      const depPct       = (estVal != null && purchaseVal > 0)
+                        ? ((estVal - purchaseVal) / purchaseVal * 100)
+                        : null;
+                      return (
+                        <SwipeRevealCard
+                          key={item.id}
+                          className="pat-cat-item pat-vehicle-item"
+                          onEdit={() => handlePatrimonyEdit(key, item)}
+                          onDelete={() => handlePatrimonyDelete(key, item.id)}
+                        >
+                          <div className="pat-vehicle-main">
+                            <div className="pat-vehicle-left">
+                              <span className="pat-cat-item-name">{item.description}</span>
+                              {item.year && (
+                                <span className="pat-vehicle-meta">
+                                  {item.year}{item.km ? ` · ${parseInt(item.km,10).toLocaleString('pt-PT')} km` : ''}{age != null ? ` · ${age} ${age === 1 ? 'ano' : 'anos'}` : ''}
+                                </span>
+                              )}
+                              {estVal != null && (
+                                <span className="pat-vehicle-est">
+                                  Est. mercado: <strong>{fmtFiat(estVal)}€</strong>
+                                  {depPct != null && (
+                                    <span className={`pat-vehicle-dep ${depPct >= 0 ? 'pos' : 'neg'}`}>
+                                      {depPct >= 0 ? '+' : ''}{depPct.toFixed(1)}%
+                                    </span>
+                                  )}
+                                </span>
+                              )}
+                              <div className="pat-vehicle-links">
+                                <a href={vehicleStandVirtualUrl(item.description)} target="_blank" rel="noopener noreferrer" className="pat-vehicle-link" onClick={e => e.stopPropagation()}>StandVirtual ↗</a>
+                                <a href={vehicleAutoScout24Url(item.description)} target="_blank" rel="noopener noreferrer" className="pat-vehicle-link" onClick={e => e.stopPropagation()}>AutoScout24 ↗</a>
+                              </div>
+                            </div>
+                            <div className="pat-vehicle-right">
+                              <span className="pat-cat-item-val">{fmtFiat(estVal ?? purchaseVal)}€</span>
+                              {estVal != null && <span className="pat-vehicle-original">compra {fmtFiat(purchaseVal)}€</span>}
+                            </div>
+                          </div>
+                        </SwipeRevealCard>
+                      );
+                    }
+
                     return (
                       <SwipeRevealCard
                         key={item.id}
