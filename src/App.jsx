@@ -40,6 +40,7 @@ const App = () => {
   // ── UI state (único estado que fica no App) ────────────────────────────────
   const [activeTab, setActiveTab]         = useState('home');
   const [pendingBudgetNav, setPendingBudgetNav] = useState(null);
+  const [pendingAddMode,   setPendingAddMode]   = useState(null);
   const mainContentRef = useRef(null);
 
   // Scroll para o topo ao mudar de tab
@@ -57,6 +58,11 @@ const App = () => {
     setActiveTab(tab);
     if (tab === 'budget' && (extra?.categoryLabel || extra?.view)) {
       setPendingBudgetNav({ ...extra, ts: Date.now() });
+    }
+    if (tab === 'add' && extra?.mode) {
+      setPendingAddMode(extra.mode);
+    } else if (tab === 'add') {
+      setPendingAddMode(null);
     }
   };
 
@@ -181,6 +187,7 @@ const App = () => {
               defaultAccount={defaultAccount}
               goals={s.goals}
               onGoalsChange={s.handleGoalsChange}
+              initialMode={pendingAddMode}
             />
           </ErrorBoundary>
         )}

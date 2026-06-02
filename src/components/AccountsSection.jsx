@@ -39,7 +39,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
             WebkitTapHighlightColor: 'transparent',
           }}
           aria-label="Ver todas as contas"
-          onClick={() => onNavigate?.('patrimony')}
+          onClick={() => onNavigate?.('budget', { view: 'patrimony' })}
         >
           Ver todas
         </button>
@@ -57,7 +57,7 @@ const AccountsSection = ({ accounts, onNavigate }) => {
           <button
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
                      color: 'var(--cosmos-accent)', fontSize: 13, fontWeight: 500 }}
-            onClick={() => onNavigate?.('patrimony')}
+            onClick={() => onNavigate?.('budget', { view: 'patrimony' })}
           >
             Adicionar conta →
           </button>

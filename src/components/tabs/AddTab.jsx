@@ -17,10 +17,10 @@ import './AddTab.css';
  *   goals              — array de objetivos (vem do useSettings via App.jsx)
  *   onGoalsChange      — (updatedGoals) => void  (persiste e atualiza estado global)
  */
-const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goals = [], onGoalsChange }) => {
+const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goals = [], onGoalsChange, initialMode }) => {
   const { currentUser, categories } = useAppContext();
   const { showError, showWarning } = useToast();
-  const [type, setType]             = useState('expense');
+  const [type, setType]             = useState(initialMode === 'transfer' ? 'transfer' : 'expense');
   const [amount, setAmount]         = useState('');
   const [category, setCategory]     = useState('');
   const [description, setDescription] = useState('');

@@ -2,10 +2,10 @@ import React from 'react';
 import { Plus, ArrowLeftRight, RefreshCw, BarChart2 } from 'lucide-react';
 
 const ACTIONS = [
-  { id: 'add',       icon: <Plus size={20} strokeWidth={2} />,             label: 'Transação',  tab: 'add'    },
-  { id: 'transfer',  icon: <ArrowLeftRight size={20} strokeWidth={1.75} />, label: 'Transferir', tab: 'add'    },
-  { id: 'recurring', icon: <RefreshCw size={20} strokeWidth={1.75} />,      label: 'Recorrente', tab: 'budget' },
-  { id: 'insight',   icon: <BarChart2 size={20} strokeWidth={1.75} />,      label: 'Insight',    tab: 'stats'  },
+  { id: 'add',       icon: <Plus size={20} strokeWidth={2} />,             label: 'Transação',  tab: 'add',    extra: null },
+  { id: 'transfer',  icon: <ArrowLeftRight size={20} strokeWidth={1.75} />, label: 'Transferir', tab: 'add',    extra: { mode: 'transfer' } },
+  { id: 'recurring', icon: <RefreshCw size={20} strokeWidth={1.75} />,      label: 'Recorrente', tab: 'budget', extra: { view: 'recurring' } },
+  { id: 'insight',   icon: <BarChart2 size={20} strokeWidth={1.75} />,      label: 'Insight',    tab: 'stats',  extra: null },
 ];
 
 const QuickActionsRow = ({ onNavigate }) => (
@@ -18,13 +18,13 @@ const QuickActionsRow = ({ onNavigate }) => (
       padding: '16px 20px',
     }}
   >
-    {ACTIONS.map(({ id, icon, label, tab }) => (
+    {ACTIONS.map(({ id, icon, label, tab, extra }) => (
       <button
         key={id}
         type="button"
         aria-label={label}
         title={label}
-        onClick={() => onNavigate?.(tab)}
+        onClick={() => onNavigate?.(tab, extra)}
         style={{
           display: 'flex',
           flexDirection: 'column',
