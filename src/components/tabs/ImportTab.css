@@ -1,4 +1,4 @@
-.import-tab{overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding:1rem;padding-bottom:var(--bottom-clearance);animation:fadeIn 0.3s ease;width:100%;gap:0.75rem}
+.import-tab{overflow-x:hidden;overflow-y:hidden;display:flex;flex-direction:column;height:100%;padding:1rem;padding-bottom:var(--bottom-clearance);animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;gap:0.75rem}
 .import-header{flex-shrink:0;text-align:center;margin-bottom:0.25rem}
 .import-header h2{font-size:1.75rem;font-weight:600;color:var(--text-primary);letter-spacing:-0.03em;margin-bottom:0.25rem}
 .import-header p{font-size:0.9375rem;color:var(--text-secondary);letter-spacing:-0.01em}
@@ -28,7 +28,7 @@
 .import-preview-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;border-bottom:0.5px solid var(--separator)}
 .import-preview-title{font-size:0.9375rem;font-weight:600;color:var(--text-primary);letter-spacing:-0.01em}
 .import-preview-count{font-size:0.8125rem;color:var(--text-tertiary);font-weight:500}
-.import-preview-list{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:var(--bottom-clearance)}
+.import-preview-list{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-bottom:1rem}
 
 .import-row{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.75rem 1rem;border-bottom:0.5px solid var(--separator)}
 .import-row:last-child{border-bottom:none}

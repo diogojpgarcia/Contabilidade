@@ -2,10 +2,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden; /* prevents outer scroller from also scrolling */
   padding: 1rem;
   animation: fadeIn 0.3s ease;
   max-width: 500px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .add-header {
@@ -30,7 +32,9 @@
 
 .add-form-container {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;

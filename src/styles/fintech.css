@@ -43,11 +43,11 @@ html, body {
 }
 
 .modern-ui .main-content-new {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  /* overscroll-behavior-y already set in modern.css */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+.modern-ui .main-content-new::-webkit-scrollbar { display: none; }
 .modern-ui .main-content-new > div {
   flex: unset;
   min-height: unset;

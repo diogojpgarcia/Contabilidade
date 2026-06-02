@@ -215,14 +215,9 @@ body {
   letter-spacing: -0.022em;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
-  min-height: 100%;
-  min-height: 100dvh;
-  /* PWA fullscreen support */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  overflow: hidden; /* .app-new is position:fixed and manages safe-area itself */
+  /* overscroll bounce on body causes scroll jank on Android */
+  overscroll-behavior: none;
 }
 
 .app-new {
@@ -486,22 +481,24 @@ input::placeholder {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  /* -webkit-overflow-scrolling: touch is default on modern iOS — explicit value can cause layer conflicts */
   display: flex;
   flex-direction: column;
   max-width: 600px;
   width: 100%;
   margin: 0 auto;
   min-height: 0;
-  /* Garante que o scroll nunca fica cortado pela bottom-nav em qualquer sub-view */
-  padding-bottom: var(--bottom-clearance);
+  /* NO padding-bottom here — each tab adds its own --bottom-clearance to avoid doubling */
   box-sizing: border-box;
+  /* Prevent scroll chaining to body on Android */
+  overscroll-behavior-y: contain;
 }
 
 .main-content-new > div {
   flex: 1;
   min-height: 0;
   overflow-x: hidden;
+  /* Tabs that manage their own scroll (AddTab, ImportTab) must set overflow:hidden here */
 }
 
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */
