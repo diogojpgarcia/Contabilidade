@@ -43,16 +43,16 @@ html, body {
 }
 
 .modern-ui .main-content-new {
-  /* overscroll-behavior-y already set in modern.css */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 .modern-ui .main-content-new::-webkit-scrollbar { display: none; }
+/* Each tab scrolls itself — hide scrollbar on tab divs too */
 .modern-ui .main-content-new > div {
-  flex: unset;
-  min-height: unset;
-  overflow: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.modern-ui .main-content-new > div::-webkit-scrollbar { display: none; }
 
 /* ── BOTTOM NAV ─────────────────────────────────────────────────────────── */
 /* .modern-ui nav overrides — movido para bloco unificado abaixo */
@@ -212,7 +212,7 @@ html, body {
 /* ═══════════════════════════════════════════════════════════════════════════
    HOME TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
-.m-home { overflow-x: hidden; padding-bottom: var(--bottom-clearance); }
+.m-home { overflow-x: hidden; } /* padding-bottom handled by .h-page in Home.css */
 
 /* Month bar */
 .m-month-bar {

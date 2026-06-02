@@ -2163,10 +2163,12 @@ html[data-theme="soft-future"] .nav-item.active {
   display: flex;
   gap: 12px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  touch-action: pan-x;
+  /* pan-x-y lets the browser decide: horizontal inside, vertical propagates up */
+  touch-action: pan-x pan-y;
 }
 .accounts-scroll-row::-webkit-scrollbar {
   display: none;

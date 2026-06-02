@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden; /* prevents outer scroller from also scrolling */
+  overflow: hidden; /* inner .add-form-container scrolls, not the tab wrapper */
   padding: 1rem;
+  padding-bottom: 0; /* footer handles its own spacing */
   animation: fadeIn 0.3s ease;
   max-width: 500px;
   margin: 0 auto;

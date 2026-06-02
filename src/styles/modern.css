@@ -488,17 +488,21 @@ input::placeholder {
   width: 100%;
   margin: 0 auto;
   min-height: 0;
-  /* NO padding-bottom here — each tab adds its own --bottom-clearance to avoid doubling */
   box-sizing: border-box;
-  /* Prevent scroll chaining to body on Android */
-  overscroll-behavior-y: contain;
+  /* main-content-new is a WRAPPER — each tab scrolls itself */
+  overflow: hidden;
 }
 
+/* Every tab fills the wrapper and scrolls independently */
 .main-content-new > div {
   flex: 1;
   min-height: 0;
+  height: 100%;
+  overflow-y: auto;
   overflow-x: hidden;
-  /* Tabs that manage their own scroll (AddTab, ImportTab) must set overflow:hidden here */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: auto; /* 'touch' causes layer conflicts on iOS 13+ */
+  box-sizing: border-box;
 }
 
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */
