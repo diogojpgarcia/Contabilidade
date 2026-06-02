@@ -501,8 +501,12 @@ input::placeholder {
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: auto; /* 'touch' causes layer conflicts on iOS 13+ */
   box-sizing: border-box;
+  /* GPU composite layer — enables ProMotion (120Hz) on iOS and high-refresh on Android */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  /* Paint containment — reduces GPU work per frame */
+  contain: layout style;
 }
 
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */

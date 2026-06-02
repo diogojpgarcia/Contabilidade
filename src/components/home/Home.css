@@ -4,6 +4,7 @@
 
 .h-page {
   padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
+  contain: layout style; /* limits repaint area — GPU can render at full refresh rate */
 }
 
 /* ── Primary zone — hero's exclusive spatial territory ───────────────────── */

@@ -129,10 +129,15 @@ html, body {
 
 
 /* ── PAGE WRAPPER (all modern tab roots) ────────────────────────────────── */
-.m-page {
+.m-page,
+.stats-tab,
+.budget-tab,
+.add-tab,
+.import-tab {
   overflow-x: hidden;
-  padding-bottom: var(--bottom-clearance);
+  contain: layout style; /* paint containment → full GPU refresh-rate rendering */
 }
+.m-page { padding-bottom: var(--bottom-clearance); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SEGMENTED TOGGLE CONTROL  (.m-toggle)

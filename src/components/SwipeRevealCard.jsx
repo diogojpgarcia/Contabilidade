@@ -49,6 +49,8 @@ const SwipeRevealCard = ({ onEdit, onDelete, onClick, className = '', children }
         dir:    null,
         active: true,
       };
+      // Promote to GPU layer immediately for 120Hz animation
+      row.style.willChange = 'transform';
     };
 
     const onMove = (e) => {
@@ -69,6 +71,8 @@ const SwipeRevealCard = ({ onEdit, onDelete, onClick, className = '', children }
 
     const onEnd = (e) => {
       const g = gesture.current;
+      // Release GPU layer hint after gesture ends
+      row.style.willChange = 'auto';
       if (!g.active || g.dir !== 'h') { g.active = false; return; }
       g.active = false;
       const dx     = e.changedTouches[0].clientX - g.startX;
