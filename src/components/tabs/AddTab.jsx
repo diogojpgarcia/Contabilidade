@@ -20,7 +20,10 @@ import './AddTab.css';
 const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goals = [], onGoalsChange, initialMode }) => {
   const { currentUser, categories } = useAppContext();
   const { showError, showWarning } = useToast();
-  const [type, setType]             = useState(initialMode === 'transfer' ? 'transfer' : 'expense');
+  const [type, setType]             = useState(
+    initialMode === 'transfer' ? 'transfer' :
+    initialMode === 'income'   ? 'income'   : 'expense'
+  );
   const [amount, setAmount]         = useState('');
   const [category, setCategory]     = useState('');
   const [description, setDescription] = useState('');
