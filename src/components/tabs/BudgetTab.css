@@ -171,68 +171,108 @@
 .m-gcc-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 0 12px 20px;
+  gap: 10px;
+  padding: 0 14px 20px;
 }
 
+/* ── Category card — premium redesign ──────────────────────────────────── */
 .m-gcc {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-top-width: 2.5px;
-  border-radius: 14px;
-  padding: 12px 12px 11px;
+  background: var(--cosmos-surface-1);
+  border: 1px solid var(--cosmos-border-card);
+  border-radius: 18px;
+  padding: 14px 13px 12px;
   position: relative;
   cursor: pointer;
-  transition: transform 0.15s, background 0.15s;
+  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1),
+              background 0.15s, box-shadow 0.15s;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
 }
-.m-gcc:active { transform: scale(0.97); }
+/* Colour accent — left border instead of top */
+.m-gcc::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 14%; bottom: 14%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--gcc-accent, var(--cosmos-accent));
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.m-gcc:active {
+  transform: scale(0.96);
+  background: var(--cosmos-surface-2);
+}
+
+/* Light mode */
+[data-theme="light"] .m-gcc,
+[data-palette="stone"] .m-gcc {
+  background: var(--cosmos-surface-2);
+  border-color: var(--cosmos-border-card);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
 
 .m-gcc-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 7px;
+  margin-bottom: 10px;
 }
 
 .m-gcc-ico {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.m-gcc-right { text-align: right; }
-.m-gcc-pct { font-size: 11px; font-weight: 700; line-height: 1; }
-.m-gcc-delta { font-size: 9px; margin-top: 2px; }
+.m-gcc-right { text-align: right; line-height: 1; }
+.m-gcc-pct {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.m-gcc-delta { font-size: 9px; margin-top: 3px; font-weight: 500; }
 .m-gcc-delta.up   { color: var(--cosmos-expense); }
 .m-gcc-delta.down { color: var(--cosmos-income); }
 
 .m-gcc-name {
   font-size: 11px;
   font-weight: 500;
-  color: var(--cosmos-text-2);
-  letter-spacing: -0.01em;
-  margin-bottom: 2px;
+  color: var(--cosmos-text-3);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .m-gcc-amounts {
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--cosmos-text-1);
   letter-spacing: -0.02em;
+  line-height: 1.1;
 }
-.m-gcc-amounts span { font-size: 10px; font-weight: 400; color: var(--cosmos-text-3); }
+.m-gcc-amounts span {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--cosmos-text-3);
+  letter-spacing: 0;
+}
 
+/* Progress bar — thicker, more visible */
 .m-gcc-bar-bg {
-  height: 3px;
-  background: rgba(255,255,255,0.06);
+  height: 4px;
+  background: var(--cosmos-border-divider);
   border-radius: 99px;
   overflow: hidden;
-  margin-top: 7px;
+  margin-top: 10px;
 }
 .m-gcc-bar-fill {
   height: 100%;
@@ -240,33 +280,43 @@
   transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
 }
 
+/* Edit button — top right, cleaner */
 .m-gcc-edit-btn {
   position: absolute;
-  bottom: 8px;
+  top: 10px;
   right: 10px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--cosmos-text-3);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 2px;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
   -webkit-tap-highlight-color: transparent;
+}
+.m-gcc:hover .m-gcc-edit-btn,
+.m-gcc:active .m-gcc-edit-btn { opacity: 1; }
+/* Always visible on touch devices */
+@media (hover: none) {
+  .m-gcc-edit-btn { opacity: 0.5; }
 }
 
 .m-gcc-edit-row {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .m-gcc-input {
   flex: 1;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
+  background: var(--cosmos-surface-2);
+  border: 1px solid var(--cosmos-border-card);
+  border-radius: 10px;
   color: var(--cosmos-text-1);
   font-size: 13px;
-  padding: 6px 8px;
+  padding: 7px 10px;
   outline: none;
+  font-weight: 600;
 }
 .m-gcc-save-btn {
   background: var(--cosmos-accent-border);
