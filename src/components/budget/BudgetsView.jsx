@@ -95,7 +95,7 @@ const BudgetsView = ({
         return { cat, limit, spent, percent, delta, predicted };
       })
       .sort((a, b) => b.percent - a.percent);
-  }, [categories.expense, budgets, transactions, selectedMonth]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [categories.expense, budgets, transactions, selectedMonth, financialMonthStartDay]);
 
   const txByCategory = useMemo(() => {
     const map = {};

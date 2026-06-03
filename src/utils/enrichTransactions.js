@@ -101,7 +101,7 @@ function daysBetween(a, b) {
   return Math.abs(new Date(a) - new Date(b)) / 86400000;
 }
 
-export function cleanDescription(raw) {
+export function normalizeDescription(raw) {
   if (!raw) return 'desconhecido';
   let s = String(raw);
   for (const p of NOISE) s = s.replace(p, ' ');
@@ -217,7 +217,7 @@ export function enrichTransactions(rawTransactions) {
   }
 
   const enriched = rawTransactions.map(tx => {
-    const clean = cleanDescription(tx.description);
+    const clean = normalizeDescription(tx.description);
     const { category, subcategory } = categorize(tx.description, tx.amount);
     // Preserve type coming from parseBankFile; fall back to sign-based detection
     // for backwards-compat with any callers that pass signed amounts directly.
@@ -314,7 +314,7 @@ export function mapToUserCategories({ budget_categories, transactions }) {
   }
 
   return transactions.map(tx => {
-    const clean      = cleanDescription(tx.description);
+    const clean      = normalizeDescription(tx.description);
     const mKey       = clean.split(' ').slice(0, 2).join(' ');
     const { category: internalCat } = categorize(tx.description, tx.amount);
 

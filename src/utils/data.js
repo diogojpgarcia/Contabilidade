@@ -4,7 +4,7 @@
 
 // Categories — single source of truth lives in categories-professional.js.
 // Re-exported here for backward-compat with any component that imports from data.js.
-export { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from './categories-professional';
+export { CATEGORIES_EXPENSE, CATEGORIES_INCOME, getCategoryById } from './categories-professional';
 
 // Format currency
 export const formatCurrency = (value) => {
@@ -47,12 +47,6 @@ export const MONTHS_SHORT = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
   "Jul", "Ago", "Set", "Out", "Nov", "Dez"
 ];
-
-// Get category by ID
-export const getCategoryById = (categoryId, type = 'expense') => {
-  const categories = type === 'income' ? CATEGORIES_INCOME : CATEGORIES_EXPENSE;
-  return categories.find(cat => cat.id === categoryId) || categories[categories.length - 1];
-};
 
 // Calculate monthly totals
 export const calculateMonthlyTotals = (transactions, monthKey) => {
