@@ -105,6 +105,7 @@ const HomeTab = ({
 
   // ── Budget status ─────────────────────────────────────────────────────────
   const budgetStatus = useMemo(() => {
+    if (!currentMonth) return { totalLimit: 0, totalSpent: 0, over: [], hasData: false };
     const expCats = categories?.expense || [];
     // budgets is stored as an object { id: { category, limit, ... } } — convert to array
     const budgetArr = Array.isArray(budgets) ? budgets : Object.values(budgets || {});
@@ -129,11 +130,19 @@ const HomeTab = ({
 
   // ── Key insight ───────────────────────────────────────────────────────────
   const keyInsight = useMemo(() => {
-    if (!transactions?.length) return null;
+    if (!transactions?.length || !currentMonth) return null;
+    const { categories: appCats } = { categories: categories || {} };
     const budgetArr = Array.isArray(budgets) ? budgets : Object.values(budgets || {});
-    const insights = generateInsights(transactions, currentMonth, budgetArr);
-    return insights?.[0] || null;
-  }, [transactions, currentMonth, budgets]);
+    try {
+      const insights = generateInsights({
+        transactions,
+        budgets: budgetArr,
+        categories: appCats,
+        selectedMonth: currentMonth,
+      });
+      return insights?.[0] || null;
+    } catch { return null; }
+  }, [transactions, currentMonth, budgets, categories]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
