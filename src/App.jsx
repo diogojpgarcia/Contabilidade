@@ -43,6 +43,9 @@ const App = () => {
   const [pendingAddMode,   setPendingAddMode]   = useState(null);
   const mainContentRef = useRef(null);
 
+  // Haptic feedback — 10ms pulse on Android via Vibration API
+  const haptic = (ms = 10) => { try { navigator.vibrate?.(ms); } catch {} };
+
   // Scroll para o topo ao mudar de tab
   useEffect(() => {
     if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
@@ -264,20 +267,20 @@ const App = () => {
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
-        <button className={`nav-item ${activeTab === 'home'   ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+        <button className={`nav-item ${activeTab === 'home'   ? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('home'); }}>
           <span className="nav-icon"><Home size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Home</span>
         </button>
-        <button className={`nav-item ${activeTab === 'stats'  ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>
+        <button className={`nav-item ${activeTab === 'stats'  ? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('stats'); }}>
           <span className="nav-icon"><BarChart2 size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Stats</span>
         </button>
         <div style={{ width: '52px', flexShrink: 0 }} />
-        <button className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`} onClick={() => setActiveTab('budget')}>
+        <button className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('budget'); }}>
           <span className="nav-icon"><LayoutGrid size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Budget</span>
         </button>
-        <button className={`nav-item ${activeTab === 'profile'? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+        <button className={`nav-item ${activeTab === 'profile'? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('profile'); }}>
           <span className="nav-icon"><User size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Perfil</span>
         </button>
@@ -285,7 +288,7 @@ const App = () => {
 
       {/* FAB central */}
       <button
-        onClick={() => setActiveTab('add')}
+        onClick={() => { haptic(15); setActiveTab('add'); }}
         aria-label="Adicionar transação"
         style={{
           position: 'fixed', bottom: 'calc(max(6px, env(safe-area-inset-bottom)) + 6px)', left: '50%', transform: 'translateX(-50%)',
