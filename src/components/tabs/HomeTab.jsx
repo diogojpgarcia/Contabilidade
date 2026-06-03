@@ -106,7 +106,9 @@ const HomeTab = ({
   // ── Budget status ─────────────────────────────────────────────────────────
   const budgetStatus = useMemo(() => {
     const expCats = categories?.expense || [];
-    const rows = (budgets || []).map(b => {
+    // budgets is stored as an object { id: { category, limit, ... } } — convert to array
+    const budgetArr = Array.isArray(budgets) ? budgets : Object.values(budgets || {});
+    const rows = budgetArr.map(b => {
       const cat = expCats.find(c => c.id === b.categoryId || c.label === b.category);
       const spent = (transactions || [])
         .filter(t => t.type === 'expense' && (t.date || '').startsWith(currentMonth) &&
@@ -128,7 +130,8 @@ const HomeTab = ({
   // ── Key insight ───────────────────────────────────────────────────────────
   const keyInsight = useMemo(() => {
     if (!transactions?.length) return null;
-    const insights = generateInsights(transactions, currentMonth, budgets || []);
+    const budgetArr = Array.isArray(budgets) ? budgets : Object.values(budgets || {});
+    const insights = generateInsights(transactions, currentMonth, budgetArr);
     return insights?.[0] || null;
   }, [transactions, currentMonth, budgets]);
 
