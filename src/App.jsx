@@ -144,6 +144,7 @@ const App = () => {
               homeUsesFinancialMonth={s.homeUsesFinancialMonth}
               recurringPayments={s.recurringPayments}
               confirmedRecurring={s.confirmedRecurring}
+              budgets={s.budgets}
               onNavigate={handleNavigateFromStats}
               userName={userName}
             />
