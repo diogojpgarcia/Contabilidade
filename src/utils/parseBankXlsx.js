@@ -14,7 +14,7 @@ async function loadXLSX() {
   return XLSX.default ?? XLSX;
 }
 
-export export async function parseXLSX(buffer) {
+export async function parseXLSX(buffer) {
   try {
     const XLSX  = await loadXLSX();
     const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;

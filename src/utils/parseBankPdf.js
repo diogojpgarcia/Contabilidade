@@ -415,7 +415,7 @@ function extractByColumnBounds(rows, layout) {
   return result;
 }
 
-export export async function parsePDF(buffer) {
+export async function parsePDF(buffer) {
   try {
     const pdfjsLib = await loadPdfJs();
     const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
