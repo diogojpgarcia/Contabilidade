@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import BulkUpdateModal from './components/BulkUpdateModal';
@@ -15,13 +15,22 @@ import { AppProvider } from './context/AppContext';
 import { ToastProvider } from './context/ToastContext';
 import { toast } from './utils/toast';
 
-// Tabs
+// Tabs — HomeTab e AddTab carregam de imediato (caminho crítico)
 import HomeTab from './components/tabs/HomeTab';
-import StatsTab from './components/tabs/StatsTab';
-import AddTab from './components/tabs/AddTab';
-import BudgetTab from './components/tabs/BudgetTab';
-import ImportTab from './components/tabs/ImportTab';
-import ProfileTab from './components/tabs/ProfileTab';
+import AddTab  from './components/tabs/AddTab';
+
+// Tabs pesados — lazy loaded (só carregam quando o utilizador abre o tab)
+const StatsTab   = lazy(() => import('./components/tabs/StatsTab'));
+const BudgetTab  = lazy(() => import('./components/tabs/BudgetTab'));
+const ImportTab  = lazy(() => import('./components/tabs/ImportTab'));
+const ProfileTab = lazy(() => import('./components/tabs/ProfileTab'));
+
+// Fallback leve durante o carregamento lazy
+const TabFallback = () => (
+  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cosmos-text-3)', fontSize: 13 }}>
+    <div style={{ width: 24, height: 24, border: '2px solid var(--cosmos-accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'pat-spin 0.8s linear infinite' }} />
+  </div>
+);
 
 import { Home, BarChart2, LayoutGrid, User } from './components/icons';
 
@@ -156,6 +165,7 @@ const App = () => {
 
         {activeTab === 'stats' && (
           <ErrorBoundary tab="Estatísticas">
+            <Suspense fallback={<TabFallback />}>
             <StatsTab
               transactions={safeTransactions}
               filteredTransactions={filteredTransactions}
@@ -171,6 +181,7 @@ const App = () => {
               onNavigate={handleNavigateFromStats}
               financialFocus={s.financialFocus}
             />
+            </Suspense>
           </ErrorBoundary>
         )}
 
@@ -198,6 +209,7 @@ const App = () => {
 
         {activeTab === 'budget' && (
           <ErrorBoundary tab="Orçamento">
+            <Suspense fallback={<TabFallback />}>
             <BudgetTab
               transactions={safeTransactions}
               currentMonth={s.currentMonth}
@@ -218,20 +230,24 @@ const App = () => {
               goals={s.goals}
               onGoalsChange={s.handleGoalsChange}
             />
+            </Suspense>
           </ErrorBoundary>
         )}
 
         {activeTab === 'import' && (
           <ErrorBoundary tab="Importar">
+            <Suspense fallback={<TabFallback />}>
             <ImportTab
               onImportDone={tx.handleImport}
               learnedRules={tx.learnedRules}
             />
+            </Suspense>
           </ErrorBoundary>
         )}
 
         {activeTab === 'profile' && (
           <ErrorBoundary tab="Perfil">
+            <Suspense fallback={<TabFallback />}>
             <ProfileTab
               onNavigateToImport={() => setActiveTab('import')}
               userName={userName}
@@ -261,6 +277,7 @@ const App = () => {
                 setActiveTab('home');
               }}
             />
+            </Suspense>
           </ErrorBoundary>
         )}
       </main>

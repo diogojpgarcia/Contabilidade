@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from '../../hooks/useForm';
 import { usePatrimonyPrices } from '../../hooks/usePatrimonyPrices';
 import Overlay from '../Overlay';
+import EmptyState from '../EmptyState';
 import SwipeRevealCard from '../SwipeRevealCard';
 import { searchAssets } from '../../utils/searchAssets';
 import {
@@ -1121,7 +1122,14 @@ const PatrimonyView = ({
                   })}
                 </div>
               )}
-              {items.length === 0 && <div className="pat-cat-empty">Sem registos · toca + para adicionar</div>}
+              {items.length === 0 && (
+                <EmptyState
+                  icon={key === 'accounts' ? '🏦' : key === 'crypto' ? '₿' : key === 'vehicles' ? '🚗' : key === 'realestate' ? '🏠' : '📈'}
+                  title="Sem registos"
+                  description="Toca no + para adicionar o teu primeiro ativo nesta categoria."
+                  style={{ padding: '24px 16px' }}
+                />
+              )}
             </div>
           );
         })}

@@ -3233,3 +3233,64 @@ button,
   font-size: 2rem;
   color: var(--cosmos-income);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATS OVERVIEW — typography classes (replaces inline styles)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Main card */
+.so-card {
+  border-radius: 20px;
+  background: var(--cosmos-surface-1);
+  border: 1px solid var(--cosmos-border-divider);
+  margin: 0 16px;
+  overflow: hidden;
+}
+[data-theme="light"] .so-card,
+[data-palette="stone"] .so-card {
+  background: var(--cosmos-surface-2);
+  border-color: var(--cosmos-border-card);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+/* Saldo label */
+.so-saldo-label {
+  font-size: 11px;
+  color: var(--cosmos-text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* Saldo amount */
+.so-saldo-amount {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+/* Score + insights card */
+.so-score-card {
+  margin: 12px 16px 0;
+  background: var(--cosmos-border-subtle);
+  border: 1px solid var(--cosmos-border-divider);
+  border-radius: 16px;
+  padding: 16px;
+}
+[data-theme="light"] .so-score-card,
+[data-palette="stone"] .so-score-card {
+  background: var(--cosmos-surface-2);
+  border-color: var(--cosmos-border-card);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+
+/* Category row */
+.so-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}

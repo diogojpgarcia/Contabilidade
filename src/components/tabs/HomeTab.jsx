@@ -5,6 +5,7 @@ import { getUpcomingPayments, relativeDueDate, safeNum, isConfirmedForMonth, get
 import { generateInsights } from '../../utils/insights';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
 import CountUp from '../budget/CountUp';
+import EmptyState from '../EmptyState';
 import '../home/Home.css';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -320,6 +321,17 @@ const HomeTab = ({
         </Section>
       )}
 
+      {/* Empty state — when nothing to show yet */}
+      {!transactions?.length && !upcoming.length && !budgetStatus.hasData && (
+        <EmptyState
+          icon="✨"
+          title="Bem-vindo!"
+          description="Adiciona a tua primeira transação para começar a acompanhar as tuas finanças."
+          action="Adicionar transação"
+          onAction={() => onNavigate?.('add')}
+          style={{ paddingTop: 32 }}
+        />
+      )}
 
     </div>
   );

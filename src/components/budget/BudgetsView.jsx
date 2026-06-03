@@ -8,6 +8,7 @@ import BudgetCategoryCard from './BudgetCategoryCard';
 import CategoryHistorySheet from './CategoryHistorySheet';
 import CountUp from './CountUp';
 import RingChart from '../charts/RingChart';
+import EmptyState from '../EmptyState';
 import { useAppContext } from '../../context/AppContext';
 
 const BudgetsView = ({
@@ -203,6 +204,15 @@ const BudgetsView = ({
           </div>
         );
       })()}
+
+      {/* Empty state when no categories have budgets or spending */}
+      {activeItems.length === 0 && inactiveItems.length === 0 && (
+        <EmptyState
+          icon="🎯"
+          title="Sem orçamentos definidos"
+          description="Toca numa categoria para definir um limite mensal e acompanhar os teus gastos."
+        />
+      )}
 
       {/* Category grid */}
       <div className="m-gcc-grid">

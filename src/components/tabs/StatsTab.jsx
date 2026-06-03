@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Clock, SlidersHorizontal, Search, BarChart2 } from 'lucide-react'; // v2
 import { useAppContext } from '../../context/AppContext';
 import CategoryPicker from '../CategoryPicker.jsx';
@@ -70,55 +70,36 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     return sorted;
   };
 
-  // Get last 6 months for chart
-  const getLast6Months = () => {
-    const months = [];
+  // Last 6 month keys — memoized, recomputes only when currentMonth changes
+  const last6Months = useMemo(() => {
     const [year, month] = currentMonth.split('-').map(Number);
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(year, month - 1 - i, 1);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      months.push(monthKey);
-    }
-    
-    return months;
-  };
-
-  // Get monthly data for chart
-  const getMonthlyData = () => {
-    const months = getLast6Months();
-    
-    return months.map(month => {
-      const monthTransactions = filterByFinancialMonth(transactions, month, financialMonthStartDay);
-      const income = monthTransactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-      const expenses = monthTransactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-      
-      return {
-        month: month.substring(5) + '/' + month.substring(2, 4),
-        income,
-        expenses,
-        balance: income - expenses
-      };
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(year, month - 1 - (5 - i), 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     });
-  };
+  }, [currentMonth]);
 
-  // Category monthly breakdown — used by the interactive chart in the fintech branch
-  const getCategoryMonthlyData = (categoryName) => {
-    return getLast6Months().map(month => {
+  // Helper kept as function (used inside other memos)
+  const getLast6Months = () => last6Months;
+
+  // Monthly chart data — memoized: only recalculates when transactions/month/startDay change
+  const getMonthlyData = useMemo(() => {
+    return last6Months.map(month => {
       const monthTxs = filterByFinancialMonth(transactions, month, financialMonthStartDay);
-      const amount = monthTxs
-        .filter(t => t.type === 'expense' && t.category === categoryName)
-        .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-      return {
-        month: month.substring(5) + '/' + month.substring(2, 4),
-        amount,
-      };
+      const income   = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+      const expenses = monthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+      return { month: month.substring(5) + '/' + month.substring(2, 4), income, expenses, balance: income - expenses };
     });
-  };
+  }, [transactions, last6Months, financialMonthStartDay]);
+
+  // Category breakdown — memoized per category set
+  const getCategoryMonthlyData = useCallback((categoryName) => {
+    return last6Months.map(month => {
+      const monthTxs = filterByFinancialMonth(transactions, month, financialMonthStartDay);
+      const amount   = monthTxs.filter(t => t.type === 'expense' && t.category === categoryName).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+      return { month: month.substring(5) + '/' + month.substring(2, 4), amount };
+    });
+  }, [transactions, last6Months, financialMonthStartDay]);
 
   // Navigate months — delegates to App so currentMonth is the single source of truth
   const goToPreviousMonth = () => onMonthChange(shiftFinancialMonth(currentMonth, -1));
@@ -178,7 +159,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     });
   }, [monthTransactions, historyView, selectedAccountId, searchQuery]);
   // 6-month chart still needs all transactions so it can look at past months
-  const monthlyData       = useMemo(() => getMonthlyData(),                                 [transactions, currentMonth]);
+  const monthlyData       = getMonthlyData; // already memoized above
   const maxAmount         = useMemo(
     () => Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses))) || 1,
     [monthlyData]

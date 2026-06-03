@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 const RingChart = ({
   pct = 0,           // 0-100
   color = 'var(--cosmos-accent)',
-  trackColor = 'rgba(255,255,255,0.06)',
+  trackColor = 'var(--cosmos-border-divider)',
   size = 120,
   stroke = 10,
   label,             // centre primary text

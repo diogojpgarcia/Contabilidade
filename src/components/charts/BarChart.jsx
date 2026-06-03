@@ -105,7 +105,7 @@ const BarChart = ({ data = [], height = 80, onBarPress }) => {
           border: '1px solid var(--cosmos-border-card)',
           borderRadius: 10, padding: '6px 12px',
           display: 'flex', gap: 14, pointerEvents: 'none',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+          boxShadow: 'var(--cosmos-shadow-card, 0 4px 16px rgba(0,0,0,0.15))',
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: 'var(--cosmos-income)', fontWeight: 600, marginBottom: 2 }}>Receitas</div>
