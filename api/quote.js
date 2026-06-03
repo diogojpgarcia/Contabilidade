@@ -141,14 +141,14 @@ export default async function handler(req, res) {
               const rawPrice = currency === 'GBp' ? price / 100 : price;
               price    = rawPrice * fxRate;
               currency = 'EUR';
-              console.log(`[quote] ${sym}: ${q.price} ${q.currency} → ${price.toFixed(4)} EUR (rate: ${fxRate})`);
+              // debug removed
             } else {
               console.warn(`[quote] ${sym}: não foi possível obter taxa ${currency}→EUR`);
             }
           }
 
           result[sym] = { price, changePct, currency };
-          console.log(`[quote] ${sym}→${yahooSym} = ${price.toFixed(4)} ${currency} (${changePct?.toFixed(2)}%)`);
+          // debug removed
         } catch (e) {
           console.warn(`[quote] ${sym} erro:`, e.message);
         }

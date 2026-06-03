@@ -21,7 +21,6 @@ function httpsGet(url, extraHeaders = {}) {
       let body = '';
       res.on('data', d => (body += d));
       res.on('end', () => {
-        console.log(`[euribor] ${url} → HTTP ${res.statusCode}, body length: ${body.length}`);
         resolve({ status: res.statusCode, body });
       });
     });
@@ -80,7 +79,6 @@ export default async function handler(req, res) {
         const val = parseEcbSdmxJson(body);
         if (val !== null) {
           rate = val;
-          console.log(`[euribor] ✓ Euribor 3M: ${val}% (via ECB)`);
           break;
         } else {
           console.warn(`[euribor] body OK mas parse falhou. Início do body: ${body.slice(0, 200)}`);

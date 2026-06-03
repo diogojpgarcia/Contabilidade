@@ -37,7 +37,9 @@ const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, col
       return;
     }
     try {
-      await authService.resetPassword(resetDraft.email);
+      await authService.supabase.auth.resetPasswordForEmail(resetDraft.email, {
+        redirectTo: window.location.origin,
+      });
       setResetStatus('✓ Email de recuperação enviado! Verifica a tua caixa de entrada.');
       setTimeout(() => {
         setShowResetPassword(false);

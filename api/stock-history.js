@@ -127,7 +127,6 @@ export default async function handler(req, res) {
 
     if (prices.length < 2) return res.status(200).json({ prices: [], labels: [] });
 
-    console.log(`[stock-history] ${symbol}→${yahooSym} period=${period}: ${prices.length} pontos`);
     res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=120');
     return res.json({ prices, labels });
   } catch (err) {

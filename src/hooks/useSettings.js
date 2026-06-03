@@ -271,7 +271,7 @@ export function useSettings(currentUser, txHook) {
 
   const handleHomeUsesFinancialMonthChange = (enabled) => {
     setHomeUsesFinancialMonth(enabled);
-    dbService.updateUserSettings(currentUser.id, { homeUsesFinancialMonth: enabled });
+    dbService.updateUserSettings(currentUser.id, { homeUsesFinancialMonth: enabled }).catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
   // ── Recorrentes ───────────────────────────────────────────────────────────
@@ -285,15 +285,21 @@ export function useSettings(currentUser, txHook) {
   // Usa txHook.setTransactions para adicionar a nova transação ao estado global.
   const handleConfirmRecurring = async ({ recurringPayment, dueDate, monthKey, amount, accountId }) => {
     const account = (patrimony.accounts || []).find(a => a.id === accountId);
-    const newTx = await dbService.addTransaction(currentUser.id, {
-      date:         dueDate,
-      description:  recurringPayment.title,
-      amount,
-      type:         'expense',
-      category:     recurringPayment.categoryId || 'Outros',
-      account_id:   accountId   || null,
-      account_name: account?.name || null,
-    });
+    let newTx;
+    try {
+      newTx = await dbService.addTransaction(currentUser.id, {
+        date:         dueDate,
+        description:  recurringPayment.title,
+        amount,
+        type:         'expense',
+        category:     recurringPayment.categoryId || 'Outros',
+        account_id:   accountId   || null,
+        account_name: account?.name || null,
+      });
+    } catch (e) {
+      toast.error('Erro ao confirmar pagamento: ' + e.message);
+      return;
+    }
 
     const txWithAccount = {
       ...newTx,

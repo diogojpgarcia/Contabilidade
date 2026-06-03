@@ -34,9 +34,6 @@ const TWELVE_DATA_KEY = import.meta.env.VITE_TWELVE_DATA_KEY ?? '';
 /** True when a Twelve Data API key is configured. */
 export const HAS_STOCK_KEY = TWELVE_DATA_KEY.length > 0;
 
-// ─── startup diagnostics ─────────────────────────────────────────────────────
-// Logged once on module load — visible in DevTools on any device/platform.
-      //       // 
 // ─── in-memory caches ────────────────────────────────────────────────────────
 
 /** ticker → { price, changePct, ts } */

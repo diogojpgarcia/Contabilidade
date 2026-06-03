@@ -2,24 +2,11 @@
 import { Clock, SlidersHorizontal, Search } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import CategoryPicker from '../CategoryPicker.jsx';
-import ModernTransactionList from '../ModernTransactionList';
 import FintechTransactionCard from '../FintechTransactionCard';
-import { generateInsights, computeFinancialScore, shiftMonth, formatMonthLabel } from '../../utils/insights';
+import { generateInsights, computeFinancialScore, shiftMonth } from '../../utils/insights';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange } from '../../utils/financialMonth';
-import PageHeader from '../PageHeader';
-import { AlertTriangle, Zap, TrendingUp, TrendingDown, BarChart2, Calendar } from '../icons';
 import { getCategoryMeta } from '../../utils/categoryIcons';
 import './StatsTab.css';
-import './HomeTab.modern.css';
-
-/* ── getCategoryIconEl ────────────────────────────────────────────────────────
-   Replaces the old getCategoryIcon() string map.
-   Used only by the legacy (non-fintech) branches that are never active in
-   production — kept alive so the module compiles without errors.            */
-function getCategoryIconEl(categoryName, type = 'expense') {
-  const { Icon, color } = getCategoryMeta(categoryName, type);
-  return <Icon size={16} color={color} strokeWidth={2} />;
-}
 
 
 /* Transfer flow helper (mirrors ModernTransactionList / DefaultTransactionList) */
@@ -574,7 +561,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                         transition: 'all 0.2s',
                       }} />
                       {/* Nome */}
-                      <div style={{ flex: 1, fontSize: '14px', color: isSelected ? '#FFFFFF' : '#FFFFFF', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.category}</div>
+                      <div style={{ flex: 1, fontSize: '14px', color: isSelected ? 'var(--cosmos-text-1)' : 'var(--cosmos-text-2)', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.category}</div>
                       {/* Barra + % */}
                       <div style={{ width: '100px', flexShrink: 0 }}>
                         <div style={{ fontSize: '12px', color: CAT_COLORS[i % 5], textAlign: 'right', marginBottom: '3px' }}>{cat.percentage.toFixed(0)}%</div>
@@ -802,6 +789,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                 return groups.map(({ date, txs }, gi) => {
                   const net = txs.reduce((s, t) => {
                     const a = parseFloat(t.amount) || 0;
+                    if (t.type === 'transfer') return s; // transfers are neutral
                     return s + (t.type === 'income' ? a : -a);
                   }, 0);
                   return (
