@@ -7,6 +7,7 @@ import { STATUS } from '../../utils/budgetUtils';
 import BudgetCategoryCard from './BudgetCategoryCard';
 import CategoryHistorySheet from './CategoryHistorySheet';
 import CountUp from './CountUp';
+import RingChart from '../charts/RingChart';
 import { useAppContext } from '../../context/AppContext';
 
 const BudgetsView = ({
@@ -133,41 +134,56 @@ const BudgetsView = ({
       {(() => {
         const remaining = totalBudget - totalSpent;
         const totalPct  = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
-        const barColor  = STATUS(totalPct).grad;
+        const ringColor = totalPct >= 100 ? 'var(--cosmos-expense)'
+                        : totalPct >= 80  ? 'var(--cosmos-warning, #f59e0b)'
+                        : 'var(--cosmos-income)';
+        const periodLabel = (() => {
+          if (financialMonthStartDay === 1) return 'Orçamento mensal';
+          const { start, end } = getFinancialMonthRange(selectedMonth, financialMonthStartDay);
+          const fmt = (s) => new Date(s + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+          return `${fmt(start)} → ${fmt(end)}`;
+        })();
         return (
           <div className="m-bmc">
-            <span className="m-bmc-label">
-              {(() => {
-                if (financialMonthStartDay === 1) return 'Orçamento mensal';
-                const { start, end } = getFinancialMonthRange(selectedMonth, financialMonthStartDay);
-                const fmt = (s) => new Date(s + 'T00:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
-                return `${fmt(start)} → ${fmt(end)}`;
-              })()}
-            </span>
-            <div className="m-bmc-big">
-              <span className="m-bmc-amount" style={{ color: isTotalOver ? 'var(--cosmos-expense)' : undefined }}>
-                <CountUp value={totalBudget > 0 ? Math.abs(remaining) : totalSpent} />€
-              </span>
-              <span className="m-bmc-sub">{isTotalOver ? 'excedido' : totalBudget > 0 ? 'disponível' : 'gasto'}</span>
+            <span className="m-bmc-label">{periodLabel}</span>
+
+            {/* Ring chart + stats side by side */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '8px 0 4px' }}>
+              {totalBudget > 0 && (
+                <RingChart
+                  pct={animated ? totalPct : 0}
+                  color={ringColor}
+                  size={100}
+                  stroke={9}
+                  label={`${Math.round(totalPct)}%`}
+                  sublabel="gasto"
+                  labelSize={20}
+                />
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: isTotalOver ? 'var(--cosmos-expense)' : 'var(--cosmos-text-1)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    <CountUp value={totalBudget > 0 ? Math.abs(remaining) : totalSpent} />€
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--cosmos-text-3)', marginTop: 3 }}>
+                    {isTotalOver ? 'excedido' : totalBudget > 0 ? 'disponível' : 'gasto'}
+                  </div>
+                </div>
+                <div className="m-bmc-row">
+                  <div className="m-bmc-col">
+                    <span className="m-bmc-col-val"><CountUp value={totalBudget} />€</span>
+                    <span className="m-bmc-col-label">Orçamento</span>
+                  </div>
+                  <div className="m-bmc-sep" />
+                  <div className="m-bmc-col">
+                    <span className="m-bmc-col-val" style={{ color: isTotalOver ? 'var(--cosmos-expense)' : undefined }}>
+                      <CountUp value={totalSpent} />€
+                    </span>
+                    <span className="m-bmc-col-label">Gasto</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="m-bmc-row">
-              <div className="m-bmc-col">
-                <span className="m-bmc-col-val"><CountUp value={totalBudget} />€</span>
-                <span className="m-bmc-col-label">Orçamento</span>
-              </div>
-              <div className="m-bmc-sep" />
-              <div className="m-bmc-col">
-                <span className="m-bmc-col-val" style={{ color: isTotalOver ? 'var(--cosmos-expense)' : undefined }}>
-                  <CountUp value={totalSpent} />€
-                </span>
-                <span className="m-bmc-col-label">Gasto</span>
-              </div>
-            </div>
-            {totalBudget > 0 && (
-              <div className="m-bmc-bar-bg">
-                <div className="m-bmc-bar-fill" style={{ width: animated ? `${totalPct}%` : '0%', background: barColor, boxShadow: animated ? `0 0 12px ${STATUS(totalPct).glow}` : 'none' }} />
-              </div>
-            )}
           </div>
         );
       })()}

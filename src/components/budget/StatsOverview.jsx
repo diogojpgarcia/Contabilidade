@@ -4,6 +4,7 @@
  * Renders: main balance card + sparkline chart + top categories + financial score + insights.
  */
 import React from 'react';
+import BarChart from '../charts/BarChart';
 
 const CAT_COLORS = ['var(--cosmos-accent)', 'var(--cosmos-income)', 'var(--cosmos-warning)', 'var(--cosmos-expense)', '#8B5CF6'];
 
@@ -27,7 +28,6 @@ const StatsOverview = ({
 }) => {
   const pct      = monthIncome > 0 ? Math.min((monthExpenses / monthIncome) * 100, 100) : 0;
   const barColor = pct >= 90 ? 'var(--cosmos-expense)' : pct >= 70 ? 'var(--cosmos-warning)' : 'var(--cosmos-accent)';
-  const maxValG  = Math.max(...(monthlyData || []).map(m => Math.max(m.income, m.expenses)), 1);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -75,70 +75,9 @@ const StatsOverview = ({
           </div>
         </div>
 
-        {/* Category filter labels */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px', height: '32px', flexWrap: 'nowrap', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', gap: '6px', flex: 1, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', touchAction: 'pan-x', opacity: selectedCategories.length > 0 ? 1 : 0, transition: 'opacity 0.15s ease', paddingBottom: '2px' }}>
-              {selectedCategories.map(cat => {
-                const idx   = categoryData.findIndex(c => c.category === cat);
-                const color = CAT_COLORS[idx % 5] || 'var(--cosmos-accent)';
-                return (
-                  <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: `${color}18`, borderRadius: '12px', padding: '2px 8px', flexShrink: 0 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
-                    <span style={{ fontSize: '11px', color: color, whiteSpace: 'nowrap' }}>{cat}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <button onClick={() => setSelectedCategories([])} style={{ fontSize: '11px', color: 'var(--cosmos-text-3)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, paddingLeft: '8px', opacity: selectedCategories.length > 0 ? 1 : 0, pointerEvents: selectedCategories.length > 0 ? 'auto' : 'none', transition: 'opacity 0.15s ease' }}>
-              Limpar ×
-            </button>
-          </div>
-
-          {/* SVG chart — category-filtered or global */}
-          {selectedCategories.length > 0 ? (() => {
-            const maxCat = Math.max(...selectedCategories.flatMap(cat => getCategoryMonthlyData(cat).map(d => d.amount)), 1);
-            return (
-              <svg width="100%" height={72} viewBox="0 0 340 72" preserveAspectRatio="none" style={{ display: 'block' }}>
-                <defs>
-                  {selectedCategories.map((cat, ci) => {
-                    const idx   = categoryData.findIndex(c => c.category === cat);
-                    const color = CAT_COLORS[idx % 5] || 'var(--cosmos-accent)';
-                    return <linearGradient key={cat} id={`catGrad${ci}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.2" /><stop offset="100%" stopColor={color} stopOpacity="0" /></linearGradient>;
-                  })}
-                </defs>
-                {selectedCategories.map((cat, ci) => {
-                  const idx   = categoryData.findIndex(c => c.category === cat);
-                  const color = CAT_COLORS[idx % 5] || 'var(--cosmos-accent)';
-                  const pts   = getCategoryMonthlyData(cat).map((d, i) => ({ x: (i / 5) * 340, y: 68 - (d.amount / maxCat) * 60 }));
-                  const area  = `M${pts[0].x},${pts[0].y} ` + pts.slice(1).map(p => `L${p.x},${p.y}`).join(' ') + ` L340,68 L0,68 Z`;
-                  return (
-                    <g key={cat}>
-                      <path d={area} fill={`url(#catGrad${ci})`} />
-                      <polyline points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3" fill={color} />
-                    </g>
-                  );
-                })}
-              </svg>
-            );
-          })() : (
-            <svg width="100%" height={72} viewBox="0 0 340 72" preserveAspectRatio="none" style={{ display: 'block' }}>
-              <defs>
-                <linearGradient id="incGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--cosmos-income)" stopOpacity="0.25" /><stop offset="100%" stopColor="var(--cosmos-income)" stopOpacity="0" /></linearGradient>
-                <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--cosmos-expense)" stopOpacity="0.2" /><stop offset="100%" stopColor="var(--cosmos-expense)" stopOpacity="0" /></linearGradient>
-              </defs>
-              <path d={`M0,${68-(monthlyData[0].income/maxValG)*60} ` + monthlyData.map((d,i) => `L${(i/5)*340},${68-(d.income/maxValG)*60}`).join(' ') + ' L340,68 L0,68 Z'} fill="url(#incGrad)" />
-              <path d={`M0,${68-(monthlyData[0].expenses/maxValG)*60} ` + monthlyData.map((d,i) => `L${(i/5)*340},${68-(d.expenses/maxValG)*60}`).join(' ') + ' L340,68 L0,68 Z'} fill="url(#expGrad)" />
-              <polyline points={monthlyData.map((d,i) => `${(i/5)*340},${68-(d.income/maxValG)*60}`).join(' ')} fill="none" stroke="var(--cosmos-income)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <polyline points={monthlyData.map((d,i) => `${(i/5)*340},${68-(d.expenses/maxValG)*60}`).join(' ')} fill="none" stroke="var(--cosmos-expense)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-
-          {/* Month labels */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 16px 14px' }}>
-            {monthlyData.map((d, i) => <span key={i} style={{ fontSize: '10px', color: 'var(--cosmos-text-3)' }}>{d.month}</span>)}
-          </div>
+        {/* Animated bar chart */}
+        <div style={{ padding: '0 12px 12px' }}>
+          <BarChart data={monthlyData} height={100} />
         </div>
       </div>
 
