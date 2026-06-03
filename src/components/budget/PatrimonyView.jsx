@@ -745,11 +745,11 @@ const PatrimonyView = ({
             {item.name && <span className="pat-asset-fullname">{item.name}</span>}
             <span className="pat-stock-sub">
               {isRefreshing ? (
-                <span className="pat-stock-loading">A atualizar…</span>
+                <span className="skeleton skeleton-price" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
               ) : hasPrice ? (
                 <>{isStock ? fmtStockPrice(marketPrice) : fmtCryptoPrice(marketPrice)}€/{priceLabel} · {age}</>
               ) : (
-                <span style={{ color: 'var(--text-tertiary)' }}>A aguardar cotação…</span>
+                <span className="skeleton skeleton-price" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
               )}
             </span>
             {(item.broker || item.exchange) && (
@@ -757,7 +757,10 @@ const PatrimonyView = ({
             )}
           </div>
           <div className="pat-stock-right">
-            <span className="pat-cat-item-val">{fmtFiat(marketVal)}€</span>
+            {isRefreshing
+              ? <span className="skeleton" style={{ display: 'inline-block', width: 64, height: '1.1em', borderRadius: 4 }} />
+              : <span className="pat-cat-item-val">{fmtFiat(marketVal)}€</span>
+            }
             <span className="pat-stock-qty">{qty} {qtyLabel}</span>
           </div>
         </div>

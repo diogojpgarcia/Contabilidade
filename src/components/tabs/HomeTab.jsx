@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { Plus, ArrowLeftRight, RefreshCw, TrendingUp, ChevronRight } from 'lucide-react';
+import { Plus, ArrowLeftRight, TrendingUp, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { getUpcomingPayments, relativeDueDate, safeNum, isConfirmedForMonth, getRecurringMonthKey } from '../../utils/recurringPayments';
 import { generateInsights } from '../../utils/insights';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
+import CountUp from '../budget/CountUp';
 import '../home/Home.css';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -34,8 +35,8 @@ function getCycleDay(useFinancial, startDay) {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-const Section = ({ children, style }) => (
-  <div style={{ padding: '0 16px', marginBottom: 12, ...style }}>{children}</div>
+const Section = ({ children, style, className }) => (
+  <div className={className} style={{ padding: '0 16px', marginBottom: 12, ...style }}>{children}</div>
 );
 
 const SectionHeader = ({ title, action, onAction }) => (
@@ -162,7 +163,7 @@ const HomeTab = ({
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontSize: 42, fontWeight: 700, color: 'var(--cosmos-text-1)', letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              {fmt(patrimonyTotal)}
+              <CountUp value={patrimonyTotal} decimals={2} />
             </span>
             <span style={{ fontSize: 20, fontWeight: 400, color: 'var(--cosmos-text-3)', letterSpacing: '-0.01em' }}>€</span>
           </div>
@@ -193,7 +194,7 @@ const HomeTab = ({
       </div>
 
       {/* ── 2. QUICK ACTIONS ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, padding: '14px 16px' }}>
+      <div className="card-anim" style={{ '--delay': '60ms', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, padding: '14px 16px' }}>
         {[
           { icon: <Plus size={18} strokeWidth={2} />, label: 'Despesa', color: 'var(--cosmos-expense)', bg: 'var(--cosmos-expense-dim)', action: () => onNavigate?.('add') },
           { icon: <Plus size={18} strokeWidth={2} />, label: 'Receita', color: 'var(--cosmos-income)', bg: 'var(--cosmos-income-dim)', action: () => onNavigate?.('add', { mode: 'income' }) },
@@ -221,7 +222,7 @@ const HomeTab = ({
 
       {/* ── 3. BUDGET DO MÊS ── */}
       {budgetStatus.hasData && (
-        <Section>
+        <Section className="card-anim" style={{ '--delay': '120ms' }}>
           <SectionHeader title="Orçamento do mês" action="Gerir" onAction={() => onNavigate?.('budget')} />
           <Card onClick={() => onNavigate?.('budget')}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
@@ -260,7 +261,7 @@ const HomeTab = ({
 
       {/* ── 4. PRÓXIMAS CONTAS ── */}
       {upcoming.length > 0 && (
-        <Section>
+        <Section className="card-anim" style={{ '--delay': '180ms' }}>
           <SectionHeader title="Próximas contas" action="Ver todas" onAction={() => onNavigate?.('budget', { view: 'recurring' })} />
           <Card style={{ padding: 0 }}>
             {upcoming.map((p, idx) => {
@@ -306,7 +307,7 @@ const HomeTab = ({
 
       {/* ── 5. KEY INSIGHT ── */}
       {keyInsight && (
-        <Section>
+        <Section className="card-anim" style={{ '--delay': '240ms' }}>
           <SectionHeader title="Insight do mês" action="Ver análise" onAction={() => onNavigate?.('stats')} />
           <Card onClick={() => onNavigate?.('stats')} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>{keyInsight.icon || '💡'}</span>
