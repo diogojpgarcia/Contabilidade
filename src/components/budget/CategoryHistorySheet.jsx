@@ -1,53 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getCategoryMeta } from '../../utils/categoryIcons';
 import { STATUS } from '../../utils/budgetUtils';
 
-const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sortedItems, animated: budgetAnimated, isVisible, onClose }) => {
-  const [txVisible, setTxVisible] = useState([]);
+const CategoryHistorySheet = ({
+  catId, categories, txByCategory, budgets, sortedItems,
+  animated: budgetAnimated, isVisible, onClose,
+  onLimitChange, onSave,
+}) => {
+  const [txVisible,    setTxVisible]    = useState([]);
+  const [editingLimit, setEditingLimit] = useState(false);
+  const [limitDraft,   setLimitDraft]   = useState('');
+  const inputRef = useRef(null);
 
   const catData = catId ? sortedItems.find(i => i.cat.id === catId) : null;
-  const txs = catId ? (txByCategory[catId] || []) : [];
-  const { Icon: CatIcon, color: catColor } = catData ? getCategoryMeta(catData.cat.label) : { Icon: () => null, color: '#475569' };
-  const st = catData ? STATUS(catData.percent) : STATUS(0);
+  const txs     = catId ? (txByCategory[catId] || []) : [];
+  const { Icon: CatIcon, color: catColor } = catData
+    ? getCategoryMeta(catData.cat.label)
+    : { Icon: () => null, color: '#475569' };
+  const st        = catData ? STATUS(catData.percent) : STATUS(0);
+  const remaining = catData ? catData.limit - catData.spent : 0;
+  const isOver    = catData && catData.percent >= 100;
 
-  // Lock body scroll while sheet is open (prevents background scroll bleed-through)
+  // Lock body scroll while open
   useEffect(() => {
-    if (isVisible) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
+    document.body.style.overflow   = isVisible ? 'hidden' : '';
+    document.body.style.touchAction = isVisible ? 'none'   : '';
+    return () => { document.body.style.overflow = ''; document.body.style.touchAction = ''; };
   }, [isVisible]);
 
+  // Stagger transactions on open
   useEffect(() => {
-    if (!isVisible) { setTxVisible([]); return; }
+    if (!isVisible) { setTxVisible([]); setEditingLimit(false); return; }
     setTxVisible([]);
-    txs.forEach((_, i) => {
-      setTimeout(() => setTxVisible(prev => [...prev, i]), 180 + i * 55);
-    });
+    txs.forEach((_, i) => setTimeout(() => setTxVisible(p => [...p, i]), 180 + i * 55));
   }, [isVisible, catId]);
+
+  // Focus input when editing
+  useEffect(() => {
+    if (editingLimit) setTimeout(() => inputRef.current?.focus(), 80);
+  }, [editingLimit]);
+
+  const handleStartEdit = () => {
+    setLimitDraft(catData?.limit > 0 ? catData.limit.toFixed(2) : '');
+    setEditingLimit(true);
+  };
+
+  const handleSave = () => {
+    if (!catData) return;
+    const val = parseFloat(limitDraft) || 0;
+    onLimitChange?.(catData.cat.id, val);
+    setTimeout(() => { onSave?.(); }, 30);
+    setEditingLimit(false);
+  };
 
   if (!catId) return null;
 
-  const remaining = catData ? catData.limit - catData.spent : 0;
-  const isOver = catData && catData.percent >= 100;
-
   return (
     <>
-      <div
-        className={`m-sheet-backdrop${isVisible ? ' open' : ''}`}
-        onClick={onClose}
-      />
+      <div className={`m-sheet-backdrop${isVisible ? ' open' : ''}`} onClick={onClose} />
       <div className={`m-sheet${isVisible ? ' open' : ''}`}>
         <div className="m-sheet-handle" />
+
+        {/* Header */}
         <div className="m-sheet-header">
-          <div className="m-sheet-ico" style={{ background: catColor + '1A' }}>
+          <div className="m-sheet-ico" style={{ background: catColor + '22' }}>
             <CatIcon size={18} color={catColor} strokeWidth={1.75} />
           </div>
           <div className="m-sheet-hdr-info">
@@ -57,27 +73,64 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
           <button className="m-sheet-close" onClick={onClose}>✕</button>
         </div>
 
+        {/* Stats row */}
         <div className="m-sheet-stats">
+          {/* Gasto */}
           <div className="m-sheet-stat">
             <div className="m-sheet-stat-lbl">Gasto</div>
-            <div className="m-sheet-stat-val" style={{ color: isOver ? '#F87171' : '#E2E8F0' }}>
+            <div className="m-sheet-stat-val" style={{ color: isOver ? 'var(--cosmos-expense)' : 'var(--cosmos-text-1)' }}>
               {catData ? catData.spent.toFixed(2) : 0}€
             </div>
           </div>
-          <div className="m-sheet-stat">
-            <div className="m-sheet-stat-lbl">Orçamento</div>
-            <div className="m-sheet-stat-val" style={{ color: 'var(--cosmos-accent)' }}>
-              {catData && catData.limit > 0 ? catData.limit.toFixed(2) : '—'}€
-            </div>
+
+          {/* Orçamento — tappable to edit */}
+          <div className="m-sheet-stat" style={{ cursor: 'pointer' }} onClick={handleStartEdit}>
+            {editingLimit ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <input
+                  ref={inputRef}
+                  type="number"
+                  inputMode="decimal"
+                  value={limitDraft}
+                  onChange={e => setLimitDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { handleSave(); e.target.blur(); } if (e.key === 'Escape') setEditingLimit(false); }}
+                  onBlur={handleSave}
+                  style={{
+                    width: 80, fontSize: 17, fontWeight: 700,
+                    background: 'var(--cosmos-surface-2)',
+                    border: '1.5px solid var(--cosmos-accent)',
+                    borderRadius: 8, color: 'var(--cosmos-accent)',
+                    padding: '3px 6px', outline: 'none',
+                    textAlign: 'center',
+                  }}
+                />
+                <span style={{ fontSize: 13, color: 'var(--cosmos-text-3)' }}>€</span>
+              </div>
+            ) : (
+              <>
+                <div className="m-sheet-stat-lbl">
+                  Orçamento
+                  <span style={{ fontSize: 9, color: 'var(--cosmos-accent)', marginLeft: 4, verticalAlign: 'middle' }}>✎</span>
+                </div>
+                <div className="m-sheet-stat-val" style={{ color: 'var(--cosmos-accent)' }}>
+                  {catData && catData.limit > 0 ? catData.limit.toFixed(2) : '—'}€
+                </div>
+              </>
+            )}
           </div>
+
+          {/* Restante */}
           <div className="m-sheet-stat">
             <div className="m-sheet-stat-lbl">Restante</div>
-            <div className="m-sheet-stat-val" style={{ color: remaining >= 0 ? '#4ADE80' : '#F87171' }}>
-              {catData && catData.limit > 0 ? `${remaining >= 0 ? '' : '−'}${Math.abs(remaining).toFixed(2)}€` : '—'}
+            <div className="m-sheet-stat-val" style={{ color: remaining >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)' }}>
+              {catData && catData.limit > 0
+                ? `${remaining >= 0 ? '' : '−'}${Math.abs(remaining).toFixed(2)}€`
+                : '—'}
             </div>
           </div>
         </div>
 
+        {/* Progress bar */}
         {catData && catData.limit > 0 && (
           <div className="m-sheet-prog-wrap">
             <div className="m-sheet-prog-row">
@@ -99,6 +152,24 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
           </div>
         )}
 
+        {/* No limit set — prompt to define */}
+        {catData && catData.limit === 0 && !editingLimit && (
+          <button
+            onClick={handleStartEdit}
+            style={{
+              margin: '0 16px 12px', padding: '10px 16px',
+              background: 'var(--cosmos-accent-dim)',
+              border: '1px solid var(--cosmos-accent-border)',
+              borderRadius: 12, cursor: 'pointer', width: 'calc(100% - 32px)',
+              fontSize: 13, fontWeight: 600, color: 'var(--cosmos-accent)',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            + Definir limite de orçamento
+          </button>
+        )}
+
+        {/* Transaction list */}
         <div className="m-sheet-txs-label">Histórico do mês</div>
         <div className="m-sheet-txs-list">
           {txs.length === 0 ? (
@@ -109,7 +180,7 @@ const CategoryHistorySheet = ({ catId, categories, txByCategory, budgets, sorted
                 key={tx.id || i}
                 className="m-sheet-tx-row"
                 style={{
-                  opacity: txVisible.includes(i) ? 1 : 0,
+                  opacity:   txVisible.includes(i) ? 1 : 0,
                   transform: txVisible.includes(i) ? 'translateY(0)' : 'translateY(10px)',
                   transition: 'opacity 0.25s ease, transform 0.25s ease',
                 }}

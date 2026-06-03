@@ -280,6 +280,8 @@ const BudgetsView = ({
         animated={animated}
         isVisible={sheetVisible}
         onClose={closeCategorySheet}
+        onLimitChange={handleLimitChange}
+        onSave={() => saveBudgetToDb()}
       />
     </>
   );
