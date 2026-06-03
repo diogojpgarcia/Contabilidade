@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Clock, SlidersHorizontal, Search, BarChart2 } from 'lucide-react';
+import { Clock, SlidersHorizontal, Search, BarChart2 } from 'lucide-react'; // v2
 import { useAppContext } from '../../context/AppContext';
 import CategoryPicker from '../CategoryPicker.jsx';
 import FintechTransactionCard from '../FintechTransactionCard';
