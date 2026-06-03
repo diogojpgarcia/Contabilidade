@@ -17,6 +17,12 @@ import { useState, useRef, useEffect } from 'react';
 export function useForm(initialData) {
   const [draft, setDraft] = useState(initialData);
 
+  // Ref always holds the latest draft — avoids stale-closure bug in save().
+  // Without this, calling save() immediately after setField() (e.g. onBlur after
+  // onChange) would pass the pre-change draft to the callback because React
+  // batches state updates and the closure captures the old value.
+  const draftRef = useRef(draft);
+
   // Guard: only initialise once so a new object reference on a re-render
   // (e.g. derived/spread props) does NOT wipe the user's in-progress draft.
   const initialized = useRef(false);
@@ -24,18 +30,23 @@ export function useForm(initialData) {
   useEffect(() => {
     if (!initialized.current) {
       setDraft(initialData);
+      draftRef.current = initialData;
       initialized.current = true;
     }
   }, [initialData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Update one key — safe to call directly from onChange */
   function setField(key, value) {
-    setDraft(prev => ({ ...prev, [key]: value }));
+    setDraft(prev => {
+      const next = { ...prev, [key]: value };
+      draftRef.current = next; // keep ref in sync immediately (before re-render)
+      return next;
+    });
   }
 
-  /** Persist: calls onSave(draft). No DB/global state here. */
+  /** Persist: calls onSave(draft). Uses ref to always get the latest value. */
   function save(onSave) {
-    onSave(draft);
+    onSave(draftRef.current);
   }
 
   /**
@@ -44,6 +55,7 @@ export function useForm(initialData) {
    */
   function reset(data) {
     setDraft(data);
+    draftRef.current = data;
   }
 
   return { draft, setField, save, reset };
