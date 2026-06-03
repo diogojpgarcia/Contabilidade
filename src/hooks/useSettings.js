@@ -33,7 +33,7 @@ function applyPaletteToDOM(palette) {
  *
  * Inclui:
  *  - Estado: patrimony, budgets, goals, recurring, confirmedRecurring,
- *            colorPalette, mainAccountId, financialMonth*, homePatrimonyView,
+ *            colorPalette, mainAccountId, financialMonth*,
  *            financialFocus, currentMonth
  *  - loadUserData(): fetch atómico de transações + settings (elimina race conditions)
  *  - Handlers para cada setting
@@ -47,7 +47,6 @@ export function useSettings(currentUser, txHook) {
   const [patrimony, setPatrimony] = useState({
     accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [],
   });
-  const [homePatrimonyView, setHomePatrimonyView] = useState('total');
   const [budgets, setBudgets] = useState({});
   const [colorPalette, setColorPaletteState] = useState(
     () => localStorage.getItem('cosmos-palette') || 'midnight'
@@ -111,7 +110,6 @@ export function useSettings(currentUser, txHook) {
 
       // Aplicar settings
       if (settings?.patrimony)        setPatrimony(settings.patrimony);
-      if (settings?.homePatrimonyView) setHomePatrimonyView(settings.homePatrimonyView);
       if (settings?.category_budgets) setBudgets(settings.category_budgets);
       if (settings?.financial_focus)  setFinancialFocus(settings.financial_focus);
       if (Array.isArray(settings?.goals)) setGoals(settings.goals);
@@ -181,16 +179,6 @@ export function useSettings(currentUser, txHook) {
     } catch (error) {
       console.error('Error saving patrimony:', error);
       toast.error('Erro ao guardar património.');
-    }
-  };
-
-  const handlePatrimonyViewChange = async (view) => {
-    setHomePatrimonyView(view);
-    try {
-      await dbService.updateUserSettings(currentUser.id, { homePatrimonyView: view });
-    } catch (error) {
-      console.error('Error saving patrimony view:', error);
-      toast.error('Erro ao guardar preferência de vista.');
     }
   };
 
@@ -350,7 +338,6 @@ export function useSettings(currentUser, txHook) {
   return {
     // Estado
     patrimony, setPatrimony,
-    homePatrimonyView,
     budgets,
     goals,
     migrationPending,
@@ -368,7 +355,6 @@ export function useSettings(currentUser, txHook) {
     resetForLogout,
     // Handlers
     handlePatrimonyChange,
-    handlePatrimonyViewChange,
     handleMainAccountChange,
     handleMigrateConfirm,
     handleMigrateDismiss,

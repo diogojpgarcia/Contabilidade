@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from '../../hooks/useForm';
+import { usePatrimonyPrices } from '../../hooks/usePatrimonyPrices';
 import Overlay from '../Overlay';
 import SwipeRevealCard from '../SwipeRevealCard';
 import { searchAssets } from '../../utils/searchAssets';
 import {
-  fetchStockQuoteBatch, fetchCryptoTwelveData, fetchStockHistory,
-  fetchCryptoHistoryBatch, fetchStockSearch, formatAge,
-  HAS_STOCK_KEY, CACHE_TTL, CRYPTO_CACHE_TTL, HISTORY_TTL, isStale, isStaleCrypto,
+  fetchStockSearch, formatAge,
+  HAS_STOCK_KEY,
 } from '../../utils/assetPrice';
 import {
-  BOND_SERIES_INFO, fetchEuribor3M, calcSerieERate,
+  BOND_SERIES_INFO, calcSerieERate,
   calcBondValue, calcAccruedInterest, formatBondAge,
 } from '../../utils/certificadoAforro';
 import { shiftMonth } from '../../utils/insights';
@@ -57,8 +57,6 @@ const PatrimonyView = ({
   const [showPatrimonyModal,  setShowPatrimonyModal]  = useState(false);
   const [patrimonyFormType,   setPatrimonyFormType]   = useState(null);
   const [editingAssetId,      setEditingAssetId]      = useState(null);
-  const [refreshingTickers,   setRefreshingTickers]   = useState(new Set());
-  const [assetHistory,        setAssetHistory]        = useState({});
   const [stockSearchQuery,    setStockSearchQuery]    = useState('');
   const [stockConfirmed,      setStockConfirmed]      = useState(false);
   const [etfSearchQuery,      setEtfSearchQuery]      = useState('');
@@ -69,18 +67,14 @@ const PatrimonyView = ({
   const [cryptoConfirmed,     setCryptoConfirmed]     = useState(false);
   const [stockApiResults,     setStockApiResults]     = useState([]);
   const [stockApiLoading,     setStockApiLoading]     = useState(false);
-  const [livePrices,          setLivePrices]          = useState({});
   const [detailAsset,         setDetailAsset]         = useState(null); // { item, assetKey }
-  const [euribor3M,           setEuribor3M]           = useState(null); // taxa Euribor 3M atual (%)
 
-  const patrimonyRef         = useRef(externalPatrimony);
-  const onPatrimonyChangeRef = useRef(onPatrimonyChange);
-  const triggerRefreshRef    = useRef(null); // allows re-triggering refresh from outside the interval effect
+  // Live prices, sparklines, euribor — managed by dedicated hook
+  const { livePrices, assetHistory, refreshingTickers, euribor3M } =
+    usePatrimonyPrices(externalPatrimony, onPatrimonyChange);
+
   const stockSearchTimerRef  = useRef(null);
   const etfSearchTimerRef    = useRef(null);
-
-  useEffect(() => { patrimonyRef.current = externalPatrimony; },  [externalPatrimony]);
-  useEffect(() => { onPatrimonyChangeRef.current = onPatrimonyChange; }, [onPatrimonyChange]);
 
   const patrimony = externalPatrimony || EMPTY_PATRIMONY;
 
@@ -119,158 +113,6 @@ const PatrimonyView = ({
     }, 350);
     return () => { if (etfSearchTimerRef.current) clearTimeout(etfSearchTimerRef.current); };
   }, [etfSearchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Live asset prices ──────────────────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
-
-    const runRefresh = async () => {
-      const current = patrimonyRef.current;
-      if (!current) return;
-
-      const stocks  = current.stocks  ?? [];
-      const etfs    = current.etfs    ?? [];
-      const cryptos = current.crypto  ?? [];
-      const now     = new Date().toISOString();
-
-      // Stocks/ETFs: use CACHE_TTL (8min) to stay within 800 credits/day
-      const staleStocks = HAS_STOCK_KEY
-        ? stocks.filter(s => s.ticker && isStale(s.lastUpdated))
-        : [];
-      const staleEtfs = HAS_STOCK_KEY
-        ? etfs.filter(e => e.ticker && isStale(e.lastUpdated))
-        : [];
-      // Crypto: use CRYPTO_CACHE_TTL (2min) — CoinGecko is free/generous
-      const staleCoins = cryptos.filter(c => c.coin && isStaleCrypto(c.lastUpdated));
-      const allStaleEquities = [...staleStocks, ...staleEtfs];
-
-      if (allStaleEquities.length === 0 && staleCoins.length === 0) return;
-
-      setRefreshingTickers(new Set([
-        ...allStaleEquities.map(s => s.ticker),
-        ...staleCoins.map(c => normCoin(c.coin)),
-      ]));
-
-      // ONE batch call for all stocks/ETFs (1 HTTP round-trip) + crypto in parallel
-      const [stockPrices, cryptoPrices] = await Promise.all([
-        fetchStockQuoteBatch(allStaleEquities.map(s => s.ticker)),
-        fetchCryptoTwelveData(staleCoins.map(c => normCoin(c.coin))),
-      ]);
-
-      if (cancelled) return;
-
-      const priceUpdates = {};
-
-      allStaleEquities.forEach(s => {
-        const data = stockPrices[s.ticker];
-        if (data?.price != null) {
-          priceUpdates[s.ticker] = {
-            price:       data.price,
-            changePct:   data.changePct ?? null,
-            lastUpdated: now,
-          };
-        }
-      });
-
-      staleCoins.forEach(c => {
-        const coinKey = normCoin(c.coin);
-        const data    = cryptoPrices[coinKey];
-        if (data?.price != null) {
-          priceUpdates[coinKey] = {
-            price:        data.price,
-            changePct24h: data.changePct24h ?? null,
-            lastUpdated:  now,
-          };
-        }
-      });
-
-
-      if (Object.keys(priceUpdates).length === 0) {
-        setRefreshingTickers(new Set());
-        return;
-      }
-
-      setLivePrices(prev => ({ ...prev, ...priceUpdates }));
-
-      const updatedStocks = stocks.map(s => {
-        const p = priceUpdates[s.ticker];
-        return p ? { ...s, lastPrice: p.price, changePct: p.changePct, lastUpdated: now } : s;
-      });
-      const updatedEtfs = etfs.map(e => {
-        const p = priceUpdates[e.ticker];
-        return p ? { ...e, lastPrice: p.price, changePct: p.changePct, lastUpdated: now } : e;
-      });
-      const updatedCrypto = cryptos.map(c => {
-        const p = priceUpdates[normCoin(c.coin)];
-        return p ? { ...c, lastPrice: p.price, change24h: p.changePct24h, lastUpdated: now } : c;
-      });
-      onPatrimonyChangeRef.current?.({ ...current, stocks: updatedStocks, etfs: updatedEtfs, crypto: updatedCrypto });
-
-      setRefreshingTickers(new Set());
-    };
-
-    triggerRefreshRef.current = runRefresh;
-    runRefresh();
-    // Poll at the shortest TTL so crypto (2min) refreshes on time;
-    // isStale / isStaleCrypto guards inside runRefresh prevent unnecessary API calls.
-    const interval = setInterval(runRefresh, CRYPTO_CACHE_TTL);
-    return () => { cancelled = true; triggerRefreshRef.current = null; clearInterval(interval); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Re-trigger price fetch when patrimony loads from Supabase (fixes race condition
-  // where initial runRefresh fires before etfs/stocks are populated in the ref).
-  useEffect(() => {
-    triggerRefreshRef.current?.();
-  }, [externalPatrimony]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── 7-day price history for sparklines ────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchHistories = async () => {
-      const current = patrimonyRef.current;
-      if (!current) return;
-      const stocks   = (current.stocks  ?? []).filter(s => s.ticker);
-      const etfs     = (current.etfs    ?? []).filter(e => e.ticker);
-      const cryptos  = (current.crypto  ?? []).filter(c => c.coin);
-      const equities = [...stocks, ...etfs];
-      if (equities.length === 0 && cryptos.length === 0) return;
-
-      const [stockResults, cryptoHistories] = await Promise.all([
-        Promise.allSettled(
-          equities.map(s => fetchStockHistory(s.ticker).then(prices => ({ ticker: s.ticker, prices })))
-        ),
-        fetchCryptoHistoryBatch(cryptos.map(c => normCoin(c.coin))),
-      ]);
-      if (cancelled) return;
-
-      const next = {};
-      for (const r of stockResults) {
-        if (r.status === 'fulfilled' && r.value?.prices) next[r.value.ticker] = r.value.prices;
-      }
-      Object.assign(next, cryptoHistories);
-      if (Object.keys(next).length > 0) setAssetHistory(prev => ({ ...prev, ...next }));
-    };
-
-    fetchHistories();
-    const id = setInterval(fetchHistories, HISTORY_TTL);
-    return () => { cancelled = true; clearInterval(id); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Taxa Euribor 3M para Certificados de Aforro Série E ───────────────────
-  useEffect(() => {
-    let cancelled = false;
-    const EURIBOR_TTL_MS = 24 * 60 * 60_000; // 24h — ECB publica uma vez por dia
-
-    const refresh = async () => {
-      const rate = await fetchEuribor3M();
-      if (!cancelled && rate !== null) setEuribor3M(rate);
-    };
-
-    refresh();
-    const id = setInterval(refresh, EURIBOR_TTL_MS);
-    return () => { cancelled = true; clearInterval(id); };
-  }, []);
 
   // Wrapper local — usa a função partilhada de budgetUtils com as transações da prop.
   const computeAccountBalanceLocal = (acc) => computeAccountBalance(acc, transactions);

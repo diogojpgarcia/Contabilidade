@@ -17,8 +17,7 @@ export const formatMonthLabel = (yyyymm, startDay = 1) => {
   return getFinancialMonthLabel(yyyymm, startDay);
 };
 
-// Re-export from financialMonth so callers that import from insights still work.
-// startDay param is now supported — pass it from BudgetTab / StatsTab.
+// Re-export so callers that import getPrediction from insights still work.
 export const getPrediction = (spent, selectedMonth, startDay = 1) =>
   _getPrediction(spent, selectedMonth, startDay);
 
@@ -334,97 +333,3 @@ export const computeFinancialScore = ({ transactions, budgets, categories, selec
   return { score, color, label };
 };
 
-// ── Smart Goals (auto-generated, max 3) ─────────────────────────────────────
-export const generateGoals = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
-  const prevMonth = shiftMonth(selectedMonth, -1);
-
-  const monthSpend = (catLabel, month) =>
-    transactions
-      .filter(t => t.type === 'expense' && t.category === catLabel && t.date && isInFinancialMonth(t.date, month, startDay))
-      .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-
-  const catTotals = categories.expense.map(cat => ({
-    cat,
-    current: monthSpend(cat.label, selectedMonth),
-    prev:    monthSpend(cat.label, prevMonth),
-  }));
-
-  const totalCurrent = catTotals.reduce((s, c) => s + c.current, 0);
-  const totalPrev    = catTotals.reduce((s, c) => s + c.prev, 0);
-  const monthIncome  = transactions
-    .filter(t => t.type === 'income' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay))
-    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-
-  const goal = (type, title, description, targetAmount, currentAmount) => {
-    // progress = "remaining room" for spending goals, "fill" for saving goals
-    const isSaving = type === 'saving';
-    const rawPct   = isSaving
-      ? Math.min(100, Math.round((currentAmount / targetAmount) * 100))
-      : Math.max(0,   Math.round((1 - currentAmount / targetAmount) * 100));
-    const progressPct = Math.max(0, rawPct);
-    const status = isSaving
-      ? (progressPct >= 100 ? 'done' : progressPct >= 50 ? 'on_track' : 'behind')
-      : (currentAmount <= targetAmount * 0.8 ? 'on_track' : currentAmount <= targetAmount ? 'risk' : 'behind');
-    const barColor = status === 'done' || status === 'on_track' ? '#4ade80'
-                   : status === 'risk' ? '#facc15' : '#f87171';
-    return { type, title, description, targetAmount, currentAmount, progressPct, status, barColor };
-  };
-
-  const goals = [];
-
-  // 1. Reduction: biggest category that grew vs last month
-  const biggestRiser = catTotals
-    .filter(c => c.prev > 10 && c.current > c.prev * 1.15)
-    .sort((a, b) => (b.current - b.prev) - (a.current - a.prev))[0];
-  if (biggestRiser) {
-    const target  = Math.round(biggestRiser.prev * 1.05);
-    const cutNeeded = Math.max(0, biggestRiser.current - target);
-    goals.push(goal(
-      'reduction',
-      `Reduzir ${fmt0(cutNeeded)}€ em ${biggestRiser.cat.label}`,
-      `Atual: ${fmt0(biggestRiser.current)}€ · Meta: ≤ ${fmt0(target)}€ este mês`,
-      target, biggestRiser.current,
-    ));
-  }
-
-  // 2. Saving: 10% of this month's income
-  if (monthIncome >= 50) {
-    const target  = Math.round(monthIncome * 0.10);
-    const savings = Math.max(0, monthIncome - totalCurrent);
-    goals.push(goal(
-      'saving',
-      `Poupar ${fmt0(target)}€ este mês`,
-      `Já poupaste ${fmt0(savings)}€ de ${fmt0(target)}€ (10% de ${fmt0(monthIncome)}€)`,
-      target, savings,
-    ));
-  }
-
-  // 3. Balance: reduce concentration if top category > 50%
-  if (totalCurrent > 20 && goals.length < 3) {
-    const topCat = catTotals.filter(c => c.current > 0).sort((a, b) => b.current - a.current)[0];
-    if (topCat && topCat.current / totalCurrent > 0.5) {
-      const target    = Math.round(totalCurrent * 0.40);
-      const cutNeeded = Math.max(0, topCat.current - target);
-      goals.push(goal(
-        'balance',
-        `Cortar ${fmt0(cutNeeded)}€ em ${topCat.cat.label}`,
-        `Atual: ${fmt0(topCat.current)}€ · Meta: ≤ ${fmt0(target)}€ (40% do total)`,
-        target, topCat.current,
-      ));
-    }
-  }
-
-  // 4. Improvement: overall spending 5% below last month (filler if < 2 goals)
-  if (totalPrev > 10 && goals.length < 2) {
-    const target    = Math.round(totalPrev * 0.95);
-    const cutNeeded = Math.max(0, totalCurrent - target);
-    goals.push(goal(
-      'improvement',
-      `Reduzir ${fmt0(cutNeeded > 0 ? cutNeeded : Math.round(totalPrev * 0.05))}€ no total`,
-      `Atual: ${fmt0(totalCurrent)}€ · Meta: ≤ ${fmt0(target)}€ (−5% vs mês passado)`,
-      target, totalCurrent,
-    ));
-  }
-
-  return goals.slice(0, 3);
-};
