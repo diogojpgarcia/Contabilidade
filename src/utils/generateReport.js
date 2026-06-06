@@ -573,35 +573,134 @@ export async function generateFinancialReport(opts) {
 
   // ── 7. ANÁLISE AI ──────────────────────────────────────────────────────────
   if (aiInsights) {
-    let nAi=3;
-    if (monthlyData.length>=2) nAi++;
-    if (topCategories.length>0) nAi++;
-    if (patItems.length>0) nAi++;
-    if (vis.length>0) nAi++;
     y = safe(y,50);
     y = section(y,'✦','Análise de Inteligência Artificial','gerado pelo Claude');
 
-    // Summary banner
+    // ── Summary banner ─────────────────────────────────────────────────────
     if (aiInsights.summary) {
-      card(M,y,W,12,C.brand,C.brand);
+      card(M,y,W,13,C.brand,C.brand);
       _doc.setFont('helvetica','bold'); _doc.setFontSize(9);
       _doc.setTextColor(...C.white);
-      const sl=_doc.splitTextToSize(aiInsights.summary,W-8);
-      _doc.text(sl, M+4, y+7.5);
-      y+=16;
+      const sl=_doc.splitTextToSize(aiInsights.summary,W-10);
+      _doc.text(sl, M+5, y+8.5);
+      y+=17;
     }
 
-    // Narrative
+    // ── Narrative ──────────────────────────────────────────────────────────
     if (aiInsights.narrative) {
-      y=safe(y,20);
+      y=safe(y,16);
       _doc.setFont('helvetica','normal'); _doc.setFontSize(8.5);
       _doc.setTextColor(...C.text1);
       const nl=_doc.splitTextToSize(aiInsights.narrative,W);
       _doc.text(nl,M,y);
-      y+=nl.length*4.2+5;
+      y+=nl.length*4.2+6;
     }
 
-    // Recommendations
+    // ── Deep analysis ──────────────────────────────────────────────────────
+    if (aiInsights.detailedAnalysis) {
+      y=safe(y,20);
+      const dal=_doc.splitTextToSize(aiInsights.detailedAnalysis, W-8);
+      const dah=dal.length*3.8+10;
+      card(M,y,W,dah,C.neutralLight,C.cardBorder);
+      _doc.setFillColor(...C.neutral);
+      _doc.rect(M,y,2.5,dah,'F');
+      _doc.setFont('helvetica','bold'); _doc.setFontSize(7);
+      _doc.setTextColor(...C.text3);
+      _doc.text('ANÁLISE DETALHADA', M+6, y+5.5);
+      _doc.setFont('helvetica','normal'); _doc.setFontSize(8);
+      _doc.setTextColor(...C.text2);
+      _doc.text(dal, M+6, y+9.5);
+      y+=dah+5;
+    }
+
+    // ── Strengths & Concerns side by side ──────────────────────────────────
+    const hasStr = aiInsights.strengths?.length;
+    const hasCon = aiInsights.concerns?.length;
+    if (hasStr || hasCon) {
+      const colW = (W-4)/2;
+      // Left: Strengths
+      if (hasStr) {
+        const strLines = aiInsights.strengths.flatMap(s => _doc.splitTextToSize(`✓  ${s}`, colW-8));
+        const strH = strLines.length*3.6+12;
+        y=safe(y, strH+4);
+        card(M, y, colW, strH, C.incomeLight, C.income);
+        _doc.setFillColor(...C.income); _doc.rect(M,y,2.5,strH,'F');
+        _doc.setFont('helvetica','bold'); _doc.setFontSize(7);
+        _doc.setTextColor(...C.income);
+        _doc.text('PONTOS POSITIVOS', M+6, y+5.5);
+        _doc.setFont('helvetica','normal'); _doc.setFontSize(7.5);
+        _doc.setTextColor(...C.text2);
+        let sy=y+9.5;
+        aiInsights.strengths.forEach(s => {
+          const sl2=_doc.splitTextToSize(`✓  ${s}`, colW-8);
+          _doc.text(sl2,M+6,sy);
+          sy+=sl2.length*3.6+1;
+        });
+        // Right: Concerns
+        if (hasCon) {
+          const conLines = aiInsights.concerns.flatMap(c => _doc.splitTextToSize(`⚠  ${c}`, colW-8));
+          const conH = Math.max(strH, conLines.length*3.6+12);
+          card(M+colW+4, y, colW, conH, C.warningLight, C.warning);
+          _doc.setFillColor(...C.warning); _doc.rect(M+colW+4,y,2.5,conH,'F');
+          _doc.setFont('helvetica','bold'); _doc.setFontSize(7);
+          _doc.setTextColor(...C.warning);
+          _doc.text('A MONITORIZAR', M+colW+10, y+5.5);
+          _doc.setFont('helvetica','normal'); _doc.setFontSize(7.5);
+          _doc.setTextColor(...C.text2);
+          let cy=y+9.5;
+          aiInsights.concerns.forEach(c => {
+            const cl2=_doc.splitTextToSize(`⚠  ${c}`, colW-8);
+            _doc.text(cl2,M+colW+10,cy);
+            cy+=cl2.length*3.6+1;
+          });
+          y+=Math.max(strH, conH)+5;
+        } else {
+          y+=strH+5;
+        }
+      } else if (hasCon) {
+        // Only concerns, full width
+        const conLines = aiInsights.concerns.flatMap(c => _doc.splitTextToSize(`⚠  ${c}`, W-8));
+        const conH = conLines.length*3.6+12;
+        y=safe(y,conH+4);
+        card(M,y,W,conH,C.warningLight,C.warning);
+        _doc.setFillColor(...C.warning); _doc.rect(M,y,2.5,conH,'F');
+        _doc.setFont('helvetica','bold'); _doc.setFontSize(7);
+        _doc.setTextColor(...C.warning);
+        _doc.text('A MONITORIZAR', M+6, y+5.5);
+        _doc.setFont('helvetica','normal'); _doc.setFontSize(7.5);
+        _doc.setTextColor(...C.text2);
+        _doc.text(conLines,M+6,y+9.5);
+        y+=conH+5;
+      }
+    }
+
+    // ── Category insights ──────────────────────────────────────────────────
+    if (aiInsights.categoryInsights?.length) {
+      y=safe(y,14);
+      _doc.setFont('helvetica','bold'); _doc.setFontSize(7.5);
+      _doc.setTextColor(...C.text2);
+      _doc.text('ANÁLISE POR CATEGORIA', M, y);
+      y+=5;
+      aiInsights.categoryInsights.forEach((ci,i) => {
+        y=safe(y,12);
+        const col=CAT_PALETTE[i%8];
+        const txt=_doc.splitTextToSize(ci.insight, W-18);
+        const h=txt.length*3.6+9;
+        card(M,y,W,h,C.white,C.cardBorder);
+        _doc.setFillColor(...col);
+        _doc.roundedRect(M+3,y+2.5,4,4,1,1,'F');
+        _doc.setFont('helvetica','bold'); _doc.setFontSize(7.5);
+        _doc.setTextColor(...C.text1);
+        _doc.text(ci.category||'', M+10, y+5.5);
+        _doc.setFont('helvetica','normal'); _doc.setFontSize(7.5);
+        _doc.setTextColor(...C.text2);
+        _doc.text(txt, M+10, y+9);
+        y+=h+3;
+      });
+      y+=2;
+    }
+
+    // ── Recommendations ────────────────────────────────────────────────────
     if (aiInsights.recommendations?.length) {
       y=safe(y,14);
       _doc.setFont('helvetica','bold'); _doc.setFontSize(8);
@@ -610,10 +709,9 @@ export async function generateFinancialReport(opts) {
       y+=5;
       aiInsights.recommendations.forEach((rec,i)=>{
         y=safe(y,12);
-        const rl=_doc.splitTextToSize(rec,W-10);
-        const rh=rl.length*3.8+7;
+        const rl=_doc.splitTextToSize(rec,W-12);
+        const rh=rl.length*3.8+8;
         card(M,y,W,rh,C.cardBg,C.cardBorder);
-        // Number badge
         _doc.setFillColor(...C.brand);
         _doc.circle(M+5,y+rh/2,3.5,'F');
         _doc.setFont('helvetica','bold'); _doc.setFontSize(7);
@@ -621,20 +719,36 @@ export async function generateFinancialReport(opts) {
         _doc.text(String(i+1),M+5,y+rh/2+2,{align:'center'});
         _doc.setFont('helvetica','normal'); _doc.setFontSize(8);
         _doc.setTextColor(...C.text1);
-        _doc.text(rl,M+11,y+5.5);
+        _doc.text(rl,M+12,y+5.5);
         y+=rh+3;
       });
       y+=2;
     }
 
-    // Outlook
+    // ── Projections ────────────────────────────────────────────────────────
+    if (aiInsights.projections) {
+      y=safe(y,16);
+      const pl=_doc.splitTextToSize(`📈  ${aiInsights.projections}`,W-8);
+      const ph=pl.length*3.8+10;
+      card(M,y,W,ph,C.brandLight,C.brand);
+      _doc.setFillColor(...C.brand); _doc.rect(M,y,2.5,ph,'F');
+      _doc.setFont('helvetica','bold'); _doc.setFontSize(7);
+      _doc.setTextColor(...C.brand);
+      _doc.text('PROJEÇÃO', M+6, y+5.5);
+      _doc.setFont('helvetica','italic'); _doc.setFontSize(8);
+      _doc.setTextColor(...C.text1);
+      _doc.text(pl,M+6,y+9.5);
+      y+=ph+5;
+    }
+
+    // ── Outlook ────────────────────────────────────────────────────────────
     if (aiInsights.outlook) {
       y=safe(y,14);
-      card(M,y,W,12,C.brandLight,C.brand);
+      card(M,y,W,12,C.brand,C.brand);
       _doc.setFont('helvetica','italic'); _doc.setFontSize(8);
-      _doc.setTextColor(...C.brand);
+      _doc.setTextColor(...C.white);
       const ol=_doc.splitTextToSize(`Próximo mês: ${aiInsights.outlook}`,W-8);
-      _doc.text(ol,M+4,y+5.5);
+      _doc.text(ol,M+4,y+7.5);
       y+=16;
     }
   }

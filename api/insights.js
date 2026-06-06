@@ -1,11 +1,9 @@
 /**
  * api/insights.js — Vercel serverless function
- * Generates natural-language financial analysis.
+ * Generates deep natural-language financial analysis.
  * Category-aware: non-discretionary spending (health, etc.) is handled with empathy.
  */
 
-// Categories where increases should NEVER trigger reduction recommendations.
-// The AI is instructed to acknowledge increases here with understanding, not criticism.
 const NON_DISCRETIONARY = [
   'saúde','médico','médica','farmácia','farmacia','hospital','clínica','clinica',
   'dentista','dental','consulta','consultas','medicamento','medicamentos',
@@ -31,8 +29,12 @@ module.exports = async function handler(req, res) {
     savings,
     savingsRate,
     expenseTrend,
-    topCategories = [],
-    budgetBreaches = [],
+    topCategories    = [],
+    budgetBreaches   = [],
+    budgetDetails    = [],
+    categoryTrends   = [],
+    txnCount,
+    avgTxnSize,
     patrimonyTotal,
     behavioralInsights = [],
   } = req.body || {};
@@ -41,70 +43,114 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // Classify top categories
+  // ── Format helpers ─────────────────────────────────────────────────────────
+  const fmtEur = (n) => `${Math.round(n).toLocaleString('pt-PT')}€`;
+
+  // ── Category lines ─────────────────────────────────────────────────────────
   const catLines = topCategories.map(c => {
-    const tag = isNonDiscretionary(c.name) ? ' [não-discricionária]' : '';
-    return `${c.name}${tag}: ${c.amount}€ (${c.pct}%)`;
-  }).join('; ') || 'sem dados';
+    const tag   = isNonDiscretionary(c.name) ? ' [não-discricionária]' : '';
+    const trend = categoryTrends.find(t => t.name === c.name);
+    const trendStr = trend && trend.prev > 0
+      ? ` | tendência 3m: ${fmtEur(trend.prev2)} → ${fmtEur(trend.prev)} → ${fmtEur(trend.curr)}`
+      : '';
+    return `${c.name}${tag}: ${fmtEur(c.amount)} (${c.pct}%)${trendStr}`;
+  }).join('\n  ') || 'sem dados';
 
-  const nonDiscNames = topCategories
-    .filter(c => isNonDiscretionary(c.name))
-    .map(c => c.name);
+  // ── Budget adherence ───────────────────────────────────────────────────────
+  const budgetLines = budgetDetails.length
+    ? budgetDetails.map(b => {
+        const status = b.over ? `⚠ EXCEDIDO ${b.pct}%` : `OK ${b.pct}%`;
+        return `${b.name}: orçamento ${fmtEur(b.budget)}, gasto ${fmtEur(b.spent)} — ${status}`;
+      }).join('\n  ')
+    : 'sem orçamentos definidos';
 
-  const savingsRateStr  = savingsRate != null ? `${savingsRate}%` : 'desconhecida';
-  const trendStr        = expenseTrend != null
-    ? (expenseTrend > 0 ? `+${expenseTrend}% vs mês anterior` : `${expenseTrend}% vs mês anterior`)
-    : 'sem dados';
-  const budgetStr       = budgetBreaches.length ? budgetBreaches.join(', ') : 'nenhum';
-  const patStr          = patrimonyTotal != null ? `${patrimonyTotal.toLocaleString('pt-PT')}€` : 'não registado';
-  const behavStr        = behavioralInsights.length
-    ? behavioralInsights.slice(0, 5).map(i => `• ${i.title}: ${i.message}`).join('\n')
-    : 'sem alertas';
-
-  const nonDiscNote = nonDiscNames.length > 0
+  // ── Non-discretionary note ─────────────────────────────────────────────────
+  const nonDiscNames = topCategories.filter(c => isNonDiscretionary(c.name)).map(c => c.name);
+  const nonDiscNote  = nonDiscNames.length > 0
     ? `\nCATEGORIAS NÃO-DISCRICIONÁRIAS PRESENTES: ${nonDiscNames.join(', ')}
-Estas categorias (saúde, farmácia, médico, etc.) NÃO devem ser alvo de recomendações de redução.
-Se alguma delas tiver aumentado, reconhece o facto com empatia ("houve um aumento nos gastos de saúde — é natural que isso aconteça") mas nunca sugiras cortar nesses gastos.
-Foca as recomendações de redução APENAS nas categorias discricionárias (lazer, restaurantes, compras, etc.).`
+Estas categorias (saúde, farmácia, médico, etc.) NUNCA devem ser alvo de recomendações de redução.
+Se alguma delas tiver aumentado, reconhece com empatia mas nunca sugiras cortar nesses gastos.`
     : '';
 
-  const prompt = `És um consultor de finanças pessoais experiente e humano. Analisas dados financeiros e dás conselhos diretos, honestos e acionáveis em português europeu informal — como um amigo inteligente e criterioso.
+  const savingsRateStr = savingsRate != null ? `${savingsRate}%` : 'desconhecida';
+  const trendStr       = expenseTrend != null
+    ? (expenseTrend > 0 ? `+${expenseTrend}%` : `${expenseTrend}%`) + ' vs mês anterior'
+    : 'sem dados';
+  const budgetStr      = budgetBreaches.length ? budgetBreaches.join(', ') : 'nenhum';
+  const patStr         = patrimonyTotal != null ? fmtEur(patrimonyTotal) : 'não registado';
+  const txnStr         = txnCount != null ? `${txnCount} transações (média ${fmtEur(avgTxnSize || 0)}/transação)` : 'sem dados';
+  const behavStr       = behavioralInsights.length
+    ? behavioralInsights.slice(0, 6).map(i => `• ${i.title}: ${i.message}`).join('\n')
+    : 'sem alertas';
 
-REGRAS FUNDAMENTAIS — lê com atenção antes de gerar a resposta:
-• Saúde, medicamentos, consultas médicas e cuidados de saúde são NECESSIDADES. NUNCA recomendas reduzir gastos nestas áreas.
-• Se uma categoria de saúde subiu, reconhece com empatia — não é uma falha financeira, é vida.
-• Foca cortes e otimizações apenas em categorias verdadeiramente discricionárias (lazer, restaurantes, roupas, etc.).
-• Distingue entre "gastaste mais porque precisaste" vs "gastaste mais por descuido".
-• Fala como uma pessoa real, não como um relatório de gestão.
-• NUNCA recomendas comprar, vender ou realocar em ativos financeiros específicos (ETFs, ações, fundos, cripto, obrigações, etc.). Não tens acesso ao estado atual dos mercados, não conheces o perfil de risco desta pessoa, e não és consultor financeiro registado. Dar timing de investimento sem este contexto é irresponsável.
-• Se o tema da alocação de poupanças surgir, podes dizer que "vale a pena rever com um consultor financeiro se o dinheiro parado está a perder valor face à inflação" — mas sem nomear produtos ou dar indicações de quando/quanto investir.
-• As tuas recomendações focam-se em comportamentos de despesa, poupança e orçamento — não em alocação de ativos.
+  const annualSavingsProjection = savings > 0 ? Math.round(savings * 12) : null;
+  const monthsOfExpensesCovered = patrimonyTotal && expenses > 0
+    ? (patrimonyTotal / expenses).toFixed(1)
+    : null;
+
+  const prompt = `És um consultor de finanças pessoais sénior — rigoroso, empático, com visão analítica de um gestor de patrimónios. Analisas dados financeiros com profundidade e forneces insights que uma pessoa comum não conseguiria derivar sozinha. Falas em português europeu informal, como um amigo muito inteligente que sabe de finanças.
+
+REGRAS FUNDAMENTAIS — lê antes de responder:
+• Saúde, medicamentos, consultas médicas = NECESSIDADES. NUNCA recomendar redução. Reconhecer aumentos com empatia.
+• Foca cortes APENAS em categorias discricionárias (lazer, restaurantes, roupas, etc.).
+• NUNCA recomendar comprar, vender ou realocar em ativos específicos (ETFs, ações, cripto, etc.). Não tens dados de mercado nem perfil de risco.
+• Se o tema poupanças surgir, podes mencionar "vale a pena rever com um consultor financeiro" — sem produtos ou timing.
+• Usa números concretos em todas as análises. Generalidades não têm valor.
+• Identifica padrões que não são óbvios — correlações, sazonalidade, desvios, oportunidades.
+• Distingue "situação estrutural" de "evento pontual".
 ${nonDiscNote}
 
-DADOS DO PERÍODO: ${period}
-━━━━━━━━━━━━━━━━━━━━━━━
-Receitas:       ${income}€
-Despesas:       ${expenses}€
-Saldo:          ${savings}€ (taxa de poupança: ${savingsRateStr})
+DADOS FINANCEIROS — ${period}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Receitas:       ${fmtEur(income)}
+Despesas:       ${fmtEur(expenses)}
+Saldo:          ${fmtEur(savings)} (taxa de poupança: ${savingsRateStr})
 Tendência:      ${trendStr}
-Top categorias: ${catLines}
-Orçamentos ultrapassados: ${budgetStr}
-Património total: ${patStr}
+Transações:     ${txnStr}
+${annualSavingsProjection ? `Projeção anual (ritmo atual): ${fmtEur(annualSavingsProjection)} em poupanças` : ''}
+${monthsOfExpensesCovered ? `Cobertura de emergência: ${monthsOfExpensesCovered} meses de despesas cobertos pelo património` : ''}
 
-Alertas comportamentais:
+TOP CATEGORIAS (com tendência 3 meses):
+  ${catLines}
+
+ADERÊNCIA AOS ORÇAMENTOS:
+  ${budgetLines}
+Categorias com orçamento excedido: ${budgetStr}
+
+PATRIMÓNIO TOTAL: ${patStr}
+
+ALERTAS COMPORTAMENTAIS (motor analítico interno):
 ${behavStr}
-━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INSTRUÇÃO: Faz uma análise genuinamente profunda. Vai além do óbvio. Identifica padrões nas tendências de 3 meses. Avalia a estrutura de despesas. Comenta a aderência ao orçamento. Projeta consequências se os padrões continuarem. Sugere ações concretas e mensuráveis.
 
 Responde APENAS com JSON válido, sem markdown, sem texto extra:
 {
-  "summary": "1 frase curtíssima (máx 15 palavras) que capta o essencial — direta e humana",
-  "narrative": "2 a 3 frases de análise genuína com números concretos. Explica o que significam na prática. Se há gastos de saúde elevados, reconhece-os com naturalidade sem os tratar como problema.",
-  "recommendations": [
-    "recomendação 1 — específica e acionável, focada em categorias discricionárias",
-    "recomendação 2 — específica e acionável",
-    "recomendação 3 — específica e acionável"
+  "summary": "1 frase curtíssima (máx 15 palavras) — captura o essencial com um número",
+  "narrative": "2-3 frases de análise com números concretos. O que significam na prática.",
+  "detailedAnalysis": "4-5 frases de análise profunda: padrões nas tendências, estrutura de despesas, riscos estruturais vs pontuais, o que está a mudar e porquê. Usa números específicos. Fala do que o utilizador provavelmente não reparou.",
+  "strengths": [
+    "ponto forte 1 — específico com números",
+    "ponto forte 2 — específico com números"
   ],
-  "outlook": "1 frase sobre o próximo mês — realista e encorajadora"
+  "concerns": [
+    "preocupação 1 — específica com dados e consequência se não corrigida",
+    "preocupação 2 se existir"
+  ],
+  "categoryInsights": [
+    {"category": "nome da categoria", "insight": "observação específica com tendência e recomendação concreta"},
+    {"category": "outra categoria relevante", "insight": "observação"}
+  ],
+  "recommendations": [
+    "recomendação 1 — ação específica e mensurável (ex: reduzir X em Y%)",
+    "recomendação 2",
+    "recomendação 3",
+    "recomendação 4",
+    "recomendação 5"
+  ],
+  "projections": "Se mantiveres este ritmo, em 12 meses... [projeção concreta com valores]",
+  "outlook": "1 frase sobre o próximo mês — realista, encorajadora, com um foco claro"
 }`;
 
   try {
@@ -117,7 +163,7 @@ Responde APENAS com JSON válido, sem markdown, sem texto extra:
       },
       body: JSON.stringify({
         model:      'claude-3-5-haiku-20241022',
-        max_tokens: 1024,
+        max_tokens: 2048,
         messages:   [{ role: 'user', content: prompt }],
       }),
     });

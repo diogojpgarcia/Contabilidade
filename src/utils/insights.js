@@ -421,20 +421,30 @@ export const computeFinancialScore = ({ transactions, budgets, categories, selec
 
 // buildInsightsSummary — payload anonimizado para AI endpoint + PDF
 export const buildInsightsSummary = ({ transactions, budgets, categories, patrimony, selectedMonth, startDay = 1 }) => {
-  const prevMonth = shiftMonth(selectedMonth, -1);
-  const monthTxns  = transactions.filter(t => t.date && isInFinancialMonth(t.date, selectedMonth, startDay));
-  const income   = monthTxns.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-  const expenses = monthTxns.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-  const savings  = income - expenses;
-  const savingsRate = income > 0 ? Math.round((savings / income) * 100) : null;
-  const prevExpenses = transactions
-    .filter(t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, prevMonth, startDay))
-    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-  const expenseTrend = prevExpenses > 0 ? Math.round(((expenses - prevExpenses) / prevExpenses) * 100) : null;
+  const prevMonth  = shiftMonth(selectedMonth, -1);
+  const prev2Month = shiftMonth(selectedMonth, -2);
+
+  const filterMonth = (m) => transactions.filter(t => t.date && isInFinancialMonth(t.date, m, startDay));
+  const monthTxns  = filterMonth(selectedMonth);
+  const prevTxns   = filterMonth(prevMonth);
+  const prev2Txns  = filterMonth(prev2Month);
+
+  const sumInc = (txns) => txns.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const sumExp = (txns) => txns.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
+  const income        = sumInc(monthTxns);
+  const expenses      = sumExp(monthTxns);
+  const savings       = income - expenses;
+  const savingsRate   = income > 0 ? Math.round((savings / income) * 100) : null;
+  const prevExpenses  = sumExp(prevTxns);
+  const expenseTrend  = prevExpenses > 0 ? Math.round(((expenses - prevExpenses) / prevExpenses) * 100) : null;
+
+  // Category map for current month
   const byCat = {};
   monthTxns.filter(t => t.type === 'expense').forEach(t => {
     byCat[t.category] = (byCat[t.category] || 0) + (parseFloat(t.amount) || 0);
   });
+
   const topCategories = Object.entries(byCat)
     .sort((a, b) => b[1] - a[1]).slice(0, 5)
     .map(([name, amount]) => ({
@@ -442,15 +452,46 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
       amount: Math.round(amount),
       pct: expenses > 0 ? Math.round((amount / expenses) * 100) : 0,
     }));
+
   const budgetBreaches = categories.expense
     .filter(cat => (budgets[cat.id] || 0) > 0 && byCat[cat.label] > budgets[cat.id])
     .map(cat => cat.label);
+
+  // Budget details — categories with a defined budget
+  const budgetDetails = categories.expense
+    .filter(cat => (budgets[cat.id] || 0) > 0)
+    .map(cat => {
+      const spent  = Math.round(byCat[cat.label] || 0);
+      const budget = Math.round(budgets[cat.id]);
+      return { name: cat.label, budget, spent, pct: Math.round((spent / budget) * 100), over: spent > budget };
+    })
+    .sort((a, b) => b.pct - a.pct)
+    .slice(0, 8);
+
+  // 3-month category trends for top 4 categories
+  const catAmt = (txns, label) =>
+    txns.filter(t => t.type === 'expense' && t.category === label)
+        .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+
+  const categoryTrends = topCategories.slice(0, 4).map(c => ({
+    name:  c.name,
+    prev2: Math.round(catAmt(prev2Txns, c.name)),
+    prev:  Math.round(catAmt(prevTxns,  c.name)),
+    curr:  Math.round(catAmt(monthTxns, c.name)),
+  }));
+
+  // Transaction stats
+  const expenseTxns = monthTxns.filter(t => t.type === 'expense');
+  const txnCount    = expenseTxns.length;
+  const avgTxnSize  = txnCount > 0 ? Math.round(expenses / txnCount) : 0;
+
   const patrimonyTotal = patrimony
     ? Object.values(patrimony).flat().reduce((s, item) => {
         const v = parseFloat(item?.value || item?.balance || item?.faceValue || 0);
         return s + (isNaN(v) ? 0 : v);
       }, 0)
     : null;
+
   return {
     period: formatMonthLabel(selectedMonth, startDay),
     income:        Math.round(income),
@@ -460,6 +501,10 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
     expenseTrend,
     topCategories,
     budgetBreaches,
+    budgetDetails,
+    categoryTrends,
+    txnCount,
+    avgTxnSize,
     patrimonyTotal: patrimonyTotal ? Math.round(patrimonyTotal) : null,
   };
 };

@@ -49,7 +49,7 @@ export function useAIInsights(summary, behavioralInsights = []) {
 
     const payload = {
       ...summary,
-      behavioralInsights: (behavioralInsights || []).slice(0, 5).map(i => ({
+      behavioralInsights: (behavioralInsights || []).slice(0, 6).map(i => ({
         title:   i.title,
         message: i.message,
       })),
