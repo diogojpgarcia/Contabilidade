@@ -106,19 +106,19 @@ const HomeTab = ({
   const cyclePct = Math.round((diaAtual / totalDias) * 100);
 
   // ── Budget status ─────────────────────────────────────────────────────────
+  // budgets is { [cat.id]: number } — iterate expense categories, look up by id
   const budgetStatus = useMemo(() => {
     if (!currentMonth) return { totalLimit: 0, totalSpent: 0, over: [], hasData: false };
     const expCats = categories?.expense || [];
-    // budgets is stored as an object { id: { category, limit, ... } } — convert to array
-    const budgetArr = Array.isArray(budgets) ? budgets : Object.values(budgets || {});
-    const rows = budgetArr.map(b => {
-      const cat = expCats.find(c => c.id === b.categoryId || c.label === b.category);
-      const spent = (transactions || [])
-        .filter(t => t.type === 'expense' && (t.date || '').startsWith(currentMonth) &&
-          (t.category === b.category || t.category === cat?.label))
-        .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-      return { label: b.category || cat?.label || b.categoryId, limit: parseFloat(b.limit) || 0, spent };
-    }).filter(r => r.limit > 0);
+    const rows = expCats
+      .filter(cat => (budgets[cat.id] || 0) > 0)
+      .map(cat => {
+        const limit = parseFloat(budgets[cat.id]) || 0;
+        const spent = (transactions || [])
+          .filter(t => t.type === 'expense' && (t.date || '').startsWith(currentMonth) && t.category === cat.label)
+          .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+        return { label: cat.label, limit, spent };
+      });
     const totalLimit = rows.reduce((s, r) => s + r.limit, 0);
     const totalSpent = rows.reduce((s, r) => s + r.spent, 0);
     const over = rows.filter(r => r.spent > r.limit);
@@ -134,11 +134,10 @@ const HomeTab = ({
   const keyInsight = useMemo(() => {
     if (!transactions?.length || !currentMonth) return null;
     const { categories: appCats } = { categories: categories || {} };
-    const budgetArr = Array.isArray(budgets) ? budgets : Object.values(budgets || {});
     try {
       const insights = generateInsights({
         transactions,
-        budgets: budgetArr,
+        budgets,          // flat object { [cat.id]: number } — pass as-is
         categories: appCats,
         selectedMonth: currentMonth,
       });

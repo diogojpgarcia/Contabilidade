@@ -76,6 +76,11 @@ export function computeImportHash(date, amount, description) {
   return `${date}|${parseFloat(amount).toFixed(2)}|${desc}`;
 }
 
+// ── Settings write queue ───────────────────────────────────────────────────
+// Serialises concurrent updateUserSettings calls per userId so that a
+// read-modify-write can never be interleaved with another one for the same user.
+const _writeQueues = new Map(); // userId → Promise (tail of the chain)
+
 export const dbService = {
   async getTransactions(userId) {
     const { data, error } = await supabase
@@ -294,29 +299,34 @@ export const dbService = {
   },
 
   async updateUserSettings(userId, newSettings) {
-    // Ler settings actuais para fazer merge (necessário porque Supabase não suporta
-    // jsonb merge nativo no upsert — teríamos de usar uma RPC para isso).
-    // O SELECT + UPSERT ainda tem uma janela de race condition teórica, mas usar
-    // upsert em vez de SELECT + INSERT/UPDATE elimina o caso mais comum de conflito
-    // (dois tabs a criar a linha em simultâneo).
-    const { data: existing } = await supabase
-      .from('user_settings')
-      .select('settings')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // Serialised via _writeQueues: each call chains onto the previous one so
+    // read-modify-write is never interleaved with a concurrent call for the same user.
+    const tail = _writeQueues.get(userId) ?? Promise.resolve();
 
-    const mergedSettings = { ...(existing?.settings || {}), ...newSettings };
+    const next = tail.catch(() => {}).then(async () => {
+      const { data: existing } = await supabase
+        .from('user_settings')
+        .select('settings')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    const { data, error } = await supabase
-      .from('user_settings')
-      .upsert(
-        { user_id: userId, settings: mergedSettings },
-        { onConflict: 'user_id' }
-      )
-      .select()
-      .single();
+      const mergedSettings = { ...(existing?.settings || {}), ...newSettings };
 
-    if (error) throw error;
-    return data;
+      const { data, error } = await supabase
+        .from('user_settings')
+        .upsert(
+          { user_id: userId, settings: mergedSettings },
+          { onConflict: 'user_id' }
+        )
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    });
+
+    // Store only the error-suppressed tail so a failed write doesn't block the queue
+    _writeQueues.set(userId, next.catch(() => {}));
+    return next;
   }
 }

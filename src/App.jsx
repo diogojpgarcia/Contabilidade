@@ -314,7 +314,7 @@ const App = () => {
         {/* Centre Add button — part of the bar, projects above it */}
         <button
           className={`nav-item nav-item--add ${activeTab === 'add' ? 'nav-item--add-active' : ''}`}
-          onClick={() => { haptic(15); setActiveTab('add'); }}
+          onClick={() => { haptic(15); setPendingAddMode(null); setActiveTab('add'); }}
           aria-label="Adicionar transação"
         >
           <span className="nav-add-inner">+</span>
