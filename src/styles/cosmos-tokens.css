@@ -85,7 +85,7 @@
   --cosmos-dur-slow: 0.35s;
 
   /* ── Bottom nav ───────────────────────────────────────────────────────── */
-  --cosmos-nav-h:       68px;    /* 58px bar + 10px min bottom padding (unified nav) */
+  --cosmos-nav-h:       50px;    /* flat unified bar height */
   --cosmos-nav-item-py: 4px;     /* padding vertical dos itens */
   --cosmos-nav-bar-pt:  6px;     /* padding-top da barra */
   --cosmos-nav-safe:    calc(var(--cosmos-nav-h) + max(0px, env(safe-area-inset-bottom)));
