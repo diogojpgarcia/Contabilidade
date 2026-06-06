@@ -79,9 +79,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     });
   }, [currentMonth]);
 
-  // Helper kept as function (used inside other memos)
-  const getLast6Months = () => last6Months;
-
   // Monthly chart data — memoized: only recalculates when transactions/month/startDay change
   const getMonthlyData = useMemo(() => {
     return last6Months.map(month => {
@@ -105,13 +102,6 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const goToPreviousMonth = () => onMonthChange(shiftFinancialMonth(currentMonth, -1));
   const goToNextMonth     = () => onMonthChange(shiftFinancialMonth(currentMonth,  1));
 
-  // Format date
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleDateString('pt-PT', { month: 'short' });
-    return `${day} ${month}`;
-  };
 
   const handleCategoryClick = (tx) => {
     if (onCategoryChange) setPickerTx(tx);

@@ -54,11 +54,11 @@ export const calculateMonthlyTotals = (transactions, monthKey) => {
   
   const income = monthTransactions
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
   const expenses = monthTransactions
     .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   
   return {
     income,
@@ -76,7 +76,7 @@ export const calculateCategoryTotals = (transactions, monthKey) => {
     if (!totals[t.category]) {
       totals[t.category] = 0;
     }
-    totals[t.category] += t.amount;
+    totals[t.category] += (parseFloat(t.amount) || 0);
   });
   
   return totals;
