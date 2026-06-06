@@ -300,43 +300,35 @@ const App = () => {
         </Suspense>
       )}
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation — unified 5-item bar */}
       <nav className="bottom-nav">
-        <button className={`nav-item ${activeTab === 'home'   ? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('home'); }}>
-          <span className="nav-icon"><Home size={22} strokeWidth={1.75} /></span>
+        <button className={`nav-item ${activeTab === 'home'    ? 'active' : ''}`} onClick={() => { haptic(8);  setActiveTab('home');    }}>
+          <span className="nav-icon"><Home     size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Home</span>
         </button>
-        <button className={`nav-item ${activeTab === 'stats'  ? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('stats'); }}>
+        <button className={`nav-item ${activeTab === 'stats'   ? 'active' : ''}`} onClick={() => { haptic(8);  setActiveTab('stats');   }}>
           <span className="nav-icon"><BarChart2 size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Stats</span>
         </button>
-        <div style={{ width: '52px', flexShrink: 0 }} />
-        <button className={`nav-item ${activeTab === 'budget' ? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('budget'); }}>
+
+        {/* Centre Add button — part of the bar, projects above it */}
+        <button
+          className={`nav-item nav-item--add ${activeTab === 'add' ? 'nav-item--add-active' : ''}`}
+          onClick={() => { haptic(15); setActiveTab('add'); }}
+          aria-label="Adicionar transação"
+        >
+          <span className="nav-add-inner">+</span>
+        </button>
+
+        <button className={`nav-item ${activeTab === 'budget'  ? 'active' : ''}`} onClick={() => { haptic(8);  setActiveTab('budget');  }}>
           <span className="nav-icon"><LayoutGrid size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Budget</span>
         </button>
-        <button className={`nav-item ${activeTab === 'profile'? 'active' : ''}`} onClick={() => { haptic(8); setActiveTab('profile'); }}>
-          <span className="nav-icon"><User size={22} strokeWidth={1.75} /></span>
+        <button className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => { haptic(8);  setActiveTab('profile'); }}>
+          <span className="nav-icon"><User      size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">Perfil</span>
         </button>
       </nav>
-
-      {/* FAB central */}
-      <button
-        onClick={() => { haptic(15); setActiveTab('add'); }}
-        aria-label="Adicionar transação"
-        style={{
-          position: 'fixed', bottom: 'calc(max(6px, env(safe-area-inset-bottom)) + 6px)', left: '50%', transform: 'translateX(-50%)',
-          width: '52px', height: '52px', borderRadius: '50%',
-          background: 'var(--cosmos-accent)', color: '#000',
-          fontSize: '26px', fontWeight: '300',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 24px var(--cosmos-accent-glow)',
-          zIndex: 9999, border: 'none', cursor: 'pointer', lineHeight: 1,
-        }}
-      >
-        +
-      </button>
 
       {/* Modal de atualização em massa de categoria */}
       {tx.bulkPending && (
