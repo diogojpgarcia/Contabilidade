@@ -3443,19 +3443,12 @@ button,
   align-items: flex-start;
   padding: 13px 14px;
   border-radius: var(--cosmos-r-card, 18px);
-  border: 1px solid var(--si-border, rgba(255,255,255,0.06));
+  border: 1px solid var(--si-glow, rgba(255,255,255,0.06));
   background: var(--cosmos-surface-2);
-  transition: opacity 0.15s, transform 0.15s;
-  position: relative;
-  overflow: hidden;
-}
-.so-insight::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--si-color);
-  border-radius: 3px 0 0 3px;
+  box-shadow:
+    0 0 18px var(--si-glow, transparent),
+    0 4px 14px rgba(0,0,0,0.28);
+  transition: box-shadow 0.2s, opacity 0.15s, transform 0.15s;
 }
 .so-insight--tap { cursor: pointer; }
 .so-insight--tap:active { opacity: 0.75; transform: scale(0.99); }

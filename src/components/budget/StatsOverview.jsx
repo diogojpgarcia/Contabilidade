@@ -9,28 +9,28 @@ const CAT_COLORS = ['var(--cosmos-accent)', 'var(--cosmos-income)', 'var(--cosmo
 
 const INSIGHT_CONFIG = {
   risk: {
-    color:  'var(--cosmos-expense)',
-    bg:     'var(--cosmos-expense-dim)',
-    border: 'rgba(248,113,113,0.18)',
-    emoji:  '⚠️',
+    color: 'var(--cosmos-expense)',
+    bg:    'var(--cosmos-expense-dim)',
+    glow:  'rgba(248,113,113,0.18)',
+    emoji: '⚠️',
   },
   warn: {
-    color:  'var(--cosmos-warning, #f59e0b)',
-    bg:     'var(--cosmos-warning-dim, rgba(245,158,11,0.12))',
-    border: 'rgba(245,158,11,0.20)',
-    emoji:  '⚡',
+    color: 'var(--cosmos-warning, #f59e0b)',
+    bg:    'var(--cosmos-warning-dim, rgba(245,158,11,0.12))',
+    glow:  'rgba(245,158,11,0.16)',
+    emoji: '⚡',
   },
   good: {
-    color:  'var(--cosmos-income)',
-    bg:     'var(--cosmos-income-dim)',
-    border: 'rgba(52,211,153,0.18)',
-    emoji:  '✦',
+    color: 'var(--cosmos-income)',
+    bg:    'var(--cosmos-income-dim)',
+    glow:  'rgba(52,211,153,0.16)',
+    emoji: '✦',
   },
   info: {
-    color:  'var(--cosmos-accent)',
-    bg:     'var(--cosmos-accent-soft)',
-    border: 'var(--cosmos-accent-border)',
-    emoji:  '💡',
+    color: 'var(--cosmos-accent)',
+    bg:    'var(--cosmos-accent-soft)',
+    glow:  'rgba(6,182,212,0.14)',
+    emoji: '💡',
   },
 };
 
@@ -170,10 +170,9 @@ const StatsOverview = ({
                   key={i}
                   className={`so-insight${item.meta ? ' so-insight--tap' : ''}`}
                   style={{
-                    '--si-color':  cfg.color,
-                    '--si-bg':     cfg.bg,
-                    '--si-border': cfg.border,
-                    borderColor:   cfg.border,
+                    '--si-color': cfg.color,
+                    '--si-bg':    cfg.bg,
+                    '--si-glow':  cfg.glow,
                   }}
                   onClick={() => item.meta?.action === 'openHistory' && onShowLog?.()}
                 >
