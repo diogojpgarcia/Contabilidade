@@ -216,7 +216,8 @@ export function useSettings(currentUser, txHook) {
     setMigrationPending(null);
 
     try {
-      await dbService.migrateUnlinkedTransactions(currentUser.id, acc.id, acc.name);
+      // dbCount is the source of truth — it's what the DB actually updated
+      const dbCount = await dbService.migrateUnlinkedTransactions(currentUser.id, acc.id, acc.name);
 
       txHook.setTransactions(prev => prev.map(t =>
         (!t.account_id && t.type !== 'transfer')
@@ -230,7 +231,7 @@ export function useSettings(currentUser, txHook) {
       });
       txHook.setTransactionAccountMap(updatedMap);
       dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
-      toast.success?.(`${unlinked.length} transação(ões) ligadas a "${acc.name}".`);
+      toast.success?.(`${dbCount} transação(ões) ligadas a "${acc.name}".`);
     } catch (err) {
       console.error('❌ Migration failed:', err);
       toast.error('Erro na migração: ' + err.message);

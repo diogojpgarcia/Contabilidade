@@ -5,7 +5,7 @@ import CategoryPicker from '../CategoryPicker.jsx';
 import FintechTransactionCard from '../FintechTransactionCard';
 import StatsOverview from '../budget/StatsOverview';
 import { generateInsights, computeFinancialScore, shiftMonth } from '../../utils/insights';
-import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange } from '../../utils/financialMonth';
+import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange, getCurrentFinancialMonth } from '../../utils/financialMonth';
 import { getCategoryMeta } from '../../utils/categoryIcons';
 import './StatsTab.css';
 
@@ -254,7 +254,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button onClick={goToPreviousMonth} style={{ background: 'var(--cosmos-border-divider)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: 'var(--cosmos-text-1)', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
           <span style={{ fontSize: '13px', color: 'var(--cosmos-text-3)', fontWeight: 500, minWidth: '90px', textAlign: 'center' }}>{monthName}</span>
-          <button onClick={goToNextMonth} disabled={currentMonth === new Date().toISOString().slice(0, 7)} style={{ background: 'var(--cosmos-border-divider)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: 'var(--cosmos-text-1)', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentMonth === new Date().toISOString().slice(0, 7) ? 0.4 : 1 }}>›</button>
+          <button onClick={goToNextMonth} disabled={currentMonth === getCurrentFinancialMonth(financialMonthStartDay)} style={{ background: 'var(--cosmos-border-divider)', border: 'none', borderRadius: '8px', width: '30px', height: '30px', color: 'var(--cosmos-text-1)', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentMonth === getCurrentFinancialMonth(financialMonthStartDay) ? 0.4 : 1 }}>›</button>
         </div>
       </div>
 

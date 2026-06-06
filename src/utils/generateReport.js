@@ -62,6 +62,7 @@ const PAGE_H = 297;
 const M      = 14;          // margin
 const W      = PAGE_W-M*2;  // content width
 let _doc;
+let _generating = false; // Guard against concurrent calls corrupting _doc
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function newPage() { _doc.addPage(); return M+2; }
@@ -311,6 +312,12 @@ export async function generateFinancialReport(opts) {
     aiInsights      = null,
     appName         = 'Finanças',
   } = opts;
+
+  if (_generating) {
+    console.warn('[generateReport] already in progress — ignoring concurrent call');
+    return;
+  }
+  _generating = true;
 
   const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   _doc = doc;
@@ -774,4 +781,5 @@ export async function generateFinancialReport(opts) {
 
   const fname=`relatorio-${period.toLowerCase().replace(/[\s/]+/g,'-')}.pdf`;
   doc.save(fname);
+  _generating = false;
 }

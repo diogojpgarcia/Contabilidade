@@ -96,7 +96,7 @@ const App = () => {
       ...acc,
       currentBalance: tx.computeCurrentBalance(acc, safeTransactions),
     })),
-  }), [s.patrimony, safeTransactions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [s.patrimony, safeTransactions, tx.computeCurrentBalance]);
 
   // ── Returns condicionais (DEPOIS de todos os hooks) ───────────────────────
   if (auth.loading) {

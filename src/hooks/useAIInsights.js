@@ -66,8 +66,20 @@ export function useAIInsights(summary, behavioralInsights = []) {
         return r.json();
       })
       .then(result => {
-        cache.set(cacheKey, result);
-        setData(result);
+        // Normalise missing fields so consumers never need to guard undefined.map()
+        const safe = {
+          summary:         result.summary         || '',
+          narrative:       result.narrative        || '',
+          detailedAnalysis:result.detailedAnalysis || '',
+          strengths:       Array.isArray(result.strengths)       ? result.strengths       : [],
+          concerns:        Array.isArray(result.concerns)        ? result.concerns        : [],
+          recommendations: Array.isArray(result.recommendations) ? result.recommendations : [],
+          categoryInsights:Array.isArray(result.categoryInsights)? result.categoryInsights: [],
+          projections:     result.projections      || '',
+          outlook:         result.outlook          || '',
+        };
+        cache.set(cacheKey, safe);
+        setData(safe);
         setLoading(false);
       })
       .catch(err => {

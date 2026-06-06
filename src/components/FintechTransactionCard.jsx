@@ -3,6 +3,7 @@ import CategoryPicker from './CategoryPicker';
 import AccountPicker from './AccountPicker';
 import Overlay from './Overlay';
 import { getCategoryMeta } from '../utils/categoryIcons';
+import { toast } from '../utils/toast';
 import './FintechTransactionCard.css';
 
 /* ── Merchant map ─────────────────────────────────────────────────────────────
@@ -202,6 +203,8 @@ const FintechTransactionCard = ({
     setDeleting(true);
     try {
       if (onDelete) await onDelete(tx.id);
+    } catch (err) {
+      toast.error('Erro ao apagar transação: ' + (err?.message || 'tenta novamente'));
     } finally {
       setDeleting(false);
     }

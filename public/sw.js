@@ -52,17 +52,27 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch - Network first, cache fallback
+// API calls (/api/*) and Supabase requests are never cached — they must always
+// be fresh (financial data, AI analysis, quotes).
+const NO_CACHE_PATTERNS = ['/api/', 'supabase.co'];
+
 self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+
+  // Pass-through: never cache API or Supabase responses
+  if (NO_CACHE_PATTERNS.some(p => url.includes(p))) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
         // Clona response para cache
         const responseClone = response.clone();
-        
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseClone);
         });
-        
         return response;
       })
       .catch(() => {
