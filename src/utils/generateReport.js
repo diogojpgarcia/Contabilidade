@@ -466,8 +466,8 @@ export async function generateFinancialReport(opts) {
   }
   y+=2;
 
-  // ── 3. EVOLUÇÃO MENSAL ─────────────────────────────────────────────────────
-  if (monthlyData.length>=2) {
+  // ── 3. EVOLUÇÃO MENSAL — detalhado only ────────────────────────────────────
+  if (mode==='detailed' && monthlyData.length>=2) {
     y = safe(y,72);
     y = section(y,'3','Evolução dos Últimos Meses',`${monthlyData.length} meses`);
     y = barChart(y, monthlyData);
@@ -475,15 +475,17 @@ export async function generateFinancialReport(opts) {
   }
 
   // ── 4. TOP CATEGORIAS ──────────────────────────────────────────────────────
-  if (topCategories.length>0) {
-    const n4 = monthlyData.length>=2?'4':'3';
+  // summary: top 3; detailed: top 5
+  const visibleCats = mode==='detailed' ? topCategories : topCategories.slice(0,3);
+  if (visibleCats.length>0) {
+    const n4 = (mode==='detailed' && monthlyData.length>=2) ? '4' : '3';
     y = safe(y,60);
     y = section(y,n4,'Top Categorias de Despesa',`total: ${fmt0(expenses)}€`);
-    y = catBars(y, topCategories, expenses);
+    y = catBars(y, visibleCats, expenses);
 
     // Context line
-    if (topCategories[0]&&income>0) {
-      const top=topCategories[0];
+    if (visibleCats[0]&&income>0) {
+      const top=visibleCats[0];
       _doc.setFont('helvetica','italic'); _doc.setFontSize(7);
       _doc.setTextColor(...C.textMuted);
       _doc.text(`${top.name}: ${top.pct}% das despesas · ${Math.round(top.amount/income*100)}% do rendimento · ${fmt0(top.amount*12)}€/ano ao ritmo atual.`, M, y);
@@ -516,29 +518,33 @@ export async function generateFinancialReport(opts) {
     }
     y+=20;
 
-    const patRows = patItems.sort((a,b)=>b.value-a.value).map(t=>{
-      const pct = patrimonyTotal>0 ? Math.round(t.value/patrimonyTotal*100) : 0;
-      const eq  = savings>0 ? `${fmt0(t.value/Math.max(savings,1))} meses de poupança` : '—';
-      return [t.label||t.key, `${fmtPT(t.value)}€`, `${pct}%`, eq];
-    });
-    autoTable(doc,{
-      startY:y, head:[['Ativo','Valor','% Total','Equivalência']], body:patRows,
-      margin:{left:M,right:M},
-      styles:{fontSize:8,cellPadding:3,textColor:C.text1,fillColor:C.white},
-      headStyles:{fillColor:C.brand,textColor:C.white,fontStyle:'bold',fontSize:7.5},
-      alternateRowStyles:{fillColor:C.cardBg},
-      columnStyles:{
-        0:{cellWidth:W*0.35},
-        1:{cellWidth:W*0.22,halign:'right',fontStyle:'bold'},
-        2:{cellWidth:W*0.13,halign:'right'},
-        3:{cellWidth:W*0.30,textColor:[...C.textMuted],fontSize:7},
-      },
-    });
-    y=doc.lastAutoTable.finalY+6;
+    if (mode==='detailed') {
+      const patRows = patItems.sort((a,b)=>b.value-a.value).map(t=>{
+        const pct = patrimonyTotal>0 ? Math.round(t.value/patrimonyTotal*100) : 0;
+        const eq  = savings>0 ? `${fmt0(t.value/Math.max(savings,1))} meses de poupança` : '—';
+        return [t.label||t.key, `${fmtPT(t.value)}€`, `${pct}%`, eq];
+      });
+      autoTable(doc,{
+        startY:y, head:[['Ativo','Valor','% Total','Equivalência']], body:patRows,
+        margin:{left:M,right:M},
+        styles:{fontSize:8,cellPadding:3,textColor:C.text1,fillColor:C.white},
+        headStyles:{fillColor:C.brand,textColor:C.white,fontStyle:'bold',fontSize:7.5},
+        alternateRowStyles:{fillColor:C.cardBg},
+        columnStyles:{
+          0:{cellWidth:W*0.35},
+          1:{cellWidth:W*0.22,halign:'right',fontStyle:'bold'},
+          2:{cellWidth:W*0.13,halign:'right'},
+          3:{cellWidth:W*0.30,textColor:[...C.textMuted],fontSize:7},
+        },
+      });
+      y=doc.lastAutoTable.finalY+6;
+    } else {
+      y+=4; // summary: just the total hero already shown above
+    }
   }
 
   // ── 6. INSIGHTS ────────────────────────────────────────────────────────────
-  const vis = mode==='detailed' ? insights : insights.slice(0,6);
+  const vis = mode==='detailed' ? insights : insights.slice(0,4);
   if (vis.length>0) {
     let nIns=3;
     if (monthlyData.length>=2) nIns++;

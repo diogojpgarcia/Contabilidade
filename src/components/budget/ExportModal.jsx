@@ -136,7 +136,7 @@ export default function ExportModal({ open, onClose, transactions, patrimony, bu
         monthlyData,
         patrimonyByType: patrimonyByType.filter(t => t.value > 0),
         patrimonyTotal,
-        insights:        mode === 'detailed' ? allInsights : allInsights.slice(0, 6),
+        insights:        allInsights,
         score,
         aiInsights:      includeAI && aiData ? aiData : null,
         appName:         'Finanças',
@@ -172,8 +172,8 @@ export default function ExportModal({ open, onClose, transactions, patrimony, bu
 
           <div className="export-mode-row">
             {[
-              { v: 'summary',  l: 'Sintético',  d: 'Resumo, top categorias, gráficos, 6 insights' },
-              { v: 'detailed', l: 'Detalhado',   d: 'Tudo + todos os insights e análise completa' },
+              { v: 'summary',  l: 'Sintético',  d: '1-2 páginas · top 3 categorias · 4 insights' },
+              { v: 'detailed', l: 'Detalhado',   d: 'Completo · gráfico · tabela · todos os insights' },
             ].map(o => (
               <button
                 key={o.v}
