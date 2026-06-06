@@ -66,6 +66,8 @@ export function useSettings(currentUser, txHook) {
   const [currentMonth, setCurrentMonth] = useState(
     () => getMonthKey(new Date().toISOString())
   );
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
 
   const loadRequestId = useRef(0);
 
@@ -74,12 +76,34 @@ export function useSettings(currentUser, txHook) {
     applyPaletteToDOM(colorPalette);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Detetar estado offline/online — quando volta online, recarrega dados automaticamente
+  useEffect(() => {
+    const handleOffline = () => setIsOffline(true);
+    const handleOnline  = () => {
+      setIsOffline(false);
+      loadUserData(); // auto-retry when connectivity is restored
+    };
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online',  handleOnline);
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online',  handleOnline);
+    };
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Boot atómico ──────────────────────────────────────────────────────────
   // Busca transações e settings em paralelo para eliminar a race condition
   // que existia quando os dois eram carregados em useEffect separados.
   const loadUserData = async () => {
     if (!currentUser) return;
+    if (!navigator.onLine) {
+      setIsOffline(true);
+      toast.error('Sem ligação à internet. Os dados serão carregados quando voltares a ficar online.');
+      return;
+    }
+    setIsOffline(false);
     const requestId = ++loadRequestId.current;
+    setIsLoadingData(true);
 
     try {
       const [txData, settings] = await Promise.all([
@@ -147,6 +171,8 @@ export function useSettings(currentUser, txHook) {
     } catch (error) {
       console.error('❌ Error loading user data:', error);
       toast.error('Erro ao carregar dados. Tenta recarregar a página.');
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
@@ -356,6 +382,8 @@ export function useSettings(currentUser, txHook) {
     confirmedRecurring,
     financialFocus,
     currentMonth, setCurrentMonth,
+    isLoadingData,
+    isOffline,
     // Boot
     loadUserData,
     resetForLogout,

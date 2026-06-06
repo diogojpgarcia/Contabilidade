@@ -17,10 +17,13 @@ function isNonDiscretionary(name) {
   return NON_DISCRETIONARY.some(kw => n.includes(kw));
 }
 
+const { requireAuth } = require('./_auth');
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  if (!requireAuth(req, res)) return;
 
   const {
     period,

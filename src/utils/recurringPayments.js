@@ -53,10 +53,41 @@ export function computeNextDueDate(payment, fromDate = null) {
 
   if (start >= from) return start;
 
-  let d = start;
-  for (let guard = 0; d < from && guard < 2000; guard++) {
-    d = advanceByFrequency(d, payment);
+  const { frequency, customDays } = payment;
+  const startMs = new Date(start + 'T00:00:00').getTime();
+  const fromMs  = new Date(from  + 'T00:00:00').getTime();
+  const diffMs  = fromMs - startMs;
+  let d;
+
+  if (frequency === 'weekly') {
+    // Jump directly to the first occurrence >= from in O(1)
+    const n = Math.ceil(diffMs / (7 * 86400000));
+    d = addDays(start, n * 7);
+  } else if (frequency === 'monthly') {
+    const sd = new Date(start + 'T00:00:00');
+    const fd = new Date(from  + 'T00:00:00');
+    const monthDiff = (fd.getFullYear() - sd.getFullYear()) * 12
+      + (fd.getMonth() - sd.getMonth());
+    const n = Math.max(1, monthDiff);
+    d = addMonths(start, n);
+    // One extra step if addMonths landed on a short month and we're still behind
+    if (d < from) d = addMonths(start, n + 1);
+  } else if (frequency === 'yearly') {
+    const sd = new Date(start + 'T00:00:00');
+    const fd = new Date(from  + 'T00:00:00');
+    const n  = Math.max(1, fd.getFullYear() - sd.getFullYear());
+    d = addYears(start, n);
+    if (d < from) d = addYears(start, n + 1);
+  } else {
+    // custom — math jump, tiny fallback loop (≤3 iterations) for edge cases
+    const days = safeNum(customDays) || 30;
+    const n = Math.max(1, Math.ceil(diffMs / (days * 86400000)));
+    d = addDays(start, n * days);
+    for (let guard = 0; d < from && guard < 3; guard++) {
+      d = advanceByFrequency(d, payment);
+    }
   }
+
   return d;
 }
 

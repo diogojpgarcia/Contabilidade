@@ -75,6 +75,16 @@ const Card = ({ children, onClick, style }) => (
 );
 
 // ── HomeTab ───────────────────────────────────────────────────────────────────
+// ── Skeleton shimmer ─────────────────────────────────────────────────────────
+const Skeleton = ({ w = '100%', h = 16, radius = 8, style }) => (
+  <div style={{
+    width: w, height: h, borderRadius: radius,
+    background: 'var(--cosmos-border-divider)',
+    animation: 'ht-shimmer 1.4s ease-in-out infinite',
+    ...style,
+  }} />
+);
+
 const HomeTab = ({
   balance, transactions, currentMonth,
   patrimony = {},
@@ -85,6 +95,7 @@ const HomeTab = ({
   recurringPayments,
   confirmedRecurring = {},
   userName = '',
+  isLoading = false,
 }) => {
   const { categories } = useAppContext();
   const p = patrimony;
@@ -156,8 +167,20 @@ const HomeTab = ({
           {getGreeting()}, {userName || 'Diogo'}
         </div>
 
+        {/* Loading skeleton */}
+        {isLoading && (
+          <div style={{ marginBottom: 6 }}>
+            <Skeleton w={120} h={11} style={{ marginBottom: 8 }} />
+            <Skeleton w={200} h={42} radius={10} style={{ marginBottom: 18 }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Skeleton w={100} h={28} radius={999} />
+              <Skeleton w={130} h={10} style={{ alignSelf: 'center' }} />
+            </div>
+          </div>
+        )}
+
         {/* Patrimony — centrepiece */}
-        <div style={{ marginBottom: 6 }}>
+        {!isLoading && <div style={{ marginBottom: 6 }}>
           <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--cosmos-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
             Património total
           </div>
@@ -190,7 +213,7 @@ const HomeTab = ({
             </div>
             <span style={{ fontSize: 11, color: 'var(--cosmos-text-3)', whiteSpace: 'nowrap' }}>dia {diaAtual}/{totalDias}</span>
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* ── 2. QUICK ACTIONS ── */}

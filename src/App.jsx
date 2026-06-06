@@ -146,6 +146,12 @@ const App = () => {
     <ToastProvider>
     <AppProvider value={appContextValue}>
     <div className="app-new fintech-ui modern-ui">
+      {s.isOffline && (
+        <div className="offline-banner" role="alert">
+          <span>📡 Sem ligação — a mostrar dados em cache</span>
+          <button onClick={s.loadUserData} className="offline-retry-btn">Tentar novamente</button>
+        </div>
+      )}
       <main className="main-content-new" ref={mainContentRef}>
         {activeTab === 'home' && (
           <ErrorBoundary tab="Início">
@@ -161,6 +167,7 @@ const App = () => {
               budgets={s.budgets}
               onNavigate={handleNavigateFromStats}
               userName={userName}
+              isLoading={s.isLoadingData}
             />
           </ErrorBoundary>
         )}

@@ -2,6 +2,12 @@
    All .h-* classes are theme-agnostic: they rely on CSS variables set by
    the light / dark / gray data-theme and modern-ui class.               */
 
+@keyframes ht-shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
 .h-page {
   padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
   contain: layout style; /* limits repaint area — GPU can render at full refresh rate */

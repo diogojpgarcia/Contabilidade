@@ -476,6 +476,36 @@ input::placeholder {
   }
 }
 
+/* Offline banner */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  z-index: 9999;
+  flex-shrink: 0;
+}
+
+.offline-retry-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.offline-retry-btn:active {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 /* App Layout - Scrollable Tab Content */
 .main-content-new {
   flex: 1;

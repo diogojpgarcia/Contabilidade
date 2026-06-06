@@ -41,6 +41,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const [searchQuery,    setSearchQuery]    = useState('');
   const [showAccFilter,  setShowAccFilter]  = useState(false);
   const [showSearch,     setShowSearch]     = useState(false);
+  const [txPage,         setTxPage]         = useState(1);
+  const TX_PAGE_SIZE = 50;
+  // Reset to page 1 whenever filters change so the list always starts from the top
+  useEffect(() => { setTxPage(1); }, [historyView, selectedAccountId, searchQuery, currentMonth]);
 
 
   // Compute expenses by category from already-filtered transactions
@@ -148,6 +152,11 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
       return true;
     });
   }, [monthTransactions, historyView, selectedAccountId, searchQuery]);
+
+  // Reset pagination whenever filters or month change
+  const pagedTransactions = visibleTransactions.slice(0, txPage * TX_PAGE_SIZE);
+  const hasMore = pagedTransactions.length < visibleTransactions.length;
+
   // 6-month chart still needs all transactions so it can look at past months
   const monthlyData       = getMonthlyData; // already memoized above
   const maxAmount         = useMemo(
@@ -452,7 +461,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               {(() => {
                 const groups = [];
                 const seenDates = {};
-                visibleTransactions.forEach(tx => {
+                pagedTransactions.forEach(tx => {
                   const d = tx.date || '';
                   if (!seenDates[d]) { seenDates[d] = []; groups.push({ date: d, txs: seenDates[d] }); }
                   seenDates[d].push(tx);
@@ -510,6 +519,23 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
                   );
                 });
               })()}
+
+              {/* Load more */}
+              {hasMore && (
+                <button
+                  onClick={() => setTxPage(p => p + 1)}
+                  style={{
+                    display: 'block', width: '100%', margin: '12px 0 4px',
+                    padding: '10px', borderRadius: 10, cursor: 'pointer',
+                    background: 'var(--cosmos-surface-2)',
+                    border: '1px solid var(--cosmos-border-divider)',
+                    color: 'var(--cosmos-text-3)', fontSize: 12, fontWeight: 500,
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  Carregar mais ({visibleTransactions.length - pagedTransactions.length} restantes)
+                </button>
+              )}
             </div>
           )}
         </>

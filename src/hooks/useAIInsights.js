@@ -6,8 +6,23 @@
  */
 import { useState, useEffect, useRef } from 'react';
 
-// Module-level cache: key → { summary, narrative, recommendations, outlook }
-const cache = new Map();
+// LRU cache — max 12 entries (one per month for a year's browsing history)
+const CACHE_MAX = 12;
+const cache = new Map(); // insertion-order Map acts as LRU when we delete-then-set
+
+function cacheSet(key, value) {
+  if (cache.has(key)) cache.delete(key); // move to end (most recent)
+  cache.set(key, value);
+  if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value); // evict oldest
+}
+
+function cacheGet(key) {
+  if (!cache.has(key)) return undefined;
+  const value = cache.get(key);
+  cache.delete(key); // move to end
+  cache.set(key, value);
+  return value;
+}
 
 /**
  * @param {object|null} summary  Output of buildInsightsSummary() from insights.js
@@ -33,8 +48,9 @@ export function useAIInsights(summary, behavioralInsights = []) {
     }
 
     // Cache hit
-    if (cache.has(cacheKey)) {
-      setData(cache.get(cacheKey));
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      setData(cached);
       setLoading(false);
       return;
     }
@@ -55,9 +71,13 @@ export function useAIInsights(summary, behavioralInsights = []) {
       })),
     };
 
+    const secret = import.meta.env.VITE_API_SECRET;
     fetch('/api/insights', {
       method:  'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(secret ? { 'x-app-secret': secret } : {}),
+      },
       body:    JSON.stringify(payload),
       signal:  controller.signal,
     })
@@ -78,7 +98,7 @@ export function useAIInsights(summary, behavioralInsights = []) {
           projections:     result.projections      || '',
           outlook:         result.outlook          || '',
         };
-        cache.set(cacheKey, safe);
+        cacheSet(cacheKey, safe);
         setData(safe);
         setLoading(false);
       })
@@ -94,7 +114,7 @@ export function useAIInsights(summary, behavioralInsights = []) {
 
   /** Manually clear cache for this period and re-fetch */
   const refresh = () => {
-    if (cacheKey) cache.delete(cacheKey);
+    if (cacheKey) cache.delete(cacheKey); // direct delete — no LRU bookkeeping needed
     setData(null);
   };
 
