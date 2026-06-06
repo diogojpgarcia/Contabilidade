@@ -2,17 +2,39 @@
  * StatsOverview.jsx — "Visão Geral" panel of StatsTab.
  * All typography via CSS classes (so-*) defined in fintech.css.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import BarChart from '../charts/BarChart';
 
 const CAT_COLORS = ['var(--cosmos-accent)', 'var(--cosmos-income)', 'var(--cosmos-warning)', 'var(--cosmos-expense)', '#8B5CF6'];
 
 const INSIGHT_CONFIG = {
-  risk: { color: 'var(--cosmos-expense)', bg: 'var(--cosmos-expense-dim)', emoji: '⚠️' },
-  warn: { color: 'var(--cosmos-warning, #f59e0b)', bg: 'rgba(245,158,11,0.08)', emoji: '⚡' },
-  good: { color: 'var(--cosmos-income)',  bg: 'var(--cosmos-income-dim)',  emoji: '📈' },
-  info: { color: 'var(--cosmos-text-3)',  bg: 'var(--cosmos-accent-soft)', emoji: '💡' },
+  risk: {
+    color:  'var(--cosmos-expense)',
+    bg:     'var(--cosmos-expense-dim)',
+    border: 'rgba(248,113,113,0.18)',
+    emoji:  '⚠️',
+  },
+  warn: {
+    color:  'var(--cosmos-warning, #f59e0b)',
+    bg:     'var(--cosmos-warning-dim, rgba(245,158,11,0.12))',
+    border: 'rgba(245,158,11,0.20)',
+    emoji:  '⚡',
+  },
+  good: {
+    color:  'var(--cosmos-income)',
+    bg:     'var(--cosmos-income-dim)',
+    border: 'rgba(52,211,153,0.18)',
+    emoji:  '✦',
+  },
+  info: {
+    color:  'var(--cosmos-accent)',
+    bg:     'var(--cosmos-accent-soft)',
+    border: 'var(--cosmos-accent-border)',
+    emoji:  '💡',
+  },
 };
+
+const INITIAL_SHOW = 3;
 
 const StatsOverview = ({
   monthSaldo, monthIncome, monthExpenses,
@@ -25,6 +47,7 @@ const StatsOverview = ({
   fmt,
   onShowLog,
 }) => {
+  const [showAll, setShowAll] = useState(false);
   const pct      = monthIncome > 0 ? Math.min((monthExpenses / monthIncome) * 100, 100) : 0;
   const barColor = pct >= 90 ? 'var(--cosmos-expense)' : pct >= 70 ? 'var(--cosmos-warning, #f59e0b)' : 'var(--cosmos-accent)';
 
@@ -135,28 +158,45 @@ const StatsOverview = ({
           </div>
         </div>
 
-        {insights.length > 0 && <div className="so-divider" style={{ margin: '12px 0' }} />}
+        {insights.length > 0 && <div className="so-divider" style={{ margin: '14px 0 12px' }} />}
 
         {/* Insights */}
-        {insights.slice(0, 3).map((item, i) => {
-          const cfg = INSIGHT_CONFIG[item.color] || INSIGHT_CONFIG.info;
-          return (
-            <div
-              key={i}
-              className={`so-insight${item.meta ? ' so-insight--tap' : ''}`}
-              style={{ background: cfg.bg, borderLeftColor: cfg.color, marginBottom: i < 2 ? 8 : 0 }}
-              onClick={() => item.meta?.action === 'openHistory' && onShowLog?.()}
-            >
-              <span className="so-insight-emoji">{cfg.emoji}</span>
-              <div className="so-insight-body">
-                <div className="so-insight-title">{item.title}</div>
-                <div className="so-insight-msg">{item.message}</div>
-                {item.explanation && <div className="so-insight-exp">{item.explanation}</div>}
-              </div>
-              {item.meta && <span className="so-insight-chev">›</span>}
-            </div>
-          );
-        })}
+        {insights.length > 0 && (
+          <div className="so-insights-list">
+            {(showAll ? insights : insights.slice(0, INITIAL_SHOW)).map((item, i) => {
+              const cfg = INSIGHT_CONFIG[item.color] || INSIGHT_CONFIG.info;
+              return (
+                <div
+                  key={i}
+                  className={`so-insight${item.meta ? ' so-insight--tap' : ''}`}
+                  style={{
+                    '--si-color':  cfg.color,
+                    '--si-bg':     cfg.bg,
+                    '--si-border': cfg.border,
+                    borderColor:   cfg.border,
+                  }}
+                  onClick={() => item.meta?.action === 'openHistory' && onShowLog?.()}
+                >
+                  <div className="so-insight-badge">{cfg.emoji}</div>
+                  <div className="so-insight-body">
+                    <div className="so-insight-title">{item.title}</div>
+                    <div className="so-insight-msg">{item.message}</div>
+                    {item.explanation && <div className="so-insight-exp">{item.explanation}</div>}
+                  </div>
+                  {item.meta && <span className="so-insight-chev">›</span>}
+                </div>
+              );
+            })}
+
+            {insights.length > INITIAL_SHOW && (
+              <button className="so-insight-more-btn" onClick={() => setShowAll(v => !v)}>
+                {showAll
+                  ? '↑ Mostrar menos'
+                  : `Ver mais ${insights.length - INITIAL_SHOW} insight${insights.length - INITIAL_SHOW > 1 ? 's' : ''} →`}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
     </div>
