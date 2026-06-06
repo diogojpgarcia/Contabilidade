@@ -48,9 +48,12 @@ export function useSettings(currentUser, txHook) {
     accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [],
   });
   const [budgets, setBudgets] = useState({});
-  const [colorPalette, setColorPaletteState] = useState(
-    () => localStorage.getItem('cosmos-palette') || 'midnight'
-  );
+  const [colorPalette, setColorPaletteState] = useState(() => {
+    const stored = localStorage.getItem('cosmos-palette') || 'midnight';
+    // Migrate old theme names that no longer exist
+    const VALID = ['midnight', 'dusk', 'stone'];
+    return VALID.includes(stored) ? stored : 'midnight';
+  });
   const [mainAccountId, setMainAccountId] = useState(null);
   const [financialMonthStartDay, setFinancialMonthStartDay] = useState(1);
   const [useFinancialMonth, setUseFinancialMonth] = useState(false);
@@ -123,11 +126,13 @@ export function useSettings(currentUser, txHook) {
       }
 
       // Paleta de cor — aplica ao DOM (inclui theme-color do notch iOS)
-      const currentPalette = settings?.color_palette || colorPalette;
+      const VALID_PALETTES = ['midnight', 'dusk', 'stone'];
+      const rawPalette = settings?.color_palette || colorPalette;
+      const currentPalette = VALID_PALETTES.includes(rawPalette) ? rawPalette : 'midnight';
       applyPaletteToDOM(currentPalette);
       if (settings?.color_palette) {
-        setColorPaletteState(settings.color_palette);
-        localStorage.setItem('cosmos-palette', settings.color_palette);
+        setColorPaletteState(currentPalette);
+        localStorage.setItem('cosmos-palette', currentPalette);
       }
 
       // Mês financeiro
