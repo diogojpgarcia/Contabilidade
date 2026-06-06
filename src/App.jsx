@@ -21,10 +21,11 @@ import HomeTab from './components/tabs/HomeTab';
 import AddTab  from './components/tabs/AddTab';
 
 // Tabs pesados — lazy loaded (só carregam quando o utilizador abre o tab)
-const StatsTab   = lazy(() => import('./components/tabs/StatsTab'));
-const BudgetTab  = lazy(() => import('./components/tabs/BudgetTab'));
-const ImportTab  = lazy(() => import('./components/tabs/ImportTab'));
-const ProfileTab = lazy(() => import('./components/tabs/ProfileTab'));
+const StatsTab    = lazy(() => import('./components/tabs/StatsTab'));
+const BudgetTab   = lazy(() => import('./components/tabs/BudgetTab'));
+const ImportTab   = lazy(() => import('./components/tabs/ImportTab'));
+const ProfileTab  = lazy(() => import('./components/tabs/ProfileTab'));
+const ExportModal = lazy(() => import('./components/budget/ExportModal'));
 
 // Fallback leve durante o carregamento lazy
 const TabFallback = () => (
@@ -51,6 +52,7 @@ const App = () => {
   const [activeTab, setActiveTab]         = useState('home');
   const [pendingBudgetNav, setPendingBudgetNav] = useState(null);
   const [pendingAddMode,   setPendingAddMode]   = useState(null);
+  const [showExport,       setShowExport]       = useState(false);
   const mainContentRef = useRef(null);
 
   // Haptic feedback — 10ms pulse on Android via Vibration API
@@ -277,11 +279,27 @@ const App = () => {
                 s.resetForLogout();
                 setActiveTab('home');
               }}
+              onExportOpen={() => setShowExport(true)}
             />
             </Suspense>
           </ErrorBoundary>
         )}
       </main>
+
+      {/* Export Modal — at App level so it has access to all data */}
+      {showExport && (
+        <Suspense fallback={null}>
+          <ExportModal
+            open={showExport}
+            onClose={() => setShowExport(false)}
+            transactions={tx.transactions}
+            patrimony={patrimonyWithLiveBalances}
+            budgets={s.budgets}
+            currentMonth={s.currentMonth}
+            financialMonthStartDay={s.financialMonthStartDay}
+          />
+        </Suspense>
+      )}
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav">

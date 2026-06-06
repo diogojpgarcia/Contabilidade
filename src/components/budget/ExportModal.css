@@ -1,0 +1,189 @@
+/* ── ExportModal ─────────────────────────────────────────────────────────── */
+.export-modal {
+  max-width: 420px;
+  width: 92vw;
+}
+
+.export-body {
+  padding: 0 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.export-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.export-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cosmos-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.export-sublabel {
+  font-size: 0.72rem;
+  color: var(--cosmos-text-3);
+  margin-top: -4px;
+}
+
+.export-select {
+  background: var(--cosmos-surface-2, var(--cosmos-card-bg));
+  border: 1px solid var(--cosmos-border-divider);
+  border-radius: 10px;
+  color: var(--cosmos-text-1);
+  font-size: 0.875rem;
+  padding: 9px 12px;
+  width: 100%;
+  font-family: inherit;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+.export-select:focus {
+  border-color: var(--cosmos-accent);
+}
+
+/* Mode buttons */
+.export-mode-row {
+  display: flex;
+  gap: 8px;
+}
+
+.export-mode-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 10px 12px;
+  background: var(--cosmos-surface-2, var(--cosmos-card-bg));
+  border: 1.5px solid var(--cosmos-border-divider);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  font-family: inherit;
+}
+.export-mode-btn.active {
+  border-color: var(--cosmos-accent);
+  background: var(--cosmos-accent-soft, rgba(99,102,241,0.08));
+}
+
+.export-mode-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cosmos-text-1);
+}
+.export-mode-btn.active .export-mode-name {
+  color: var(--cosmos-accent);
+}
+.export-mode-desc {
+  font-size: 0.68rem;
+  color: var(--cosmos-text-3);
+  line-height: 1.35;
+}
+
+/* AI toggle row */
+.export-toggle-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.export-toggle {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  background: var(--cosmos-border-divider);
+  border: none;
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.export-toggle.on {
+  background: var(--cosmos-accent);
+}
+.export-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.export-toggle.on .export-toggle-knob {
+  transform: translateX(18px);
+}
+
+/* AI status */
+.export-ai-status {
+  font-size: 0.75rem;
+  color: var(--cosmos-text-3);
+  padding: 6px 10px;
+  background: var(--cosmos-surface-2, var(--cosmos-card-bg));
+  border-radius: 8px;
+  border: 1px solid var(--cosmos-border-divider);
+}
+.export-ai-status.loading { color: var(--cosmos-warning, #f59e0b); }
+.export-ai-status.ready   { color: var(--cosmos-income); }
+
+/* Preview */
+.export-preview {
+  background: var(--cosmos-surface-2, var(--cosmos-card-bg));
+  border: 1px solid var(--cosmos-border-divider);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.export-preview-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--cosmos-text-2);
+}
+.export-preview-row .income  { color: var(--cosmos-income); font-weight: 600; }
+.export-preview-row .expense { color: var(--cosmos-expense); font-weight: 600; }
+
+/* Error */
+.export-error {
+  font-size: 0.78rem;
+  color: var(--cosmos-expense);
+  background: var(--cosmos-expense-dim, rgba(239,68,68,0.08));
+  border: 1px solid var(--cosmos-expense);
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.45;
+}
+
+/* Generate button */
+.export-btn-generate {
+  width: 100%;
+  padding: 13px;
+  background: var(--cosmos-accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.export-btn-generate:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.export-btn-generate:not(:disabled):active {
+  transform: scale(0.98);
+}

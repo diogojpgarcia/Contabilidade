@@ -17,7 +17,6 @@ export const formatMonthLabel = (yyyymm, startDay = 1) => {
   return getFinancialMonthLabel(yyyymm, startDay);
 };
 
-// Re-export so callers that import getPrediction from insights still work.
 export const getPrediction = (spent, selectedMonth, startDay = 1) =>
   _getPrediction(spent, selectedMonth, startDay);
 
@@ -29,307 +28,420 @@ const getSpent = (transactions, catName, month, startDay = 1) =>
 const fmt0 = (n) =>
   Math.abs(n).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-export const generateInsights = ({ transactions, budgets, categories, selectedMonth, startDay = 1, focus = null }) => {
+export const generateInsights = ({
+  transactions, budgets, categories, selectedMonth,
+  startDay = 1, focus = null, maxResults = 4,
+}) => {
   const items = [];
-
-  const prevMonth  = shiftMonth(selectedMonth, -1);
-  const prev2Month = shiftMonth(selectedMonth, -2);
-  const prev3Month = shiftMonth(selectedMonth, -3);
-  const prev4Month = shiftMonth(selectedMonth, -4);
-  const prev5Month = shiftMonth(selectedMonth, -5);
-
-  // Current period timing (works for both calendar and financial months)
+  const prevMonth       = shiftMonth(selectedMonth, -1);
+  const prev2Month      = shiftMonth(selectedMonth, -2);
+  const prev3Month      = shiftMonth(selectedMonth, -3);
+  const prev4Month      = shiftMonth(selectedMonth, -4);
+  const prev5Month      = shiftMonth(selectedMonth, -5);
+  const sameMonthLastYr = shiftMonth(selectedMonth, -12);
   const today    = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const { start, end } = getFinancialMonthRange(selectedMonth, startDay);
   const isCurrentMonth = todayStr >= start && todayStr <= end;
-  const startDate  = new Date(start + 'T00:00:00');
-  const endDate    = new Date(end   + 'T00:00:00');
-  const daysInMonth  = Math.round((endDate - startDate) / 86400000) + 1;
-  const daysPassed   = isCurrentMonth ? Math.round((today - startDate) / 86400000) + 1 : daysInMonth;
-  const daysLeft     = isCurrentMonth ? daysInMonth - daysPassed : 0;
-
-  // Per-category current + previous month totals
+  const startDate   = new Date(start + 'T00:00:00');
+  const endDate     = new Date(end   + 'T00:00:00');
+  const daysInMonth = Math.round((endDate - startDate) / 86400000) + 1;
+  const daysPassed  = isCurrentMonth ? Math.round((today - startDate) / 86400000) + 1 : daysInMonth;
+  const daysLeft    = isCurrentMonth ? daysInMonth - daysPassed : 0;
   const catTotals = categories.expense.map(cat => ({
     cat,
     spent:     getSpent(transactions, cat.label, selectedMonth, startDay),
-    prevSpent: getSpent(transactions, cat.label, prevMonth,     startDay),
+    prevSpent: getSpent(transactions, cat.label, prevMonth, startDay),
   }));
   const totalCurr = catTotals.reduce((s, c) => s + c.spent, 0);
+  const currIncome = transactions
+    .filter(t => t.type === 'income' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay))
+    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const last6Months = [prev5Month, prev4Month, prev3Month, prev2Month, prevMonth, selectedMonth];
 
-  // ── 1. Budget alerts ───────────────────────────────────────────────────────
+  // 1. Budget alerts
   for (const { cat, spent } of catTotals) {
     const limit   = budgets[cat.id] || 0;
     const percent = limit > 0 ? (spent / limit) * 100 : 0;
-
     if (limit > 0 && percent >= 100) {
-      items.push({
-        type: 'alert',
+      items.push({ type:'alert', priority:100, color:'risk',
         title: `${cat.label}: limite ultrapassado`,
         message: `Excedeste em ${fmt0(spent - limit)}€${daysLeft > 0 ? ` — ainda faltam ${daysLeft} dias` : ''}`,
         explanation: `${fmt0(spent)}€ gastos de um limite de ${fmt0(limit)}€`,
-        priority: 100,
-        color: 'risk',
-        meta: { action: 'openBudget', categoryLabel: cat.label },
-      });
+        meta: { action:'openBudget', categoryLabel:cat.label } });
     } else if (limit > 0 && percent >= 80) {
-      const remaining = limit - spent;
-      items.push({
-        type: 'risk',
-        title: `${cat.label}: só restam ${fmt0(remaining)}€`,
-        message: daysLeft > 0
-          ? `${percent.toFixed(0)}% usado — ${daysLeft} dias ainda por decorrer`
-          : `${percent.toFixed(0)}% do orçamento consumido`,
+      items.push({ type:'risk', priority:90, color:'warn',
+        title: `${cat.label}: só restam ${fmt0(limit - spent)}€`,
+        message: daysLeft > 0 ? `${percent.toFixed(0)}% usado — ${daysLeft} dias ainda por decorrer` : `${percent.toFixed(0)}% do orçamento consumido`,
         explanation: `${fmt0(spent)}€ de ${fmt0(limit)}€`,
-        priority: 90,
-        color: 'warn',
-        meta: { action: 'openBudget', categoryLabel: cat.label },
-      });
+        meta: { action:'openBudget', categoryLabel:cat.label } });
     }
-
-    // Projection: current pace → end of month
     if (isCurrentMonth && limit > 0 && daysPassed > 3 && percent < 100) {
       const projected = Math.round((spent / daysPassed) * daysInMonth);
       if (projected > limit) {
-        items.push({
-          type: 'alert',
+        items.push({ type:'alert', priority:85, color:'risk',
           title: `${cat.label}: vai ultrapassar ao ritmo atual`,
           message: `Projeção: ${fmt0(projected)}€ para um limite de ${fmt0(limit)}€`,
           explanation: `${fmt0(spent)}€ em ${daysPassed} dias — ritmo de ${fmt0(Math.round(spent / daysPassed))}€/dia`,
-          priority: 85,
-          color: 'risk',
-          meta: { action: 'openBudget', categoryLabel: cat.label },
-        });
+          meta: { action:'openBudget', categoryLabel:cat.label } });
       }
     }
   }
 
-  // ── 2. Category concentration ──────────────────────────────────────────────
+  // 2. Concentration
   if (totalCurr > 20) {
-    const topCat = catTotals.filter(c => c.spent > 0).sort((a, b) => b.spent - a.spent)[0];
-    if (topCat) {
-      const share = (topCat.spent / totalCurr) * 100;
+    const top = catTotals.filter(c => c.spent > 0).sort((a, b) => b.spent - a.spent)[0];
+    if (top) {
+      const share = (top.spent / totalCurr) * 100;
       if (share >= 50) {
-        items.push({
-          type: 'risk',
-          title: `${topCat.cat.label} concentra ${share.toFixed(0)}% das despesas`,
-          message: `${fmt0(topCat.spent)}€ de ${fmt0(totalCurr)}€ totais`,
-          explanation: share >= 70
-            ? 'Concentração muito elevada — uma única categoria domina o orçamento'
-            : 'Reduzir aqui tem o maior impacto nas poupanças totais',
-          priority: 80,
-          color: share >= 70 ? 'risk' : 'warn',
-          meta: { action: 'openBudget', categoryLabel: topCat.cat.label },
-        });
+        items.push({ type:'risk', priority:80, color: share >= 70 ? 'risk' : 'warn',
+          title: `${top.cat.label} concentra ${share.toFixed(0)}% das despesas`,
+          message: `${fmt0(top.spent)}€ de ${fmt0(totalCurr)}€ totais`,
+          explanation: share >= 70 ? 'Concentração muito elevada — uma única categoria domina o orçamento' : 'Reduzir aqui tem o maior impacto nas poupanças totais',
+          meta: { action:'openBudget', categoryLabel:top.cat.label } });
       }
     }
   }
 
-  // ── 3. 3-month consecutive increase in a category ─────────────────────────
+  // 3. 3-month rise
   for (const { cat } of catTotals) {
-    const [m0, m1, m2] = [prev2Month, prevMonth, selectedMonth]
-      .map(m => getSpent(transactions, cat.label, m, startDay));
+    const m0 = getSpent(transactions, cat.label, prev2Month, startDay);
+    const m1 = getSpent(transactions, cat.label, prevMonth, startDay);
+    const m2 = getSpent(transactions, cat.label, selectedMonth, startDay);
     if (m0 > 10 && m1 > m0 * 1.1 && m2 > m1 * 1.1) {
-      const growth = ((m2 - m0) / m0 * 100).toFixed(0);
-      items.push({
-        type: 'trend',
+      items.push({ type:'trend', priority:75, color:'warn',
         title: `${cat.label} sobe há 3 meses seguidos`,
-        message: `${fmt0(m0)}€ → ${fmt0(m1)}€ → ${fmt0(m2)}€  (+${growth}%)`,
+        message: `${fmt0(m0)}€ → ${fmt0(m1)}€ → ${fmt0(m2)}€ (+${((m2-m0)/m0*100).toFixed(0)}%)`,
         explanation: 'Tendência de aumento consistente — vale a pena definir um limite',
-        priority: 75,
-        color: 'warn',
-        meta: { action: 'openBudget', categoryLabel: cat.label },
-      });
+        meta: { action:'openBudget', categoryLabel:cat.label } });
     }
   }
 
-  // ── 4. Savings opportunity — spending above 2-month average by > 30% ───────
+  // 4. Savings opportunity
   for (const { cat } of catTotals) {
-    const [m0, m1, m2] = [prev2Month, prevMonth, selectedMonth]
-      .map(m => getSpent(transactions, cat.label, m, startDay));
+    const m0 = getSpent(transactions, cat.label, prev2Month, startDay);
+    const m1 = getSpent(transactions, cat.label, prevMonth, startDay);
+    const m2 = getSpent(transactions, cat.label, selectedMonth, startDay);
     const avg2 = (m0 + m1) / 2;
     if (avg2 > 20 && m2 > avg2 * 1.3) {
-      const excess = Math.round(m2 - avg2);
-      items.push({
-        type: 'opportunity',
+      items.push({ type:'opportunity', priority:70, color:'good',
         title: `Poupança potencial em ${cat.label}`,
-        message: `${fmt0(excess)}€ acima da tua média habitual de ${fmt0(Math.round(avg2))}€`,
+        message: `${fmt0(Math.round(m2 - avg2))}€ acima da tua média habitual de ${fmt0(Math.round(avg2))}€`,
         explanation: 'Voltares ao teu ritmo anterior pouparia este valor todo o mês',
-        priority: 70,
-        color: 'good',
-        meta: { action: 'openBudget', categoryLabel: cat.label },
-      });
+        meta: { action:'openBudget', categoryLabel:cat.label } });
     }
   }
 
-  // ── 5. Biggest single expense this month ──────────────────────────────────
+  // 5. Biggest single expense
   if (totalCurr > 50) {
-    const thisMonthExpenses = transactions.filter(
-      t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay)
-    ).sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
-    const bigTx = thisMonthExpenses[0];
+    const bigTx = transactions
+      .filter(t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay))
+      .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))[0];
     if (bigTx) {
       const amt = parseFloat(bigTx.amount) || 0;
-      const share = amt / totalCurr;
-      if (amt >= 50 && share >= 0.20) {
-        const label = bigTx.description?.trim() || bigTx.category;
-        items.push({
-          type: 'info',
+      if (amt >= 50 && amt / totalCurr >= 0.20) {
+        items.push({ type:'info', priority:55, color:'info',
           title: `Maior despesa: ${fmt0(amt)}€`,
-          message: `"${label}" — ${(share * 100).toFixed(0)}% do total deste mês`,
-          explanation: null,
-          priority: 55,
-          color: 'info',
-          meta: { action: 'openHistory' },
-        });
+          message: `"${bigTx.description?.trim() || bigTx.category}" — ${((amt/totalCurr)*100).toFixed(0)}% do total deste mês`,
+          explanation: null, meta: { action:'openHistory' } });
       }
     }
   }
 
-  // ── 6. Spending volatility ─────────────────────────────────────────────────
+  // 6. Volatility
   for (const { cat } of catTotals) {
-    const monthly = [prev5Month, prev4Month, prev3Month, prev2Month, prevMonth, selectedMonth]
-      .map(m => getSpent(transactions, cat.label, m, startDay))
-      .filter(v => v > 0);
+    const monthly = last6Months.map(m => getSpent(transactions, cat.label, m, startDay)).filter(v => v > 0);
     if (monthly.length >= 4) {
       const mean   = monthly.reduce((s, v) => s + v, 0) / monthly.length;
       const stddev = Math.sqrt(monthly.reduce((s, v) => s + (v - mean) ** 2, 0) / monthly.length);
-      const cv     = stddev / mean;
-      if (cv > 0.7 && mean > 15) {
-        const min = fmt0(Math.min(...monthly));
-        const max = fmt0(Math.max(...monthly));
-        items.push({
-          type: 'pattern',
+      if (stddev / mean > 0.7 && mean > 15) {
+        items.push({ type:'pattern', priority:65, color:'info',
           title: `${cat.label}: gastos muito irregulares`,
-          message: `De ${min}€ a ${max}€ nos últimos meses`,
+          message: `De ${fmt0(Math.min(...monthly))}€ a ${fmt0(Math.max(...monthly))}€ nos últimos meses`,
           explanation: 'Padrão imprevisível — um orçamento fixo ajudaria a estabilizar',
-          priority: 65,
-          color: 'info',
-          meta: { action: 'openBudget', categoryLabel: cat.label },
-        });
+          meta: { action:'openBudget', categoryLabel:cat.label } });
       }
     }
   }
 
-  // ── 7. Weekend vs weekday spending pattern ─────────────────────────────────
-  const windowStart = prev2Month + '-01';
-  const recentExpenses = transactions.filter(
-    t => t.type === 'expense' && t.date && t.date >= windowStart
-  );
-  if (recentExpenses.length >= 10) {
-    let weekendTotal = 0; const weekendDays = new Set();
-    let weekdayTotal = 0; const weekdayDays = new Set();
-    for (const t of recentExpenses) {
-      const dow    = new Date(t.date + 'T12:00:00').getDay();
-      const amount = parseFloat(t.amount) || 0;
-      if (dow === 0 || dow === 6) { weekendTotal += amount; weekendDays.add(t.date); }
-      else                        { weekdayTotal += amount; weekdayDays.add(t.date); }
+  // 7. Weekend vs weekday
+  const recentExp = transactions.filter(t => t.type === 'expense' && t.date && t.date >= prev2Month + '-01');
+  if (recentExp.length >= 10) {
+    let weTotal = 0, wdTotal = 0;
+    const weDays = new Set(), wdDays = new Set();
+    for (const t of recentExp) {
+      const dow = new Date(t.date + 'T12:00:00').getDay();
+      const amt = parseFloat(t.amount) || 0;
+      if (dow === 0 || dow === 6) { weTotal += amt; weDays.add(t.date); }
+      else { wdTotal += amt; wdDays.add(t.date); }
     }
-    if (weekendDays.size >= 3 && weekdayDays.size >= 5) {
-      const wkendAvg = weekendTotal / weekendDays.size;
-      const wkdayAvg = weekdayTotal / weekdayDays.size;
-      if (wkendAvg > wkdayAvg * 1.4) {
-        const ratio = (wkendAvg / wkdayAvg).toFixed(1);
-        items.push({
-          type: 'pattern',
-          title: `Gastas ${ratio}× mais ao fim de semana`,
-          message: `${fmt0(wkendAvg)}€/dia (fim de semana) vs ${fmt0(wkdayAvg)}€/dia (semana)`,
+    if (weDays.size >= 3 && wdDays.size >= 5) {
+      const weAvg = weTotal / weDays.size;
+      const wdAvg = wdTotal / wdDays.size;
+      if (weAvg > wdAvg * 1.4) {
+        items.push({ type:'pattern', priority:60, color:'info',
+          title: `Gastas ${(weAvg/wdAvg).toFixed(1)}× mais ao fim de semana`,
+          message: `${fmt0(weAvg)}€/dia (fim de semana) vs ${fmt0(wdAvg)}€/dia (semana)`,
           explanation: 'Padrão detetado nos últimos 3 meses',
-          priority: 60,
-          color: 'info',
-          meta: { action: 'openHistory' },
-        });
+          meta: { action:'openHistory' } });
       }
     }
   }
 
-  // ── 8. Recurring micro-transactions ───────────────────────────────────────
+  // 8. Micro-transactions
   for (const { cat, spent } of catTotals) {
     if (spent < 10) continue;
-    const txns = transactions.filter(
-      t => t.type === 'expense' && t.category === cat.label && t.date && isInFinancialMonth(t.date, selectedMonth, startDay)
-    );
-    if (txns.length >= 5) {
-      const avg = spent / txns.length;
-      if (avg < 15) {
-        items.push({
-          type: 'pattern',
-          title: `${txns.length} pequenas compras em ${cat.label}`,
-          message: `Média de ${avg.toFixed(1)}€ cada — total acumulado: ${fmt0(spent)}€`,
-          explanation: 'Pequenos gastos frequentes somam mais do que parece',
-          priority: 50,
-          color: 'info',
-          meta: { action: 'openBudget', categoryLabel: cat.label },
-        });
+    const txns = transactions.filter(t => t.type === 'expense' && t.category === cat.label && t.date && isInFinancialMonth(t.date, selectedMonth, startDay));
+    if (txns.length >= 5 && spent / txns.length < 15) {
+      items.push({ type:'pattern', priority:50, color:'info',
+        title: `${txns.length} pequenas compras em ${cat.label}`,
+        message: `Média de ${(spent/txns.length).toFixed(1)}€ cada — total: ${fmt0(spent)}€`,
+        explanation: 'Pequenos gastos frequentes somam mais do que parece',
+        meta: { action:'openBudget', categoryLabel:cat.label } });
+    }
+  }
+
+  // 9. Savings rate
+  if (currIncome > 30) {
+    const sav  = currIncome - totalCurr;
+    const rate = (sav / currIncome) * 100;
+    if (sav < 0) {
+      items.push({ type:'alert', priority:95, color:'risk',
+        title: 'A gastar mais do que recebes',
+        message: `Défice de ${fmt0(Math.abs(sav))}€ — receitas ${fmt0(currIncome)}€, despesas ${fmt0(totalCurr)}€`,
+        explanation: 'Isto é insustentável a longo prazo — analisa onde reduzir',
+        meta: { action:'openHistory' } });
+    } else if (rate < 5) {
+      items.push({ type:'risk', priority:88, color:'warn',
+        title: `Taxa de poupança crítica: ${rate.toFixed(1)}%`,
+        message: `Só ${fmt0(sav)}€ guardados de ${fmt0(currIncome)}€ de rendimento`,
+        explanation: 'Objetivo recomendado: pelo menos 20%. Pequenas reduções em várias categorias podem fazer a diferença.',
+        meta: { action:'openHistory' } });
+    } else if (rate < 15) {
+      items.push({ type:'risk', priority:72, color:'warn',
+        title: `Taxa de poupança baixa: ${rate.toFixed(1)}%`,
+        message: `${fmt0(sav)}€ guardados de ${fmt0(currIncome)}€`,
+        explanation: `Meta saudável: 20% ou mais. Com mais 5% pouparias mais ${fmt0(currIncome * 0.05)}€/mês.`,
+        meta: { action:'openHistory' } });
+    } else if (rate >= 20) {
+      items.push({ type:'good', priority:42, color:'good',
+        title: `Taxa de poupança sólida: ${rate.toFixed(1)}%`,
+        message: `${fmt0(sav)}€ poupados de ${fmt0(currIncome)}€ — acima da meta de 20%`,
+        explanation: null, meta: null });
+    }
+  }
+
+  // 10. Spending pace
+  if (isCurrentMonth && daysPassed >= 5 && totalCurr > 50) {
+    const histVals = [prevMonth, prev2Month].map(m => {
+      return transactions
+        .filter(t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, m, startDay))
+        .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+    }).filter(v => v > 0);
+    if (histVals.length >= 1) {
+      const histAvg   = histVals.reduce((s, v) => s + v, 0) / histVals.length;
+      const currDaily = totalCurr / daysPassed;
+      const histDaily = histAvg / daysInMonth;
+      const projected = Math.round(currDaily * daysInMonth);
+      if (histDaily > 5 && currDaily > histDaily * 1.5) {
+        items.push({ type:'alert', priority:87, color:'risk',
+          title: 'Ritmo de gastos acima do normal',
+          message: `${fmt0(currDaily)}€/dia atual vs ${fmt0(histDaily)}€/dia habitual`,
+          explanation: `Ao ritmo atual terminarás o mês com ${fmt0(projected)}€ (habitual: ${fmt0(histAvg)}€)`,
+          meta: { action:'openHistory' } });
+      } else if (histDaily > 5 && currDaily < histDaily * 0.7) {
+        items.push({ type:'good', priority:38, color:'good',
+          title: 'Ritmo de gastos mais controlado',
+          message: `${fmt0(currDaily)}€/dia vs ${fmt0(histDaily)}€/dia habitual`,
+          explanation: `Ao ritmo atual poderás poupar mais ${fmt0(Math.round(histAvg - projected))}€ vs meses anteriores`,
+          meta: null });
       }
     }
   }
 
-  const ranked = applyFocusBoost(items, focus)
-    .sort((a, b) => b.priority - a.priority);
+  // 11. Year-over-year
+  const lyExp = transactions
+    .filter(t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, sameMonthLastYr, startDay))
+    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  if (lyExp > 100 && totalCurr > 100) {
+    const yoy = ((totalCurr - lyExp) / lyExp) * 100;
+    if (yoy >= 20) {
+      items.push({ type:'trend', priority:82, color:'warn',
+        title: `Despesas ${yoy.toFixed(0)}% acima do ano passado`,
+        message: `${fmt0(totalCurr)}€ este mês vs ${fmt0(lyExp)}€ no mesmo mês do ano anterior`,
+        explanation: 'Crescimento significativo nas despesas anuais — vale a pena perceber a causa',
+        meta: { action:'openHistory' } });
+    } else if (yoy <= -15) {
+      items.push({ type:'good', priority:44, color:'good',
+        title: `Despesas ${Math.abs(yoy).toFixed(0)}% abaixo do ano passado`,
+        message: `${fmt0(totalCurr)}€ vs ${fmt0(lyExp)}€ no mesmo período de ${sameMonthLastYr.split('-')[0]}`,
+        explanation: `Poupaste ${fmt0(lyExp - totalCurr)}€ a mais do que no ano anterior`,
+        meta: null });
+    }
+  }
 
-  return ranked.slice(0, 4);
+  // 12. Recurring without budget
+  for (const cat of categories.expense) {
+    const active = last6Months.filter(m => getSpent(transactions, cat.label, m, startDay) > 0).length;
+    const curr   = getSpent(transactions, cat.label, selectedMonth, startDay);
+    if (active >= 4 && !(budgets[cat.id] > 0) && curr >= 30) {
+      const avg6 = last6Months.reduce((s, m) => s + getSpent(transactions, cat.label, m, startDay), 0) / 6;
+      items.push({ type:'info', priority:48, color:'info',
+        title: `${cat.label}: recorrente sem limite definido`,
+        message: `Ativo em ${active} dos últimos 6 meses — média de ${fmt0(avg6)}€/mês`,
+        explanation: 'Definir um orçamento ajuda a controlar gastos habituais',
+        meta: { action:'openBudget', categoryLabel:cat.label } });
+    }
+  }
+
+  // 13. Income volatility
+  const incHist = [prev5Month, prev4Month, prev3Month, prev2Month, prevMonth].map(m => {
+    return transactions
+      .filter(t => t.type === 'income' && t.date && isInFinancialMonth(t.date, m, startDay))
+      .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  }).filter(v => v > 0);
+  if (incHist.length >= 3) {
+    const mean   = incHist.reduce((s, v) => s + v, 0) / incHist.length;
+    const stddev = Math.sqrt(incHist.reduce((s, v) => s + (v - mean) ** 2, 0) / incHist.length);
+    if (stddev / mean > 0.25 && mean > 200) {
+      items.push({ type:'pattern', priority:63, color:'info',
+        title: 'Rendimento variável detetado',
+        message: `Variação de ${fmt0(Math.min(...incHist))}€ a ${fmt0(Math.max(...incHist))}€ nos últimos meses`,
+        explanation: 'Com rendimento irregular, mantém uma reserva de emergência de 3-6 meses de despesas',
+        meta: null });
+    }
+  }
+
+  // 14. First vs second half
+  if (totalCurr > 100) {
+    const thisMonthTxns = transactions.filter(t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay));
+    if (thisMonthTxns.length >= 8) {
+      const mStart = new Date(start + 'T00:00:00');
+      let fh = 0, sh = 0;
+      for (const t of thisMonthTxns) {
+        const dayN = Math.round((new Date(t.date + 'T12:00:00') - mStart) / 86400000) + 1;
+        if (dayN <= daysInMonth / 2) fh += parseFloat(t.amount) || 0;
+        else sh += parseFloat(t.amount) || 0;
+      }
+      if (fh > 20 && sh > 20) {
+        const ratio = fh / sh;
+        if (ratio > 2) {
+          items.push({ type:'pattern', priority:46, color:'info',
+            title: 'Gastos concentrados no início do mês',
+            message: `${fmt0(fh)}€ na 1ª metade vs ${fmt0(sh)}€ na 2ª`,
+            explanation: 'Planear as compras de forma mais distribuída ajuda a controlar o orçamento',
+            meta: { action:'openHistory' } });
+        } else if (ratio < 0.5) {
+          items.push({ type:'pattern', priority:46, color:'info',
+            title: 'Gastos concentrados no fim do mês',
+            message: `${fmt0(sh)}€ na 2ª metade vs ${fmt0(fh)}€ na 1ª`,
+            explanation: 'Tendência de acumulação de despesas no final do mês',
+            meta: { action:'openHistory' } });
+        }
+      }
+    }
+  }
+
+  const ranked = applyFocusBoost(items, focus).sort((a, b) => b.priority - a.priority);
+  return maxResults > 0 ? ranked.slice(0, maxResults) : ranked;
 };
 
-// ── Financial score (0-100) ─────────────────────────────────────────────────
+// Financial score
 export const computeFinancialScore = ({ transactions, budgets, categories, selectedMonth, startDay = 1 }) => {
   const prevMonth  = shiftMonth(selectedMonth, -1);
   const prev2Month = shiftMonth(selectedMonth, -2);
-
   const catSpent = (label, month) =>
     transactions
       .filter(t => t.type === 'expense' && t.category === label && t.date && isInFinancialMonth(t.date, month, startDay))
       .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-
-  const catTotals = categories.expense.map(cat => ({
-    cat,
-    spent: catSpent(cat.label, selectedMonth),
-  }));
+  const catTotals  = categories.expense.map(cat => ({ cat, spent: catSpent(cat.label, selectedMonth) }));
   const totalCurr  = catTotals.reduce((s, c) => s + c.spent, 0);
   const totalPrev  = categories.expense.reduce((s, c) => s + catSpent(c.label, prevMonth),  0);
   const totalPrev2 = categories.expense.reduce((s, c) => s + catSpent(c.label, prev2Month), 0);
-
-  // 1. Budget control (40 pts)
+  const currIncome = transactions
+    .filter(t => t.type === 'income' && t.date && isInFinancialMonth(t.date, selectedMonth, startDay))
+    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const withBudget = catTotals.filter(c => (budgets[c.cat.id] || 0) > 0);
-  let budgetPts = 20; // neutral when no budgets are set
+  let budgetPts = 15;
   if (withBudget.length > 0) {
     const earned = withBudget.reduce((s, c) => {
       const pct = c.spent / budgets[c.cat.id];
       return s + (pct <= 0.8 ? 1 : pct <= 1.0 ? 0.4 : 0);
     }, 0);
-    budgetPts = Math.round((earned / withBudget.length) * 40);
+    budgetPts = Math.round((earned / withBudget.length) * 30);
   }
-
-  // 2. Monthly trend (30 pts)
-  let trendPts = 20;
+  let trendPts = 15;
   if (totalPrev > 5) {
     const chg = (totalCurr - totalPrev) / totalPrev;
-    trendPts = chg < -0.05 ? 30 : chg <= 0.05 ? 20 : chg <= 0.20 ? 10 : 0;
+    trendPts = chg < -0.05 ? 25 : chg <= 0.05 ? 15 : chg <= 0.20 ? 7 : 0;
   }
-
-  // 3. Stability (20 pts) — variance over last 3 months
-  let stabilityPts = 10;
+  let savingsPts = 10;
+  if (currIncome > 30) {
+    const rate = (currIncome - totalCurr) / currIncome;
+    savingsPts = rate >= 0.30 ? 25 : rate >= 0.20 ? 20 : rate >= 0.10 ? 12 : rate >= 0 ? 6 : 0;
+  }
+  let stabilityPts = 7;
   if (totalPrev > 5 && totalPrev2 > 5) {
     const vals = [totalPrev2, totalPrev, totalCurr];
-    const mean   = vals.reduce((s, v) => s + v, 0) / 3;
+    const mean = vals.reduce((s, v) => s + v, 0) / 3;
     const maxDev = Math.max(...vals.map(v => Math.abs(v - mean) / mean));
-    stabilityPts = maxDev <= 0.15 ? 20 : maxDev <= 0.35 ? 12 : 5;
+    stabilityPts = maxDev <= 0.15 ? 15 : maxDev <= 0.35 ? 9 : 3;
   }
-
-  // 4. Category concentration (10 pts)
-  let concPts = 10;
+  let concPts = 5;
   if (totalCurr > 20) {
     const topShare = Math.max(...catTotals.map(c => c.spent)) / totalCurr;
-    concPts = topShare <= 0.30 ? 10 : topShare <= 0.50 ? 5 : 0;
+    concPts = topShare <= 0.30 ? 5 : topShare <= 0.50 ? 2 : 0;
   }
-
-  const score = Math.min(100, Math.round(budgetPts + trendPts + stabilityPts + concPts));
+  const score = Math.min(100, Math.round(budgetPts + trendPts + savingsPts + stabilityPts + concPts));
   const color = score >= 80 ? '#4ade80' : score >= 60 ? '#facc15' : score >= 40 ? '#fb923c' : '#f87171';
   const label = score >= 80 ? 'Excelente controlo financeiro'
               : score >= 60 ? 'Bom controlo — há margem para melhorar'
               : score >= 40 ? 'Atenção a alguns gastos'
               : 'Gastos sob pressão — ação necessária';
-
   return { score, color, label };
 };
 
+// buildInsightsSummary — payload anonimizado para AI endpoint + PDF
+export const buildInsightsSummary = ({ transactions, budgets, categories, patrimony, selectedMonth, startDay = 1 }) => {
+  const prevMonth = shiftMonth(selectedMonth, -1);
+  const monthTxns  = transactions.filter(t => t.date && isInFinancialMonth(t.date, selectedMonth, startDay));
+  const income   = monthTxns.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const expenses = monthTxns.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const savings  = income - expenses;
+  const savingsRate = income > 0 ? Math.round((savings / income) * 100) : null;
+  const prevExpenses = transactions
+    .filter(t => t.type === 'expense' && t.date && isInFinancialMonth(t.date, prevMonth, startDay))
+    .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const expenseTrend = prevExpenses > 0 ? Math.round(((expenses - prevExpenses) / prevExpenses) * 100) : null;
+  const byCat = {};
+  monthTxns.filter(t => t.type === 'expense').forEach(t => {
+    byCat[t.category] = (byCat[t.category] || 0) + (parseFloat(t.amount) || 0);
+  });
+  const topCategories = Object.entries(byCat)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(([name, amount]) => ({
+      name,
+      amount: Math.round(amount),
+      pct: expenses > 0 ? Math.round((amount / expenses) * 100) : 0,
+    }));
+  const budgetBreaches = categories.expense
+    .filter(cat => (budgets[cat.id] || 0) > 0 && byCat[cat.label] > budgets[cat.id])
+    .map(cat => cat.label);
+  const patrimonyTotal = patrimony
+    ? Object.values(patrimony).flat().reduce((s, item) => {
+        const v = parseFloat(item?.value || item?.balance || item?.faceValue || 0);
+        return s + (isNaN(v) ? 0 : v);
+      }, 0)
+    : null;
+  return {
+    period: formatMonthLabel(selectedMonth, startDay),
+    income:        Math.round(income),
+    expenses:      Math.round(expenses),
+    savings:       Math.round(savings),
+    savingsRate,
+    expenseTrend,
+    topCategories,
+    budgetBreaches,
+    patrimonyTotal: patrimonyTotal ? Math.round(patrimonyTotal) : null,
+  };
+};
