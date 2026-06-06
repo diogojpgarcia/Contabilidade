@@ -102,7 +102,7 @@ html[data-palette="stone"] {
   /* Surfaces */
   --cosmos-bg:        #f0ebe4;
   --cosmos-surface-1: #faf7f2;
-  --cosmos-surface-2: #ffffff;
+  --cosmos-surface-2: #fdf9f4;
   --cosmos-surface-3: #f4efe9;
 
   /* Accent */
@@ -157,7 +157,7 @@ html[data-palette="stone"] {
   --bg-primary:     #f0ebe4;
   --bg-secondary:   #faf7f2;
   --bg-tertiary:    #f4efe9;
-  --bg-elevated:    #ffffff;
+  --bg-elevated:    #fdf9f4;
 
   --text-primary:   #1e1812;
   --text-secondary: rgba(60, 48, 38, 0.68);
