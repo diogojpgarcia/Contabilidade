@@ -1,7 +1,6 @@
 /**
- * StatsOverview.jsx
- * The "Visão Geral" panel of StatsTab — extracted from the inline IIFE.
- * Renders: main balance card + sparkline chart + top categories + financial score + insights.
+ * StatsOverview.jsx — "Visão Geral" panel of StatsTab.
+ * All typography via CSS classes (so-*) defined in fintech.css.
  */
 import React from 'react';
 import BarChart from '../charts/BarChart';
@@ -9,10 +8,10 @@ import BarChart from '../charts/BarChart';
 const CAT_COLORS = ['var(--cosmos-accent)', 'var(--cosmos-income)', 'var(--cosmos-warning)', 'var(--cosmos-expense)', '#8B5CF6'];
 
 const INSIGHT_CONFIG = {
-  risk: { color: 'var(--cosmos-expense)', bg: 'rgba(248,113,113,0.08)', emoji: '⚠️' },
-  warn: { color: 'var(--cosmos-warning)', bg: 'rgba(251,146,60,0.08)',  emoji: '⚡' },
-  good: { color: 'var(--cosmos-income)', bg: 'rgba(34,197,94,0.08)',   emoji: '📈' },
-  info: { color: 'var(--cosmos-text-3)', bg: 'rgba(148,163,184,0.06)', emoji: '💡' },
+  risk: { color: 'var(--cosmos-expense)', bg: 'var(--cosmos-expense-dim)', emoji: '⚠️' },
+  warn: { color: 'var(--cosmos-warning, #f59e0b)', bg: 'rgba(245,158,11,0.08)', emoji: '⚡' },
+  good: { color: 'var(--cosmos-income)',  bg: 'var(--cosmos-income-dim)',  emoji: '📈' },
+  info: { color: 'var(--cosmos-text-3)',  bg: 'var(--cosmos-accent-soft)', emoji: '💡' },
 };
 
 const StatsOverview = ({
@@ -27,77 +26,91 @@ const StatsOverview = ({
   onShowLog,
 }) => {
   const pct      = monthIncome > 0 ? Math.min((monthExpenses / monthIncome) * 100, 100) : 0;
-  const barColor = pct >= 90 ? 'var(--cosmos-expense)' : pct >= 70 ? 'var(--cosmos-warning)' : 'var(--cosmos-accent)';
+  const barColor = pct >= 90 ? 'var(--cosmos-expense)' : pct >= 70 ? 'var(--cosmos-warning, #f59e0b)' : 'var(--cosmos-accent)';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="so-wrap">
 
-      {/* ── 1. CARD PRINCIPAL ── */}
-      <div style={{
-        borderRadius: '20px',
-        background: 'var(--cosmos-surface-1)',
-        border: '1px solid var(--cosmos-border-divider)',
-        margin: '0 16px',
-        overflow: 'hidden',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-      }}>
-        {/* Top section */}
-        <div style={{ padding: '20px 20px 12px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--cosmos-text-3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-            Saldo do Mês
-          </div>
-          <div style={{ fontSize: '36px', fontWeight: 700, color: monthSaldo >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '6px' }}>
+      {/* ── 1. MAIN CARD ── */}
+      <div className="so-card">
+        <div className="so-card-top">
+          <div className="so-saldo-label">Saldo do Mês</div>
+          <div className="so-saldo-amount" style={{ color: monthSaldo >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)' }}>
             {monthSaldo >= 0 ? '+' : '−'}{fmt(Math.abs(monthSaldo))}
           </div>
-          <div style={{ fontSize: '13px', color: saldoDelta >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', marginBottom: '14px' }}>
+          <div className="so-saldo-delta" style={{ color: saldoDelta >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)' }}>
             {saldoDeltaLabel}
           </div>
-          <div style={{ height: '1px', background: 'var(--cosmos-border-subtle)', marginBottom: '14px' }} />
-          {/* Income / ratio bar / Expenses */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+          <div className="so-divider" />
+          {/* Income / ratio / Expenses */}
+          <div className="so-cashflow-row">
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Receitas</div>
-              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cosmos-income)' }}>+{fmt(monthIncome)}</div>
+              <div className="so-cf-label">Receitas</div>
+              <div className="so-cf-value" style={{ color: 'var(--cosmos-income)' }}>+{fmt(monthIncome)}</div>
             </div>
-            <div style={{ flex: 1, maxWidth: '120px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--cosmos-text-3)', marginBottom: '4px' }}>
-                <span style={{ textTransform: 'uppercase', letterSpacing: '0.06em' }}>Gasto</span>
-                <span style={{ color: barColor, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+            <div className="so-ratio-bar">
+              <div className="so-ratio-row">
+                <span className="so-cf-label">Gasto</span>
+                <span className="so-ratio-pct" style={{ color: barColor }}>{pct.toFixed(0)}%</span>
               </div>
-              <div style={{ height: '3px', background: 'var(--cosmos-border-divider)', borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, var(--cosmos-accent), ${barColor})`, borderRadius: '3px', transition: 'width 0.4s ease' }} />
+              <div className="so-ratio-track">
+                <div className="so-ratio-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, var(--cosmos-accent), ${barColor})` }} />
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '10px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Despesas</div>
-              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cosmos-expense)' }}>−{fmt(monthExpenses)}</div>
+            <div className="so-cashflow-right">
+              <div className="so-cf-label">Despesas</div>
+              <div className="so-cf-value" style={{ color: 'var(--cosmos-expense)' }}>−{fmt(monthExpenses)}</div>
             </div>
           </div>
         </div>
 
-        {/* Animated bar chart */}
-        <div style={{ padding: '0 12px 12px' }}>
+        {/* Bar chart */}
+        <div className="so-chart-wrap">
           <BarChart data={monthlyData} height={100} />
         </div>
       </div>
 
-      {/* ── 2. TOP CATEGORIAS ── */}
+      {/* ── 2. TOP CATEGORIES ── */}
       {categoryData.length > 0 && (
-        <div style={{ margin: '12px 16px 0' }}>
-          <div style={{ fontSize: '11px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Top Categorias</div>
+        <div className="so-cats-wrap">
+          <div className="so-section-label">Top Categorias</div>
           {categoryData.slice(0, 5).map((cat, i) => {
             const isSelected = selectedCategories.includes(cat.category);
+            const color      = CAT_COLORS[i % 5];
             return (
-              <div key={cat.category} onClick={() => setSelectedCategories(prev => prev.includes(cat.category) ? prev.filter(c => c !== cat.category) : [...prev, cat.category])} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: CAT_COLORS[i % 5], flexShrink: 0, transform: isSelected ? 'scale(1.5)' : 'scale(1)', boxShadow: isSelected ? `0 0 8px ${CAT_COLORS[i % 5]}` : 'none', transition: 'all 0.2s' }} />
-                <div style={{ flex: 1, fontSize: '14px', color: isSelected ? 'var(--cosmos-text-1)' : 'var(--cosmos-text-2)', fontWeight: isSelected ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.category}</div>
-                <div style={{ width: '100px', flexShrink: 0 }}>
-                  <div style={{ fontSize: '12px', color: CAT_COLORS[i % 5], textAlign: 'right', marginBottom: '3px' }}>{cat.percentage.toFixed(0)}%</div>
-                  <div style={{ height: '3px', background: 'var(--cosmos-border-divider)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${cat.percentage}%`, background: CAT_COLORS[i % 5], borderRadius: '3px', opacity: isSelected ? 1 : 0.7 }} />
+              <div
+                key={cat.category}
+                className="so-cat-row"
+                onClick={() => setSelectedCategories(prev =>
+                  prev.includes(cat.category)
+                    ? prev.filter(c => c !== cat.category)
+                    : [...prev, cat.category]
+                )}
+              >
+                <div
+                  className="so-cat-dot"
+                  style={{
+                    background: color,
+                    transform:  isSelected ? 'scale(1.5)' : 'scale(1)',
+                    boxShadow:  isSelected ? `0 0 8px ${color}` : 'none',
+                  }}
+                />
+                <div
+                  className="so-cat-name"
+                  style={{
+                    color:      isSelected ? 'var(--cosmos-text-1)' : 'var(--cosmos-text-2)',
+                    fontWeight: isSelected ? 600 : 400,
+                  }}
+                >
+                  {cat.category}
+                </div>
+                <div className="so-cat-bar-wrap">
+                  <div className="so-cat-pct" style={{ color }}>{cat.percentage.toFixed(0)}%</div>
+                  <div className="so-cat-track">
+                    <div className="so-cat-fill" style={{ width: `${cat.percentage}%`, background: color, opacity: isSelected ? 1 : 0.7 }} />
                   </div>
                 </div>
-                <div style={{ width: '64px', fontSize: '13px', color: 'var(--cosmos-text-3)', textAlign: 'right', flexShrink: 0 }}>{fmt(cat.amount)}</div>
+                <div className="so-cat-amount">{fmt(cat.amount)}</div>
               </div>
             );
           })}
@@ -105,30 +118,42 @@ const StatsOverview = ({
       )}
 
       {/* ── 3. SCORE + INSIGHTS ── */}
-      <div style={{ margin: '12px 16px 0', background: 'var(--cosmos-border-subtle)', border: '1px solid var(--cosmos-border-divider)', borderRadius: '16px', padding: '16px' }}>
+      <div className="so-score-card">
         {/* Score ring */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, rgba(255,255,255,0.08) ${financialScore.score}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: 'var(--cosmos-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: financialScore.color }}>{financialScore.score}</div>
+        <div className="so-score-row">
+          <div
+            className="so-score-ring"
+            style={{ background: `conic-gradient(${financialScore.color} 0% ${financialScore.score}%, var(--cosmos-border-divider) ${financialScore.score}% 100%)` }}
+          >
+            <div className="so-score-inner" style={{ color: financialScore.color }}>
+              {financialScore.score}
+            </div>
           </div>
           <div>
-            <div style={{ fontSize: '10px', color: 'var(--cosmos-text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Score Financeiro</div>
-            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cosmos-text-1)' }}>{financialScore.label}</div>
+            <div className="so-cf-label">Score Financeiro</div>
+            <div className="so-score-label">{financialScore.label}</div>
           </div>
         </div>
-        {insights.length > 0 && <div style={{ height: '1px', background: 'var(--cosmos-border-subtle)', margin: '12px 0' }} />}
+
+        {insights.length > 0 && <div className="so-divider" style={{ margin: '12px 0' }} />}
+
         {/* Insights */}
         {insights.slice(0, 3).map((item, i) => {
           const cfg = INSIGHT_CONFIG[item.color] || INSIGHT_CONFIG.info;
           return (
-            <div key={i} onClick={() => item.meta?.action === 'openHistory' && onShowLog?.()} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', padding: '12px', borderRadius: '12px', background: cfg.bg, borderLeft: `3px solid ${cfg.color}`, marginBottom: i < 2 ? '8px' : 0, cursor: item.meta ? 'pointer' : 'default' }}>
-              <span style={{ fontSize: '20px', lineHeight: 1, marginTop: '1px', flexShrink: 0 }}>{cfg.emoji}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--cosmos-text-1)', marginBottom: '3px' }}>{item.title}</div>
-                <div style={{ fontSize: '12px', color: 'var(--cosmos-text-3)', lineHeight: 1.5 }}>{item.message}</div>
-                {item.explanation && <div style={{ fontSize: '11px', color: 'var(--cosmos-text-3)', marginTop: '4px', lineHeight: 1.4 }}>{item.explanation}</div>}
+            <div
+              key={i}
+              className={`so-insight${item.meta ? ' so-insight--tap' : ''}`}
+              style={{ background: cfg.bg, borderLeftColor: cfg.color, marginBottom: i < 2 ? 8 : 0 }}
+              onClick={() => item.meta?.action === 'openHistory' && onShowLog?.()}
+            >
+              <span className="so-insight-emoji">{cfg.emoji}</span>
+              <div className="so-insight-body">
+                <div className="so-insight-title">{item.title}</div>
+                <div className="so-insight-msg">{item.message}</div>
+                {item.explanation && <div className="so-insight-exp">{item.explanation}</div>}
               </div>
-              {item.meta && <span style={{ color: 'var(--cosmos-text-3)', fontSize: '16px', alignSelf: 'center' }}>›</span>}
+              {item.meta && <span className="so-insight-chev">›</span>}
             </div>
           );
         })}

@@ -3,6 +3,7 @@ import CloudAuth from './components/CloudAuth';
 import ResetPassword from './components/ResetPassword';
 import BulkUpdateModal from './components/BulkUpdateModal';
 import ErrorBoundary from './components/ErrorBoundary';
+import Onboarding, { isOnboardingDone } from './components/Onboarding';
 import { isInFinancialMonth } from './utils/financialMonth';
 
 // Hooks
