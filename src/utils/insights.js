@@ -28,6 +28,20 @@ const getSpent = (transactions, catName, month, startDay = 1) =>
 const fmt0 = (n) =>
   Math.abs(n).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
+// Categorias não-discricionárias — nunca sugerir redução de gastos nestas áreas
+const NON_DISC_KW = [
+  'saúde','saude','médico','medico','médica','medica','farmácia','farmacia',
+  'hospital','clínica','clinica','dentista','dental','consulta','consultas',
+  'medicamento','medicamentos','fisioterapia','optometria','seguro saúde',
+  'urgência','urgencia','exames','análises','analises','terapia',
+  'psicologia','psicólogo','psicologo','pediatria',
+];
+const isNonDisc = (label) => {
+  if (!label) return false;
+  const l = label.toLowerCase();
+  return NON_DISC_KW.some(kw => l.includes(kw));
+};
+
 export const generateInsights = ({
   transactions, budgets, categories, selectedMonth,
   startDay = 1, focus = null, maxResults = 4,
@@ -109,16 +123,20 @@ export const generateInsights = ({
     const m1 = getSpent(transactions, cat.label, prevMonth, startDay);
     const m2 = getSpent(transactions, cat.label, selectedMonth, startDay);
     if (m0 > 10 && m1 > m0 * 1.1 && m2 > m1 * 1.1) {
-      items.push({ type:'trend', priority:75, color:'warn',
-        title: `${cat.label} sobe há 3 meses seguidos`,
+      const nonDisc = isNonDisc(cat.label);
+      items.push({ type:'trend', priority: nonDisc ? 40 : 75, color: nonDisc ? 'info' : 'warn',
+        title: `${cat.label}: gastos a subir há 3 meses`,
         message: `${fmt0(m0)}€ → ${fmt0(m1)}€ → ${fmt0(m2)}€ (+${((m2-m0)/m0*100).toFixed(0)}%)`,
-        explanation: 'Tendência de aumento consistente — vale a pena definir um limite',
-        meta: { action:'openBudget', categoryLabel:cat.label } });
+        explanation: nonDisc
+          ? 'Gastos de saúde podem refletir necessidades pontuais — acompanha mas não te preocupes em reduzir.'
+          : 'Tendência de aumento consistente — vale a pena definir um limite.',
+        meta: { action: nonDisc ? 'openHistory' : 'openBudget', categoryLabel: cat.label } });
     }
   }
 
-  // 4. Savings opportunity
+  // 4. Savings opportunity — skip non-discretionary categories
   for (const { cat } of catTotals) {
+    if (isNonDisc(cat.label)) continue; // saúde, farmácia, etc. nunca são "poupança potencial"
     const m0 = getSpent(transactions, cat.label, prev2Month, startDay);
     const m1 = getSpent(transactions, cat.label, prevMonth, startDay);
     const m2 = getSpent(transactions, cat.label, selectedMonth, startDay);
@@ -127,7 +145,7 @@ export const generateInsights = ({
       items.push({ type:'opportunity', priority:70, color:'good',
         title: `Poupança potencial em ${cat.label}`,
         message: `${fmt0(Math.round(m2 - avg2))}€ acima da tua média habitual de ${fmt0(Math.round(avg2))}€`,
-        explanation: 'Voltares ao teu ritmo anterior pouparia este valor todo o mês',
+        explanation: 'Voltares ao teu ritmo anterior pouparia este valor todo o mês.',
         meta: { action:'openBudget', categoryLabel:cat.label } });
     }
   }
