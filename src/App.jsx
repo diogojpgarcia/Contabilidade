@@ -103,7 +103,6 @@ const App = () => {
     return (
       <div className="app-new loading-screen">
         <div className="loading-content">
-          <h1>💰 Finanças Familiares</h1>
           <div className="loading-spinner"></div>
         </div>
       </div>
