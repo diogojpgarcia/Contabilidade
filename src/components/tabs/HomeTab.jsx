@@ -180,40 +180,42 @@ const HomeTab = ({
         )}
 
         {/* Patrimony — centrepiece */}
-        {!isLoading && <div style={{ marginBottom: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--cosmos-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Património total
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontSize: 42, fontWeight: 700, color: 'var(--cosmos-text-1)', letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              <CountUp value={patrimonyTotal} decimals={2} />
-            </span>
-            <span style={{ fontSize: 20, fontWeight: 400, color: 'var(--cosmos-text-3)', letterSpacing: '-0.01em' }}>€</span>
-          </div>
-        </div>
-
-        {/* Monthly balance chip + month progress */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: balance >= 0 ? 'var(--cosmos-income-dim)' : 'var(--cosmos-expense-dim)',
-            borderRadius: 999, padding: '5px 12px',
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: balance >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', fontVariantNumeric: 'tabular-nums' }}>
-              {balance >= 0 ? '+' : ''}{fmt(balance)}€
-            </span>
-            <span style={{ fontSize: 11, color: balance >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', opacity: 0.7 }}>
-              este mês
-            </span>
-          </div>
-          {/* Month progress */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 72, height: 3, background: 'var(--cosmos-border-divider)', borderRadius: 2, overflow: 'hidden' }}>
-              <div style={{ width: `${cyclePct}%`, height: '100%', background: 'var(--cosmos-accent)', borderRadius: 2, transition: 'width 0.6s ease' }} />
+        {!isLoading && <>
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--cosmos-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+              Património total
             </div>
-            <span style={{ fontSize: 11, color: 'var(--cosmos-text-3)', whiteSpace: 'nowrap' }}>dia {diaAtual}/{totalDias}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 42, fontWeight: 700, color: 'var(--cosmos-text-1)', letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                <CountUp value={patrimonyTotal} decimals={2} />
+              </span>
+              <span style={{ fontSize: 20, fontWeight: 400, color: 'var(--cosmos-text-3)', letterSpacing: '-0.01em' }}>€</span>
+            </div>
           </div>
-        </div>}
+
+          {/* Monthly balance chip + month progress */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: balance >= 0 ? 'var(--cosmos-income-dim)' : 'var(--cosmos-expense-dim)',
+              borderRadius: 999, padding: '5px 12px',
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: balance >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', fontVariantNumeric: 'tabular-nums' }}>
+                {balance >= 0 ? '+' : ''}{fmt(balance)}€
+              </span>
+              <span style={{ fontSize: 11, color: balance >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', opacity: 0.7 }}>
+                este mês
+              </span>
+            </div>
+            {/* Month progress */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 72, height: 3, background: 'var(--cosmos-border-divider)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ width: `${cyclePct}%`, height: '100%', background: 'var(--cosmos-accent)', borderRadius: 2, transition: 'width 0.6s ease' }} />
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--cosmos-text-3)', whiteSpace: 'nowrap' }}>dia {diaAtual}/{totalDias}</span>
+            </div>
+          </div>
+        </>}
       </div>
 
       {/* ── 2. QUICK ACTIONS ── */}
