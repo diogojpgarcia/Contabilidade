@@ -98,6 +98,16 @@ const App = () => {
     })),
   }), [s.patrimony, safeTransactions, tx.computeCurrentBalance]);
 
+  // Context value — dados estáveis partilhados por toda a árvore.
+  // Só entra aqui o que muda raramente e é lido por 3+ componentes.
+  // Memoizado (e antes dos returns condicionais) para não re-renderizar todos
+  // os consumidores do AppContext a cada render do App.
+  const appContextValue = useMemo(() => ({
+    currentUser: auth.currentUser,
+    categories:  tx.categories,
+    onCategoriesChange: tx.handleCategoriesChange,
+  }), [auth.currentUser, tx.categories, tx.handleCategoriesChange]);
+
   // ── Returns condicionais (DEPOIS de todos os hooks) ───────────────────────
   if (auth.loading) {
     return (
@@ -133,14 +143,6 @@ const App = () => {
   const monthlyExpenses  = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   const balance          = monthlyIncome - monthlyExpenses;
   const userName         = auth.currentUser.user_metadata?.full_name || auth.currentUser.email.split('@')[0];
-
-  // Context value — dados estáveis partilhados por toda a árvore.
-  // Só entra aqui o que muda raramente e é lido por 3+ componentes.
-  const appContextValue = {
-    currentUser: auth.currentUser,
-    categories:  tx.categories,
-    onCategoriesChange: tx.handleCategoriesChange,
-  };
 
   return (
     <ToastProvider>

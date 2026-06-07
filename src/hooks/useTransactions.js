@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { dbService } from '../lib/supabase';
 import { toast } from '../utils/toast';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
@@ -317,16 +317,19 @@ export function useTransactions(currentUser) {
     setBulkPending(null);
   };
 
-  const handleCategoriesChange = (updated) => {
+  const handleCategoriesChange = useCallback((updated) => {
     setCategories(updated);
-  };
+  }, []);
 
   // ── Utilitários ───────────────────────────────────────────────────────────
 
   // Wrapper de conveniência — delega em computeAccountBalance (budgetUtils).
-  // Mantido por compatibilidade com os chamadores existentes.
-  const computeCurrentBalance = (account, allTransactions) =>
-    computeAccountBalance(account, allTransactions);
+  // useCallback com [] → referência estável, para que os useMemo dos chamadores
+  // (ex. patrimonyWithLiveBalances no App) possam cachear corretamente.
+  const computeCurrentBalance = useCallback(
+    (account, allTransactions) => computeAccountBalance(account, allTransactions),
+    []
+  );
 
   // Propaga o novo nome de uma conta a todas as transações ligadas.
   // Chamado pelo PatrimonyView quando o utilizador renomeia uma conta.

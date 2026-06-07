@@ -45,7 +45,7 @@ function applyPaletteToDOM(palette) {
  */
 export function useSettings(currentUser, txHook) {
   const [patrimony, setPatrimony] = useState({
-    accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [],
+    accounts: [], stocks: [], etfs: [], bonds: [], realestate: [], vehicles: [], crypto: [],
   });
   const [budgets, setBudgets] = useState({});
   const [colorPalette, setColorPaletteState] = useState(() => {
@@ -185,7 +185,7 @@ export function useSettings(currentUser, txHook) {
   // Cancelar fetches pendentes quando o utilizador fizer logout
   const resetForLogout = () => {
     loadRequestId.current++;
-    setPatrimony({ accounts: [], stocks: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
+    setPatrimony({ accounts: [], stocks: [], etfs: [], bonds: [], realestate: [], vehicles: [], crypto: [] });
     setBudgets({});
     setGoals([]);
     setMainAccountId(null);
