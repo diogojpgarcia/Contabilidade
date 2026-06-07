@@ -216,12 +216,6 @@ html, body {
 .skeleton-text  { height: 0.75em; border-radius: 4px; }
 .skeleton-price { height: 1.1em; width: 80px; border-radius: 4px; }
 
-/* ── Staggered card entry ──────────────────────────────────────────────────── */
-.card-anim {
-  animation: card-enter 0.35s cubic-bezier(0.22,1,0.36,1) both;
-  animation-delay: var(--delay, 0ms);
-}
-
 /* ── Button micro-feedback ─────────────────────────────────────────────────── */
 button:active,
 [role="button"]:active {
