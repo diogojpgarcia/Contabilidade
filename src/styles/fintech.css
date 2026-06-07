@@ -64,10 +64,10 @@ html, body {
 
 /* ── Bottom Nav ── unified 5-item bar, flat layout ──────────────────────── */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  /* Normal-flow flex item — último filho de .app-new (flex column de altura = viewport).
+     Não usar position:fixed: no iOS PWA standalone o fixed;bottom:0 flutua acima do
+     fundo real. Como flex item, fica sempre colado ao fundo sem overlap nem hacks. */
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -221,20 +221,18 @@ body {
 }
 
 .app-new {
+  /* inset:0 fixa o container exactamente ao viewport visível do PWA standalone.
+     NÃO adicionar min-height:100vh/100dvh aqui — em iOS standalone pode exceder a
+     altura derivada do inset e empurrar a nav (último flex child) para fora do ecrã. */
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
+  inset: 0;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
   background: var(--bg-primary);
   /* Safe area: push content below notch/Dynamic Island on all iPhone models */
   padding-top: env(safe-area-inset-top);
-  /* safe-area-bottom: a nav está em flux normal — app-new não precisa de padding-bottom */
+  /* safe-area-bottom: a .bottom-nav (flex item) absorve env(safe-area-inset-bottom) */
 }
 
 /* Loading Screen */
@@ -536,16 +534,8 @@ input::placeholder {
   contain: layout style;
 }
 
-/* Clearance para a nav fixa — ::after em vez de padding-bottom
-   (iOS Safari não inclui padding-bottom no scroll area de overflow:auto) */
-.main-content-new > div::after {
-  content: '';
-  display: block;
-  height: var(--bottom-clearance);
-  flex-shrink: 0;
-  pointer-events: none;
-}
-
+/* Sem clearance: a .bottom-nav está em flux normal (último flex child de .app-new),
+   por isso a área de scroll termina exactamente acima da nav — nunca há overlap. */
 
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */
 .transaction-category--editable {
