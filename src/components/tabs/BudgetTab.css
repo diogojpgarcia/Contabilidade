@@ -1,4 +1,4 @@
-﻿.budget-tab{padding:0 1rem;padding-bottom:var(--bottom-clearance,calc(80px + env(safe-area-inset-bottom)));animation:fadeIn 0.3s ease;width:100%}
+.budget-tab{padding:0 1rem;padding-bottom:var(--bottom-clearance);animation:fadeIn 0.3s ease;width:100%}
 
 /* Toggle â€” supports 2 or 3 tabs */
 .view-toggle{flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.25rem;background:var(--bg-secondary);border-radius:12px;border:0.5px solid var(--separator);margin-bottom:1.25rem}
