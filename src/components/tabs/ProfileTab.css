@@ -2,7 +2,6 @@
 .m-profile-page {
   padding-bottom: var(--bottom-clearance);
   background: var(--cosmos-bg);
-  min-height: 100vh;
 }
 
 /* ── Identity card ─────────────────────────────────────────────────────────── */
