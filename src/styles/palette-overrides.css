@@ -101,9 +101,9 @@ html[data-palette="dusk"] {
 html[data-palette="stone"] {
   /* Surfaces */
   --cosmos-bg:        #f0ebe4;
-  --cosmos-surface-1: #faf7f2;
-  --cosmos-surface-2: #fdf9f4;
-  --cosmos-surface-3: #f4efe9;
+  --cosmos-surface-1: #e8e2da;
+  --cosmos-surface-2: #ede7df;
+  --cosmos-surface-3: #e2dbd2;
 
   /* Accent */
   --cosmos-accent:        #9f6b48;
@@ -138,8 +138,8 @@ html[data-palette="stone"] {
   --cosmos-toggle-knob:    rgba(255, 255, 255, 0.90);
 
   /* Shadows */
-  --cosmos-shadow-card:  0 2px 12px rgba(120,90,60,0.10), inset 0 1px 0 rgba(255,255,255,0.80);
-  --cosmos-shadow-hero:  0 8px 32px rgba(120,90,60,0.14), inset 0 1px 0 rgba(255,255,255,0.90), inset 0 -1px 0 rgba(159,107,72,0.06);
+  --cosmos-shadow-card:  0 2px 12px rgba(120,90,60,0.12), inset 0 1px 0 rgba(255,255,255,0.30);
+  --cosmos-shadow-hero:  0 8px 32px rgba(120,90,60,0.16), inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(159,107,72,0.06);
   --cosmos-shadow-sheet: 0 -6px 28px rgba(120,90,60,0.12), inset 0 1px 0 rgba(255,255,255,0.70);
   --cosmos-glow-accent:  0 0 20px rgba(159, 107, 72, 0.14);
 
@@ -177,12 +177,12 @@ html[data-palette="stone"] {
   --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
 
   /* Legacy aliases */
-  --card-bg:       #faf7f2;
-  --surface-2:     rgba(0, 0, 0, 0.04);
+  --card-bg:       #e8e2da;
+  --surface-2:     rgba(0, 0, 0, 0.06);
   --border-color:  rgba(159, 107, 72, 0.18);
   --accent:        #9f6b48;
-  --bg-hover:      rgba(0, 0, 0, 0.05);
-  --input-bg:      #f4efe9;
+  --bg-hover:      rgba(0, 0, 0, 0.06);
+  --input-bg:      #e2dbd2;
 
   /* Nav / modal overlays */
   --surface-nav:   rgba(235, 230, 222, 0.96);

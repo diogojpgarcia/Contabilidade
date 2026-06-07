@@ -65,17 +65,18 @@ html, body {
 /* ── Bottom Nav ── unified 5-item bar, flat layout ──────────────────────── */
 .bottom-nav {
   position: fixed;
-  bottom: 1px; left: 0; right: 0;
+  bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  left: 12px; right: 12px;
   display: flex;
   align-items: stretch;
   justify-content: center;
   z-index: 1000;
   background: var(--cosmos-nav-surface);
-  border-top: 0.5px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.18);
-  padding: 0 8px max(3px, env(safe-area-inset-bottom, 3px)) 8px;
-  height: calc(64px + max(3px, env(safe-area-inset-bottom, 3px)));
+  border: 0.5px solid rgba(255, 255, 255, 0.07);
+  border-radius: 24px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.28);
+  padding: 0 8px;
+  height: 64px;
 }
 
 /* Stone palette — softer shadow */

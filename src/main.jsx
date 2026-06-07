@@ -20,24 +20,29 @@ function showUpdateBanner(doUpdate) {
 
   const banner = document.createElement('div');
   banner.id = 'pwa-update-banner';
+  // Banner posicionado acima da bottom nav (floating), não no topo
   banner.style.cssText = [
-    'position:fixed;top:0;left:0;right:0;z-index:10000',
+    'position:fixed',
+    'bottom:calc(64px + max(8px,env(safe-area-inset-bottom,8px)) + 12px)',
+    'left:12px;right:12px',
+    'z-index:9999',
     'background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
-    'color:#fff;padding:.875rem 1rem;text-align:center',
-    'box-shadow:0 4px 12px rgba(0,0,0,.3)',
+    'color:#fff;padding:.75rem 1rem;text-align:center',
+    'border-radius:18px',
+    'box-shadow:0 4px 24px rgba(0,0,0,.35)',
     'font-family:-apple-system,BlinkMacSystemFont,sans-serif',
-    'animation:pwa-slide-down .3s ease',
+    'animation:pwa-slide-up .3s ease',
   ].join(';');
 
   banner.innerHTML = `
-    <style>@keyframes pwa-slide-down{from{transform:translateY(-100%)}to{transform:translateY(0)}}</style>
-    <div style="display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap">
-      <p style="margin:0;font-weight:600;font-size:.9375rem">✨ Nova versão disponível!</p>
-      <button id="pwa-update-now" style="background:#fff;color:#667eea;border:none;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;font-size:.875rem;cursor:pointer">Atualizar Agora</button>
-      <button id="pwa-dismiss"    style="background:transparent;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.3);padding:.5rem 1rem;border-radius:8px;font-weight:500;font-size:.875rem;cursor:pointer">Mais Tarde</button>
+    <style>@keyframes pwa-slide-up{from{transform:translateY(120%);opacity:0}to{transform:translateY(0);opacity:1}}</style>
+    <div style="display:flex;align-items:center;justify-content:center;gap:.75rem;flex-wrap:wrap">
+      <p style="margin:0;font-weight:600;font-size:.9rem">✨ Nova versão disponível!</p>
+      <button id="pwa-update-now" style="background:#fff;color:#667eea;border:none;padding:.4rem 1rem;border-radius:10px;font-weight:600;font-size:.85rem;cursor:pointer">Atualizar Agora</button>
+      <button id="pwa-dismiss" style="background:transparent;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.3);padding:.4rem .875rem;border-radius:10px;font-weight:500;font-size:.85rem;cursor:pointer">Mais Tarde</button>
     </div>`;
 
-  document.body.prepend(banner);
+  document.body.appendChild(banner);
   document.getElementById('pwa-update-now').onclick = () => { banner.remove(); doUpdate(); };
   document.getElementById('pwa-dismiss').onclick    = () => banner.remove();
 
