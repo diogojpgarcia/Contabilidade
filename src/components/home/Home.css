@@ -10,7 +10,7 @@
 }
 
 .h-page {
-  padding-bottom: var(--bottom-clearance, calc(80px + env(safe-area-inset-bottom)));
+  padding-bottom: var(--bottom-clearance, 80px);
   contain: layout style;
 }
 

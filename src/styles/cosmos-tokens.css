@@ -88,8 +88,8 @@
   --cosmos-nav-h:       64px;    /* bar height (sem safe area) */
   --cosmos-nav-item-py: 4px;
   --cosmos-nav-bar-pt:  6px;
-  --cosmos-nav-safe:    calc(var(--cosmos-nav-h) + env(safe-area-inset-bottom, 0px));
-  --bottom-clearance:   calc(var(--cosmos-nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  --cosmos-nav-safe:    var(--cosmos-nav-h);   /* .app-new já absorve safe-area-inset-bottom */
+  --bottom-clearance:   calc(var(--cosmos-nav-h) + 16px); /* = 80px; safe-area handled by .app-new */
   --cosmos-nav-surface: rgba(17, 19, 26, 1.00);   /* floating bar fill */
   --cosmos-nav-notch:   #0d0f12;                   /* page-bg colour used for notch cutout */
 

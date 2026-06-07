@@ -519,8 +519,6 @@ input::placeholder {
   margin: 0 auto;
   min-height: 0;
   box-sizing: border-box;
-  /* main-content-new is a WRAPPER — each tab scrolls itself */
-  overflow: hidden;
 }
 
 /* Every tab fills the wrapper and scrolls independently */
