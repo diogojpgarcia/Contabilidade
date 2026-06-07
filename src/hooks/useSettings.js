@@ -69,19 +69,23 @@ export function useSettings(currentUser, txHook) {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
 
-  const loadRequestId = useRef(0);
+  const loadRequestId  = useRef(0);
+  // Ref que aponta sempre para a versão mais recente de loadUserData.
+  // Evita closures stale no handler `online` sem ter de re-registar os listeners.
+  const loadUserDataRef = useRef(null);
 
   // Aplicar paleta ao <html> no primeiro render (antes de loadUserData)
   useEffect(() => {
     applyPaletteToDOM(colorPalette);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Detetar estado offline/online — quando volta online, recarrega dados automaticamente
+  // Detetar estado offline/online — quando volta online, recarrega dados automaticamente.
+  // Usa loadUserDataRef para garantir que chama sempre a versão mais recente da função.
   useEffect(() => {
     const handleOffline = () => setIsOffline(true);
     const handleOnline  = () => {
       setIsOffline(false);
-      loadUserData(); // auto-retry when connectivity is restored
+      loadUserDataRef.current?.(); // sempre chama a versão mais recente
     };
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online',  handleOnline);
@@ -89,7 +93,7 @@ export function useSettings(currentUser, txHook) {
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('online',  handleOnline);
     };
-  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // sem deps — os listeners registam-se uma vez, o ref garante freshness
 
   // ── Boot atómico ──────────────────────────────────────────────────────────
   // Busca transações e settings em paralelo para eliminar a race condition
@@ -175,6 +179,8 @@ export function useSettings(currentUser, txHook) {
       setIsLoadingData(false);
     }
   };
+  // Manter o ref sempre actualizado com a versão mais recente de loadUserData
+  loadUserDataRef.current = loadUserData;
 
   // Cancelar fetches pendentes quando o utilizador fizer logout
   const resetForLogout = () => {
