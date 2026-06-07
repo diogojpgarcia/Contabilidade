@@ -6,6 +6,12 @@
  * When startDay=1 the financial month is identical to the calendar month.
  */
 
+// Formata uma Date para 'YYYY-MM-DD' a partir de componentes LOCAIS (não UTC).
+// toISOString() converte para UTC e, em fusos a leste (Portugal no verão = UTC+1),
+// a meia-noite local cai no dia anterior → datas desfasadas. Este helper evita isso.
+const fmtLocalDate = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 export function getFinancialMonthKey(dateStr, startDay = 1) {
   if (!dateStr) return '';
   if (startDay === 1) return dateStr.slice(0, 7);
@@ -32,8 +38,8 @@ export function getFinancialMonthRange(monthKey, startDay = 1) {
   const startDate = new Date(y, m - 1, startDay);
   const endDate = new Date(y, m, startDay - 1);
   return {
-    start: startDate.toISOString().split('T')[0],
-    end:   endDate.toISOString().split('T')[0],
+    start: fmtLocalDate(startDate),
+    end:   fmtLocalDate(endDate),
   };
 }
 
@@ -49,8 +55,7 @@ export function filterByFinancialMonth(transactions, monthKey, startDay = 1) {
 }
 
 export function getCurrentFinancialMonth(startDay = 1) {
-  const today = new Date();
-  return getFinancialMonthKey(today.toISOString().split('T')[0], startDay);
+  return getFinancialMonthKey(fmtLocalDate(new Date()), startDay);
 }
 
 export function shiftFinancialMonth(monthKey, delta) {
@@ -73,7 +78,7 @@ export function getFinancialMonthLabel(monthKey, startDay = 1, locale = 'pt-PT')
 
 export function getPrediction(spent, selectedMonth, startDay = 1) {
   const today    = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = fmtLocalDate(today);
   const { start, end } = getFinancialMonthRange(selectedMonth, startDay);
   if (todayStr < start || todayStr > end) return null;
   const startDate  = new Date(start + 'T00:00:00');

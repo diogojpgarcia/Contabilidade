@@ -14,28 +14,39 @@ export const safeNum = (v) => {
 };
 
 // ── Date helpers ────────────────────────────────────────────────────────────
+// Formata uma Date para 'YYYY-MM-DD' a partir de componentes LOCAIS (não UTC).
+// Evita o off-by-one do toISOString em fusos a leste de UTC (Portugal no verão = UTC+1):
+// aí a meia-noite local é o dia anterior em UTC, e toISOString devolvia a data errada.
+const fmtLocalDate = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Data de hoje em hora LOCAL (não UTC).
+const todayLocal = () => fmtLocalDate(new Date());
+
+// Nº de dias inteiros entre duas strings 'YYYY-MM-DD'. Usa Date.UTC → imune a DST.
+const daysBetween = (aStr, bStr) => {
+  const u = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+  return Math.round((u(bStr) - u(aStr)) / 86400000);
+};
 
 function addMonths(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00');
-  const y = d.getFullYear();
-  const m = d.getMonth() + n;
   const day = d.getDate();
-  const target = new Date(y, m, 1);
+  const target = new Date(d.getFullYear(), d.getMonth() + n, 1);
   const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
   target.setDate(Math.min(day, lastDay));
-  return target.toISOString().split('T')[0];
+  return fmtLocalDate(target);
 }
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00');
-  const r = new Date(d.getTime() + safeNum(n) * 86400000);
-  return r.toISOString().split('T')[0];
+  // Aritmética por componentes (não por ms) → imune a transições de DST.
+  return fmtLocalDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + safeNum(n)));
 }
 
 function addYears(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00');
-  return new Date(d.getFullYear() + n, d.getMonth(), d.getDate())
-    .toISOString().split('T')[0];
+  return fmtLocalDate(new Date(d.getFullYear() + n, d.getMonth(), d.getDate()));
 }
 
 export function advanceByFrequency(dateStr, payment) {
@@ -47,21 +58,19 @@ export function advanceByFrequency(dateStr, payment) {
 }
 
 export function computeNextDueDate(payment, fromDate = null) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayLocal();
   const from  = fromDate || today;
   const start = payment.startDate || today;
 
   if (start >= from) return start;
 
   const { frequency, customDays } = payment;
-  const startMs = new Date(start + 'T00:00:00').getTime();
-  const fromMs  = new Date(from  + 'T00:00:00').getTime();
-  const diffMs  = fromMs - startMs;
+  const diffDays = daysBetween(start, from); // dias inteiros, imune a DST
   let d;
 
   if (frequency === 'weekly') {
     // Jump directly to the first occurrence >= from in O(1)
-    const n = Math.ceil(diffMs / (7 * 86400000));
+    const n = Math.ceil(diffDays / 7);
     d = addDays(start, n * 7);
   } else if (frequency === 'monthly') {
     const sd = new Date(start + 'T00:00:00');
@@ -81,7 +90,7 @@ export function computeNextDueDate(payment, fromDate = null) {
   } else {
     // custom — math jump, tiny fallback loop (≤3 iterations) for edge cases
     const days = safeNum(customDays) || 30;
-    const n = Math.max(1, Math.ceil(diffMs / (days * 86400000)));
+    const n = Math.max(1, Math.ceil(diffDays / days));
     d = addDays(start, n * days);
     for (let guard = 0; d < from && guard < 3; guard++) {
       d = advanceByFrequency(d, payment);
@@ -98,9 +107,7 @@ export function getOccurrencesInRange(payment, start, end) {
 
   // Guard proporcional ao range — evita loop infinito sem permitir 500 iters desnecessárias.
   // Pior caso: pagamento diário num range de 1 ano ≈ 366 ocorrências.
-  const rangeDays = Math.round(
-    (new Date(end + 'T00:00:00') - new Date(start + 'T00:00:00')) / 86400000
-  ) + 2;
+  const rangeDays = daysBetween(start, end) + 2;
   const dates = [];
   let d = first;
   for (let guard = 0; d <= end && guard < rangeDays; guard++) {
@@ -111,7 +118,7 @@ export function getOccurrencesInRange(payment, start, end) {
 }
 
 export function getUpcomingPayments(payments, count = 5, fromDate = null) {
-  const from = fromDate || new Date().toISOString().split('T')[0];
+  const from = fromDate || todayLocal();
   return (payments || [])
     .filter(p => p.active !== false)
     .map(p => ({ ...p, computedNextDue: computeNextDueDate(p, from) }))
@@ -159,7 +166,7 @@ export const PAYMENT_TYPE_LABELS = {
 };
 
 export function getRecurringMonthKey(dateStr) {
-  const s = dateStr ? String(dateStr) : new Date().toISOString();
+  const s = dateStr ? String(dateStr) : todayLocal();
   return s.slice(0, 7);
 }
 
@@ -168,7 +175,7 @@ export function isConfirmedForMonth(recId, monthKey, confirmedRecurring) {
 }
 
 export function getPendingConfirmations(payments, confirmedRecurring, fromDate = null) {
-  const today = fromDate || new Date().toISOString().split('T')[0];
+  const today = fromDate || todayLocal();
   const result = [];
 
   for (const p of (payments || [])) {
@@ -198,11 +205,9 @@ export const FREQ_OPTIONS = [
 ];
 
 export function relativeDueDate(dateStr) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayLocal();
   if (dateStr === today) return 'Hoje';
-  const diff = Math.round(
-    (new Date(dateStr + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000
-  );
+  const diff = daysBetween(today, dateStr);
   if (diff === 1)   return 'Amanhã';
   if (diff < 0)     return `${Math.abs(diff)}d atrás`;
   if (diff < 7)     return `em ${diff}d`;
