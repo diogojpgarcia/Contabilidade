@@ -234,7 +234,7 @@ body {
   background: var(--bg-primary);
   /* Safe area: push content below notch/Dynamic Island on all iPhone models */
   padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* padding-bottom gerido por --bottom-clearance em cada tab — não aqui */
 }
 
 /* Loading Screen */
