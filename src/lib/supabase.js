@@ -238,10 +238,13 @@ export const dbService = {
       .single()
     
     if (error && error.code !== 'PGRST116') {
-      // PGRST116 = no rows returned (user hasn't created settings yet)
+      // PGRST116 = no rows returned (user hasn't created settings yet) — esperado.
+      // Outros erros (rede, RLS, etc.) não devem rebentar o boot, mas devem ser
+      // registados para não falharem em silêncio.
+      console.warn('[supabase] getUserSettings:', error.message || error.code);
       return {};
     }
-    
+
     return data?.settings || {};
   },
 

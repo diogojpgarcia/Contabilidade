@@ -32,12 +32,15 @@ const CategoryHistorySheet = ({
   useEffect(() => {
     if (!isVisible) { setTxVisible([]); setEditingLimit(false); return; }
     setTxVisible([]);
-    txs.forEach((_, i) => setTimeout(() => setTxVisible(p => [...p, i]), 180 + i * 55));
+    const timers = txs.map((_, i) => setTimeout(() => setTxVisible(p => [...p, i]), 180 + i * 55));
+    return () => timers.forEach(clearTimeout);
   }, [isVisible, catId]);
 
   // Focus input when editing
   useEffect(() => {
-    if (editingLimit) setTimeout(() => inputRef.current?.focus(), 80);
+    if (!editingLimit) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 80);
+    return () => clearTimeout(t);
   }, [editingLimit]);
 
   const handleStartEdit = () => {
