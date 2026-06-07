@@ -536,6 +536,16 @@ input::placeholder {
   contain: layout style;
 }
 
+/* Clearance para a nav fixa — ::after em vez de padding-bottom
+   (iOS Safari não inclui padding-bottom no scroll area de overflow:auto) */
+.main-content-new > div::after {
+  content: '';
+  display: block;
+  height: var(--bottom-clearance);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */
 .transaction-category--editable {

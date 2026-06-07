@@ -64,13 +64,14 @@ html, body {
 
 /* ── Bottom Nav ── unified 5-item bar, flat layout ──────────────────────── */
 .bottom-nav {
-  /* In-flow flex item — sem position:fixed, sem cálculos de clearance.
-     O conteúdo para naturalmente acima da nav. */
-  flex-shrink: 0;
-  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
   overflow: visible;
   background: var(--cosmos-nav-surface);
   border-top: 0.5px solid rgba(255, 255, 255, 0.07);
