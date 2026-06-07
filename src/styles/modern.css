@@ -234,7 +234,7 @@ body {
   background: var(--bg-primary);
   /* Safe area: push content below notch/Dynamic Island on all iPhone models */
   padding-top: env(safe-area-inset-top);
-  /* padding-bottom gerido por --bottom-clearance em cada tab — não aqui */
+  /* safe-area-bottom: a nav está em flux normal — app-new não precisa de padding-bottom */
 }
 
 /* Loading Screen */
@@ -525,7 +525,6 @@ input::placeholder {
 .main-content-new > div {
   flex: 1;
   min-height: 0;
-  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
@@ -537,15 +536,6 @@ input::placeholder {
   contain: layout style;
 }
 
-/* iOS Safari bug: padding-bottom on overflow:auto containers is not included in scroll area.
-   Use ::after spacer instead — actual DOM content scrolls correctly. */
-.main-content-new > div::after {
-  content: '';
-  display: block;
-  height: var(--bottom-clearance);
-  flex-shrink: 0;
-  pointer-events: none;
-}
 
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */
 .transaction-category--editable {
