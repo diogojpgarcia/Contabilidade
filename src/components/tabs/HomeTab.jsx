@@ -88,7 +88,7 @@ const Skeleton = ({ w = '100%', h = 16, radius = 8, style }) => (
 const HomeTab = ({
   balance, transactions, currentMonth,
   patrimony = {},
-  budgets = [],
+  budgets = {},
   financialMonthStartDay = 1,
   homeUsesFinancialMonth = true,
   onNavigate,

@@ -12,7 +12,7 @@ const PALETTE_BG = {
   dusk:     '#121008',
   stone:    '#f0ebe4',
 };
-const DEFAULT_BG = '#0d0f12';
+const DEFAULT_BG = '#0b0d10'; // midnight — deve ser idêntico a PALETTE_BG.midnight
 
 function applyPaletteToDOM(palette) {
   document.documentElement.setAttribute('data-palette', palette);
