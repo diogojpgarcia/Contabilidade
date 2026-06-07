@@ -239,7 +239,6 @@
 .cosmos-add {
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--bottom-clearance);
   min-height: 100%;
 }
 

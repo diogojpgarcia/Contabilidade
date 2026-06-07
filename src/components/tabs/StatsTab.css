@@ -1,4 +1,4 @@
-.stats-tab{padding:0 1rem;padding-bottom:var(--bottom-clearance);animation:fadeIn 0.3s ease;width:100%}
+.stats-tab{padding:0 1rem;padding-bottom:0;animation:fadeIn 0.3s ease;width:100%}
 .view-toggle{flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;padding:0.25rem;background:var(--bg-secondary);border-radius:12px;border:0.5px solid var(--separator);margin-bottom:1.25rem}
 .toggle-btn{display:flex;align-items:center;justify-content:center;gap:0.5rem;min-height:44px;padding:10px 12px;background:transparent;border:none;border-radius:10px;color:var(--text-secondary);font-size:0.9375rem;font-weight:500;cursor:pointer;transition:all 0.2s ease;letter-spacing:-0.01em}
 .toggle-btn.active{background:var(--bg-primary);color:var(--text-primary);box-shadow:0 1px 3px rgba(0,0,0,0.08)}

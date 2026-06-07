@@ -1,6 +1,5 @@
 /* ── Profile Tab — Cosmos design, token-driven ───────────────────────────── */
 .m-profile-page {
-  padding-bottom: var(--bottom-clearance);
   background: var(--cosmos-bg);
 }
 

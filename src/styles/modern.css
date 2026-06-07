@@ -537,6 +537,16 @@ input::placeholder {
   contain: layout style;
 }
 
+/* iOS Safari bug: padding-bottom on overflow:auto containers is not included in scroll area.
+   Use ::after spacer instead — actual DOM content scrolls correctly. */
+.main-content-new > div::after {
+  content: '';
+  display: block;
+  height: var(--bottom-clearance);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 /* ── Editable category label (shared by HomeTab + StatsTab) ─────────────── */
 .transaction-category--editable {
   cursor: pointer;

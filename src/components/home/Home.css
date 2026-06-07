@@ -10,7 +10,6 @@
 }
 
 .h-page {
-  padding-bottom: var(--bottom-clearance, 80px);
   contain: layout style;
 }
 

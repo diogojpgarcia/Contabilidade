@@ -1,4 +1,4 @@
-.import-tab{overflow-x:hidden;overflow-y:hidden;display:flex;flex-direction:column;height:100%;padding:1rem;padding-bottom:var(--bottom-clearance);animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;gap:0.75rem}
+.import-tab{overflow-x:hidden;overflow-y:hidden;display:flex;flex-direction:column;height:100%;padding:1rem;padding-bottom:0;animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;gap:0.75rem}
 .import-header{flex-shrink:0;text-align:center;margin-bottom:0.25rem}
 .import-header h2{font-size:1.75rem;font-weight:600;color:var(--text-primary);letter-spacing:-0.03em;margin-bottom:0.25rem}
 .import-header p{font-size:0.9375rem;color:var(--text-secondary);letter-spacing:-0.01em}

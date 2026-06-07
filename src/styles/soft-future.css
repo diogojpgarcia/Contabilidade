@@ -1294,9 +1294,6 @@ html[data-theme="soft-future"] body {
 }
 
 
-[data-theme="soft-future"] .h-page {
-  padding-bottom: var(--bottom-clearance);
-}
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1362,9 +1359,6 @@ html[data-theme="soft-future"] body {
 }
 
 
-[data-theme="soft-future"] .h-page {
-  padding-bottom: var(--bottom-clearance);
-}
 
 
 /* ═══════════════════════════════════════════════════════════════════════════

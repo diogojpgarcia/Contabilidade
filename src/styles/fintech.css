@@ -247,7 +247,7 @@ button,
   animation: card-enter 0.4s cubic-bezier(0.34,1.2,0.64,1) both;
   animation-delay: var(--delay, 0ms);
 }
-.m-page { padding-bottom: var(--bottom-clearance); }
+.m-page { }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SEGMENTED TOGGLE CONTROL  (.m-toggle)
@@ -877,7 +877,7 @@ button,
 /* ═══════════════════════════════════════════════════════════════════════════
    BUDGET TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
-.m-budget-page { padding-bottom: var(--bottom-clearance); }
+.m-budget-page { }
 
 /* Budget summary chips */
 .m-budget-summary {
@@ -1050,7 +1050,6 @@ button,
   flex-direction: column;
   gap: 8px;
   padding: 0 16px;
-  padding-bottom: var(--bottom-clearance);
 }
 .m-bcc {
   background: var(--bg-secondary);
@@ -1494,7 +1493,6 @@ button,
   flex-direction: column;
   gap: 8px;
   padding: 0 16px;
-  padding-bottom: var(--bottom-clearance);
 }
 .pat-cat-card {
   background: var(--bg-secondary);
@@ -2510,7 +2508,7 @@ button,
    PROFILE TAB — MODERN
    ═══════════════════════════════════════════════════════════════════════════ */
 .m-profile-page {
-  padding: 0 0 var(--bottom-clearance);
+  padding: 0;
 }
 
 /* ── Identity strip ─────────────────────────────────────────────────────── */
@@ -3202,7 +3200,6 @@ button,
   flex-direction: column;
   gap: 8px;
   padding: 0 16px;
-  padding-bottom: var(--bottom-clearance);
 }
 
 .m-insight-card {
