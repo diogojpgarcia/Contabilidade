@@ -65,24 +65,29 @@ html, body {
 /* ── Bottom Nav ── unified 5-item bar, flat layout ──────────────────────── */
 .bottom-nav {
   position: fixed;
-  bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   left: 12px; right: 12px;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow: visible;          /* permite botão + sobressair acima da barra */
   background: var(--cosmos-nav-surface);
   border: 0.5px solid rgba(255, 255, 255, 0.07);
   border-radius: 24px;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
   padding: 0 8px;
   height: 64px;
 }
 
-/* Stone palette — softer shadow */
+/* Stone palette — softer shadow + warm border */
 [data-palette="stone"] .bottom-nav {
-  box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.08);
-  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+  border: 0.5px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 4px 20px rgba(120, 90, 60, 0.14);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
 
 /* Regular nav items */
@@ -128,9 +133,12 @@ html, body {
   line-height: 1;
 }
 
-/* Centre Add button — inline with bar, slightly larger circle */
+/* Centre Add button — protrudes above the floating bar */
 .nav-item--add {
-  flex: 0 0 56px;   /* fixed width — no excess space around the circle */
+  position: relative;
+  z-index: 10;
+  margin-top: -16px;          /* sobressai acima da barra */
+  flex: 0 0 56px;
   display: flex;
   align-items: center;
   justify-content: center;

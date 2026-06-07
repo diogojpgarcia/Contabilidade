@@ -85,11 +85,12 @@
   --cosmos-dur-slow: 0.35s;
 
   /* ── Bottom nav ───────────────────────────────────────────────────────── */
-  --cosmos-nav-h:       72px;    /* flat unified bar height */
+  --cosmos-nav-h:       64px;    /* floating bar height */
   --cosmos-nav-item-py: 4px;     /* padding vertical dos itens */
-  --cosmos-nav-bar-pt:  6px;     /* padding-top da barra */
-  --cosmos-nav-safe:    calc(var(--cosmos-nav-h) + max(0px, env(safe-area-inset-bottom)));
-  --bottom-clearance:   calc(var(--cosmos-nav-h) + max(0px, env(safe-area-inset-bottom)) + 16px);
+  --cosmos-nav-bar-pt:  0px;     /* sem padding-top (floating pill) */
+  /* clearance = altura(64) + bottom offset(8+safe-area) + margem extra(16) */
+  --cosmos-nav-safe:    calc(var(--cosmos-nav-h) + 8px + env(safe-area-inset-bottom, 0px));
+  --bottom-clearance:   calc(var(--cosmos-nav-h) + 8px + env(safe-area-inset-bottom, 0px) + 16px);
   --cosmos-nav-surface: rgba(17, 19, 26, 1.00);   /* floating bar fill */
   --cosmos-nav-notch:   #0d0f12;                   /* page-bg colour used for notch cutout */
 
