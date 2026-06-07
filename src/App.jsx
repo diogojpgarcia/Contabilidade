@@ -328,7 +328,7 @@ const App = () => {
         </button>
 
         <button className={`nav-item ${activeTab === 'budget'  ? 'active' : ''}`} onClick={() => { haptic(8);  setActiveTab('budget');  }}>
-          <span className="nav-icon"><LayoutGrid size={22} strokeWidth={1.75} /></span>
+          <span className="nav-icon"><LayoutGrid size={20} strokeWidth={1.75} /></span>
           <span className="nav-label">Budget</span>
         </button>
         <button className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => { haptic(8);  setActiveTab('profile'); }}>

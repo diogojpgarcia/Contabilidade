@@ -120,6 +120,9 @@ html, body {
   height: 22px;
 }
 
+/* svg centrado no box; tamanho real vem do prop `size` em App.jsx */
+.nav-icon svg { display: block; }
+
 .nav-item.active .nav-icon { transform: scale(1.05); }
 
 .nav-label {
