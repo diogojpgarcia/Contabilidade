@@ -1,9 +1,0 @@
-/* HomeTab — default branch styles
-   Modern/fintech branch styles live in src/styles/fintech.css           */
-
-/* ── Mini cards (income / expense / total) ──────────────────────────── */
-.mini-card.total-balance {
-  border-left: 2px solid var(--cosmos-accent);
-}
-.mini-card.total-balance .mini-card-label  { color: var(--cosmos-accent); }
-.mini-card.total-balance .mini-card-amount { color: var(--text-primary, #111); }
