@@ -96,9 +96,14 @@ export function getOccurrencesInRange(payment, start, end) {
   const first = computeNextDueDate(payment, start);
   if (first > end) return [];
 
+  // Guard proporcional ao range — evita loop infinito sem permitir 500 iters desnecessárias.
+  // Pior caso: pagamento diário num range de 1 ano ≈ 366 ocorrências.
+  const rangeDays = Math.round(
+    (new Date(end + 'T00:00:00') - new Date(start + 'T00:00:00')) / 86400000
+  ) + 2;
   const dates = [];
   let d = first;
-  for (let guard = 0; d <= end && guard < 500; guard++) {
+  for (let guard = 0; d <= end && guard < rangeDays; guard++) {
     dates.push(d);
     d = advanceByFrequency(d, payment);
   }

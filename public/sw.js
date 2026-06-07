@@ -1,5 +1,7 @@
 // Advanced Service Worker with Auto-Update
-const CACHE_VERSION = 'v2'; // Incrementa quando há updates
+// __SW_VERSION__ é injectado pelo plugin Vite em cada build (timestamp).
+// Garante que cada deploy usa um cache novo sem ter de actualizar este ficheiro manualmente.
+const CACHE_VERSION = '__SW_VERSION__';
 const CACHE_NAME = `financas-${CACHE_VERSION}`;
 
 const ASSETS_TO_CACHE = [
