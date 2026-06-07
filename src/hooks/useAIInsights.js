@@ -5,6 +5,7 @@
  * Never sends raw transaction descriptions to the server — only aggregated stats.
  */
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 
 // LRU cache — max 12 entries (one per month for a year's browsing history)
 const CACHE_MAX = 12;
@@ -71,16 +72,17 @@ export function useAIInsights(summary, behavioralInsights = []) {
       })),
     };
 
-    const secret = import.meta.env.VITE_API_SECRET;
-    fetch('/api/insights', {
-      method:  'POST',
-      headers: {
-        'content-type': 'application/json',
-        ...(secret ? { 'x-app-secret': secret } : {}),
-      },
-      body:    JSON.stringify(payload),
-      signal:  controller.signal,
-    })
+    // Autentica via JWT do Supabase — o token é verificado server-side em /api/_auth.
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => fetch('/api/insights', {
+        method:  'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body:    JSON.stringify(payload),
+        signal:  controller.signal,
+      }))
       .then(r => {
         if (!r.ok) throw new Error(`API ${r.status}`);
         return r.json();

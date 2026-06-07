@@ -14,6 +14,14 @@ export function useAuth() {
   useEffect(() => {
     checkUserSession();
     checkRecoveryMode();
+
+    // Mantém o utilizador sincronizado com a sessão real: token refresh,
+    // expiração, e logout/login noutro separador propagam para esta árvore.
+    // (Só chamamos setState dentro do callback — seguro, sem deadlock.)
+    const { data: { subscription } } = authService.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+    return () => subscription?.unsubscribe();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkUserSession = async () => {
