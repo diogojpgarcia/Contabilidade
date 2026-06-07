@@ -2,16 +2,37 @@
 <html lang="pt">
   <head>
     <meta charset="UTF-8" />
-    <!-- ⚡ Apply Cosmos theme synchronously before any CSS or React renders.
-         Must be a plain <script> (not module/defer/async) so it blocks paint
-         and runs before the first frame is drawn.                           -->
-    <script>document.documentElement.setAttribute('data-theme','soft-future');</script>
+    <!-- ⚡ Apply palette + theme synchronously before any CSS or React renders.
+         Plain <script> (not module/defer/async) — blocks paint intentionally
+         so the very first frame already has the correct data-palette,
+         data-theme AND theme-color. Zero flash on any device.             -->
+    <script>
+      (function () {
+        try {
+          var BG    = { midnight: '#0b0d10', dusk: '#121008', stone: '#f0ebe4' };
+          var VALID = ['midnight', 'dusk', 'stone'];
+          var p = localStorage.getItem('cosmos-palette') || 'midnight';
+          if (!VALID.includes(p)) p = 'midnight';
+          // data-palette drives cosmos-tokens + palette-overrides.css
+          document.documentElement.setAttribute('data-palette', p);
+          // data-theme drives soft-future.css (scoped) + fintech.css light overrides
+          document.documentElement.setAttribute('data-theme', p === 'stone' ? 'light' : 'soft-future');
+          // Update theme-color so iOS status bar matches from the first frame
+          var tc = document.querySelector('meta[name="theme-color"]');
+          if (tc) tc.setAttribute('content', BG[p] || '#0b0d10');
+        } catch (e) {
+          // localStorage unavailable (Private Browsing, quota) — fall back to midnight
+          document.documentElement.setAttribute('data-palette', 'midnight');
+          document.documentElement.setAttribute('data-theme', 'soft-future');
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0b0d10" />
     <meta name="description" content="App de gestão de finanças familiares" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />

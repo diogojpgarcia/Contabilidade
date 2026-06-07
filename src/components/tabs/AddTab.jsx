@@ -176,7 +176,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">De</div>
               {accounts.length === 0
-                ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas — adiciona em Budget</span>
+                ? <span style={{ fontSize: 13, color: 'var(--cosmos-text-2)' }}>Sem contas — adiciona em Budget</span>
                 : <select className="cosmos-field-select" value={transferFrom} onChange={(e) => setTransferFrom(e.target.value)}>
                     <option value="">Conta de origem</option>
                     {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}
@@ -188,7 +188,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">Para</div>
               {accounts.length === 0
-                ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas — adiciona em Budget</span>
+                ? <span style={{ fontSize: 13, color: 'var(--cosmos-text-2)' }}>Sem contas — adiciona em Budget</span>
                 : <select className="cosmos-field-select" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}>
                     <option value="">Conta de destino</option>
                     {accounts.filter(a => a.id !== transferFrom).map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>)}
@@ -229,7 +229,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">Objetivo</div>
               {goals.length === 0
-                ? <span style={{ fontSize: 13, color: '#334155' }}>Sem objetivos — cria um em Budget</span>
+                ? <span style={{ fontSize: 13, color: 'var(--cosmos-text-2)' }}>Sem objetivos — cria um em Budget</span>
                 : <select className="cosmos-field-select" value={selectedGoal} onChange={(e) => setSelectedGoal(e.target.value)}>
                     <option value="">Seleciona um objetivo</option>
                     {goals.map(g => <option key={g.id} value={g.id}>{g.name} ({(g.currentSavings || 0).toFixed(2)}€ / {g.amount.toFixed(2)}€)</option>)}
@@ -245,7 +245,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">Conta (de onde sai)</div>
               {accounts.length === 0
-                ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas</span>
+                ? <span style={{ fontSize: 13, color: 'var(--cosmos-text-2)' }}>Sem contas</span>
                 : <select
                     className="cosmos-field-select"
                     value={goalAccountId}
@@ -270,7 +270,7 @@ const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goa
             <div className="cosmos-field-inner">
               <div className="cosmos-field-label">Conta</div>
               {accounts.length === 0
-                ? <span style={{ fontSize: 13, color: '#334155' }}>Sem contas</span>
+                ? <span style={{ fontSize: 13, color: 'var(--cosmos-text-2)' }}>Sem contas</span>
                 : <select className="cosmos-field-select" value={accountId} onChange={handleAccountSelect}>
                     <option value="">Sem conta específica</option>
                     {accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''} — {(parseFloat(a.currentBalance ?? a.balance) || 0).toFixed(2)}€</option>)}

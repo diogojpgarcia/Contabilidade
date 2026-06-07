@@ -177,7 +177,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     try {
       return computeFinancialScore({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay });
     } catch (e) {
-      return { score: 0, color: '#52525b', label: '—' };
+      return { score: 0, color: 'var(--cosmos-text-3)', label: '—' };
     }
   }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
 
@@ -422,7 +422,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  style={{ background: 'none', border: 'none', color: '#334155', cursor: 'pointer', padding: 0, fontSize: 13, lineHeight: 1 }}
+                  style={{ background: 'none', border: 'none', color: 'var(--cosmos-text-2)', cursor: 'pointer', padding: 0, fontSize: 13, lineHeight: 1 }}
                 >✕</button>
               )}
             </div>

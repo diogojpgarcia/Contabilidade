@@ -8,8 +8,8 @@ import { useAppContext } from '../../context/AppContext';
 import './ProfileTab.css';
 
 const PALETTES = [
-  { id: 'midnight', name: 'Midnight', bg: '#0d0f12', accent: '#06b6d4' },
-  { id: 'dusk',     name: 'Dusk',     bg: '#1c1810', accent: '#c49a6c' },
+  { id: 'midnight', name: 'Midnight', bg: '#0b0d10', accent: '#06b6d4' },
+  { id: 'dusk',     name: 'Dusk',     bg: '#121008', accent: '#c49a6c' },
   { id: 'stone',    name: 'Stone',    bg: '#f0ebe4', accent: '#9f6b48' },
 ];
 
