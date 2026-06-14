@@ -238,6 +238,7 @@ const App = () => {
               onRecurringPaymentsChange={s.handleRecurringPaymentsChange}
               confirmedRecurring={s.confirmedRecurring}
               onConfirmRecurring={s.handleConfirmRecurring}
+              onDeleteRecurring={s.handleDeleteRecurring}
               goals={s.goals}
               onGoalsChange={s.handleGoalsChange}
             />

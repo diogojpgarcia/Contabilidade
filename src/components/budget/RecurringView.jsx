@@ -41,6 +41,7 @@ const RecurringView = ({
   onRecurringPaymentsChange,
   confirmedRecurring = {},
   onConfirmRecurring,
+  onDeleteRecurring,
   patrimony,
 }) => {
   const { categories } = useAppContext();
@@ -92,7 +93,10 @@ const RecurringView = ({
   };
 
   const handleDelete = (id) => {
-    persist(payments.filter(p => p.id !== id));
+    // onDeleteRecurring apaga também as transações já confirmadas deste
+    // recorrente (repõe o saldo na conta). Fallback: só remove o recorrente.
+    if (onDeleteRecurring) onDeleteRecurring(id);
+    else persist(payments.filter(p => p.id !== id));
     setConfirmDeleteId(null);
   };
 
@@ -324,11 +328,17 @@ const RecurringView = ({
                   Cancelar
                 </button>
                 <button
+                  className="rp-form-cancel"
+                  onClick={() => { const p = confirmTarget.payment; setConfirmTarget(null); openEdit(p); }}
+                >
+                  Editar
+                </button>
+                <button
                   className="rp-form-save"
                   onClick={handleConfirmSave}
                   disabled={confirming || safeNum(confirmAmount) <= 0}
                 >
-                  {confirming ? 'A confirmar…' : 'Confirmar pagamento'}
+                  {confirming ? 'A confirmar…' : 'Confirmar'}
                 </button>
               </div>
             </div>
@@ -347,6 +357,9 @@ const RecurringView = ({
             <div className="modal-body" style={{ padding: '0 0 8px' }}>
               <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
                 <strong>{payments.find(p => p.id === confirmDeleteId)?.title}</strong> será removido.
+                {Object.keys(confirmedRecurring[confirmDeleteId] || {}).length > 0 && (
+                  <><br />Os pagamentos já confirmados serão apagados e o valor reposto na conta.</>
+                )}
               </p>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
@@ -462,9 +475,9 @@ const RecurringView = ({
                 </div>
               )}
 
-              {/* Start date */}
+              {/* Payment date */}
               <div className="rp-form-field">
-                <label className="rp-form-label">Data de início</label>
+                <label className="rp-form-label">Data de pagamento</label>
                 <input
                   className="rp-form-input"
                   type="date"

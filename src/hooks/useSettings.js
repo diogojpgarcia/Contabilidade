@@ -356,6 +356,31 @@ export function useSettings(currentUser, txHook) {
     dbService.updateUserSettings(currentUser.id, settingsUpdate).catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
+  // Apaga um pagamento recorrente E as transações já confirmadas que ele criou,
+  // repondo o saldo na conta. Limpa também as confirmações desse recorrente.
+  const handleDeleteRecurring = async (id) => {
+    const conf = confirmedRecurring[id] || {};
+    const txIds = Object.values(conf).map(c => c && c.transactionId).filter(Boolean);
+    for (const txId of txIds) {
+      try { await txHook.handleDeleteTransaction(txId); } catch (_) { /* continua */ }
+    }
+
+    const updatedConf = { ...confirmedRecurring };
+    delete updatedConf[id];
+    setConfirmedRecurring(updatedConf);
+
+    const updatedPayments = (recurringPayments || []).filter(p => p.id !== id);
+    setRecurringPayments(updatedPayments);
+
+    // Persistir ambos num só save (evita race no read-modify-write)
+    dbService.updateUserSettings(currentUser.id, {
+      confirmed_recurring: updatedConf,
+      recurring_payments:  updatedPayments,
+    }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+
+    if (txIds.length > 0) toast.success?.(`Recorrente removido · ${txIds.length} pagamento(s) repostos.`);
+  };
+
   // ── Objetivos ─────────────────────────────────────────────────────────────
   const handleGoalsChange = async (updatedGoals) => {
     setGoals(updatedGoals);
@@ -403,6 +428,7 @@ export function useSettings(currentUser, txHook) {
     handleHomeUsesFinancialMonthChange,
     handleRecurringPaymentsChange,
     handleConfirmRecurring,
+    handleDeleteRecurring,
     handleGoalsChange,
     handleFocusChange,
   };

@@ -31,6 +31,7 @@ const BudgetTab = ({
   onRecurringPaymentsChange,
   confirmedRecurring = {},
   onConfirmRecurring,
+  onDeleteRecurring,
   goals = [],
   onGoalsChange,
 }) => {
@@ -98,6 +99,7 @@ const BudgetTab = ({
           onRecurringPaymentsChange={onRecurringPaymentsChange}
           confirmedRecurring={confirmedRecurring}
           onConfirmRecurring={onConfirmRecurring}
+          onDeleteRecurring={onDeleteRecurring}
           patrimony={externalPatrimony}
         />
       )}
