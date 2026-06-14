@@ -10,6 +10,10 @@
   border-radius: 14px;
   margin-bottom: 8px;
   overflow: hidden;
+  /* Nunca encolher: em listas flex-column de altura limitada (ex. o scroll da
+     pré-visualização do import) o flex-shrink:1 por omissão esmagava o cartão
+     até ~0px, escondendo nome/valor. A lista deve fazer scroll, não comprimir. */
+  flex-shrink: 0;
   cursor: pointer;
   transition: transform 0.12s ease, background 0.15s;
   -webkit-tap-highlight-color: transparent;
