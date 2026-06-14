@@ -182,11 +182,14 @@ html, body {
    ANIMATIONS — shared keyframes used across the app
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* 1. Tab enter — slide up with spring overshoot */
+/* 1. Tab enter — fade only.
+   NÃO animar transform: o root do tab é também o container de scroll com
+   transform:translateZ(0)+contain (perf + containing block do FAB). Animar
+   transform aqui sobrepunha-se e libertava esse translateZ a cada troca de
+   tab, fazendo o iOS recalcular o layout e a bottom-nav "saltar". */
 @keyframes tab-enter {
-  0%   { opacity: 0; transform: translateY(28px) scale(0.98); }
-  60%  { opacity: 1; transform: translateY(-3px) scale(1.002); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* 2. Card entry — staggered, more pronounced */

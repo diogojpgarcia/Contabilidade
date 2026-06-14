@@ -65,6 +65,12 @@ const PatrimonyFormModal = ({
       reset(editingAsset.item);
       setFormType(editingAsset.typeKey);
       setEditingId(editingAsset.item.id);
+      if (editingAsset.typeKey === 'accounts') {
+        // Prefill com o SALDO ATUAL (base + transações), não o saldo-base.
+        const it = editingAsset.item;
+        const cur = it.currentBalance != null ? it.currentBalance : (it.balance != null ? it.balance : '');
+        set('currentValue', cur === '' ? '' : String(cur));
+      }
       if (editingAsset.typeKey === 'stocks' && editingAsset.item.ticker) setStockConfirmed(true);
       if (editingAsset.typeKey === 'etfs'   && editingAsset.item.ticker) setEtfConfirmed(true);
       if (editingAsset.typeKey === 'crypto' && editingAsset.item.coin)   setCryptoConfirmed(true);
@@ -143,6 +149,21 @@ const PatrimonyFormModal = ({
   const handleSubmit = () => {
     if (!formType) return;
     const clean = { ...f };
+
+    // Contas: o utilizador edita o SALDO ATUAL. Ajustamos o saldo-base (balance)
+    // para que (base + transações ligadas) = valor inserido. Sem transações, ou
+    // ao adicionar, base = valor inserido.
+    if (formType === 'accounts') {
+      const num = v => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
+      const entered = Number(clean.currentValue);
+      const sumTx = (editingId && editingAsset?.item)
+        ? num(editingAsset.item.currentBalance != null ? editingAsset.item.currentBalance : editingAsset.item.balance) - num(editingAsset.item.balance)
+        : 0;
+      clean.balance = Number.isFinite(entered) ? (entered - sumTx) : num(clean.balance);
+      delete clean.currentValue;
+      delete clean.currentBalance;
+    }
+
     if (editingId) {
       // propagate account renames to linked transactions
       if (formType === 'accounts' && onAccountRename) {
@@ -197,7 +218,7 @@ const PatrimonyFormModal = ({
         return (<>
           <input className={cls} placeholder="Nome da conta"    value={f.name    || ''} onChange={e => set('name',    e.target.value)} />
           <input className={cls} placeholder="Banco (opcional)" value={f.bank    || ''} onChange={e => set('bank',    e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Saldo inicial (€)" value={f.balance || ''} onChange={e => set('balance', e.target.value)} />
+          <input className={cls} type="number" inputMode="decimal" placeholder="Saldo atual (€)" value={f.currentValue ?? ''} onChange={e => set('currentValue', e.target.value)} />
         </>);
 
       case 'stocks': {
