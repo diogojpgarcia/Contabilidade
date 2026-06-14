@@ -7,12 +7,14 @@ import { parseXLSX } from './parseBankXlsx';
 
 
 // ── Column keyword scoring tables ────────────────────────────────────────────
-const SCORE_DATE = [
+// Exportadas + helpers (norm, detectColumns) porque parseBankXlsx.js e
+// parseBankPdf.js (split deste ficheiro) dependem destes símbolos.
+export const SCORE_DATE = [
   'date','data','datum','fecha','valuta','buchungstag','booking','wertstellung',
   'movimento','data mov','data valor','transaction date','posting date','value date',
   'boekdatum','rekeningdatum','handelsdatum',
 ];
-const SCORE_DESC = [
+export const SCORE_DESC = [
   'description','descricao','historico','movimento','details','detail',
   'omschrijving','verwendungszweck','memo','narration','reference','referencia',
   'text','label','transaction','hist','descr','bezeichnung','betreff','subject',
@@ -20,15 +22,15 @@ const SCORE_DESC = [
   'payment details','beneficiary','creditor name','naam','tegenrekening naam',
   'comunicacao','comunicacao',
 ];
-const SCORE_AMT = [
+export const SCORE_AMT = [
   'amount','valor','betrag','bedrag','importe','montant','montante','quantia',
   'total','net amount','transaction amount','movimento',
 ];
-const SCORE_DEBIT = [
+export const SCORE_DEBIT = [
   'debit','debito','debito','db','deb','af','uitgaven','ausgabe',
   'withdrawal','charge','debet','kosten','saidas','saida',
 ];
-const SCORE_CREDIT = [
+export const SCORE_CREDIT = [
   'credit','credito','credito','cr','cred','bij','inkomsten','einnahme',
   'deposit','payment','entradas','entrada','receita',
 ];
@@ -59,7 +61,7 @@ function decodeBuffer(buffer) {
 }
 
 // ── Normalisation helpers ─────────────────────────────────────────────────────
-function norm(s) {
+export function norm(s) {
   return String(s)
     .toLowerCase()
     .normalize('NFD')
@@ -218,7 +220,7 @@ function dedupKey(r) {
 }
 
 // ── Column detection ─────────────────────────────────────────────────────────
-function detectColumns(headers) {
+export function detectColumns(headers) {
   const cols = {
     date: null,   dateScore: 0,
     desc: null,   descScore: 0,
@@ -240,6 +242,11 @@ function detectColumns(headers) {
     if (crs > cols.creditScore){ cols.creditScore = crs; cols.credit = h; }
   }
 
+  // Uma coluna de DATA pode bater falsamente em keywords de montante
+  // (ex. "Data valor" → keyword 'valor'). A coluna de montante tem de ser
+  // diferente da coluna de data escolhida.
+  if (cols.amt && cols.amt === cols.date) { cols.amt = null; cols.amtScore = 0; }
+
   return cols;
 }
 
@@ -259,7 +266,7 @@ function findHeaderRow(rows) {
 // contain an explicit +/- sign. This catches cases where the column name is
 // unrecognised ("Montante", "Valor Mov.", "Importe") but the data itself has
 // signed numbers like "-4,00" or "+1.500,00".
-function findSignedAmountColumn(headers, dataRows) {
+export function findSignedAmountColumn(headers, dataRows) {
   const counts = {};
   headers.forEach(h => { counts[h] = 0; });
 

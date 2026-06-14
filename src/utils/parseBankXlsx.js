@@ -1,5 +1,9 @@
 // parseBankXlsx.js — XLSX/XLS bank statement parser (extracted from parseBankFile.js)
-import { parseDate, parseAmount, cleanDescription } from './parseBankFile';
+import {
+  parseDate, parseAmount, cleanDescription,
+  norm, detectColumns, findSignedAmountColumn,
+  SCORE_DATE, SCORE_DESC, SCORE_AMT, SCORE_DEBIT, SCORE_CREDIT,
+} from './parseBankFile';
 
 // Internal dedup key helper
 function dedupKey(r) {
@@ -53,6 +57,22 @@ export async function parseXLSX(buffer) {
     const headers = raw[headerIdx].map(c => String(c).trim());
 
     const cols = detectColumns(headers);
+
+    // Data-driven override (igual ao parseCSV): se houver uma coluna com valores
+    // explicitamente assinados (ex. "Montante" com -1,35), é essa o montante —
+    // sobrepõe-se à deteção por nome, que pode escolher mal (ex. "Data valor").
+    const dataMatrix = raw.slice(headerIdx + 1).map(r =>
+      headers.map((h, idx) => {
+        const c = r[idx];
+        return c instanceof Date ? c.toISOString().slice(0, 10) : (c != null ? String(c).trim() : '');
+      })
+    );
+    const signedCol = findSignedAmountColumn(headers, dataMatrix);
+    if (signedCol) {
+      cols.amt = signedCol; cols.amtScore = 20;
+      cols.debit = null; cols.debitScore = 0;
+      cols.credit = null; cols.creditScore = 0;
+    }
 
     const result = [];
     const seen   = new Set();

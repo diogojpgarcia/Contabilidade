@@ -1,5 +1,8 @@
 // parseBankPdf.js — PDF bank statement parser (extracted from parseBankFile.js)
-import { parseDate, parseAmount, cleanDescription } from './parseBankFile';
+import {
+  parseDate, parseAmount, cleanDescription,
+  norm, SCORE_DATE, SCORE_DESC, SCORE_DEBIT, SCORE_CREDIT,
+} from './parseBankFile';
 
 // Internal dedup key helper
 function dedupKey(r) {
