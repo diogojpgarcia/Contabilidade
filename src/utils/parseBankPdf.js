@@ -418,6 +418,18 @@ function extractByColumnBounds(rows, layout) {
   return result;
 }
 
+// Limpeza final da descrição extraída de PDF: remove a data de movimento que
+// às vezes cola no início e os códigos de moeda (EUR/USD/GBP) que sobram no fim.
+function cleanPdfDescription(desc) {
+  let s = String(desc || '').replace(/\s+/g, ' ').trim();
+  s = s.replace(/^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}\s+/, '');      // data à cabeça
+  s = s.replace(/(?:\s*\b(?:EUR|USD|GBP)\b)+\s*$/i, '');          // moeda no fim
+  return s.trim() || 'unknown transaction';
+}
+function finalizePdfRows(rows) {
+  return (rows || []).map(r => ({ ...r, description: cleanPdfDescription(r.description) }));
+}
+
 export async function parsePDF(buffer) {
   try {
     const pdfjsLib = await loadPdfJs();
@@ -443,7 +455,7 @@ export async function parsePDF(buffer) {
     const layout   = detectColumnBounds(rowItems);
     if (layout) {
       const colResult = extractByColumnBounds(rowItems, layout);
-      if (colResult.length >= 2) return colResult;
+      if (colResult.length >= 2) return finalizePdfRows(colResult);
     }
 
     // ── Strategy 2: y-coordinate line reconstruction ────────────────────────
@@ -458,10 +470,10 @@ export async function parsePDF(buffer) {
       : [];
 
     const best = normResult.length > lineResult.length ? normResult : lineResult;
-    if (best.length > 0) return best;
+    if (best.length > 0) return finalizePdfRows(best);
 
     // ── Strategy 4: Flat single-line mode (last resort) ─────────────────────
-    return extractTransactionsFromText(fullText);
+    return finalizePdfRows(extractTransactionsFromText(fullText));
   } catch (err) {
     console.error('[parseBankFile] PDF parse error:', err);
     return [];

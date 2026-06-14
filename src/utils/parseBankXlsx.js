@@ -1,7 +1,7 @@
 // parseBankXlsx.js — XLSX/XLS bank statement parser (extracted from parseBankFile.js)
 import {
-  parseDate, parseAmount, cleanDescription,
-  norm, detectColumns, findSignedAmountColumn,
+  parseDate, cleanDescription, resolveSignedAmount,
+  norm, detectColumns,
   SCORE_DATE, SCORE_DESC, SCORE_AMT, SCORE_DEBIT, SCORE_CREDIT,
 } from './parseBankFile';
 
@@ -56,71 +56,36 @@ export async function parseXLSX(buffer) {
 
     const headers = raw[headerIdx].map(c => String(c).trim());
 
-    const cols = detectColumns(headers);
+    // Normaliza cada linha para strings (datas locais, não UTC) para a deteção
+    // data-driven e para a resolução por linha.
+    const cellToStr = (c) => {
+      if (c instanceof Date) {
+        return `${c.getFullYear()}-${String(c.getMonth() + 1).padStart(2, '0')}-${String(c.getDate()).padStart(2, '0')}`;
+      }
+      return c != null ? String(c).trim() : '';
+    };
+    const dataMatrix = raw.slice(headerIdx + 1).map(r => headers.map((h, idx) => cellToStr(r[idx])));
 
-    // Data-driven override (igual ao parseCSV): se houver uma coluna com valores
-    // explicitamente assinados (ex. "Montante" com -1,35), é essa o montante —
-    // sobrepõe-se à deteção por nome, que pode escolher mal (ex. "Data valor").
-    const dataMatrix = raw.slice(headerIdx + 1).map(r =>
-      headers.map((h, idx) => {
-        const c = r[idx];
-        return c instanceof Date ? c.toISOString().slice(0, 10) : (c != null ? String(c).trim() : '');
-      })
-    );
-    const signedCol = findSignedAmountColumn(headers, dataMatrix);
-    if (signedCol) {
-      cols.amt = signedCol; cols.amtScore = 20;
-      cols.debit = null; cols.debitScore = 0;
-      cols.credit = null; cols.creditScore = 0;
-    }
+    const cols = detectColumns(headers, dataMatrix);
 
     const result = [];
     const seen   = new Set();
 
-    for (let i = headerIdx + 1; i < raw.length; i++) {
-      const rawRow = raw[i];
-      if (!rawRow || rawRow.every(c => c === '' || c == null)) continue;
+    for (const rawRow of dataMatrix) {
+      if (!rawRow || rawRow.every(c => c === '')) continue;
 
       const obj = {};
-      headers.forEach((h, idx) => {
-        const cell = rawRow[idx];
-        // SheetJS returns Date objects for date cells; convert to ISO string
-        if (cell instanceof Date) {
-          obj[h] = cell.toISOString().slice(0, 10);
-        } else {
-          obj[h] = cell != null ? String(cell).trim() : '';
-        }
-      });
+      headers.forEach((h, idx) => { obj[h] = rawRow[idx] || ''; });
 
       const date = parseDate(obj[cols.date]);
       if (!date) continue;
 
-      // ── Amount resolution ────────────────────────────────────────────────
-      let amount = null;
-
-      if (cols.debitScore >= 3 || cols.creditScore >= 3) {
-        const rawDebit  = cols.debit  ? obj[cols.debit]  : '';
-        const rawCredit = cols.credit ? obj[cols.credit] : '';
-
-        const debitVal  = rawDebit  ? parseAmount(rawDebit)  : null;
-        const creditVal = rawCredit ? parseAmount(rawCredit) : null;
-        const debitAbs  = debitVal  !== null ? Math.abs(debitVal)  : 0;
-        const creditAbs = creditVal !== null ? Math.abs(creditVal) : 0;
-
-        if (creditAbs > 0 && debitAbs === 0) amount =  creditAbs;   // income
-        if (debitAbs  > 0 && creditAbs === 0) amount = -debitAbs;   // expense
-        if (creditAbs > 0 && debitAbs  > 0)  amount =  creditAbs - debitAbs;
-      }
-
-      if (amount === null && cols.amt && obj[cols.amt]) {
-        const raw = obj[cols.amt];
-        amount = parseAmount(raw);
-      }
-
+      const amount = resolveSignedAmount(obj, cols);
       if (amount === null) continue;
 
       const fallbackCells = headers
-        .filter(h => h !== cols.date && h !== cols.amt && h !== cols.debit && h !== cols.credit)
+        .filter(h => h !== cols.date && h !== cols.amt && h !== cols.debit &&
+                     h !== cols.credit && h !== cols.balance && h !== cols.direction)
         .map(h => obj[h]);
 
       const description = cleanDescription(cols.desc ? obj[cols.desc] : null, fallbackCells);

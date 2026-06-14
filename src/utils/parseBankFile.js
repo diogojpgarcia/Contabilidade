@@ -20,11 +20,17 @@ export const SCORE_DESC = [
   'text','label','transaction','hist','descr','bezeichnung','betreff','subject',
   'particulars','remark','remarks','note','notes','transaction details',
   'payment details','beneficiary','creditor name','naam','tegenrekening naam',
-  'comunicacao','comunicacao',
+  'comunicacao','payee','payer','beneficiario','ordenante','contraparte',
+  'merchant','counterparty','nome','entidade',
 ];
 export const SCORE_AMT = [
-  'amount','valor','betrag','bedrag','importe','montant','montante','quantia',
-  'total','net amount','transaction amount','movimento',
+  'amount','valor','betrag','bedrag','importe','importancia','montant','montante',
+  'quantia','total','net amount','transaction amount','movimento',
+];
+// Saldo / running balance — detetada para ser EXCLUÍDA da coluna de montante.
+export const SCORE_BALANCE = [
+  'saldo','balance','saldo contabilistico','saldo disponivel','saldo apos movimento',
+  'saldo apos','saldo final','saldo atual','running balance','saldo escritural',
 ];
 export const SCORE_DEBIT = [
   'debit','debito','debito','db','deb','af','uitgaven','ausgabe',
@@ -219,34 +225,134 @@ function dedupKey(r) {
   return `${r.date}|${r.amount}|${(r.description || '').slice(0, 30)}`;
 }
 
-// ── Column detection ─────────────────────────────────────────────────────────
-export function detectColumns(headers) {
-  const cols = {
-    date: null,   dateScore: 0,
-    desc: null,   descScore: 0,
-    amt:  null,   amtScore:  0,
-    debit: null,  debitScore: 0,
-    credit: null, creditScore: 0,
+// ── Column direction tokens (D/C) ─────────────────────────────────────────────
+const DIR_DEBIT  = new Set(['d','db','deb','debito','dr','debit','saida','saidas','out','withdrawal','charge']);
+const DIR_CREDIT = new Set(['c','cr','cred','credito','credit','entrada','entradas','in','deposit','payment','abono']);
+
+// ── Per-column data statistics ────────────────────────────────────────────────
+// Calcula, a partir de uma amostra de valores, que fração parseia como data,
+// como número, com sinal +/-, como token de direção (D/C), e o tamanho médio
+// do texto livre. É a base da deteção data-driven.
+function colStats(values) {
+  let nonEmpty = 0, dateHits = 0, numHits = 0, signedHits = 0, dirHits = 0, textLen = 0, textN = 0;
+  for (const raw of values) {
+    const v = (raw ?? '').toString().trim();
+    if (!v) continue;
+    nonEmpty++;
+    const isDate = !!parseDate(v);
+    const isNum  = !isDate && /\d/.test(v) && parseAmount(v) !== null;
+    if (isDate) dateHits++;
+    if (isNum) {
+      numHits++;
+      if (/^\s*[+\-(]/.test(v) || /\d\s*-\s*$/.test(v)) signedHits++;
+    }
+    if (!isDate && !isNum) {
+      textLen += v.length; textN++;
+      const nv = norm(v);
+      if (nv.length <= 12 && (DIR_DEBIT.has(nv) || DIR_CREDIT.has(nv))) dirHits++;
+    }
+  }
+  const den = nonEmpty || 1;
+  return {
+    nonEmpty,
+    dateRate:   dateHits / den,
+    numRate:    numHits / den,
+    signedRate: signedHits / den,
+    dirRate:    dirHits / den,
+    avgText:    textN ? textLen / textN : 0,
   };
-  for (const h of headers) {
-    if (!norm(h)) continue;
-    const ds  = scoreHeader(h, SCORE_DATE);
-    if (ds  > cols.dateScore)  { cols.dateScore  = ds;  cols.date   = h; }
-    const dss = scoreHeader(h, SCORE_DESC);
-    if (dss > cols.descScore)  { cols.descScore  = dss; cols.desc   = h; }
-    const as  = scoreHeader(h, SCORE_AMT);
-    if (as  > cols.amtScore)   { cols.amtScore   = as;  cols.amt    = h; }
-    const dbs = scoreHeader(h, SCORE_DEBIT);
-    if (dbs > cols.debitScore) { cols.debitScore  = dbs; cols.debit  = h; }
-    const crs = scoreHeader(h, SCORE_CREDIT);
-    if (crs > cols.creditScore){ cols.creditScore = crs; cols.credit = h; }
+}
+
+// ── Column detection (data-driven) ────────────────────────────────────────────
+// Infere o papel de cada coluna a partir dos DADOS (taxa de datas, de números,
+// de sinais +/-, de texto), usando os nomes só como desempate. Generaliza para
+// qualquer banco, mesmo com cabeçalhos invulgares ou colisões de keywords.
+export function detectColumns(headers, dataRows = []) {
+  const sample = dataRows.slice(0, 60);
+  const hasData = sample.length > 0;
+  const info = headers.map((h, i) => ({
+    h, i,
+    st: colStats(sample.map(r => (Array.isArray(r) ? r[i] : undefined))),
+    nameDate:   scoreHeader(h, SCORE_DATE),
+    nameDesc:   scoreHeader(h, SCORE_DESC),
+    nameAmt:    scoreHeader(h, SCORE_AMT),
+    nameDebit:  scoreHeader(h, SCORE_DEBIT),
+    nameCredit: scoreHeader(h, SCORE_CREDIT),
+    nameBal:    scoreHeader(h, SCORE_BALANCE),
+  }));
+  const cols = {
+    date: null, dateScore: 0, desc: null, descScore: 0, amt: null, amtScore: 0,
+    debit: null, debitScore: 0, credit: null, creditScore: 0, direction: null, balance: null,
+  };
+  const used = new Set();
+  const avail = () => info.filter(c => !used.has(c.i));
+
+  // 1) DATE — coluna que mais parseia como data (ou, sem dados, pelo nome)
+  {
+    let best = null, bestSc = 0;
+    for (const c of avail()) {
+      const dataSig = c.st.dateRate >= 0.6 ? 100 + c.st.dateRate * 10 : 0;
+      const sc = dataSig + c.nameDate;
+      const eligible = hasData ? c.st.dateRate >= 0.6 : c.nameDate > 0;
+      if (eligible && sc > bestSc) { bestSc = sc; best = c; }
+    }
+    if (best) { cols.date = best.h; cols.dateScore = Math.max(best.nameDate, best.st.dateRate >= 0.6 ? 10 : 0); used.add(best.i); }
   }
 
-  // Uma coluna de DATA pode bater falsamente em keywords de montante
-  // (ex. "Data valor" → keyword 'valor'). A coluna de montante tem de ser
-  // diferente da coluna de data escolhida.
-  if (cols.amt && cols.amt === cols.date) { cols.amt = null; cols.amtScore = 0; }
+  // 2) BALANCE — numérica com nome 'saldo' (excluída de montante/descrição)
+  {
+    let best = null, bestSc = 0;
+    for (const c of avail()) {
+      if (hasData && c.st.numRate < 0.5) continue;
+      if (c.nameBal > bestSc) { bestSc = c.nameBal; best = c; }
+    }
+    if (best && bestSc >= 5) { cols.balance = best.h; used.add(best.i); }
+  }
 
+  // 3) DEBIT/CREDIT — par de colunas numéricas com nomes débito/crédito
+  {
+    let dCol = null, dSc = 0, cCol = null, cSc = 0;
+    for (const c of avail()) {
+      if (hasData && c.st.numRate < 0.15) continue;
+      if (c.nameDebit  > dSc) { dSc = c.nameDebit;  dCol = c; }
+      if (c.nameCredit > cSc) { cSc = c.nameCredit; cCol = c; }
+    }
+    if (dCol && cCol && dCol.i !== cCol.i && dSc >= 5 && cSc >= 5) {
+      cols.debit  = dCol.h; cols.debitScore  = dSc; used.add(dCol.i);
+      cols.credit = cCol.h; cols.creditScore = cSc; used.add(cCol.i);
+    }
+  }
+
+  // 4) AMOUNT (coluna única) — só se não houver par débito/crédito.
+  //    Prefere a coluna NUMÉRICA com mais sinais +/-, depois pelo nome.
+  if (!cols.debit && !cols.credit) {
+    let best = null, bestSc = -1;
+    for (const c of avail()) {
+      if (hasData && c.st.numRate < 0.6) continue;
+      if (!hasData && c.nameAmt === 0) continue;
+      const sc = c.st.signedRate * 100 + c.nameAmt * 3 + c.st.numRate;
+      if (sc > bestSc) { bestSc = sc; best = c; }
+    }
+    if (best) { cols.amt = best.h; cols.amtScore = best.st.signedRate > 0.3 ? 20 : Math.max(5, best.nameAmt); used.add(best.i); }
+  }
+
+  // 5) DIRECTION — coluna D/C (valores curtos do conjunto débito/crédito)
+  for (const c of avail()) {
+    if (c.st.dirRate >= 0.6 && c.st.nonEmpty >= 1) { cols.direction = c.h; used.add(c.i); break; }
+  }
+
+  // 6) DESCRIPTION — entre as restantes, a de maior conteúdo de texto (+ nome)
+  {
+    let best = null, bestSc = -1;
+    for (const c of avail()) {
+      const sc = c.st.avgText * 2 + c.nameDesc * 3;
+      if (sc > bestSc) { bestSc = sc; best = c; }
+    }
+    if (best) { cols.desc = best.h; cols.descScore = Math.max(best.nameDesc, best.st.avgText > 3 ? 5 : 0); }
+  }
+
+  // Guarda: montante e data nunca podem ser a mesma coluna
+  if (cols.amt && cols.amt === cols.date) { cols.amt = null; cols.amtScore = 0; }
   return cols;
 }
 
@@ -290,12 +396,10 @@ export function findSignedAmountColumn(headers, dataRows) {
   return best[0][0];
 }
 
-// ── Data-driven: find D/C direction column ────────────────────────────────────
+// ── Data-driven: find D/C direction column (legacy helper, mantido p/ compat) ──
 // Some banks export unsigned amounts with a separate column that says "D"/"C"
-// or "Débito"/"Crédito" to indicate direction. Detects this pattern.
-const DIR_DEBIT  = new Set(['d','db','deb','debito','dr','debit','saida','saidas','out','withdrawal','charge']);
-const DIR_CREDIT = new Set(['c','cr','cred','credito','credit','entrada','entradas','in','deposit','payment','abono']);
-
+// or "Débito"/"Crédito". A deteção principal está agora em detectColumns
+// (cols.direction); este helper fica como utilitário.
 function findDirectionColumn(headers, dataRows) {
   for (const h of headers) {
     let matches = 0, total = 0;
@@ -356,6 +460,18 @@ function resolveAmount(obj, cols) {
   return null;
 }
 
+// Resolve o montante COM sinal final, aplicando a coluna de direção (D/C) quando
+// existe e o montante veio sem sinal. Fonte única usada por CSV e XLSX.
+export function resolveSignedAmount(obj, cols) {
+  let amount = resolveAmount(obj, cols);
+  if (amount !== null && cols.direction && obj[cols.direction]) {
+    const dir = norm(obj[cols.direction]);
+    if (DIR_DEBIT.has(dir)  && amount > 0) amount = -amount;
+    if (DIR_CREDIT.has(dir) && amount < 0) amount = -amount;
+  }
+  return amount;
+}
+
 // ── FALLBACK: row-based detection ─────────────────────────────────────────────
 function parseRowFallback(row) {
   let date = null, amount = null, descCandidates = [];
@@ -388,30 +504,13 @@ export function parseCSV(text) {
   const headerIdx = findHeaderRow(rows);
   const headers   = rows[headerIdx].map(h => h.trim());
 
-  const cols = detectColumns(headers);
-
-  // ── Data-driven override: signed values & direction column ────────────────
   const dataRows = rows.slice(headerIdx + 1);
-
-  // 1. Find column that actually contains +/- signed values in the data.
-  //    This overrides header-name detection when the column name is opaque.
-  const signedCol = findSignedAmountColumn(headers, dataRows);
-  if (signedCol) {
-    cols.amt        = signedCol;
-    cols.amtScore   = 20; // highest priority
-    cols.debit      = null;
-    cols.debitScore = 0;
-    cols.credit     = null;
-    cols.creditScore= 0;
-  }
-
-  // 2. Find a D/C direction column (only useful when no signed column found).
-  const dirCol = signedCol ? null : findDirectionColumn(headers, dataRows);
+  const cols = detectColumns(headers, dataRows);
 
   const result = [];
   const seen   = new Set();
 
-  if (cols.dateScore >= 3) {
+  if (cols.date && cols.dateScore >= 3) {
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const rawRow = rows[i];
       if (rawRow.length < 2) continue;
@@ -422,19 +521,12 @@ export function parseCSV(text) {
       const date = parseDate(obj[cols.date]);
       if (!date) continue;
 
-      let amount = resolveAmount(obj, cols);
-
-      // Apply direction column if present and amount came out unsigned
-      if (amount !== null && dirCol && obj[dirCol]) {
-        const dir = norm(obj[dirCol]);
-        if (DIR_DEBIT.has(dir) && amount > 0)  amount = -amount;
-        if (DIR_CREDIT.has(dir) && amount < 0) amount = -amount;
-      }
-
+      const amount = resolveSignedAmount(obj, cols);
       if (amount === null) continue;
 
       const fallbackCells = headers
-        .filter(h => h !== cols.date && h !== cols.amt && h !== cols.debit && h !== cols.credit)
+        .filter(h => h !== cols.date && h !== cols.amt && h !== cols.debit &&
+                     h !== cols.credit && h !== cols.balance && h !== cols.direction)
         .map(h => obj[h]);
 
       const description = cleanDescription(cols.desc ? obj[cols.desc] : null, fallbackCells);
