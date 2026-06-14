@@ -283,21 +283,36 @@ export const dbService = {
       const skipped = rows.length - saved.length;
       return { saved, skipped };
     } catch (err) {
-      // Se a coluna import_hash ainda não existe (antes da migração SQL),
-      // cai no modo de fallback com inserts individuais sem proteção.
+      // Casos em que o ON CONFLICT (import_hash) não funciona:
+      //  - coluna import_hash ainda não existe (PGRST204 / 42703)
+      //  - não existe constraint UNIQUE em import_hash → Postgres 42P10
+      //    "there is no unique or exclusion constraint matching the ON CONFLICT…"
       const isColErr = err.code === 'PGRST204' || err.code === '42703' ||
         (err.message || '').includes('import_hash');
-      if (!isColErr) throw err;
+      const isConstraintErr = err.code === '42P10' ||
+        /no unique or exclusion constraint|on conflict/i.test(err.message || '');
+      if (!isColErr && !isConstraintErr) throw err;
 
-      // Fallback: insert one by one sem hash (comportamento anterior)
-      const saved = [];
-      for (const tx of transactions) {
-        try {
-          const row = await this.addTransaction(userId, tx);
-          if (row) saved.push(row);
-        } catch (e) { /* ignorar erros individuais no fallback */ }
+      // Insert simples, sem dedup ao nível do DB. É seguro porque o preview do
+      // import já marca/filtra os duplicados client-side. Se a coluna import_hash
+      // existir, guardamo-la na mesma (fica útil quando a constraint for criada).
+      const plainRows = isColErr ? rows.map(({ import_hash, ...r }) => r) : rows;
+      try {
+        const { data, error } = await supabase
+          .from('transactions').insert(plainRows).select();
+        if (error) throw error;
+        return { saved: (data || []).map(mapTransaction), skipped: 0 };
+      } catch (e2) {
+        // Último recurso: inserts individuais (mais lento, mas robusto).
+        const saved = [];
+        for (const tx of transactions) {
+          try {
+            const row = await this.addTransaction(userId, tx);
+            if (row) saved.push(row);
+          } catch (_) { /* ignorar erros individuais */ }
+        }
+        return { saved, skipped: 0 };
       }
-      return { saved, skipped: 0 };
     }
   },
 
