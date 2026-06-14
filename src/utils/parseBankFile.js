@@ -11,7 +11,7 @@ import { parseXLSX } from './parseBankXlsx';
 // parseBankPdf.js (split deste ficheiro) dependem destes símbolos.
 export const SCORE_DATE = [
   'date','data','datum','fecha','valuta','buchungstag','booking','wertstellung',
-  'movimento','data mov','data valor','transaction date','posting date','value date',
+  'data mov','data valor','transaction date','posting date','value date',
   'boekdatum','rekeningdatum','handelsdatum',
 ];
 export const SCORE_DESC = [
@@ -25,7 +25,7 @@ export const SCORE_DESC = [
 ];
 export const SCORE_AMT = [
   'amount','valor','betrag','bedrag','importe','importancia','montant','montante',
-  'quantia','total','net amount','transaction amount','movimento',
+  'quantia','total','net amount','transaction amount',
 ];
 // Saldo / running balance — detetada para ser EXCLUÍDA da coluna de montante.
 export const SCORE_BALANCE = [
@@ -78,14 +78,27 @@ export function norm(s) {
     .trim();
 }
 
+// Booleano: o cabeçalho normalizado bate com algum keyword? Aplica a mesma
+// regra segura do scoreHeader — substring só para keywords com ≥4 letras, para
+// 'cr'/'db'/'d'/'c' não baterem dentro de palavras (ex. 'cr' em "descrição").
+export function matchesKeyword(n, keywords) {
+  return keywords.some(k =>
+    n === k ||
+    n.startsWith(k + ' ') || n.endsWith(' ' + k) || n.includes(' ' + k + ' ') ||
+    (k.length >= 4 && n.includes(k))
+  );
+}
+
 function scoreHeader(header, keywords) {
   const h = norm(header);
   let best = 0;
   for (const kw of keywords) {
     if (h === kw)                                            { best = Math.max(best, 10); break; }
     if (h.startsWith(kw + ' ') || h.endsWith(' ' + kw))    { best = Math.max(best, 7); }
-    if (h.includes(kw))                                      { best = Math.max(best, 5); }
-    if (kw.includes(h) && h.length >= 3)                     { best = Math.max(best, 3); }
+    // Substring só para keywords com ≥4 letras: evita que códigos curtos como
+    // 'cr'/'db'/'d'/'c' batam dentro de palavras (ex. 'cr' em "des-cr-ição").
+    if (kw.length >= 4 && h.includes(kw))                   { best = Math.max(best, 5); }
+    if (kw.length >= 4 && kw.includes(h) && h.length >= 3)  { best = Math.max(best, 3); }
   }
   return best;
 }

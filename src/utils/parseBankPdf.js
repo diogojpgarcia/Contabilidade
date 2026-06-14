@@ -1,7 +1,8 @@
 // parseBankPdf.js — PDF bank statement parser (extracted from parseBankFile.js)
 import {
   parseDate, parseAmount, cleanDescription,
-  norm, SCORE_DATE, SCORE_DESC, SCORE_DEBIT, SCORE_CREDIT,
+  norm, matchesKeyword,
+  SCORE_DATE, SCORE_DESC, SCORE_AMT, SCORE_DEBIT, SCORE_CREDIT, SCORE_BALANCE,
 } from './parseBankFile';
 
 // Internal dedup key helper
@@ -91,6 +92,14 @@ function extractTransactionsFromLines(rawLines) {
   const EXPENSE_KW = ['compra','pagamento','mbway','mb way','debito','levantamento',
     'transferencia enviada','comissao','taxa','mensalidade','anuidade','multibanco'];
 
+  // O documento marca DESPESAS com sinal '-'? (convenção comum na banca PT).
+  // Se sim, um montante SEM sinal é RECEITA — o sinal é mais fiável que keywords
+  // ambíguas ('mb way' aparece tanto em transferências recebidas como enviadas).
+  const docSignsExpenses = rawLines.some(l => {
+    const ms = l.match(MONEY_RE);
+    return ms && ms.some(m => /^-/.test(m.trim()) || /-$/.test(m.trim()));
+  });
+
   const seen     = new Set();
   const result   = [];
   let   lastDate = null;
@@ -152,6 +161,9 @@ function extractTransactionsFromLines(rawLines) {
     if (/^\s*-/.test(rawAmt) || /-\s*$/.test(rawAmt)) {
       type = 'expense';
     } else if (/^\s*\+/.test(rawAmt)) {
+      type = 'income';
+    } else if (docSignsExpenses) {
+      // Despesas seriam assinadas com '-'; um valor sem sinal é receita.
       type = 'income';
     } else {
       const lower = norm(line);
@@ -264,9 +276,35 @@ function groupItemsByRow(items, tol = 3) {
   return rows;
 }
 
-// Scans rows for a header row that labels Date, Debit, and/or Credit columns.
-// Returns { headerY, cols } where cols maps column types to {xMin, xMax} ranges,
-// or null if no recognisable column layout is found.
+// Localiza as colunas NUMÉRICAS (montante/saldo) pela posição-x dos dados.
+// Agrupa os x dos valores monetários em clusters e devolve os centros ordenados
+// da esquerda para a direita. Robusto quando o cabeçalho junta "Montante Saldo".
+function numericColumnCenters(rows, headerY) {
+  const xs = [];
+  for (const row of rows) {
+    if (row.y >= headerY) continue;
+    for (const item of row.items) {
+      const t = (item.text || '').trim();
+      if (!t || parseDate(t)) continue;
+      if (/\d/.test(t) && parseAmount(t.replace(/\s/g, '')) !== null) xs.push(item.x);
+    }
+  }
+  if (!xs.length) return [];
+  xs.sort((a, b) => a - b);
+  const clusters = [[xs[0]]];
+  for (let i = 1; i < xs.length; i++) {
+    const cur = clusters[clusters.length - 1];
+    if (xs[i] - cur[cur.length - 1] <= 25) cur.push(xs[i]);
+    else clusters.push([xs[i]]);
+  }
+  return clusters
+    .filter(c => c.length >= 2)                                    // ignora ruído
+    .map(c => c.reduce((s, x) => s + x, 0) / c.length);
+}
+
+// Scans rows for a header row that labels Date + amount columns (debit/credit
+// pair OR a single signed amount column). Returns { headerY, cols } where cols
+// maps column types to {xMin, xMax} ranges, or null if no layout is found.
 function detectColumnBounds(rows) {
   let bestRow = null;
   let bestScore = 0;
@@ -276,13 +314,14 @@ function detectColumnBounds(rows) {
     const found = new Set();
     for (const item of row.items) {
       const n = norm(item.text);
-      if (!found.has('date')   && SCORE_DATE.some(k => n === k || n.includes(k)))   { score += 5; found.add('date'); }
-      if (!found.has('debit')  && SCORE_DEBIT.some(k => n === k || n.includes(k)))  { score += 5; found.add('debit'); }
-      if (!found.has('credit') && SCORE_CREDIT.some(k => n === k || n.includes(k))) { score += 5; found.add('credit'); }
-      if (!found.has('desc')   && SCORE_DESC.some(k => n === k || n.includes(k)))   { score += 3; found.add('desc'); }
+      if (!found.has('date')   && matchesKeyword(n, SCORE_DATE))   { score += 5; found.add('date'); }
+      if (!found.has('debit')  && matchesKeyword(n, SCORE_DEBIT))  { score += 5; found.add('debit'); }
+      if (!found.has('credit') && matchesKeyword(n, SCORE_CREDIT)) { score += 5; found.add('credit'); }
+      if (!found.has('amt')    && matchesKeyword(n, SCORE_AMT))    { score += 4; found.add('amt'); }
+      if (!found.has('desc')   && matchesKeyword(n, SCORE_DESC))   { score += 3; found.add('desc'); }
     }
-    // Must have at least a date column + one amount column to be a useful layout
-    if (score > bestScore && found.has('date') && (found.has('debit') || found.has('credit'))) {
+    // Header útil: data + uma coluna de valor (débito/crédito OU montante único)
+    if (score > bestScore && found.has('date') && (found.has('debit') || found.has('credit') || found.has('amt'))) {
       bestScore = score;
       bestRow = row;
     }
@@ -294,14 +333,29 @@ function detectColumnBounds(rows) {
   const detected = {};
   for (const item of bestRow.items) {
     const n = norm(item.text);
-    const ds  = SCORE_DATE.some(k => n === k || n.includes(k));
-    const dbs = SCORE_DEBIT.some(k => n === k || n.includes(k));
-    const crs = SCORE_CREDIT.some(k => n === k || n.includes(k));
-    const dss = SCORE_DESC.some(k => n === k || n.includes(k));
+    const ds  = matchesKeyword(n, SCORE_DATE);
+    const dbs = matchesKeyword(n, SCORE_DEBIT);
+    const crs = matchesKeyword(n, SCORE_CREDIT);
+    const dss = matchesKeyword(n, SCORE_DESC);
     if      (ds  && !detected.date)   detected.date   = item.x;
+    else if (dss && !detected.desc)   detected.desc   = item.x;
     else if (dbs && !detected.debit)  detected.debit  = item.x;
     else if (crs && !detected.credit) detected.credit = item.x;
-    else if (dss && !detected.desc)   detected.desc   = item.x;
+  }
+
+  // Sem par débito/crédito → o banco usa uma coluna de MONTANTE assinado.
+  // O cabeçalho pode juntar "Montante Saldo" num só item, por isso localizamos
+  // as colunas numéricas pelos DADOS (clusters de x): a mais à direita é o saldo
+  // (excluído), a anterior é o montante. O sinal do montante dá o tipo.
+  const hasDC = detected.debit !== undefined || detected.credit !== undefined;
+  if (!hasDC) {
+    const centers = numericColumnCenters(rows, bestRow.y);
+    if (centers.length >= 2) {
+      detected.balance = centers[centers.length - 1];
+      detected.amt     = centers[centers.length - 2];
+    } else if (centers.length === 1) {
+      detected.amt = centers[0];
+    }
   }
 
   // If no explicit desc column, infer it between date and first amount column
@@ -353,7 +407,7 @@ function extractByColumnBounds(rows, layout) {
   const dataRows = rows.filter(r => r.y < headerY);
 
   for (const row of dataRows) {
-    const bins = { date: [], desc: [], debit: [], credit: [] };
+    const bins = { date: [], desc: [], debit: [], credit: [], amt: [], balance: [] };
 
     for (const item of row.items) {
       const col = colForX(item.x, cols);
@@ -364,6 +418,7 @@ function extractByColumnBounds(rows, layout) {
     const descStr   = bins.desc.join(' ').trim();
     const debitStr  = bins.debit.join(' ').trim();
     const creditStr = bins.credit.join(' ').trim();
+    const amtStr    = bins.amt.join(' ').trim();
 
     // Noise guard (saldo lines, etc.)
     const lineText = row.items.map(i => i.text).join(' ');
@@ -372,7 +427,9 @@ function extractByColumnBounds(rows, layout) {
     const date    = dateStr  ? parseDate(dateStr)   : null;
     const debit   = debitStr  ? parseAmount(debitStr.replace(/\s/g, ''))  : null;
     const credit  = creditStr ? parseAmount(creditStr.replace(/\s/g, '')) : null;
-    const hasAmt  = debit !== null || credit !== null;
+    // Coluna de montante único assinado (sinal → tipo); saldo é ignorado.
+    const amtVal  = amtStr ? parseAmount(amtStr.replace(/\s/g, '')) : null;
+    const hasAmt  = debit !== null || credit !== null || amtVal !== null;
 
     if (date) lastDate = date;
 
@@ -394,6 +451,10 @@ function extractByColumnBounds(rows, layout) {
         // Both columns have a value — net (unusual but possible)
         amount = Math.abs(credit - debit);
         type   = credit >= debit ? 'income' : 'expense';
+      } else if (amtVal !== null) {
+        // Coluna de montante único: o sinal define o tipo (negativo = despesa)
+        amount = Math.abs(amtVal);
+        type   = amtVal < 0 ? 'expense' : 'income';
       } else {
         continue;
       }
