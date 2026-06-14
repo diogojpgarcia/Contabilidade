@@ -6,8 +6,10 @@ import { PATRIMONY_META } from './categoryIcons';
  * PatrimonyView para garantir resultados sempre idênticos.
  */
 export const computeAccountBalance = (account, transactions) => {
-  const initial = parseFloat(account.balance ?? 0);
-  if (isNaN(initial)) return 0;
+  // base = saldo de criação (imutável) + ajustes manuais ao saldo atual.
+  // O `adjustment` regista correcções feitas ao "saldo atual" sem mexer no
+  // valor de criação nem inventar transações.
+  const initial = (parseFloat(account.balance ?? 0) || 0) + (parseFloat(account.adjustment ?? 0) || 0);
   return (transactions || []).reduce((sum, tx) => {
     if (tx.account_id !== account.id) return sum;
     const amt = parseFloat(tx.amount) || 0;

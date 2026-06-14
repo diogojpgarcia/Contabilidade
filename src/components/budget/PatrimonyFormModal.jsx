@@ -150,16 +150,22 @@ const PatrimonyFormModal = ({
     if (!formType) return;
     const clean = { ...f };
 
-    // Contas: o utilizador edita o SALDO ATUAL. Ajustamos o saldo-base (balance)
-    // para que (base + transações ligadas) = valor inserido. Sem transações, ou
-    // ao adicionar, base = valor inserido.
+    // Contas: o valor de CRIAÇÃO (balance) fica registado e imutável. Só o
+    // "Saldo atual" é editável — a diferença é registada no campo `adjustment`,
+    // sem mexer no valor de criação nem criar transações.
     if (formType === 'accounts') {
       const num = v => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
       const entered = Number(clean.currentValue);
-      const sumTx = (editingId && editingAsset?.item)
-        ? num(editingAsset.item.currentBalance != null ? editingAsset.item.currentBalance : editingAsset.item.balance) - num(editingAsset.item.balance)
-        : 0;
-      clean.balance = Number.isFinite(entered) ? (entered - sumTx) : num(clean.balance);
+      if (editingId && editingAsset?.item) {
+        const it = editingAsset.item;
+        clean.balance = num(it.balance);                       // criação — preservado
+        const curNow  = num(it.currentBalance != null ? it.currentBalance : it.balance);
+        const delta   = Number.isFinite(entered) ? entered - curNow : 0;
+        clean.adjustment = num(it.adjustment) + delta;          // acumula o ajuste
+      } else {
+        clean.balance    = Number.isFinite(entered) ? entered : 0; // valor de criação
+        clean.adjustment = 0;
+      }
       delete clean.currentValue;
       delete clean.currentBalance;
     }
@@ -218,7 +224,14 @@ const PatrimonyFormModal = ({
         return (<>
           <input className={cls} placeholder="Nome da conta"    value={f.name    || ''} onChange={e => set('name',    e.target.value)} />
           <input className={cls} placeholder="Banco (opcional)" value={f.bank    || ''} onChange={e => set('bank',    e.target.value)} />
-          <input className={cls} type="number" inputMode="decimal" placeholder="Saldo atual (€)" value={f.currentValue ?? ''} onChange={e => set('currentValue', e.target.value)} />
+          {editingId ? (<>
+            <input className={cls} type="number" inputMode="decimal" placeholder="Saldo atual (€)" value={f.currentValue ?? ''} onChange={e => set('currentValue', e.target.value)} />
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', padding: '0 2px' }}>
+              Saldo inicial (criação): {Number(editingAsset?.item?.balance ?? 0).toFixed(2)}€ · registado, não editável
+            </div>
+          </>) : (
+            <input className={cls} type="number" inputMode="decimal" placeholder="Saldo inicial (€)" value={f.currentValue ?? ''} onChange={e => set('currentValue', e.target.value)} />
+          )}
         </>);
 
       case 'stocks': {
