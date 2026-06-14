@@ -203,6 +203,11 @@ html {
   height: 100%;
 }
 
+/* Cadeia de altura estável até .app-new (mais fiável no iOS standalone que dvh) */
+#root {
+  height: 100%;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 
     'Helvetica Neue', Arial, sans-serif;
@@ -215,7 +220,8 @@ body {
   letter-spacing: -0.022em;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* .app-new is position:fixed and manages safe-area itself */
+  height: 100%;
+  overflow: hidden;
   /* overscroll bounce on body causes scroll jank on Android */
   overscroll-behavior: none;
 }
@@ -228,8 +234,11 @@ body {
      ao fundo, sem o quirk do fixed. A .bottom-nav (último flex child) cola ao fundo. */
   position: relative;
   width: 100%;
-  height: 100vh;   /* fallback p/ browsers sem dvh */
-  height: 100dvh;  /* iOS 16+ / Android moderno — altura dinâmica real */
+  /* Altura estável encadeada de html→body→#root (= viewport de layout no iOS
+     standalone). Mais fiável que 100dvh, que recalcula/encolhe e fazia a nav
+     "saltar". box-sizing:border-box para o padding da safe-area caber nos 100%. */
+  height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   overflow: hidden;
