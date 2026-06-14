@@ -25,6 +25,17 @@
           document.documentElement.setAttribute('data-palette', 'midnight');
           document.documentElement.setAttribute('data-theme', 'soft-future');
         }
+
+        // Altura ESTÁVEL da app: fixa window.innerHeight numa CSS var (--app-height).
+        // .app-new usa-a em vez de 100dvh. Só muda em resize/rotação REAL — nunca
+        // nos recálculos automáticos do dvh nem em trocas de tab — por isso a
+        // bottom-nav deixa de saltar / subir.
+        function setAppHeight() {
+          document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+        }
+        setAppHeight();
+        window.addEventListener('resize', setAppHeight);
+        window.addEventListener('orientationchange', setAppHeight);
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />

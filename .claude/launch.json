@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "contabilidade",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
       "runtimeArgs": ["run", "dev", "--", "--host", "--port", "5173"],
       "port": 5173
     }
