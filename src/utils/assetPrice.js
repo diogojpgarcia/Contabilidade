@@ -19,6 +19,8 @@
  * In-memory caches with CACHE_TTL = 5 min and HISTORY_TTL = 5 min.
  */
 
+import { apiFetch } from '../lib/apiFetch';
+
 // ─── constants ───────────────────────────────────────────────────────────────
 
 // Free Twelve Data: 8 credits/min, 800/day.
@@ -30,9 +32,11 @@ export const CRYPTO_CACHE_TTL = 2 * 60_000; // 2 min — crypto via CoinGecko (f
 export const HISTORY_TTL     = 10 * 60_000; // 10 min — sparkline history changes slowly
 const        FETCH_TIMEOUT   = 12_000;       // 12 s — headroom for slow mobile networks
 
-const TWELVE_DATA_KEY = import.meta.env.VITE_TWELVE_DATA_KEY ?? '';
-/** True when a Twelve Data API key is configured. */
-export const HAS_STOCK_KEY = TWELVE_DATA_KEY.length > 0;
+// A chave da Twelve Data vive AGORA no servidor (api/twelve.js). O cliente
+// chama o proxy /api/twelve, por isso a chave deixa de estar no bundle.
+// VITE_HAS_STOCK_KEY (não-secreto, default "true") permite desligar a procura
+// de preços de ações se não houver chave configurada.
+export const HAS_STOCK_KEY = (import.meta.env.VITE_HAS_STOCK_KEY ?? 'true') !== 'false';
 
 // ─── in-memory caches ────────────────────────────────────────────────────────
 
@@ -255,7 +259,7 @@ const fetchStooqQuoteBatch = async (resolvedToOrig) => {
   try {
     // Chama o proxy server-side /api/quote (Yahoo Finance, sem CORS)
     const url = `/api/quote?symbols=${encodeURIComponent(symbols)}`;
-    const res = await fetch(url, { signal });
+    const res = await apiFetch(url, { signal });
     if (!res.ok) {
       console.warn(`[assetPrice] /api/quote HTTP ${res.status}`);
       return result;
@@ -332,8 +336,8 @@ export const fetchStockQuote = async (ticker) => {
 
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(resolved)}&apikey=${TWELVE_DATA_KEY}`;
-    const res = await fetch(url, { signal });
+    const url = `/api/twelve?path=quote&symbol=${encodeURIComponent(resolved)}`;
+    const res = await apiFetch(url, { signal });
     if (!res.ok) {
       console.error(`[assetPrice] fetchStockQuote HTTP ${res.status} — ${resolved}`);
       return null;
@@ -501,7 +505,7 @@ export const fetchStockHistory = async (ticker) => {
 
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/stock-history?symbol=${encodeURIComponent(resolved)}&period=1S`,
       { signal }
     );
@@ -549,7 +553,7 @@ export const fetchCryptoHistoryBatch = async (symbols) => {
     toFetch.map(async ({ sym, id }) => {
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
       try {
-        const res = await fetch(
+        const res = await apiFetch(
           `/api/crypto-history?coin=${encodeURIComponent(id)}&days=7`,
           { signal }
         );
@@ -623,7 +627,7 @@ export const fetchPeriodHistory = async (sym, period, type) => {
       const days = CRYPTO_PERIOD_DAYS[period] ?? 7;
       const interval = period === '1D' ? 'hourly' : 'daily';
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/crypto-history?coin=${encodeURIComponent(id)}&days=${days}`,
         { signal }
       );
@@ -638,7 +642,7 @@ export const fetchPeriodHistory = async (sym, period, type) => {
     } else {
       const resolvedSym = resolveEquityTicker(sym);
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/stock-history?symbol=${encodeURIComponent(resolvedSym)}&period=${encodeURIComponent(period)}`,
         { signal }
       );
@@ -659,8 +663,8 @@ export const fetchStockSearch = async (query, types) => {
   if (!HAS_STOCK_KEY || !query?.trim()) return [];
   const { signal, clear } = abortAfter(FETCH_TIMEOUT);
   try {
-    const res = await fetch(
-      `https://api.twelvedata.com/symbol_search?symbol=${encodeURIComponent(query)}&apikey=${TWELVE_DATA_KEY}`,
+    const res = await apiFetch(
+      `/api/twelve?path=symbol_search&symbol=${encodeURIComponent(query)}`,
       { signal }
     );
     clear();

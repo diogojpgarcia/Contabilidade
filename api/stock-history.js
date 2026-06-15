@@ -8,6 +8,7 @@
  */
 
 import https from 'https';
+import authMod from './_auth.js';
 
 // ─── Twelve Data :EXCHANGE → Yahoo Finance suffix ────────────────────────────
 const TD_TO_YAHOO = {
@@ -71,6 +72,7 @@ function httpsGet(url) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if (!(await authMod.requireAuth(req, res))) return;
 
   const { symbol, period = '1S' } = req.query || {};
   if (!symbol) return res.status(400).json({ prices: [], labels: [] });

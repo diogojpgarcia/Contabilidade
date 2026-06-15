@@ -17,6 +17,8 @@
  *   calcAccruedInterest(...)  – juros acumulados em €
  */
 
+import { apiFetch } from '../lib/apiFetch';
+
 // ─── Séries ──────────────────────────────────────────────────────────────────
 
 export const BOND_SERIES_INFO = {
@@ -48,7 +50,7 @@ export const fetchEuribor3M = async () => {
     const t    = setTimeout(() => ctrl.abort(), 20_000); // 20s — proxy tenta múltiplos endpoints ECB
 
     // Usa o proxy server-side /api/euribor (evita CORS do ECB e tenta múltiplos endpoints)
-    const res = await fetch('/api/euribor', { signal: ctrl.signal });
+    const res = await apiFetch('/api/euribor', { signal: ctrl.signal });
     clearTimeout(t);
 
     if (!res.ok) throw new Error(`proxy HTTP ${res.status}`);

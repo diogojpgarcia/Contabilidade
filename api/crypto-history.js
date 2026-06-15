@@ -5,6 +5,7 @@
  * GET /api/crypto-history?coin=bitcoin&days=7
  */
 import https from 'https';
+import authMod from './_auth.js';
 
 function httpsGet(url) {
   return new Promise((resolve) => {
@@ -23,6 +24,7 @@ function httpsGet(url) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if (!(await authMod.requireAuth(req, res))) return;
 
   try {
     const { coin, days = '7' } = req.query || {};

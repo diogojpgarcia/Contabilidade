@@ -9,6 +9,7 @@
  */
 
 import https from 'https';
+import authMod from './_auth.js';
 
 // ─── Twelve Data :EXCHANGE → Yahoo Finance suffix ────────────────────────────
 const TD_TO_YAHOO = {
@@ -108,6 +109,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if (!(await authMod.requireAuth(req, res))) return;
 
   try {
     const symList = ((req.query || {}).symbols || '')
