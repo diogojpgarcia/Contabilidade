@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { usePatrimonyPrices } from '../../hooks/usePatrimonyPrices';
-import EmptyState from '../EmptyState';
 import SwipeRevealCard from '../SwipeRevealCard';
 import Overlay from '../Overlay';
 import { formatAge, HAS_STOCK_KEY } from '../../utils/assetPrice';
@@ -51,6 +50,7 @@ const PatrimonyView = ({
   const [editingAsset,   setEditingAsset]   = useState(null); // { typeKey, item } | null
   const [confirmDelete,  setConfirmDelete]  = useState(null); // { typeKey, id, name }
   const [detailAsset,    setDetailAsset]    = useState(null); // { item, assetKey }
+  const [showEmptyCats,  setShowEmptyCats]  = useState(false); // barra colapsável das categorias vazias
 
   // ── Live prices, sparklines, euribor ─────────────────────────────────────
   const { livePrices, assetHistory, refreshingTickers, euribor3M } =
@@ -62,6 +62,13 @@ const PatrimonyView = ({
   const openAddModal = () => {
     setEditingAsset(null);
     setModalInitType(null);
+    setShowModal(true);
+  };
+
+  // Abre o modal de adicionar já com a categoria pré-selecionada (barra colapsável).
+  const openAddModalForType = (key) => {
+    setEditingAsset(null);
+    setModalInitType(key);
     setShowModal(true);
   };
 
@@ -325,6 +332,12 @@ const PatrimonyView = ({
   // ── Main render ───────────────────────────────────────────────────────────
   const typeValues = PATRIMONY_TYPES.map(t => ({ ...t, value: getTypeValue(t.key) }));
 
+  // Contas sempre visíveis (mesmo vazias). As restantes categorias sem ativos
+  // ficam numa barra colapsável (em vez de cartões vazios com emoji).
+  const sortedTypes = sortPatrimonyTypes(patrimony, PATRIMONY_TYPES);
+  const shownTypes  = sortedTypes.filter(t => (patrimony[t.key] || []).length > 0 || t.key === 'accounts');
+  const emptyTypes  = sortedTypes.filter(t => (patrimony[t.key] || []).length === 0 && t.key !== 'accounts');
+
   return (
     <>
       {/* ── Hero card ── */}
@@ -446,7 +459,7 @@ const PatrimonyView = ({
 
       {/* ── Category cards ── */}
       <div className="pat-cards">
-        {sortPatrimonyTypes(patrimony, PATRIMONY_TYPES).map(({ key, label, Icon: PatIcon, color }) => {
+        {shownTypes.map(({ key, label, Icon: PatIcon, color }) => {
           const items     = patrimony[key] || [];
           const sorted    = sortItemsByType(items, key);
           const typeTotal = getTypeValue(key);
@@ -583,17 +596,37 @@ const PatrimonyView = ({
               )}
 
               {items.length === 0 && (
-                <EmptyState
-                  icon={key === 'accounts' ? '🏦' : key === 'crypto' ? '₿' : key === 'vehicles' ? '🚗' : key === 'realestate' ? '🏠' : '📈'}
-                  title="Sem registos"
-                  description="Toca no + para adicionar o teu primeiro ativo nesta categoria."
-                  style={{ padding: '24px 16px' }}
-                />
+                <button className="pat-cat-empty-inline" onClick={() => openAddModalForType(key)}>
+                  + Adicionar {label.toLowerCase()}
+                </button>
               )}
             </div>
           );
         })}
       </div>
+
+      {/* ── Categorias sem ativos (barra colapsável) ── */}
+      {emptyTypes.length > 0 && (
+        <div className="pat-empty-cats">
+          <button className="pat-empty-cats-toggle" onClick={() => setShowEmptyCats(v => !v)}>
+            <span>{emptyTypes.length} categoria{emptyTypes.length !== 1 ? 's' : ''} sem ativos</span>
+            <span className="pat-empty-cats-chev">{showEmptyCats ? '▾' : '▸'}</span>
+          </button>
+          {showEmptyCats && (
+            <div className="pat-empty-cats-list">
+              {emptyTypes.map(({ key, label, Icon: PatIcon, color }) => (
+                <button key={key} className="pat-empty-cat-row" onClick={() => openAddModalForType(key)}>
+                  <span className="pat-empty-cat-icon" style={{ background: `${color}22` }}>
+                    <PatIcon size={16} color={color} strokeWidth={2} />
+                  </span>
+                  <span className="pat-empty-cat-label">{label}</span>
+                  <span className="pat-empty-cat-add">+</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Asset detail sheet ── */}
       {detailAsset && (() => {

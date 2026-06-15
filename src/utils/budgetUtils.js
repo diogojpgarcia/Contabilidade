@@ -80,12 +80,16 @@ export const sortPatrimonyTypes = (patrimony, types) => {
     return { ...t, hasItems, totalValue };
   });
 
-  // Active types first (by total value descending), then inactive (alphabetical)
-  return typeValues.sort((a, b) => {
+  const sorted = typeValues.sort((a, b) => {
     if (a.hasItems !== b.hasItems) return a.hasItems ? -1 : 1;
     if (a.hasItems) return b.totalValue - a.totalValue;
     return (a.label || '').localeCompare(b.label || '');
   });
+
+  // Contas sempre em primeiro (destaque), independente de valor/ordem alfabética.
+  const accounts = sorted.filter(t => t.key === 'accounts');
+  const rest     = sorted.filter(t => t.key !== 'accounts');
+  return [...accounts, ...rest];
 };
 
 export const PATRIMONY_TYPES = [
