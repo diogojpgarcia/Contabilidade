@@ -30,7 +30,9 @@ export const computeAccountBalance = (account, transactions) => {
 
 // Compute value of a patrimony item (type-specific)
 export const getItemValue = (item, typeKey) => {
-  if (typeKey === 'accounts')  return parseFloat(item.currentBalance ?? item.balance) || 0;
+  // currentBalance (injetado) já inclui balance+adjustment+transações; em fallback
+  // soma balance+adjustment para nunca ignorar o ajuste manual ao saldo.
+  if (typeKey === 'accounts')  return parseFloat(item.currentBalance ?? ((parseFloat(item.balance) || 0) + (parseFloat(item.adjustment) || 0))) || 0;
   if (typeKey === 'stocks')    return (parseFloat(item.qty) || 0) * (parseFloat(item.avgPrice) || 0);
   if (typeKey === 'etfs')      return (parseFloat(item.qty) || 0) * (parseFloat(item.avgPrice) || 0);
   if (typeKey === 'crypto')    return (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
