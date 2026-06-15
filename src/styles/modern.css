@@ -228,13 +228,14 @@ body {
      ao fundo, sem o quirk do fixed. A .bottom-nav (último flex child) cola ao fundo. */
   position: relative;
   width: 100%;
-  /* Altura FIXADA por JS (index.html → --app-height = window.innerHeight), que
-     só muda em resize/rotação real. Evita os recálculos automáticos do 100dvh
-     que faziam a bottom-nav saltar. 100dvh é o fallback até o JS correr.
-     box-sizing:border-box para o padding-top da safe-area caber na altura. */
-  height: 100vh;                      /* fallback ancestral */
-  height: var(--app-height, 100dvh);  /* JS-fixado; 100dvh até o script correr */
-  box-sizing: border-box;
+  /* Altura = viewport. No PWA standalone svh == dvh == ecrã (logo a nav fica
+     visível ao fundo), MAS o svh é ESTÁTICO e o dvh é DINÂMICO: o dvh recalcula
+     sozinho e fazia a bottom-nav saltar nas trocas de tab. Usar svh elimina o
+     salto mantendo a mesma altura. Fallbacks: vh → dvh → svh (o último válido
+     ganha; box-sizing já é border-box via `*`). */
+  height: 100vh;   /* fallback ancestral */
+  height: 100dvh;  /* fallback se não houver svh */
+  height: 100svh;  /* preferido — estático, não salta */
   display: flex;
   flex-direction: column;
   overflow: hidden;
