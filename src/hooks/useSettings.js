@@ -361,9 +361,17 @@ export function useSettings(currentUser, txHook) {
   const handleDeleteRecurring = async (id) => {
     const conf = confirmedRecurring[id] || {};
     const txIds = Object.values(conf).map(c => c && c.transactionId).filter(Boolean);
-    for (const txId of txIds) {
-      try { await txHook.handleDeleteTransaction(txId); } catch (_) { /* continua */ }
+
+    // Apaga as transações no DB em paralelo e atualiza o estado UMA vez
+    // (em vez de N escritas de settings, uma por transação).
+    await Promise.all(txIds.map(txId => dbService.deleteTransaction(txId).catch(() => {})));
+    if (txIds.length) {
+      const idset = new Set(txIds);
+      txHook.setTransactions(prev => prev.filter(t => !idset.has(t.id)));
     }
+    const updatedMap = { ...txHook.transactionAccountMap };
+    txIds.forEach(txId => delete updatedMap[txId]);
+    txHook.setTransactionAccountMap(updatedMap);
 
     const updatedConf = { ...confirmedRecurring };
     delete updatedConf[id];
@@ -372,10 +380,11 @@ export function useSettings(currentUser, txHook) {
     const updatedPayments = (recurringPayments || []).filter(p => p.id !== id);
     setRecurringPayments(updatedPayments);
 
-    // Persistir ambos num só save (evita race no read-modify-write)
+    // UM único save com tudo (mapa de contas + confirmações + recorrentes)
     dbService.updateUserSettings(currentUser.id, {
-      confirmed_recurring: updatedConf,
-      recurring_payments:  updatedPayments,
+      transactionAccountMap: updatedMap,
+      confirmed_recurring:   updatedConf,
+      recurring_payments:    updatedPayments,
     }).catch(e => toast.error('Erro ao guardar: ' + e.message));
 
     if (txIds.length > 0) toast.success?.(`Recorrente removido · ${txIds.length} pagamento(s) repostos.`);

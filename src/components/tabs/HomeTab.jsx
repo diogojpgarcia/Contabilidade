@@ -292,7 +292,10 @@ const HomeTab = ({
             {upcoming.map((p, idx) => {
               const due = p.computedNextDue;
               const monthKey = getRecurringMonthKey(due);
-              const isConfirmed = isConfirmedForMonth(p.id, monthKey, confirmedRecurring);
+              const conf = confirmedRecurring?.[p.id]?.[monthKey];
+              const isPaid = !!conf?.transactionId;       // confirmado (criou transação)
+              const isSkipped = !!conf && !conf.transactionId; // dispensado
+              const isConfirmed = !!conf;                  // tratado (pago OU dispensado)
               const isPast = due <= today;
               const isPending = isPast && !isConfirmed;
               const catLabel = expCats.find(c => c.id === p.categoryId)?.label || '';
@@ -314,11 +317,11 @@ const HomeTab = ({
                       {p.title}
                     </div>
                     <div style={{ fontSize: 11, color: urgency, marginTop: 1 }}>
-                      {isConfirmed ? '✓ Pago' : relativeDueDate(due)}
-                      {isPending && !isConfirmed && ' · por confirmar'}
+                      {isPaid ? '✓ Pago' : isSkipped ? 'Dispensado' : relativeDueDate(due)}
+                      {isPending && ' · por confirmar'}
                     </div>
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: isConfirmed ? 'var(--cosmos-text-3)' : 'var(--cosmos-text-1)', textDecoration: isConfirmed ? 'line-through' : 'none' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: isConfirmed ? 'var(--cosmos-text-3)' : 'var(--cosmos-text-1)', textDecoration: isPaid ? 'line-through' : 'none' }}>
                     {p.paymentType === 'variable' && p.estimatedAmount
                       ? `~${safeNum(p.estimatedAmount).toFixed(2)}€`
                       : `${safeNum(p.amount).toFixed(2)}€`}

@@ -155,10 +155,6 @@ const UCITS_EUR_TICKER = {
   // Invesco UCITS
   EQQQ:  'EQQQ:XETRA',  // Nasdaq-100 UCITS — XETRA EUR
   QQQM:  'QQQM:XAMS',   // Nasdaq-100 UCITS Dist — Euronext Amsterdam EUR
-  // Amundi extras
-  LCWD:  'LCWD:XPAR',   // MSCI World UCITS — Euronext Paris EUR
-  PANX:  'PANX:XPAR',   // Nasdaq-100 UCITS — Euronext Paris EUR
-  SPXS:  'SPXS:XETRA',  // S&P 500 UCITS SPDR — XETRA EUR
   // SPDR
   SPXS:  'SPXS:XETRA',   // S&P 500 UCITS — XETRA EUR
   // ── Ações portuguesas (Euronext Lisboa, EUR) ─────────────────────────────

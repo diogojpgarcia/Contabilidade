@@ -413,13 +413,13 @@ export default function AssetDetailSheet({
   const [scrubIdx,   setScrubIdx]   = useState(null);
   const [scrubPrice, setScrubPrice] = useState(null);
 
-  if (!item) return null;
-
+  // Nota: o early-return de item nulo vive DEPOIS de todos os hooks (regras dos
+  // hooks). Os derivados abaixo são null-safe para o caso item == null.
   const isStock  = assetKey === 'stocks' || assetKey === 'etfs';
   const type     = isStock ? 'stock' : 'crypto';
-  const sym      = isStock ? item.ticker : (item.coin ?? '');
-  const qty      = parseFloat(item.qty)           || 0;
-  const purchase = parseFloat(item.purchasePrice) || 0;
+  const sym      = isStock ? (item?.ticker ?? '') : (item?.coin ?? '');
+  const qty      = parseFloat(item?.qty)           || 0;
+  const purchase = parseFloat(item?.purchasePrice) || 0;
   const hasPrice = marketPrice > 0;
 
   const marketVal = qty * marketPrice;
@@ -434,7 +434,7 @@ export default function AssetDetailSheet({
         : 0)
   ) >= 0;
 
-  const insertedDate = item.insertedAt
+  const insertedDate = item?.insertedAt
     ? new Date(item.insertedAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' })
     : null;
 
@@ -497,6 +497,8 @@ export default function AssetDetailSheet({
   const scrubLabel = scrubIdx !== null && labels ? labels[scrubIdx] : null;
   const lastLabel  = labels ? labels[labels.length - 1] : null;
   const timeLabel  = scrubLabel ?? (period === '1D' ? lastLabel : null);
+
+  if (!item) return null; // depois de todos os hooks (regras dos hooks)
 
   return (
     <CosmosSheet open={open} onClose={onClose} title="" showClose divider={false}>
