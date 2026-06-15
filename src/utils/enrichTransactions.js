@@ -1,6 +1,7 @@
 // enrichTransactions.js
 // Input:  [{date, description, amount}]  (amount already signed)
 // Output: { transactions: [...], insights: {...} }
+import { toBudgetLabel } from './categories-professional';
 
 const RULES = [
   { category: 'Rendimentos', subcategory: 'Salario',
@@ -228,7 +229,7 @@ export function enrichTransactions(rawTransactions) {
       clean_description: clean,
       amount:            tx.amount,
       type,
-      category,
+      category:          toBudgetLabel(category), // alinha com as labels do orçamento
       subcategory,
       is_subscription:   false,
       is_duplicate:      false,

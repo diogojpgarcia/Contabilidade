@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { getCategoryMeta } from '../../utils/categoryIcons';
 import { STATUS } from '../../utils/budgetUtils';
 
@@ -58,7 +59,12 @@ const CategoryHistorySheet = ({
 
   if (!catId) return null;
 
-  return (
+  // Portal para #overlay-root (fora de .main-content-new > div, que tem
+  // transform/contain). Sem isto o position:fixed do sheet ancorava ao wrapper
+  // do tab em vez do ecrã → sheet descentrado e backdrop a não cobrir tudo.
+  const overlayRoot = document.getElementById('overlay-root') || document.body;
+
+  return createPortal(
     <>
       <div className={`m-sheet-backdrop${isVisible ? ' open' : ''}`} onClick={onClose} />
       <div className={`m-sheet${isVisible ? ' open' : ''}`}>
@@ -205,7 +211,8 @@ const CategoryHistorySheet = ({
           <div style={{ height: 'calc(24px + max(0px, env(safe-area-inset-bottom)))' }} />
         </div>
       </div>
-    </>
+    </>,
+    overlayRoot,
   );
 };
 

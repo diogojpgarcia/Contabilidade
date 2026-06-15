@@ -375,6 +375,38 @@ export const CATEGORIES_INCOME = [
 // UTILITY FUNCTIONS
 // ============================================
 
+// Normaliza um nome de categoria para a LABEL canónica do orçamento.
+// Resolve duas fontes de desalinhamento que impediam as transações de
+// aparecerem nas categorias do orçamento:
+//   1. Acentos/casing (ex. import guarda "Alimentacao", orçamento usa "Alimentação")
+//   2. Taxonomia interna do categorizador do import (ex. "Transportes", "Contas",
+//      "Financas") que não existe como label do orçamento.
+const _normCat = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+const _LABEL_BY_NORM = {};
+[...CATEGORIES_EXPENSE, ...CATEGORIES_INCOME].forEach(c => { _LABEL_BY_NORM[_normCat(c.label)] = c.label; });
+
+// Aliases da taxonomia interna do import → label do orçamento.
+const _CATEGORY_ALIASES = {
+  alimentacao:   'Alimentação',
+  transportes:   'Transporte',
+  saude:         'Saúde',
+  contas:        'Utilities',
+  financas:      'Serviços Financeiros',
+  entretenimento:'Lazer & Entretenimento',
+  compras:       'Outros',
+  poupanca:      'Investimentos',
+  rendimentos:   'Outros Rendimentos',
+};
+
+export function toBudgetLabel(category) {
+  if (!category) return category;
+  const n = _normCat(category);
+  if (_LABEL_BY_NORM[n]) return _LABEL_BY_NORM[n]; // acerta acentos/casing
+  if (_CATEGORY_ALIASES[n]) return _CATEGORY_ALIASES[n];
+  return category;
+}
+
 export function getCategoryById(categoryId, type = 'expense') {
   const categories = type === 'income' ? CATEGORIES_INCOME : CATEGORIES_EXPENSE;
   return categories.find(cat => cat.id === categoryId) || categories[categories.length - 1];

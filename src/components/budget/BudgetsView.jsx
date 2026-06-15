@@ -4,6 +4,7 @@ import { shiftFinancialMonth, isInFinancialMonth, getFinancialMonthRange } from 
 import { formatMonthLabel, getPrediction } from '../../utils/insights';
 import { getTotalMonthlyCommitted } from '../../utils/recurringPayments';
 import { STATUS } from '../../utils/budgetUtils';
+import { toBudgetLabel } from '../../utils/categories-professional';
 import BudgetCategoryCard from './BudgetCategoryCard';
 import CategoryHistorySheet from './CategoryHistorySheet';
 import CountUp from './CountUp';
@@ -78,7 +79,7 @@ const BudgetsView = ({
   const getSpentForMonth = (categoryId, month) => {
     const categoryName = categories.expense.find(c => c.id === categoryId)?.label;
     return transactions
-      .filter(t => t.type === 'expense' && t.category === categoryName && t.date && isInFinancialMonth(t.date, month, financialMonthStartDay))
+      .filter(t => t.type === 'expense' && toBudgetLabel(t.category) === categoryName && t.date && isInFinancialMonth(t.date, month, financialMonthStartDay))
       .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   };
 
@@ -104,7 +105,7 @@ const BudgetsView = ({
     for (const cat of categories.expense) {
       const categoryName = cat.label;
       map[cat.id] = transactions
-        .filter(t => t.type === 'expense' && t.category === categoryName && t.date && isInFinancialMonth(t.date, selectedMonth, financialMonthStartDay))
+        .filter(t => t.type === 'expense' && toBudgetLabel(t.category) === categoryName && t.date && isInFinancialMonth(t.date, selectedMonth, financialMonthStartDay))
         .sort((a, b) => new Date(b.date) - new Date(a.date));
     }
     return map;

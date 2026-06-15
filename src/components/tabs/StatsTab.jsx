@@ -7,6 +7,7 @@ import StatsOverview from '../budget/StatsOverview';
 import { generateInsights, computeFinancialScore, shiftMonth } from '../../utils/insights';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange, getCurrentFinancialMonth } from '../../utils/financialMonth';
 import { getCategoryMeta } from '../../utils/categoryIcons';
+import { toBudgetLabel } from '../../utils/categories-professional';
 import './StatsTab.css';
 
 
@@ -51,7 +52,8 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const computeExpensesByCategory = (txns) => {
     const byCategory = {};
     txns.filter(t => t.type === 'expense').forEach(t => {
-      byCategory[t.category] = (byCategory[t.category] || 0) + (parseFloat(t.amount) || 0);
+      const cat = toBudgetLabel(t.category); // agrupa sob a label canónica do orçamento
+      byCategory[cat] = (byCategory[cat] || 0) + (parseFloat(t.amount) || 0);
     });
     const total = Object.values(byCategory).reduce((sum, val) => sum + val, 0);
     return Object.entries(byCategory)
@@ -97,7 +99,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const getCategoryMonthlyData = useCallback((categoryName) => {
     return last6Months.map(month => {
       const monthTxs = filterByFinancialMonth(transactions, month, financialMonthStartDay);
-      const amount   = monthTxs.filter(t => t.type === 'expense' && t.category === categoryName).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+      const amount   = monthTxs.filter(t => t.type === 'expense' && toBudgetLabel(t.category) === categoryName).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
       return { month: month.substring(5) + '/' + month.substring(2, 4), amount };
     });
   }, [transactions, last6Months, financialMonthStartDay]);
