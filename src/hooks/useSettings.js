@@ -358,9 +358,11 @@ export function useSettings(currentUser, txHook) {
 
   // Apaga um pagamento recorrente E as transações já confirmadas que ele criou,
   // repondo o saldo na conta. Limpa também as confirmações desse recorrente.
-  const handleDeleteRecurring = async (id) => {
+  const handleDeleteRecurring = async (id, { restore = true } = {}) => {
     const conf = confirmedRecurring[id] || {};
-    const txIds = Object.values(conf).map(c => c && c.transactionId).filter(Boolean);
+    // restore=true → apaga as transações lançadas (repõe o saldo).
+    // restore=false → mantém as transações, remove só o agendamento.
+    const txIds = restore ? Object.values(conf).map(c => c && c.transactionId).filter(Boolean) : [];
 
     // Apaga as transações no DB em paralelo e atualiza o estado UMA vez
     // (em vez de N escritas de settings, uma por transação).

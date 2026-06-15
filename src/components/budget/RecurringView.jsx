@@ -93,10 +93,10 @@ const RecurringView = ({
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
-    // onDeleteRecurring apaga também as transações já confirmadas deste
-    // recorrente (repõe o saldo na conta). Fallback: só remove o recorrente.
-    if (onDeleteRecurring) onDeleteRecurring(id);
+  const handleDelete = (id, restore = true) => {
+    // restore=true → apaga também as transações já lançadas (repõe o saldo).
+    // restore=false → mantém as transações, remove só o agendamento.
+    if (onDeleteRecurring) onDeleteRecurring(id, { restore });
     else persist(payments.filter(p => p.id !== id));
     setConfirmDeleteId(null);
   };
@@ -358,7 +358,12 @@ const RecurringView = ({
       )}
 
       {/* Delete confirmation modal */}
-      {confirmDeleteId && (
+      {confirmDeleteId && (() => {
+        const paid  = Object.values(confirmedRecurring[confirmDeleteId] || {}).filter(c => c && c.transactionId);
+        const total = paid.reduce((s, c) => s + safeNum(c.amount), 0);
+        const title = payments.find(p => p.id === confirmDeleteId)?.title;
+        const btn = (extra) => ({ width: '100%', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600, border: 'none', ...extra });
+        return (
         <Overlay onClose={() => setConfirmDeleteId(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -367,25 +372,43 @@ const RecurringView = ({
             </div>
             <div className="modal-body" style={{ padding: '0 0 8px' }}>
               <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
-                <strong>{payments.find(p => p.id === confirmDeleteId)?.title}</strong> será removido.
-                {Object.keys(confirmedRecurring[confirmDeleteId] || {}).length > 0 && (
-                  <><br />Os pagamentos já confirmados serão apagados e o valor reposto na conta.</>
+                <strong>{title}</strong> será removido.
+                {paid.length > 0 && (
+                  <><br />Já lançou <strong>{paid.length}</strong> pagamento{paid.length !== 1 ? 's' : ''} ({total.toFixed(2)}€). Queres repor esse valor na conta?</>
                 )}
               </p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid var(--separator)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
-                  onClick={() => setConfirmDeleteId(null)}
-                >Cancelar</button>
-                <button
-                  style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: 'var(--cosmos-expense)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600 }}
-                  onClick={() => handleDelete(confirmDeleteId)}
-                >Apagar</button>
-              </div>
+              {paid.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <button
+                    style={btn({ background: 'var(--cosmos-income)', color: '#fff' })}
+                    onClick={() => handleDelete(confirmDeleteId, true)}
+                  >Apagar e repor {total.toFixed(2)}€</button>
+                  <button
+                    style={btn({ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--separator)' })}
+                    onClick={() => handleDelete(confirmDeleteId, false)}
+                  >Apagar só o agendamento</button>
+                  <button
+                    style={btn({ background: 'transparent', color: 'var(--text-tertiary)', fontWeight: 500 })}
+                    onClick={() => setConfirmDeleteId(null)}
+                  >Cancelar</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    style={btn({ flex: 1, background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--separator)' })}
+                    onClick={() => setConfirmDeleteId(null)}
+                  >Cancelar</button>
+                  <button
+                    style={btn({ flex: 1, background: 'var(--cosmos-expense)', color: '#fff' })}
+                    onClick={() => handleDelete(confirmDeleteId, true)}
+                  >Apagar</button>
+                </div>
+              )}
             </div>
           </div>
         </Overlay>
-      )}
+        );
+      })()}
 
       {/* Calendar overlay */}
       {showCalendar && (
