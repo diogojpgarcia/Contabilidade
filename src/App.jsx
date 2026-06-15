@@ -4,6 +4,7 @@ import ResetPassword from './components/ResetPassword';
 import BulkUpdateModal from './components/BulkUpdateModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import Onboarding, { isOnboardingDone } from './components/Onboarding';
+import DebugViewport from './components/DebugViewport';
 import { isInFinancialMonth } from './utils/financialMonth';
 
 // Hooks
@@ -148,6 +149,7 @@ const App = () => {
     <ToastProvider>
     <AppProvider value={appContextValue}>
     <div className="app-new fintech-ui modern-ui">
+      <DebugViewport />
       {s.isOffline && (
         <div className="offline-banner" role="alert">
           <span>📡 Sem ligação — a mostrar dados em cache</span>
