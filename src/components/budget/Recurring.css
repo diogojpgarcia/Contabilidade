@@ -794,6 +794,26 @@
   transition: opacity 0.15s;
 }
 .rp-confirm-btn:active { opacity: 0.75; }
+.rp-pending-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rp-pending-iconbtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--bg-tertiary);
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rp-pending-iconbtn:active { opacity: 0.7; }
 
 /* Confirm modal info bar */
 .rp-confirm-info {

@@ -42,6 +42,7 @@ const RecurringView = ({
   confirmedRecurring = {},
   onConfirmRecurring,
   onDeleteRecurring,
+  onSkipRecurring,
   patrimony,
 }) => {
   const { categories } = useAppContext();
@@ -154,6 +155,12 @@ const RecurringView = ({
     setConfirmAccountId(payment.accountId || '');
   };
 
+  // Dispensa esta ocorrência pendente (não cria transação). Marca o mês como
+  // tratado para sair da lista de "aguardam confirmação".
+  const handleSkip = (p) => {
+    if (onSkipRecurring) onSkipRecurring({ recurringPayment: p, monthKey: p.monthKey });
+  };
+
   const handleConfirmSave = async () => {
     if (!confirmTarget || !onConfirmRecurring) return;
     const amount = safeNum(confirmAmount);
@@ -221,12 +228,16 @@ const RecurringView = ({
                     ? `~${safeNum(p.estimatedAmount).toFixed(2)}€`
                     : `${safeNum(p.amount).toFixed(2)}€`}
                 </div>
-                <button
-                  className="rp-confirm-btn"
-                  onClick={() => openConfirm(p, p.dueDate, p.monthKey)}
-                >
-                  Confirmar
-                </button>
+                <div className="rp-pending-actions">
+                  <button className="rp-pending-iconbtn" onClick={() => openEdit(p)} aria-label="Editar" title="Editar (ex. corrigir data)">✎</button>
+                  <button className="rp-pending-iconbtn" onClick={() => handleSkip(p)} aria-label="Dispensar" title="Dispensar este pagamento">✕</button>
+                  <button
+                    className="rp-confirm-btn"
+                    onClick={() => openConfirm(p, p.dueDate, p.monthKey)}
+                  >
+                    Confirmar
+                  </button>
+                </div>
               </div>
             </div>
           ))}

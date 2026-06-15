@@ -381,6 +381,22 @@ export function useSettings(currentUser, txHook) {
     if (txIds.length > 0) toast.success?.(`Recorrente removido · ${txIds.length} pagamento(s) repostos.`);
   };
 
+  // Dispensa uma ocorrência pendente sem criar transação (marca o mês como
+  // tratado para sair de "aguardam confirmação"). Reversível por re-confirmação.
+  const handleSkipRecurring = ({ recurringPayment, monthKey }) => {
+    if (!recurringPayment || !monthKey) return;
+    const updated = {
+      ...confirmedRecurring,
+      [recurringPayment.id]: {
+        ...(confirmedRecurring[recurringPayment.id] || {}),
+        [monthKey]: { skipped: true, at: new Date().toISOString() },
+      },
+    };
+    setConfirmedRecurring(updated);
+    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated })
+      .catch(e => toast.error('Erro ao guardar: ' + e.message));
+  };
+
   // ── Objetivos ─────────────────────────────────────────────────────────────
   const handleGoalsChange = async (updatedGoals) => {
     setGoals(updatedGoals);
@@ -429,6 +445,7 @@ export function useSettings(currentUser, txHook) {
     handleRecurringPaymentsChange,
     handleConfirmRecurring,
     handleDeleteRecurring,
+    handleSkipRecurring,
     handleGoalsChange,
     handleFocusChange,
   };

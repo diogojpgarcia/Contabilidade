@@ -239,6 +239,7 @@ const App = () => {
               confirmedRecurring={s.confirmedRecurring}
               onConfirmRecurring={s.handleConfirmRecurring}
               onDeleteRecurring={s.handleDeleteRecurring}
+              onSkipRecurring={s.handleSkipRecurring}
               goals={s.goals}
               onGoalsChange={s.handleGoalsChange}
             />
