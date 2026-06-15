@@ -228,14 +228,14 @@ body {
      ao fundo, sem o quirk do fixed. A .bottom-nav (último flex child) cola ao fundo. */
   position: relative;
   width: 100%;
-  /* Altura = viewport. No PWA standalone svh == dvh == ecrã (logo a nav fica
-     visível ao fundo), MAS o svh é ESTÁTICO e o dvh é DINÂMICO: o dvh recalcula
-     sozinho e fazia a bottom-nav saltar nas trocas de tab. Usar svh elimina o
-     salto mantendo a mesma altura. Fallbacks: vh → dvh → svh (o último válido
-     ganha; box-sizing já é border-box via `*`). */
+  /* Altura = ecrã cheio E estática.
+     - dvh: ecrã cheio (nav no fundo) MAS dinâmico → recalcula e a nav saltava.
+     - svh: estático MAS mais curto que o ecrã neste standalone → nav ficava alta.
+     - lvh: ecrã cheio (= dvh no máximo) E estático → nav no fundo, sem saltar.
+     Fallbacks vh → dvh → lvh (o último válido ganha; box-sizing já é border-box). */
   height: 100vh;   /* fallback ancestral */
-  height: 100dvh;  /* fallback se não houver svh */
-  height: 100svh;  /* preferido — estático, não salta */
+  height: 100dvh;  /* fallback se não houver lvh */
+  height: 100lvh;  /* preferido — ecrã cheio e estático */
   display: flex;
   flex-direction: column;
   overflow: hidden;
