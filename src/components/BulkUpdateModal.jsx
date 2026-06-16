@@ -1,20 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Overlay from './Overlay';
+import { toBudgetLabel } from '../utils/categories-professional';
 import './BulkUpdateModal.css';
 
 /**
- * BulkUpdateModal — shown after a category change when similar
- * transactions are found.
+ * BulkUpdateModal — mostrado após mudar a categoria de uma transação quando
+ * existem outras com descrição parecida.
+ *
+ * O utilizador escolhe individualmente (checkboxes) a quais aplicar — pode,
+ * por exemplo, mudar só "Uber Eats" e deixar "Uber Rides" de fora.
  *
  * Props:
  *   bulkPending  { pattern, newCategory, similar: Transaction[] }
- *   onConfirm()  — update all + save rule
- *   onDismiss()  — keep only the single update + save rule
+ *   onConfirm(selectedIds: string[])  — aplica aos selecionados + aprende regra
+ *   onDismiss()                       — mantém só a alteração original
  */
 const BulkUpdateModal = ({ bulkPending, onConfirm, onDismiss }) => {
   const { pattern, newCategory, similar } = bulkPending;
-  const preview = similar.slice(0, 5);
-  const extra   = similar.length - preview.length;
+  const catLabel = toBudgetLabel(newCategory);
+
+  // Por defeito todas selecionadas (comportamento "aplicar a todas").
+  const [selected, setSelected] = useState(() => new Set(similar.map(s => s.id)));
+
+  const toggle = (id) => setSelected(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    return next;
+  });
+
+  const allOn = selected.size === similar.length;
+  const toggleAll = () =>
+    setSelected(allOn ? new Set() : new Set(similar.map(s => s.id)));
+
+  const handleConfirm = () => onConfirm(Array.from(selected));
 
   return (
     <Overlay onClose={onDismiss}>
@@ -22,33 +41,44 @@ const BulkUpdateModal = ({ bulkPending, onConfirm, onDismiss }) => {
         <div className="bum-handle" />
 
         <div className="bum-header">
-          <p className="bum-title">Atualizar transações similares?</p>
+          <p className="bum-title">Aplicar a transações similares?</p>
           <p className="bum-subtitle">
             Encontrei <strong>{similar.length}</strong> transação{similar.length !== 1 ? 'ões' : ''} com
-            &nbsp;<span className="bum-pattern">"{pattern}"</span>
+            &nbsp;<span className="bum-pattern">"{pattern}"</span>. Escolhe a quais aplicar
+            &nbsp;<span className="bum-pattern">{catLabel}</span>.
           </p>
         </div>
 
+        <button className="bum-selectall" onClick={toggleAll}>
+          <span className={`bum-box ${allOn ? 'bum-box--on' : ''}`}>{allOn ? '✓' : ''}</span>
+          {allOn ? 'Desmarcar todas' : 'Selecionar todas'}
+        </button>
+
         <div className="bum-preview">
-          {preview.map(tx => (
-            <div key={tx.id} className="bum-row">
-              <span className="bum-row-desc">
-                {tx.description || tx.clean_description || '—'}
-              </span>
-              <span className="bum-row-cat">{newCategory}</span>
-            </div>
-          ))}
-          {extra > 0 && (
-            <p className="bum-more">+{extra} mais</p>
-          )}
+          {similar.map(tx => {
+            const on = selected.has(tx.id);
+            return (
+              <button
+                key={tx.id}
+                type="button"
+                className={`bum-row ${on ? 'bum-row--on' : ''}`}
+                onClick={() => toggle(tx.id)}
+              >
+                <span className={`bum-box ${on ? 'bum-box--on' : ''}`}>{on ? '✓' : ''}</span>
+                <span className="bum-row-desc">
+                  {tx.description || tx.clean_description || '—'}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="bum-actions">
           <button className="bum-btn bum-btn-dismiss" onClick={onDismiss}>
             Só esta
           </button>
-          <button className="bum-btn bum-btn-confirm" onClick={onConfirm}>
-            Atualizar {similar.length + 1}
+          <button className="bum-btn bum-btn-confirm" onClick={handleConfirm}>
+            {selected.size > 0 ? `Aplicar a ${selected.size + 1}` : 'Concluir'}
           </button>
         </div>
       </div>

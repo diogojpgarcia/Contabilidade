@@ -53,39 +53,74 @@
 .bum-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
+  width: 100%;
   padding: 8px 0;
+  border: none;
   border-bottom: 1px solid var(--cosmos-surface-border);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
 }
 
 .bum-row:last-child {
   border-bottom: none;
 }
 
+.bum-row:active { opacity: 0.7; }
+
 .bum-row-desc {
   font-size: 0.8rem;
-  color: var(--cosmos-text-2);
+  color: var(--cosmos-text-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
 }
 
-.bum-row-cat {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--cosmos-accent);
-  flex-shrink: 0;
+.bum-row--on .bum-row-desc {
+  color: var(--cosmos-text-1);
 }
 
-.bum-more {
-  font-size: 0.78rem;
-  color: var(--cosmos-text-3);
-  text-align: center;
-  padding: 6px 0 2px;
-  margin: 0;
+/* ── Checkbox ────────────────────────────────────────────────────────────── */
+.bum-box {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--cosmos-surface-border);
+  background: var(--cosmos-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  transition: background 0.12s, border-color 0.12s;
 }
+
+.bum-box--on {
+  background: var(--cosmos-accent);
+  border-color: var(--cosmos-accent);
+}
+
+/* ── Selecionar todas ────────────────────────────────────────────────────── */
+.bum-selectall {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: auto;
+  margin: 0 20px 4px;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  color: var(--cosmos-text-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bum-selectall:active { opacity: 0.7; }
 
 .bum-actions {
   display: flex;

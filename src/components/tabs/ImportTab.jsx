@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { dbService, computeImportHash } from '../../lib/supabase';
 import { parseBankFile } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
+import { descMatchesPattern } from '../../utils/textMatch';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { useAppContext } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
@@ -54,8 +55,11 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
       // Apply learned rules locally
       const categorized = transactions.map(tx => {
         if (tx.category) return tx;
-        const desc = (tx.description || '').toLowerCase();
-        const match = learnedRules.find(r => r.pattern && desc.includes(r.pattern));
+        // Mais específico primeiro: regras com padrão mais longo ganham
+        // (ex. "uber eats" antes de "uber"), para respeitar diferenciações.
+        const match = [...learnedRules]
+          .filter(r => r.pattern && descMatchesPattern(tx.description, r.pattern))
+          .sort((a, b) => b.pattern.length - a.pattern.length)[0];
         return match ? { ...tx, category: match.category } : tx;
       });
 

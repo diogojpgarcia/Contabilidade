@@ -3,6 +3,7 @@ import { dbService } from '../lib/supabase';
 import { toast } from '../utils/toast';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
 import { computeAccountBalance } from '../utils/budgetUtils';
+import { tokensOf, derivePattern, descMatchesPattern } from '../utils/textMatch';
 
 /**
  * useTransactions — responsável por TODA a lógica de transações.
@@ -241,22 +242,6 @@ export function useTransactions(currentUser) {
 
   // ── Categorização ─────────────────────────────────────────────────────────
 
-  const NOISE_WORDS = new Set([
-    'payment','compra','ref','mbway','transfer','debito','credito',
-    'debit','credit','via','para','from','por','com','the','and',
-    'pagamento','direta','direto','sepa','trf','pos','atm',
-  ]);
-
-  const extractPattern = (description) => {
-    if (!description) return null;
-    const words = description
-      .toLowerCase()
-      .replace(/[^a-z\s]/g, ' ')
-      .split(/\s+/)
-      .filter(w => w.length >= 3 && !NOISE_WORDS.has(w));
-    return words[0] || null;
-  };
-
   const saveLearnedRule = (pattern, category) => {
     const updated = [
       { pattern, category },
@@ -276,12 +261,12 @@ export function useTransactions(currentUser) {
     try {
       await dbService.updateTransaction(transactionId, { category: newCategory });
 
-      const pattern = extractPattern(description);
+      const pattern = tokensOf(description)[0] || null;
       if (pattern) {
         const similar = transactions.filter(t =>
           t.id !== transactionId &&
           t.category !== newCategory &&
-          (t.description || '').toLowerCase().includes(pattern)
+          descMatchesPattern(t.description, pattern)
         );
 
         if (similar.length > 0) {
@@ -296,24 +281,48 @@ export function useTransactions(currentUser) {
     }
   };
 
-  const handleBulkConfirm = async () => {
+  // Aplica a nova categoria APENAS às transações selecionadas no modal.
+  // selectedIds: array de ids (subconjunto de bulkPending.similar). Se omitido,
+  // assume todas (retrocompatível).
+  const handleBulkConfirm = async (selectedIds) => {
     if (!bulkPending) return;
-    const { newCategory, pattern, similar } = bulkPending;
+    const { newCategory, pattern, description, similar } = bulkPending;
 
-    setTransactions(prev => prev.map(t =>
-      similar.some(s => s.id === t.id) ? { ...t, category: newCategory } : t
-    ));
+    const ids = Array.isArray(selectedIds) ? selectedIds : similar.map(s => s.id);
+    const selected = similar.filter(s => ids.includes(s.id));
+    const rejected = similar.filter(s => !ids.includes(s.id));
 
-    for (const tx of similar) {
-      dbService.updateTransaction(tx.id, { category: newCategory }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+    if (selected.length > 0) {
+      setTransactions(prev => prev.map(t =>
+        ids.includes(t.id) ? { ...t, category: newCategory } : t
+      ));
+      for (const tx of selected) {
+        dbService.updateTransaction(tx.id, { category: newCategory })
+          .catch(e => toast.error('Erro ao guardar: ' + e.message));
+      }
     }
 
-    saveLearnedRule(pattern, newCategory);
+    // Aprende o padrão mais específico que cobre a transação alterada + os
+    // selecionados, mas NENHUM dos rejeitados → imports futuros respeitam a
+    // divisão (ex. "uber eats" em vez de "uber"). Sem rejeitados, usa o amplo.
+    const precise = derivePattern(
+      description,
+      [description, ...selected.map(s => s.description || '')],
+      rejected.map(s => s.description || ''),
+    ) || (rejected.length === 0 ? pattern : null);
+    if (precise) saveLearnedRule(precise, newCategory);
+
     setBulkPending(null);
   };
 
   const handleBulkDismiss = () => {
-    if (bulkPending) saveLearnedRule(bulkPending.pattern, bulkPending.newCategory);
+    if (bulkPending) {
+      const { description, newCategory, similar } = bulkPending;
+      // Só a transação alterada foi aplicada. Aprende uma regra específica que
+      // NÃO toque nas similares deixadas de fora (evita recategorizar os irmãos).
+      const precise = derivePattern(description, [description], similar.map(s => s.description || ''));
+      if (precise) saveLearnedRule(precise, newCategory);
+    }
     setBulkPending(null);
   };
 
