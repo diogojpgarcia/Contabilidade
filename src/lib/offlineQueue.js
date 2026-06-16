@@ -12,6 +12,17 @@
  */
 
 const KEY = 'financas_offline_queue_v1';
+const SETTINGS_KEY = 'financas_offline_settings_v1';
+
+/**
+ * Erro de rede (offline/flaky) vs. erro real (validação, RLS). O Supabase usa
+ * fetch → falha de rede lança TypeError "Failed to fetch" (iOS Safari: "Load
+ * failed"). Pura (só analisa o erro); o estado "offline agora" é verificado nos
+ * call sites antes do pedido.
+ */
+export const isNetworkError = (err) =>
+  err?.name === 'TypeError' ||
+  /failed to fetch|networkerror|load failed|network request failed/i.test(err?.message || '');
 
 // Storage injetável: localStorage no browser, fallback em memória nos testes (node).
 const _mem = new Map();
@@ -98,4 +109,63 @@ export function removeQueuedAdd(tempId) {
 /** Remove uma entrada da fila pelo seu id interno (após replay com sucesso). */
 export function removeEntry(entryId) {
   persist(loadQueue().filter((e) => e.id !== entryId));
+}
+
+/* ── Overlay de settings ──────────────────────────────────────────────────── */
+/* Patches de user_settings feitos offline (ex. confirmed_recurring,             */
+/* recurring_payments). Acumulam por chave (last-write-wins) e são empurrados     */
+/* para o servidor na reconexão, ANTES do reload — senão o fetch sobrepunha-se.   */
+
+export function getSettingsOverlay() {
+  try {
+    const raw = _storage.getItem(SETTINGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistOverlay(o) {
+  try { _storage.setItem(SETTINGS_KEY, JSON.stringify(o)); } catch { /* ignora */ }
+}
+
+export function mergeSettingsPatch(patch) {
+  persistOverlay({ ...getSettingsOverlay(), ...patch });
+}
+
+export function hasSettingsOverlay() {
+  return Object.keys(getSettingsOverlay()).length > 0;
+}
+
+export function clearSettingsOverlay() {
+  persistOverlay({});
+}
+
+function remapConfirmed(confirmed, remap) {
+  if (!confirmed || typeof confirmed !== 'object') return confirmed;
+  const out = {};
+  for (const [recId, months] of Object.entries(confirmed)) {
+    out[recId] = {};
+    for (const [m, v] of Object.entries(months || {})) {
+      out[recId][m] = (v && v.transactionId && remap[v.transactionId])
+        ? { ...v, transactionId: remap[v.transactionId] }
+        : v;
+    }
+  }
+  return out;
+}
+
+/**
+ * Reescreve transactionIds temporários (local-…) para os ids reais devolvidos
+ * pelo flush, dentro do confirmed_recurring guardado na overlay. Garante que
+ * "apagar e repor" um recorrente continua a encontrar a transação após sync.
+ */
+export function remapSettingsTxIds(remap) {
+  if (!remap || !Object.keys(remap).length) return;
+  const o = getSettingsOverlay();
+  if (o.confirmed_recurring) {
+    o.confirmed_recurring = remapConfirmed(o.confirmed_recurring, remap);
+    persistOverlay(o);
+  }
 }

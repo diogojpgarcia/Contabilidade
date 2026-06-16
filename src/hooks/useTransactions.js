@@ -7,14 +7,10 @@ import { tokensOf, derivePattern, descMatchesPattern } from '../utils/textMatch'
 import {
   newTempId, isTempId, enqueueAdd, enqueueUpdate, enqueueDelete,
   amendQueuedAdd, removeQueuedAdd, removeEntry, getAll as getQueue, size as queueSize,
+  isNetworkError,
 } from '../lib/offlineQueue';
 
-// Erro de rede (offline/flaky) vs. erro real (validação, RLS). O Supabase usa
-// fetch → offline lança TypeError "Failed to fetch" (iOS Safari: "Load failed").
-const isNetworkError = (err) =>
-  typeof navigator !== 'undefined' && !navigator.onLine ||
-  err?.name === 'TypeError' ||
-  /failed to fetch|networkerror|load failed|network request failed/i.test(err?.message || '');
+const isOffline = () => typeof navigator !== 'undefined' && !navigator.onLine;
 
 /**
  * useTransactions — responsável por TODA a lógica de transações.
@@ -88,7 +84,7 @@ export function useTransactions(currentUser) {
       return optimistic;
     };
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return queueLocally();
+    if (isOffline()) return queueLocally();
 
     try {
       const newTx = await dbService.addTransaction(currentUser.id, enriched);
@@ -121,7 +117,7 @@ export function useTransactions(currentUser) {
       refreshPending();
     };
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return removeLocally();
+    if (isOffline()) return removeLocally();
 
     try {
       await dbService.deleteTransaction(id);
@@ -165,7 +161,7 @@ export function useTransactions(currentUser) {
       refreshPending();
     };
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return queueLocally();
+    if (isOffline()) return queueLocally();
 
     try {
       const updated = await dbService.updateTransaction(updatedTransaction.id, fields);
@@ -186,9 +182,11 @@ export function useTransactions(currentUser) {
   // Reproduz a fila offline contra o Supabase, por ordem. Chamado no boot e na
   // reconexão (ANTES de recarregar do servidor, senão o reload perdia as
   // escritas offline). Para no primeiro erro de rede e tenta de novo depois.
+  // Devolve o remap { tempId: realId } das criações reconciliadas, para que o
+  // chamador corrija referências (ex. transactionId em confirmed_recurring).
   const flushQueue = async () => {
-    if (!currentUser) return;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    const remap = {};
+    if (!currentUser || isOffline()) return remap;
 
     for (const entry of getQueue()) {
       try {
@@ -200,6 +198,7 @@ export function useTransactions(currentUser) {
             account_id:   saved.account_id   ?? tx.account_id   ?? null,
             account_name: saved.account_name ?? tx.account_name ?? null,
           };
+          remap[entry.payload.tempId] = saved.id;
           setTransactions(prev => prev.some(t => t.id === entry.payload.tempId)
             ? prev.map(t => t.id === entry.payload.tempId ? reconciled : t)
             : [reconciled, ...prev]);
@@ -219,6 +218,7 @@ export function useTransactions(currentUser) {
         refreshPending();
       }
     }
+    return remap;
   };
 
   // Chamado pelo ImportTab depois de guardar no DB.
@@ -244,19 +244,32 @@ export function useTransactions(currentUser) {
     const fromName = fromAcc?.name || fromId;
     const toName   = toAcc?.name   || toId;
 
+    const outPayload = {
+      description: `Transferência para ${toName}`,
+      amount: value, type: 'transfer', category: fromName, date: today,
+      account_id: fromId, account_name: fromName, subcategory: 'out',
+    };
+    const inPayload = {
+      description: `Transferência de ${fromName}`,
+      amount: value, type: 'transfer', category: toName, date: today,
+      account_id: toId, account_name: toName, subcategory: 'in',
+    };
+
+    // Sem rede → cria os dois lados com ids temporários e enfileira ambos.
+    const queueLocally = () => {
+      const outTx = { ...outPayload, id: newTempId(), _pending: true };
+      const inTx  = { ...inPayload,  id: newTempId(), _pending: true };
+      setTransactions(prev => [outTx, inTx, ...prev]);
+      enqueueAdd(outPayload, outTx.id);
+      enqueueAdd(inPayload, inTx.id);
+      refreshPending();
+    };
+
+    if (isOffline()) return queueLocally();
+
     try {
-      const rawOut = await dbService.addTransaction(currentUser.id, {
-        description: `Transferência para ${toName}`,
-        amount: value, type: 'transfer', category: fromName, date: today,
-        account_id: fromId, account_name: fromName,
-        subcategory: 'out',
-      });
-      const rawIn = await dbService.addTransaction(currentUser.id, {
-        description: `Transferência de ${fromName}`,
-        amount: value, type: 'transfer', category: toName, date: today,
-        account_id: toId, account_name: toName,
-        subcategory: 'in',
-      });
+      const rawOut = await dbService.addTransaction(currentUser.id, outPayload);
+      const rawIn  = await dbService.addTransaction(currentUser.id, inPayload);
 
       const outTx = { ...rawOut, account_id: rawOut.account_id || fromId, account_name: rawOut.account_name || fromName };
       const inTx  = { ...rawIn,  account_id: rawIn.account_id  || toId,   account_name: rawIn.account_name  || toName  };
@@ -264,6 +277,7 @@ export function useTransactions(currentUser) {
       const both = [outTx, inTx].filter(t => t?.id);
       if (both.length) setTransactions(prev => [...both, ...prev]);
     } catch (err) {
+      if (isNetworkError(err)) return queueLocally();
       console.error('❌ Transfer error:', err);
       throw err;
     }

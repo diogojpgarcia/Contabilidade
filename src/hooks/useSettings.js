@@ -4,6 +4,10 @@ import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-profe
 import { getMonthKey } from '../utils/data';
 import { getCurrentFinancialMonth } from '../utils/financialMonth';
 import { toast } from '../utils/toast';
+import {
+  isNetworkError, mergeSettingsPatch, getSettingsOverlay,
+  hasSettingsOverlay, clearSettingsOverlay, remapSettingsTxIds,
+} from '../lib/offlineQueue';
 
 // Cores de fundo de cada paleta — usadas para atualizar <meta name="theme-color">
 // e eliminar o artefacto de cor residual na zona do notch no iOS.
@@ -108,8 +112,15 @@ export function useSettings(currentUser, txHook) {
     setIsOffline(false);
 
     // Empurra escritas offline pendentes ANTES de puxar do servidor — senão o
-    // reload sobrepunha-se às transações criadas/editadas sem rede.
-    await txHook.flushQueue?.().catch(() => {});
+    // reload sobrepunha-se às transações/settings criadas sem rede.
+    const remap = (await txHook.flushQueue?.().catch(() => ({}))) || {};
+    if (hasSettingsOverlay()) {
+      remapSettingsTxIds(remap); // tempId → realId em confirmed_recurring
+      try {
+        await dbService.updateUserSettings(currentUser.id, getSettingsOverlay());
+        clearSettingsOverlay();
+      } catch { /* ainda offline/erro — mantém a overlay para a próxima */ }
+    }
 
     const requestId = ++loadRequestId.current;
     setIsLoadingData(true);
@@ -290,20 +301,31 @@ export function useSettings(currentUser, txHook) {
     dbService.updateUserSettings(currentUser.id, { homeUsesFinancialMonth: enabled }).catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
+  // Persiste um patch de user_settings; offline (ou falha de rede) acumula numa
+  // overlay que é empurrada na reconexão (ver loadUserData).
+  const persistSettings = (patch) => {
+    if (!navigator.onLine) { mergeSettingsPatch(patch); return; }
+    dbService.updateUserSettings(currentUser.id, patch).catch((e) => {
+      if (isNetworkError(e)) mergeSettingsPatch(patch);
+      else toast.error('Erro ao guardar: ' + e.message);
+    });
+  };
+
   // ── Recorrentes ───────────────────────────────────────────────────────────
   const handleRecurringPaymentsChange = (updated) => {
     setRecurringPayments(updated);
-    dbService.updateUserSettings(currentUser.id, { recurring_payments: updated })
-      .catch(e => toast.error('Erro ao guardar recorrentes: ' + e.message));
+    persistSettings({ recurring_payments: updated });
   };
 
-  // Confirma um pagamento recorrente: cria a transação real e regista a confirmação.
-  // Usa txHook.setTransactions para adicionar a nova transação ao estado global.
+  // Confirma um pagamento recorrente: cria a transação (com suporte offline via
+  // txHook.handleAddTransaction) e regista a confirmação. Se offline, a transação
+  // fica com id temporário; o flush reconcilia-o e o remap corrige o
+  // transactionId guardado aqui (ver loadUserData / remapSettingsTxIds).
   const handleConfirmRecurring = async ({ recurringPayment, dueDate, monthKey, amount, accountId }) => {
     const account = (patrimony.accounts || []).find(a => a.id === accountId);
     let newTx;
     try {
-      newTx = await dbService.addTransaction(currentUser.id, {
+      newTx = await txHook.handleAddTransaction({
         date:         dueDate,
         description:  recurringPayment.title,
         amount,
@@ -316,13 +338,7 @@ export function useSettings(currentUser, txHook) {
       toast.error('Erro ao confirmar pagamento: ' + e.message);
       return;
     }
-
-    const txWithAccount = {
-      ...newTx,
-      account_id:   newTx.account_id   ?? accountId   ?? null,
-      account_name: newTx.account_name ?? account?.name ?? null,
-    };
-    txHook.setTransactions(prev => [txWithAccount, ...prev]);
+    if (!newTx) return;
 
     const updated = {
       ...confirmedRecurring,
@@ -332,9 +348,7 @@ export function useSettings(currentUser, txHook) {
       },
     };
     setConfirmedRecurring(updated);
-
-    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated })
-      .catch(e => toast.error('Erro ao guardar: ' + e.message));
+    persistSettings({ confirmed_recurring: updated });
   };
 
   // Apaga um pagamento recorrente E as transações já confirmadas que ele criou,
@@ -345,13 +359,9 @@ export function useSettings(currentUser, txHook) {
     // restore=false → mantém as transações, remove só o agendamento.
     const txIds = restore ? Object.values(conf).map(c => c && c.transactionId).filter(Boolean) : [];
 
-    // Apaga as transações no DB em paralelo e atualiza o estado UMA vez
-    // (em vez de N escritas de settings, uma por transação).
-    await Promise.all(txIds.map(txId => dbService.deleteTransaction(txId).catch(() => {})));
-    if (txIds.length) {
-      const idset = new Set(txIds);
-      txHook.setTransactions(prev => prev.filter(t => !idset.has(t.id)));
-    }
+    // Apaga via txHook (lida com online/offline e ids temporários ainda na fila).
+    await Promise.all(txIds.map(txId => txHook.handleDeleteTransaction(txId).catch(() => {})));
+
     const updatedConf = { ...confirmedRecurring };
     delete updatedConf[id];
     setConfirmedRecurring(updatedConf);
@@ -359,11 +369,7 @@ export function useSettings(currentUser, txHook) {
     const updatedPayments = (recurringPayments || []).filter(p => p.id !== id);
     setRecurringPayments(updatedPayments);
 
-    // UM único save com tudo (confirmações + recorrentes)
-    dbService.updateUserSettings(currentUser.id, {
-      confirmed_recurring:   updatedConf,
-      recurring_payments:    updatedPayments,
-    }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+    persistSettings({ confirmed_recurring: updatedConf, recurring_payments: updatedPayments });
 
     if (txIds.length > 0) toast.success?.(`Recorrente removido · ${txIds.length} pagamento(s) repostos.`);
   };
@@ -380,8 +386,7 @@ export function useSettings(currentUser, txHook) {
       },
     };
     setConfirmedRecurring(updated);
-    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated })
-      .catch(e => toast.error('Erro ao guardar: ' + e.message));
+    persistSettings({ confirmed_recurring: updated });
   };
 
   // ── Objetivos ─────────────────────────────────────────────────────────────

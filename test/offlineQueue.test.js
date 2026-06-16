@@ -3,9 +3,11 @@ import {
   getAll, size, clearQueue, newTempId, isTempId,
   enqueueAdd, enqueueUpdate, enqueueDelete,
   amendQueuedAdd, removeQueuedAdd, removeEntry,
+  isNetworkError, mergeSettingsPatch, getSettingsOverlay,
+  hasSettingsOverlay, clearSettingsOverlay, remapSettingsTxIds,
 } from '../src/lib/offlineQueue.js';
 
-beforeEach(() => clearQueue());
+beforeEach(() => { clearQueue(); clearSettingsOverlay(); });
 
 describe('offlineQueue — básico', () => {
   it('começa vazia', () => {
@@ -89,6 +91,52 @@ describe('offlineQueue — invariante: nunca update/delete com tempId', () => {
     expect(temporais).toHaveLength(0);
     expect(q).toHaveLength(1);
     expect(q[0].payload.id).toBe('real-9');
+  });
+});
+
+describe('isNetworkError', () => {
+  it('deteta erros de rede e ignora erros reais', () => {
+    expect(isNetworkError({ name: 'TypeError', message: 'Failed to fetch' })).toBe(true);
+    expect(isNetworkError({ message: 'Load failed' })).toBe(true);
+    expect(isNetworkError({ message: 'NetworkError when attempting fetch' })).toBe(true);
+    expect(isNetworkError({ code: '23505', message: 'duplicate key' })).toBe(false);
+  });
+});
+
+describe('offlineQueue — overlay de settings', () => {
+  it('mergeSettingsPatch acumula por chave (last-write-wins)', () => {
+    mergeSettingsPatch({ recurring_payments: [1, 2] });
+    mergeSettingsPatch({ confirmed_recurring: { r1: {} } });
+    mergeSettingsPatch({ recurring_payments: [9] });
+    expect(getSettingsOverlay()).toEqual({ recurring_payments: [9], confirmed_recurring: { r1: {} } });
+    expect(hasSettingsOverlay()).toBe(true);
+  });
+
+  it('clearSettingsOverlay esvazia', () => {
+    mergeSettingsPatch({ goals: [] });
+    clearSettingsOverlay();
+    expect(hasSettingsOverlay()).toBe(false);
+    expect(getSettingsOverlay()).toEqual({});
+  });
+
+  it('remapSettingsTxIds reescreve transactionId temporário → real no confirmed_recurring', () => {
+    mergeSettingsPatch({
+      confirmed_recurring: {
+        rent: { '2026-06': { transactionId: 'local-abc', amount: 500 } },
+        gym:  { '2026-06': { skipped: true } },
+      },
+    });
+    remapSettingsTxIds({ 'local-abc': 'real-123' });
+    const o = getSettingsOverlay();
+    expect(o.confirmed_recurring.rent['2026-06'].transactionId).toBe('real-123');
+    expect(o.confirmed_recurring.rent['2026-06'].amount).toBe(500);
+    expect(o.confirmed_recurring.gym['2026-06']).toEqual({ skipped: true });
+  });
+
+  it('remapSettingsTxIds não mexe se o remap estiver vazio', () => {
+    mergeSettingsPatch({ confirmed_recurring: { r: { m: { transactionId: 'local-x' } } } });
+    remapSettingsTxIds({});
+    expect(getSettingsOverlay().confirmed_recurring.r.m.transactionId).toBe('local-x');
   });
 });
 
