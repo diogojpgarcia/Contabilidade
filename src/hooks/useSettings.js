@@ -116,20 +116,13 @@ export function useSettings(currentUser, txHook) {
       ]);
       if (requestId !== loadRequestId.current) return; // fetch superseded
 
-      // Fundir o transactionAccountMap (fallback para colunas ausentes no DB)
-      const accountMap = settings?.transactionAccountMap || {};
-      const rows = (txData || []).map(t => ({
-        ...t,
-        type: t.type || 'expense',
-        account_id:   t.account_id   || accountMap[t.id]?.account_id   || null,
-        account_name: t.account_name || accountMap[t.id]?.account_name || null,
-      }));
+      // account_id/account_name vêm agora das colunas reais (migração 001).
+      const rows = (txData || []).map(t => ({ ...t, type: t.type || 'expense' }));
 
       // Inicializar o estado de transações via txHook
       const savedCategories = settings?.custom_categories;
       txHook.initFromLoad({
         rows,
-        accountMap,
         learnedRulesData: settings?.learned_rules || null,
         categoriesData: savedCategories
           ? {
@@ -244,7 +237,6 @@ export function useSettings(currentUser, txHook) {
     const acc = (patrimony.accounts || []).find(a => a.id === accountId);
     if (!acc) { setMigrationPending(null); return; }
 
-    const unlinked = (txHook.transactions || []).filter(t => !t.account_id && t.type !== 'transfer');
     setMigrationPending(null);
 
     try {
@@ -256,13 +248,6 @@ export function useSettings(currentUser, txHook) {
           ? { ...t, account_id: acc.id, account_name: acc.name }
           : t
       ));
-
-      const updatedMap = { ...txHook.transactionAccountMap };
-      unlinked.forEach(t => {
-        updatedMap[t.id] = { account_id: acc.id, account_name: acc.name };
-      });
-      txHook.setTransactionAccountMap(updatedMap);
-      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
       toast.success?.(`${dbCount} transação(ões) ligadas a "${acc.name}".`);
     } catch (err) {
       console.error('❌ Migration failed:', err);
@@ -343,17 +328,8 @@ export function useSettings(currentUser, txHook) {
     };
     setConfirmedRecurring(updated);
 
-    // Merge ambos os saves num só para evitar race condition (READ→merge→WRITE concorrente)
-    const settingsUpdate = { confirmed_recurring: updated };
-    if (accountId && newTx.id) {
-      const updatedMap = {
-        ...txHook.transactionAccountMap,
-        [newTx.id]: { account_id: accountId, account_name: account?.name || null },
-      };
-      txHook.setTransactionAccountMap(updatedMap);
-      settingsUpdate.transactionAccountMap = updatedMap;
-    }
-    dbService.updateUserSettings(currentUser.id, settingsUpdate).catch(e => toast.error('Erro ao guardar: ' + e.message));
+    dbService.updateUserSettings(currentUser.id, { confirmed_recurring: updated })
+      .catch(e => toast.error('Erro ao guardar: ' + e.message));
   };
 
   // Apaga um pagamento recorrente E as transações já confirmadas que ele criou,
@@ -371,10 +347,6 @@ export function useSettings(currentUser, txHook) {
       const idset = new Set(txIds);
       txHook.setTransactions(prev => prev.filter(t => !idset.has(t.id)));
     }
-    const updatedMap = { ...txHook.transactionAccountMap };
-    txIds.forEach(txId => delete updatedMap[txId]);
-    txHook.setTransactionAccountMap(updatedMap);
-
     const updatedConf = { ...confirmedRecurring };
     delete updatedConf[id];
     setConfirmedRecurring(updatedConf);
@@ -382,9 +354,8 @@ export function useSettings(currentUser, txHook) {
     const updatedPayments = (recurringPayments || []).filter(p => p.id !== id);
     setRecurringPayments(updatedPayments);
 
-    // UM único save com tudo (mapa de contas + confirmações + recorrentes)
+    // UM único save com tudo (confirmações + recorrentes)
     dbService.updateUserSettings(currentUser.id, {
-      transactionAccountMap: updatedMap,
       confirmed_recurring:   updatedConf,
       recurring_payments:    updatedPayments,
     }).catch(e => toast.error('Erro ao guardar: ' + e.message));

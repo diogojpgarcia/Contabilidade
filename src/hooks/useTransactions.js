@@ -9,7 +9,7 @@ import { tokensOf, derivePattern, descMatchesPattern } from '../utils/textMatch'
  * useTransactions — responsável por TODA a lógica de transações.
  *
  * Inclui:
- *  - Estado: transactions, transactionAccountMap, learnedRules, bulkPending, categories
+ *  - Estado: transactions, learnedRules, bulkPending, categories
  *  - CRUD: add, edit, delete, import, transfer
  *  - Categorização: handleCategoryChange, bulk update, learned rules
  *  - Contas: handleAccountChange
@@ -19,7 +19,6 @@ import { tokensOf, derivePattern, descMatchesPattern } from '../utils/textMatch'
  */
 export function useTransactions(currentUser) {
   const [transactions, setTransactions] = useState([]);
-  const [transactionAccountMap, setTransactionAccountMap] = useState({});
   const [learnedRules, setLearnedRules] = useState([]);
   const [bulkPending, setBulkPending] = useState(null);
   const [categories, setCategories] = useState({
@@ -30,27 +29,21 @@ export function useTransactions(currentUser) {
 
   // ── Boot ──────────────────────────────────────────────────────────────────
   // Chamado pelo useSettings.loadUserData depois de ter os dados do servidor.
-  const initFromLoad = ({ rows, accountMap, learnedRulesData, categoriesData }) => {
+  const initFromLoad = ({ rows, learnedRulesData, categoriesData }) => {
     setTransactions(rows || []);
-    setTransactionAccountMap(accountMap || {});
     if (learnedRulesData) setLearnedRules(learnedRulesData);
     if (categoriesData) setCategories(categoriesData);
   };
 
   // Recarrega só transações (sem re-aplicar settings) — usado após delete/import.
-  const loadUserTransactions = async (currentAccountMap) => {
+  const loadUserTransactions = async () => {
     if (!currentUser) return;
     const requestId = ++loadRequestId.current;
     try {
       const txData = await dbService.getTransactions(currentUser.id).catch(() => []);
       if (requestId !== loadRequestId.current) return;
-      const accountMap = currentAccountMap || transactionAccountMap;
-      const rows = (txData || []).map(t => ({
-        ...t,
-        type: t.type || 'expense',
-        account_id:   t.account_id   || accountMap[t.id]?.account_id   || null,
-        account_name: t.account_name || accountMap[t.id]?.account_name || null,
-      }));
+      // account_id/account_name vêm agora das colunas reais (migração 001).
+      const rows = (txData || []).map(t => ({ ...t, type: t.type || 'expense' }));
       setTransactions(rows);
     } catch (error) {
       console.error('❌ Error loading transactions:', error);
@@ -78,15 +71,6 @@ export function useTransactions(currentUser) {
       };
       setTransactions(prev => [txWithAccount, ...prev]);
 
-      if (accId && txWithAccount.id) {
-        const updatedMap = {
-          ...transactionAccountMap,
-          [txWithAccount.id]: { account_id: accId, account_name: accName || null },
-        };
-        setTransactionAccountMap(updatedMap);
-        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
-      }
-
       return txWithAccount;
     } catch (error) {
       console.error('❌ Error adding transaction:', error);
@@ -98,14 +82,6 @@ export function useTransactions(currentUser) {
     try {
       await dbService.deleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
-      // Limpar entrada do mapa para não acumular IDs mortos
-      if (transactionAccountMap[id]) {
-        const updatedMap = { ...transactionAccountMap };
-        delete updatedMap[id];
-        setTransactionAccountMap(updatedMap);
-        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap })
-          .catch(e => toast.error('Erro ao guardar: ' + e.message));
-      }
     } catch (error) {
       console.error('❌ Error deleting transaction:', error);
       throw error;
@@ -138,18 +114,6 @@ export function useTransactions(currentUser) {
         account_name: updatedTransaction.account_name ?? updated.account_name ?? null,
       };
       setTransactions(prev => prev.map(t => t.id === merged.id ? merged : t));
-
-      // Manter transactionAccountMap sincronizado
-      if (merged.account_id !== (original?.account_id ?? null)) {
-        const updatedMap = { ...transactionAccountMap };
-        if (merged.account_id) {
-          updatedMap[merged.id] = { account_id: merged.account_id, account_name: merged.account_name || null };
-        } else {
-          delete updatedMap[merged.id];
-        }
-        setTransactionAccountMap(updatedMap);
-        dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
-      }
     } catch (error) {
       console.error('❌ Error updating transaction:', error);
       if (original) setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? original : t));
@@ -199,12 +163,6 @@ export function useTransactions(currentUser) {
 
       const both = [outTx, inTx].filter(t => t?.id);
       if (both.length) setTransactions(prev => [...both, ...prev]);
-
-      const updatedMap = { ...transactionAccountMap };
-      if (outTx.id) updatedMap[outTx.id] = { account_id: fromId, account_name: fromName };
-      if (inTx.id)  updatedMap[inTx.id]  = { account_id: toId,   account_name: toName  };
-      setTransactionAccountMap(updatedMap);
-      dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
     } catch (err) {
       console.error('❌ Transfer error:', err);
       throw err;
@@ -220,15 +178,6 @@ export function useTransactions(currentUser) {
         ? { ...t, account_id: newAccountId || null, account_name: newAccountName || null }
         : t
     ));
-
-    const updatedMap = { ...transactionAccountMap };
-    if (newAccountId) {
-      updatedMap[transactionId] = { account_id: newAccountId, account_name: newAccountName || null };
-    } else {
-      delete updatedMap[transactionId];
-    }
-    setTransactionAccountMap(updatedMap);
-    dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap }).catch(e => toast.error('Erro ao guardar: ' + e.message));
 
     try {
       await dbService.updateTransaction(transactionId, {
@@ -347,16 +296,6 @@ export function useTransactions(currentUser) {
     setTransactions(prev => prev.map(t =>
       t.account_id === accountId ? { ...t, account_name: newName } : t
     ));
-    // Actualizar o mapa de contas
-    const updatedMap = { ...transactionAccountMap };
-    Object.keys(updatedMap).forEach(txId => {
-      if (updatedMap[txId]?.account_id === accountId) {
-        updatedMap[txId] = { ...updatedMap[txId], account_name: newName };
-      }
-    });
-    setTransactionAccountMap(updatedMap);
-    dbService.updateUserSettings(currentUser.id, { transactionAccountMap: updatedMap })
-      .catch(e => toast.error('Erro ao guardar: ' + e.message));
     // Persistir no DB
     try {
       await dbService.updateAccountName(currentUser.id, accountId, newName);
@@ -369,8 +308,6 @@ export function useTransactions(currentUser) {
     // Estado
     transactions,
     setTransactions,
-    transactionAccountMap,
-    setTransactionAccountMap,
     learnedRules,
     bulkPending,
     categories,

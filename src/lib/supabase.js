@@ -111,26 +111,7 @@ export const dbService = {
     if (account_name != null) row.account_name = account_name;
 
     const { data, error } = await supabase.from('transactions').insert([row]).select();
-
-    // Graceful fallback: if the account columns don't exist yet in the DB,
-    // retry without them so the insert still succeeds.
-    // Add `account_id text, account_name text` to the transactions table to enable linking.
-    if (error) {
-      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
-        (error.message || '').includes('account_id') || (error.message || '').includes('account_name');
-      if (!isColErr) throw error;
-      console.warn('[supabase] account_id/account_name columns missing — add them to transactions table');
-      const base = { user_id: userId, date, description, amount, type, category };
-      const { data: d2, error: e2 } = await supabase.from('transactions').insert([base]).select();
-      if (e2) throw e2;
-      // Preserve account fields the caller passed in — the DB row lacks them but
-      // the in-memory object must carry them so computeCurrentBalance works immediately.
-      return {
-        ...mapTransaction(d2[0]),
-        ...(account_id   != null ? { account_id }   : {}),
-        ...(account_name != null ? { account_name } : {}),
-      };
-    }
+    if (error) throw error;
     return mapTransaction(data[0]);
   },
 
@@ -142,13 +123,7 @@ export const dbService = {
       .is('account_id', null)
       .neq('type', 'transfer')
       .select('id');
-    if (error) {
-      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
-        (error.message || '').includes('account_id');
-      if (!isColErr) throw error;
-      console.warn('[supabase] account columns missing — migration skipped');
-      return 0;
-    }
+    if (error) throw error;
     return (data || []).length;
   },
 
@@ -159,16 +134,13 @@ export const dbService = {
       .eq('id', transactionId)
       .select();
     if (error) {
-      // If optional columns (account_id, account_name, subcategory…) don't exist yet,
-      // retry with only the core fields that are guaranteed to be in the schema.
-      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
-        (error.message || '').includes('account_id') ||
-        (error.message || '').includes('account_name') ||
+      // A coluna `subcategory` pode ainda não existir nalgumas BDs — nesse caso
+      // repetimos sem ela (os saldos de transferência têm fallback por descrição
+      // em computeAccountBalance). As colunas de conta já existem (migração 001).
+      const isSubcatErr = error.code === 'PGRST204' || error.code === '42703' ||
         (error.message || '').includes('subcategory');
-      if (!isColErr) throw error;
-      console.warn('[supabase] optional column missing — retrying with core fields only');
-      // Strip all optional/possibly-missing columns; keep only guaranteed core schema fields
-      const { account_id, account_name, subcategory, ...baseUpdates } = updates;
+      if (!isSubcatErr) throw error;
+      const { subcategory, ...baseUpdates } = updates;
       if (Object.keys(baseUpdates).length === 0) {
         // Nothing core to update — fetch current row so caller gets a valid object back
         const { data: cur, error: ce } = await supabase
@@ -204,13 +176,7 @@ export const dbService = {
       .update({ account_name: newName })
       .eq('user_id', userId)
       .eq('account_id', accountId);
-    if (error) {
-      const isColErr = error.code === 'PGRST204' || error.code === '42703' ||
-        (error.message || '').includes('account_name') ||
-        (error.message || '').includes('account_id');
-      if (!isColErr) throw error;
-      console.warn('[supabase] account_name column missing — DB rename skipped');
-    }
+    if (error) throw error;
   },
 
   async deleteAllUserData(userId) {

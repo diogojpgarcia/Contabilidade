@@ -267,7 +267,7 @@ const App = () => {
               onLogout={async () => {
                 await auth.handleLogout();
                 s.resetForLogout();
-                tx.initFromLoad({ rows: [], accountMap: {} });
+                tx.initFromLoad({ rows: [] });
               }}
               colorPalette={s.colorPalette}
               setColorPalette={s.setColorPalette}
@@ -285,7 +285,7 @@ const App = () => {
               onMigrateConfirm={s.handleMigrateConfirm}
               onMigrateDismiss={s.handleMigrateDismiss}
               onDataDeleted={() => {
-                tx.initFromLoad({ rows: [], accountMap: {} });
+                tx.initFromLoad({ rows: [] });
                 s.resetForLogout();
                 setActiveTab('home');
               }}
