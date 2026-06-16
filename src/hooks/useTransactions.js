@@ -6,7 +6,7 @@ import { computeAccountBalance } from '../utils/budgetUtils';
 import { tokensOf, derivePattern, descMatchesPattern } from '../utils/textMatch';
 import { validateTransaction } from '../utils/validateTransaction';
 import {
-  newTempId, isTempId, enqueueAdd, enqueueUpdate, enqueueDelete,
+  newTempId, newMutationId, isTempId, enqueueAdd, enqueueUpdate, enqueueDelete,
   amendQueuedAdd, removeQueuedAdd, removeEntry, getAll as getQueue, size as queueSize,
   isNetworkError,
 } from '../lib/offlineQueue';
@@ -70,6 +70,9 @@ export function useTransactions(currentUser) {
     // Rede de segurança: normaliza/valida (amount finito, data válida) antes de
     // tocar no estado ou na BD. Lança em dados inutilizáveis (apanhado a montante).
     const enriched = validateTransaction({ ...transaction, account_id: accId, account_name: accName });
+    // Chave de idempotência partilhada entre a tentativa online e o re-envio na
+    // fila — se o ack de um insert online se perder, o flush não duplica.
+    const mutationId = newMutationId();
 
     // Sem rede → cria com id temporário, otimista, e enfileira para sincronizar.
     const queueLocally = () => {
@@ -82,7 +85,7 @@ export function useTransactions(currentUser) {
         _pending: true,
       };
       setTransactions(prev => [optimistic, ...prev]);
-      enqueueAdd(enriched, tempId);
+      enqueueAdd(enriched, tempId, mutationId);
       refreshPending();
       return optimistic;
     };
@@ -90,7 +93,7 @@ export function useTransactions(currentUser) {
     if (isOffline()) return queueLocally();
 
     try {
-      const newTx = await dbService.addTransaction(currentUser.id, enriched);
+      const newTx = await dbService.addTransactionIdempotent(currentUser.id, enriched, mutationId);
       const txWithAccount = {
         ...newTx,
         account_id:   newTx.account_id   || accId   || null,
@@ -197,7 +200,7 @@ export function useTransactions(currentUser) {
       try {
         if (entry.kind === 'add') {
           const tx = entry.payload.transaction;
-          const saved = await dbService.addTransaction(currentUser.id, tx);
+          const saved = await dbService.addTransactionIdempotent(currentUser.id, tx, entry.payload.mutationId);
           const reconciled = {
             ...saved,
             account_id:   saved.account_id   ?? tx.account_id   ?? null,
@@ -259,22 +262,24 @@ export function useTransactions(currentUser) {
       amount: value, type: 'transfer', category: toName, date: today,
       account_id: toId, account_name: toName, subcategory: 'in',
     };
+    const outMut = newMutationId();
+    const inMut  = newMutationId();
 
     // Sem rede → cria os dois lados com ids temporários e enfileira ambos.
     const queueLocally = () => {
       const outTx = { ...outPayload, id: newTempId(), _pending: true };
       const inTx  = { ...inPayload,  id: newTempId(), _pending: true };
       setTransactions(prev => [outTx, inTx, ...prev]);
-      enqueueAdd(outPayload, outTx.id);
-      enqueueAdd(inPayload, inTx.id);
+      enqueueAdd(outPayload, outTx.id, outMut);
+      enqueueAdd(inPayload, inTx.id, inMut);
       refreshPending();
     };
 
     if (isOffline()) return queueLocally();
 
     try {
-      const rawOut = await dbService.addTransaction(currentUser.id, outPayload);
-      const rawIn  = await dbService.addTransaction(currentUser.id, inPayload);
+      const rawOut = await dbService.addTransactionIdempotent(currentUser.id, outPayload, outMut);
+      const rawIn  = await dbService.addTransactionIdempotent(currentUser.id, inPayload, inMut);
 
       const outTx = { ...rawOut, account_id: rawOut.account_id || fromId, account_name: rawOut.account_name || fromName };
       const inTx  = { ...rawIn,  account_id: rawIn.account_id  || toId,   account_name: rawIn.account_name  || toName  };

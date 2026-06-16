@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   getAll, size, clearQueue, newTempId, isTempId,
+  newMutationId,
   enqueueAdd, enqueueUpdate, enqueueDelete,
   amendQueuedAdd, removeQueuedAdd, removeEntry,
   isNetworkError, mergeSettingsPatch, getSettingsOverlay,
@@ -30,6 +31,17 @@ describe('offlineQueue — básico', () => {
     expect(q[0].kind).toBe('add');
     expect(q[0].payload.tempId).toBe('local-1');
     expect(q[1].payload.transaction.description).toBe('Pão');
+  });
+
+  it('enqueueAdd guarda a mutationId (idempotência) — gerada ou fornecida', () => {
+    enqueueAdd({ description: 'A' }, 'local-1');
+    expect(typeof getAll()[0].payload.mutationId).toBe('string');
+    expect(getAll()[0].payload.mutationId.length).toBeGreaterThan(0);
+
+    clearQueue();
+    const mid = newMutationId();
+    enqueueAdd({ description: 'B' }, 'local-2', mid);
+    expect(getAll()[0].payload.mutationId).toBe(mid);
   });
 });
 

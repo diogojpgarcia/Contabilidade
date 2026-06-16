@@ -115,6 +115,41 @@ export const dbService = {
     return mapTransaction(data[0]);
   },
 
+  // Insere de forma idempotente usando client_mutation_id (migração 002):
+  // re-enviar a mesma mutação devolve a MESMA linha em vez de duplicar.
+  // Degrada para addTransaction se não houver chave ou se a coluna/índice ainda
+  // não existirem na BD.
+  async addTransactionIdempotent(userId, transaction, mutationId) {
+    if (!mutationId) return this.addTransaction(userId, transaction);
+
+    const { date, description, amount, type, category, account_id, account_name } = transaction;
+    const row = { user_id: userId, date, description, amount, type, category, client_mutation_id: mutationId };
+    if (account_id   != null) row.account_id   = account_id;
+    if (account_name != null) row.account_name = account_name;
+
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .upsert([row], { onConflict: 'client_mutation_id', ignoreDuplicates: true })
+        .select();
+      if (error) throw error;
+      if (data && data.length) return mapTransaction(data[0]);
+
+      // Conflito: já tinha sido inserida num flush anterior — devolve a existente.
+      const { data: existing, error: e2 } = await supabase
+        .from('transactions').select('*').eq('client_mutation_id', mutationId).single();
+      if (e2) throw e2;
+      return mapTransaction(existing);
+    } catch (err) {
+      // Migração 002 ainda não aplicada (coluna/constraint em falta) → insert normal.
+      const isColErr = err.code === 'PGRST204' || err.code === '42703' || err.code === '42P10' ||
+        /client_mutation_id|no unique or exclusion constraint|on conflict/i.test(err.message || '');
+      if (!isColErr) throw err;
+      console.warn('[supabase] client_mutation_id ausente — insert sem idempotência (correr migração 002)');
+      return this.addTransaction(userId, transaction);
+    }
+  },
+
   async migrateUnlinkedTransactions(userId, accountId, accountName) {
     const { data, error } = await supabase
       .from('transactions')

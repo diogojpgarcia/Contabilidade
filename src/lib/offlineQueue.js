@@ -61,13 +61,20 @@ export function clearQueue() { persist([]); }
 /** Gera um id temporário para uma transação criada offline. */
 export function newTempId() { return `local-${randomId()}`; }
 
+/** Gera uma chave de idempotência (client_mutation_id) para uma escrita. */
+export function newMutationId() { return randomId(); }
+
 /** True se o id é de uma transação ainda não sincronizada. */
 export function isTempId(id) { return typeof id === 'string' && id.startsWith('local-'); }
 
-/** Enfileira a criação de uma transação (offline). */
-export function enqueueAdd(transaction, tempId) {
+/**
+ * Enfileira a criação de uma transação (offline). `mutationId` é a chave de
+ * idempotência partilhada com a tentativa online (se houver), para que um
+ * re-envio nunca duplique.
+ */
+export function enqueueAdd(transaction, tempId, mutationId = randomId()) {
   const q = loadQueue();
-  q.push({ id: randomId(), kind: 'add', payload: { transaction, tempId }, createdAt: Date.now() });
+  q.push({ id: randomId(), kind: 'add', payload: { transaction, tempId, mutationId }, createdAt: Date.now() });
   persist(q);
 }
 
