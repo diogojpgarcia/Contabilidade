@@ -3,6 +3,20 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        // Separa vendors estáveis em chunks próprios. Como o seu conteúdo
+        // raramente muda, o content-hash mantém-se entre deploys → o browser
+        // (e o precache do service worker) reutiliza-os, e cada deploy só
+        // obriga a re-descarregar o código da app que mudou.
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
