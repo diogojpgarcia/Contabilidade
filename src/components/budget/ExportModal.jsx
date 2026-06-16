@@ -156,7 +156,7 @@ export default function ExportModal({ open, onClose, transactions, patrimony, bu
       <div className="modal-content export-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h4>Exportar Relatório PDF</h4>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
         </div>
 
         <div className="export-body">

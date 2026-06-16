@@ -4,6 +4,7 @@ import { toast } from '../utils/toast';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
 import { computeAccountBalance } from '../utils/budgetUtils';
 import { tokensOf, derivePattern, descMatchesPattern } from '../utils/textMatch';
+import { validateTransaction } from '../utils/validateTransaction';
 import {
   newTempId, isTempId, enqueueAdd, enqueueUpdate, enqueueDelete,
   amendQueuedAdd, removeQueuedAdd, removeEntry, getAll as getQueue, size as queueSize,
@@ -66,7 +67,9 @@ export function useTransactions(currentUser) {
     const accId   = transaction.account_id || mainAccountId || null;
     const accName = transaction.account_name
       || (accId ? (patrimonyAccounts || []).find(a => a.id === accId)?.name || null : null);
-    const enriched = { ...transaction, account_id: accId, account_name: accName };
+    // Rede de segurança: normaliza/valida (amount finito, data válida) antes de
+    // tocar no estado ou na BD. Lança em dados inutilizáveis (apanhado a montante).
+    const enriched = validateTransaction({ ...transaction, account_id: accId, account_name: accName });
 
     // Sem rede → cria com id temporário, otimista, e enfileira para sincronizar.
     const queueLocally = () => {
@@ -130,21 +133,23 @@ export function useTransactions(currentUser) {
   };
 
   const handleEditTransaction = async (updatedTransaction) => {
-    const original = transactions.find(t => t.id === updatedTransaction.id);
+    // Rede de segurança: valida/normaliza (lança em valor/data inválidos).
+    const clean = validateTransaction(updatedTransaction);
+    const original = transactions.find(t => t.id === clean.id);
     const fields = {
-      amount:       updatedTransaction.amount,
-      type:         updatedTransaction.type,
-      category:     updatedTransaction.category,
-      subcategory:  updatedTransaction.subcategory || null,
-      description:  updatedTransaction.description || '',
-      date:         updatedTransaction.date,
-      account_id:   updatedTransaction.account_id   || null,
-      account_name: updatedTransaction.account_name || null,
+      amount:       clean.amount,
+      type:         clean.type,
+      category:     clean.category,
+      subcategory:  clean.subcategory || null,
+      description:  clean.description || '',
+      date:         clean.date,
+      account_id:   clean.account_id   || null,
+      account_name: clean.account_name || null,
     };
 
     // Optimistic update
     setTransactions(prev => prev.map(t =>
-      t.id === updatedTransaction.id ? { ...t, ...updatedTransaction } : t
+      t.id === clean.id ? { ...t, ...clean } : t
     ));
 
     // Editar uma transação ainda pendente → altera a própria entrada `add`

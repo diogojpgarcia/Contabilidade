@@ -526,7 +526,7 @@ const PatrimonyFormModal = ({
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h4>{modalTitle}</h4>
-          <button className="modal-close" onClick={closeModal}>×</button>
+          <button className="modal-close" onClick={closeModal} aria-label="Fechar">×</button>
         </div>
 
         {!formType ? (

@@ -122,7 +122,7 @@ const GoalsView = ({ goals = [], onGoalsChange, transactions = [] }) => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>Apagar objetivo?</h4>
-              <button className="modal-close" onClick={() => setConfirmDeleteId(null)}>×</button>
+              <button className="modal-close" onClick={() => setConfirmDeleteId(null)} aria-label="Fechar">×</button>
             </div>
             <div className="modal-body" style={{ padding: '0 0 8px' }}>
               <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
@@ -149,7 +149,7 @@ const GoalsView = ({ goals = [], onGoalsChange, transactions = [] }) => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>Novo Objetivo</h4>
-              <button className="modal-close" onClick={() => { setEditingGoalId(null); resetGoal(EMPTY_GOAL); }}>×</button>
+              <button className="modal-close" onClick={() => { setEditingGoalId(null); resetGoal(EMPTY_GOAL); }} aria-label="Fechar">×</button>
             </div>
             <div className="goal-form">
               <input type="text"   className="goal-input" placeholder="Nome do objetivo"

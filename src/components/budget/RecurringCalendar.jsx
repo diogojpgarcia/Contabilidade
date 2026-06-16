@@ -92,7 +92,7 @@ const RecurringCalendar = ({ recurringPayments, onClose }) => {
             <span className="rp-cal-month-label">{monthLabel}</span>
             <button className="rp-cal-nav-btn" onClick={nextMonth}>›</button>
           </div>
-          <button className="rp-cal-close" onClick={onClose}>✕</button>
+          <button className="rp-cal-close" onClick={onClose} aria-label="Fechar">✕</button>
         </div>
 
         <div className="rp-cal-grid">

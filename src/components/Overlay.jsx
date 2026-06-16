@@ -18,20 +18,28 @@ import { createPortal } from 'react-dom';
  *     <div className="my-sheet" onClick={e => e.stopPropagation()}>…</div>
  *   </Overlay>
  */
-export default function Overlay({ children, onClose }) {
+export default function Overlay({ children, onClose, label }) {
   const root = document.getElementById('overlay-root');
 
-  // Lock body scroll while any overlay is open
+  // Lock body scroll while any overlay is open + fechar com a tecla Escape (a11y).
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+    const onKey = (e) => { if (e.key === 'Escape' && onClose) onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
 
   if (!root) return null;
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={label || undefined}
       style={{
         position: 'fixed',
         inset: 0,

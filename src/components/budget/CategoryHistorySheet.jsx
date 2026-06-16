@@ -79,7 +79,7 @@ const CategoryHistorySheet = ({
             <div className="m-sheet-title">{catData?.cat.label || ''}</div>
             <div className="m-sheet-subtitle">{txs.length} transações este mês</div>
           </div>
-          <button className="m-sheet-close" onClick={onClose}>✕</button>
+          <button className="m-sheet-close" onClick={onClose} aria-label="Fechar">✕</button>
         </div>
 
         {/* Stats row */}

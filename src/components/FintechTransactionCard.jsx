@@ -405,7 +405,7 @@ const FintechTransactionCard = ({
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h4>Apagar transação?</h4>
-              <button className="modal-close" onClick={() => setConfirmDelete(false)}>×</button>
+              <button className="modal-close" onClick={() => setConfirmDelete(false)} aria-label="Fechar">×</button>
             </div>
             <div className="modal-body" style={{ padding: '0 0 8px' }}>
               <p style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>

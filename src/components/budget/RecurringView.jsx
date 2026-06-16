@@ -291,7 +291,7 @@ const RecurringView = ({
             <div className="rp-form-handle" />
             <div className="rp-form-header">
               <span className="rp-form-title">Confirmar Pagamento</span>
-              <button className="rp-form-close" onClick={() => setConfirmTarget(null)}>✕</button>
+              <button className="rp-form-close" onClick={() => setConfirmTarget(null)} aria-label="Fechar">✕</button>
             </div>
             <div className="rp-form-body">
               <div className="rp-confirm-info">
@@ -368,7 +368,7 @@ const RecurringView = ({
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>Apagar pagamento?</h4>
-              <button className="modal-close" onClick={() => setConfirmDeleteId(null)}>×</button>
+              <button className="modal-close" onClick={() => setConfirmDeleteId(null)} aria-label="Fechar">×</button>
             </div>
             <div className="modal-body" style={{ padding: '0 0 8px' }}>
               <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
@@ -427,7 +427,7 @@ const RecurringView = ({
               <span className="rp-form-title">
                 {editingId ? 'Editar Pagamento' : 'Novo Pagamento Recorrente'}
               </span>
-              <button className="rp-form-close" onClick={() => setShowForm(false)}>✕</button>
+              <button className="rp-form-close" onClick={() => setShowForm(false)} aria-label="Fechar">✕</button>
             </div>
 
             <div className="rp-form-body">
@@ -595,7 +595,7 @@ const RecurringView = ({
                 <div className="rp-modal-panel" onClick={e => e.stopPropagation()}>
                   <div className="rp-modal-header">
                     <span>Selecionar Categoria</span>
-                    <button className="rp-modal-close" onClick={() => setShowCategoryModal(false)}>✕</button>
+                    <button className="rp-modal-close" onClick={() => setShowCategoryModal(false)} aria-label="Fechar">✕</button>
                   </div>
                   <div className="rp-modal-list">
                     <button
@@ -631,7 +631,7 @@ const RecurringView = ({
                 <div className="rp-modal-panel" onClick={e => e.stopPropagation()}>
                   <div className="rp-modal-header">
                     <span>Selecionar Conta</span>
-                    <button className="rp-modal-close" onClick={() => setShowAccountModal(false)}>✕</button>
+                    <button className="rp-modal-close" onClick={() => setShowAccountModal(false)} aria-label="Fechar">✕</button>
                   </div>
                   <div className="rp-modal-list">
                     <button
