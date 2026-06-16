@@ -94,12 +94,12 @@ export function usePatrimonyPrices(externalPatrimony, onPatrimonyChange) {
     runRefresh();
     const interval = setInterval(runRefresh, CRYPTO_CACHE_TTL);
     return () => { cancelled = true; triggerRefreshRef.current = null; clearInterval(interval); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   // Re-trigger when patrimony loads from Supabase (race condition guard)
   useEffect(() => {
     triggerRefreshRef.current?.();
-  }, [externalPatrimony]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [externalPatrimony]);  
 
   // ── Sparkline history ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -132,13 +132,13 @@ export function usePatrimonyPrices(externalPatrimony, onPatrimonyChange) {
     fetchHistories();
     const id = setInterval(fetchHistories, HISTORY_TTL);
     return () => { cancelled = true; triggerHistoryRef.current = null; clearInterval(id); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   // Re-buscar histórico quando o património carrega do Supabase (mesma race
   // que os preços: sem isto, as sparklines ficavam vazias num arranque fresco).
   useEffect(() => {
     triggerHistoryRef.current?.();
-  }, [externalPatrimony]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [externalPatrimony]);  
 
   // ── Euribor 3M ────────────────────────────────────────────────────────────
   useEffect(() => {

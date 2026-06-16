@@ -28,8 +28,6 @@ const BudgetsView = ({
 
   const [editingCategoryId,  setEditingCategoryId]  = useState(null);
   const [showInactive,       setShowInactive]       = useState(false);
-  const [expandedCategoryId, setExpandedCategoryId] = useState(null);
-  const [navExpandedId,      setNavExpandedId]      = useState(null);
   const [sheetCategoryId,    setSheetCategoryId]    = useState(null);
   const [sheetVisible,       setSheetVisible]       = useState(false);
   const [animated,           setAnimated]           = useState(false);

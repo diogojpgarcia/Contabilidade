@@ -18,7 +18,7 @@ import './AddTab.css';
  *   onGoalsChange      — (updatedGoals) => void  (persiste e atualiza estado global)
  */
 const AddTab = ({ onTransactionAdded, onTransfer, patrimony, defaultAccount, goals = [], onGoalsChange, initialMode }) => {
-  const { currentUser, categories } = useAppContext();
+  const { categories } = useAppContext();
   const { showError, showWarning } = useToast();
   const [type, setType]             = useState(
     initialMode === 'transfer' ? 'transfer' :

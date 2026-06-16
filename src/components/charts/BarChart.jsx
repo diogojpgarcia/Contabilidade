@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 
-const BarChart = ({ data = [], height = 80, onBarPress }) => {
+const BarChart = ({ data = [], height = 80 }) => {
   const [animPct, setAnimPct] = useState(0);
   const [tooltip, setTooltip] = useState(null); // { idx, x, y }
   const rafRef = useRef(null);

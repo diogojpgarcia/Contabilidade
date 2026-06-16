@@ -94,7 +94,7 @@ const PatrimonyFormModal = ({
       setStockLoading(false);
     }, 350);
     return () => { if (stockTimer.current) clearTimeout(stockTimer.current); };
-  }, [stockQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stockQuery]);  
 
   // ── Debounced ETF search ──────────────────────────────────────────────────
   useEffect(() => {
@@ -108,7 +108,7 @@ const PatrimonyFormModal = ({
       setEtfLoading(false);
     }, 350);
     return () => { if (etfTimer.current) clearTimeout(etfTimer.current); };
-  }, [etfQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [etfQuery]);  
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const clearSearchForms = () => {

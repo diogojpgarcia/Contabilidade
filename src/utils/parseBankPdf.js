@@ -1,6 +1,6 @@
 // parseBankPdf.js — PDF bank statement parser (extracted from parseBankFile.js)
 import {
-  parseDate, parseAmount, cleanDescription,
+  parseDate, parseAmount,
   norm, matchesKeyword,
   SCORE_DATE, SCORE_DESC, SCORE_AMT, SCORE_DEBIT, SCORE_CREDIT, SCORE_BALANCE,
 } from './parseBankFile';

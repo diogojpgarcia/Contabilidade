@@ -45,7 +45,7 @@ const CloudAuth = ({ onSuccess }) => {
           return;
         }
         
-        const { user } = await authService.signUp(email, password, fullName);
+        await authService.signUp(email, password, fullName);
         setSuccess('Conta criada! Verifica o email para confirmar.');
         setTimeout(() => {
           setMode('login');

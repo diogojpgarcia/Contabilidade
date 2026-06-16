@@ -88,7 +88,7 @@ export default function ExportModal({ open, onClose, transactions, patrimony, bu
       .map(([name, amount]) => ({ name, amount: Math.round(amount), pct: expenses > 0 ? Math.round((amount / expenses) * 100) : 0 }));
     const label = period === '__q__' ? 'Último Trimestre' : period === '__s__' ? 'Último Semestre' : `Ano ${new Date().getFullYear()}`;
     return { period: label, income, expenses, savings, savingsRate, expenseTrend: null, topCategories: topCats, budgetBreaches: [], patrimonyTotal: summary.patrimonyTotal };
-  }, [period, isMultiMonth, currentMonth, transactions, financialMonthStartDay, summary.patrimonyTotal]); // eslint-disable-line
+  }, [period, isMultiMonth, currentMonth, transactions, financialMonthStartDay, summary.patrimonyTotal]);  
 
   const activeSummary = isMultiMonth ? multiSummary : summary;
   const periodLabel   = isMultiMonth ? activeSummary?.period : formatMonthLabel(singleMonth, financialMonthStartDay);

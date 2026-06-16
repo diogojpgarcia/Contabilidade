@@ -5,7 +5,6 @@ import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import { descMatchesPattern } from '../../utils/textMatch';
 import FintechTransactionCard from '../FintechTransactionCard';
 import { useAppContext } from '../../context/AppContext';
-import { useToast } from '../../context/ToastContext';
 import './ImportTab.css';
 
 /* Map a preview row to the shape FintechTransactionCard expects */
@@ -20,7 +19,6 @@ const toFtcShape = (tx, i) => ({
 
 const ImportTab = ({ onImportDone, learnedRules = [] }) => {
   const { currentUser } = useAppContext();
-  const { showSuccess } = useToast();
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading,  setLoading]  = useState(false);

@@ -13,7 +13,7 @@ const PALETTES = [
   { id: 'stone',    name: 'Stone',    bg: '#f0ebe4', accent: '#9f6b48' },
 ];
 
-const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, colorPalette = 'midnight', setColorPalette, patrimony = {}, defaultAccount, onDefaultAccountChange, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, financialFocus = null, onFocusChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange, migrationPending = null, onMigrateConfirm, onMigrateDismiss, onExportOpen }) => {
+const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, colorPalette = 'midnight', setColorPalette, patrimony = {}, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange, migrationPending = null, onMigrateConfirm, onMigrateDismiss, onExportOpen }) => {
   const { currentUser, categories, onCategoriesChange } = useAppContext();
   const user = currentUser; // alias para compatibilidade com referências existentes
   const [showCategoryManager, setShowCategoryManager] = useState(false);

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Plus, ArrowLeftRight, TrendingUp, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-import { getUpcomingPayments, relativeDueDate, safeNum, isConfirmedForMonth, getRecurringMonthKey } from '../../utils/recurringPayments';
+import { getUpcomingPayments, relativeDueDate, safeNum, getRecurringMonthKey } from '../../utils/recurringPayments';
 import { generateInsights } from '../../utils/insights';
 import { CategoryIconBubble } from '../../utils/categoryIcons';
 import CountUp from '../budget/CountUp';

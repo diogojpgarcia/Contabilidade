@@ -280,7 +280,7 @@ export const dbService = {
           .from('transactions').insert(plainRows).select();
         if (error) throw error;
         return { saved: (data || []).map(mapTransaction), skipped: 0 };
-      } catch (e2) {
+      } catch {
         // Último recurso: inserts individuais (mais lento, mas robusto).
         const saved = [];
         for (const tx of transactions) {

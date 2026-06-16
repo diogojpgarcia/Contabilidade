@@ -6,7 +6,6 @@ import FintechTransactionCard from '../FintechTransactionCard';
 import StatsOverview from '../budget/StatsOverview';
 import { generateInsights, computeFinancialScore, shiftMonth } from '../../utils/insights';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange, getCurrentFinancialMonth } from '../../utils/financialMonth';
-import { getCategoryMeta } from '../../utils/categoryIcons';
 import { toBudgetLabel } from '../../utils/categories-professional';
 import './StatsTab.css';
 
@@ -21,7 +20,7 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, onNavigate, financialFocus = null }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, financialFocus = null }) => {
   const { categories } = useAppContext();
 
   const [pickerTx, setPickerTx] = useState(null);
@@ -34,8 +33,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     const outer = statsTabRef.current?.closest('.main-content-new');
     if (outer) outer.scrollTop = 0;
   }, []); // só no mount, não em cada mudança de view
-  const [filterDate, setFilterDate] = useState(''); // Filter by specific date
-  const [expandedId, setExpandedId] = useState(null); // modern-theme expanded card
+  const [filterDate] = useState(''); // Filter by specific date
   const [historyView, setHistoryView] = useState('all');
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null = all accounts
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -160,11 +158,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const hasMore = pagedTransactions.length < visibleTransactions.length;
 
   // 6-month chart still needs all transactions so it can look at past months
-  const monthlyData       = getMonthlyData; // already memoized above
-  const maxAmount         = useMemo(
-    () => Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses))) || 1,
-    [monthlyData]
-  );
+  const monthlyData = getMonthlyData; // already memoized above
 
   const insights = useMemo(() => {
     try {
@@ -178,7 +172,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   const financialScore = useMemo(() => {
     try {
       return computeFinancialScore({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay });
-    } catch (e) {
+    } catch {
       return { score: 0, color: 'var(--cosmos-text-3)', label: '—' };
     }
   }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);

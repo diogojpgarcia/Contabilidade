@@ -27,7 +27,6 @@ export function searchAssets(query, types = null, limit = 8) {
   if (!query?.trim()) return [];
 
   const q    = query.trim().toLowerCase();
-  const qUp  = query.trim().toUpperCase();
 
   const pool = types
     ? ASSETS.filter(a => types.includes(a.type))

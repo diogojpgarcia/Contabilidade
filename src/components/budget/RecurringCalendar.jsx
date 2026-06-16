@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Overlay from '../Overlay';
-import { getOccurrencesInRange, shortDate, FREQ_LABELS } from '../../utils/recurringPayments';
+import { getOccurrencesInRange, FREQ_LABELS } from '../../utils/recurringPayments';
 
 const DAY_HEADERS = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 

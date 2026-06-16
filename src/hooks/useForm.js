@@ -33,7 +33,7 @@ export function useForm(initialData) {
       draftRef.current = initialData;
       initialized.current = true;
     }
-  }, [initialData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialData]);  
 
   /** Update one key — safe to call directly from onChange */
   function setField(key, value) {

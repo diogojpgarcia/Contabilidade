@@ -3,7 +3,7 @@
  * First-use tour — shown once, dismissed permanently via localStorage flag.
  * 4 slides covering the main tabs.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const STORAGE_KEY = 'financas_onboarding_done';
 

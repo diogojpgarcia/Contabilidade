@@ -22,7 +22,7 @@ export function useAuth() {
       setCurrentUser(session?.user ?? null);
     });
     return () => subscription?.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   const checkUserSession = async () => {
     try {

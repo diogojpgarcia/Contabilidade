@@ -4,8 +4,8 @@ import { getCategoryMeta } from '../../utils/categoryIcons';
 import { STATUS } from '../../utils/budgetUtils';
 
 const CategoryHistorySheet = ({
-  catId, categories, txByCategory, budgets, sortedItems,
-  animated: budgetAnimated, isVisible, onClose,
+  catId, txByCategory, sortedItems,
+  isVisible, onClose,
   onLimitChange, onSave,
 }) => {
   const [txVisible,    setTxVisible]    = useState([]);

@@ -601,13 +601,6 @@ const CRYPTO_PERIOD_DAYS = {
   '6M': 180, '1A': 365, '5A': 1825, 'Tudo': 'max',
 };
 
-function formatLabel(dateStr, period) {
-  const d = new Date(dateStr);
-  if (period === '1D') return d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-  if (period === '1A') return d.toLocaleDateString('pt-PT', { month: 'short', year: '2-digit' });
-  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
-}
-
 function formatCryptoLabel(ts, period) {
   const d = new Date(ts);
   if (period === '1D') return d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
@@ -625,7 +618,6 @@ export const fetchPeriodHistory = async (sym, period, type) => {
     if (type === 'crypto') {
       const id = toCoinId(sym);
       const days = CRYPTO_PERIOD_DAYS[period] ?? 7;
-      const interval = period === '1D' ? 'hourly' : 'daily';
       const { signal, clear } = abortAfter(FETCH_TIMEOUT);
       const res = await apiFetch(
         `/api/crypto-history?coin=${encodeURIComponent(id)}&days=${days}`,

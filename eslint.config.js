@@ -17,7 +17,12 @@ export default [
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       // Avisos para limpeza; código não-bloqueante. Erros só para bugs reais.
-      'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', {
+        varsIgnorePattern: '^[A-Z_]',
+        argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        ignoreRestSiblings: true, // padrão idiomático: omitir chave via { x, ...resto }
+      }],
       'no-empty': ['warn', { allowEmptyCatch: true }],
       'no-useless-escape': 'warn',   // escapes de regex benignos — não são bugs
       'react-hooks/exhaustive-deps': 'warn',

@@ -42,7 +42,6 @@ const StatsOverview = ({
   monthlyData,
   categoryData,
   selectedCategories, setSelectedCategories,
-  getCategoryMonthlyData,
   insights, financialScore,
   fmt,
   onShowLog,

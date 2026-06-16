@@ -70,12 +70,6 @@ function safe(y, need=24) {
   return (y+need > PAGE_H-M-10) ? newPage() : y;
 }
 
-function hLine(y, col=C.divider) {
-  _doc.setDrawColor(...col);
-  _doc.setLineWidth(0.25);
-  _doc.line(M, y, PAGE_W-M, y);
-  return y+2;
-}
 
 // Filled rounded rect — no alpha
 function card(x, y, w, h, bg=C.cardBg, borderCol=C.cardBorder) {

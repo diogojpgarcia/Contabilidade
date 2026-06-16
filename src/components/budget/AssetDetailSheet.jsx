@@ -158,7 +158,7 @@ const PremiumChart = React.memo(({ prices, isPos, animKey, onScrubChange, onScru
       if (animRAF.current)  cancelAnimationFrame(animRAF.current);
       if (scrubRAF.current) cancelAnimationFrame(scrubRAF.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [animKey]);
 
   // ── Scrub RAF loop (runs only while pointer is down) ─────────────────────
@@ -251,7 +251,7 @@ const PremiumChart = React.memo(({ prices, isPos, animKey, onScrubChange, onScru
     pendingRatioRef.current = getRatio(e.clientX, e.currentTarget);
   }, []);
 
-  const onUp = useCallback((e) => {
+  const onUp = useCallback(() => {
     isScrubbingRef.current  = false;
     pendingRatioRef.current = null;
     lastIdxRef.current      = -1;
