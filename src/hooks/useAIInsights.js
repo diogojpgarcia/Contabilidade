@@ -6,6 +6,20 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { readJsonStringField, tryParseJsonObject } from '../utils/streamParse';
+
+// Normaliza campos em falta para os consumidores nunca terem de guardar undefined.
+const safeShape = (o = {}) => ({
+  summary:          o.summary          || '',
+  narrative:        o.narrative        || '',
+  detailedAnalysis: o.detailedAnalysis || '',
+  strengths:        Array.isArray(o.strengths)        ? o.strengths        : [],
+  concerns:         Array.isArray(o.concerns)         ? o.concerns         : [],
+  recommendations:  Array.isArray(o.recommendations)  ? o.recommendations  : [],
+  categoryInsights: Array.isArray(o.categoryInsights) ? o.categoryInsights : [],
+  projections:      o.projections      || '',
+  outlook:          o.outlook          || '',
+});
 
 // LRU cache — max 12 entries (one per month for a year's browsing history)
 const CACHE_MAX = 12;
@@ -83,24 +97,47 @@ export function useAIInsights(summary, behavioralInsights = []) {
         body:    JSON.stringify(payload),
         signal:  controller.signal,
       }))
-      .then(r => {
+      .then(async (r) => {
         if (!r.ok) throw new Error(`API ${r.status}`);
-        return r.json();
-      })
-      .then(result => {
-        // Normalise missing fields so consumers never need to guard undefined.map()
-        const safe = {
-          summary:         result.summary         || '',
-          narrative:       result.narrative        || '',
-          detailedAnalysis:result.detailedAnalysis || '',
-          strengths:       Array.isArray(result.strengths)       ? result.strengths       : [],
-          concerns:        Array.isArray(result.concerns)        ? result.concerns        : [],
-          recommendations: Array.isArray(result.recommendations) ? result.recommendations : [],
-          categoryInsights:Array.isArray(result.categoryInsights)? result.categoryInsights: [],
-          projections:     result.projections      || '',
-          outlook:         result.outlook          || '',
-        };
-        cacheSet(cacheKey, safe);
+
+        // Sem suporte a stream (ou resposta JSON simples) → parse direto.
+        if (!r.body || !r.body.getReader) {
+          const json = await r.json();
+          const safe = safeShape(json);
+          cacheSet(cacheKey, safe);
+          setData(safe);
+          setLoading(false);
+          return;
+        }
+
+        // Stream: lê os deltas e mostra a prosa a fluir; parse estrito no fim.
+        const reader  = r.body.getReader();
+        const decoder = new TextDecoder();
+        let acc = '';
+        let gotData = false;
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          acc += decoder.decode(value, { stream: true });
+          if (!gotData) { gotData = true; setLoading(false); } // mostra a prosa a fluir
+          const whole = tryParseJsonObject(acc);
+          if (whole) {
+            setData({ ...safeShape(whole), _streaming: true });
+          } else {
+            setData({
+              ...safeShape({}),
+              summary:          readJsonStringField(acc, 'summary')          || '',
+              narrative:        readJsonStringField(acc, 'narrative')        || '',
+              detailedAnalysis: readJsonStringField(acc, 'detailedAnalysis') || '',
+              _streaming: true,
+            });
+          }
+        }
+
+        const finalObj = tryParseJsonObject(acc);
+        if (!finalObj) throw new Error('No JSON in streamed response');
+        const safe = safeShape(finalObj);
+        cacheSet(cacheKey, safe);   // cache só o resultado final e completo
         setData(safe);
         setLoading(false);
       })

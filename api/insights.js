@@ -183,6 +183,7 @@ Responde APENAS com JSON válido, sem markdown, sem texto extra:
       body: JSON.stringify({
         model:         'claude-sonnet-4-6',
         max_tokens:    3000,
+        stream:        true,                 // stream incremental para o cliente
         output_config: { effort: 'medium' }, // GA no Sonnet 4.6 — equilíbrio qualidade/latência
         messages:      [{ role: 'user', content: prompt }],
       }),
@@ -193,17 +194,38 @@ Responde APENAS com JSON válido, sem markdown, sem texto extra:
       return res.status(502).json({ error: 'Claude API error' });
     }
 
-    const data  = await response.json();
-    const text  = data.content?.[0]?.text || '';
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) {
-      console.error('[insights] No JSON in response:', text);
-      return res.status(502).json({ error: 'No JSON in response' });
-    }
+    // Faz pipe dos text deltas (SSE da Anthropic) para o cliente em texto simples.
+    // O cliente acumula e faz o parse do JSON final (ver useAIInsights).
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('X-Accel-Buffering', 'no');
 
-    return res.json(JSON.parse(match[0]));
+    const reader  = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // guarda a última linha (possivelmente parcial)
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const payload = trimmed.slice(5).trim();
+        if (!payload || payload === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(payload);
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            res.write(evt.delta.text);
+          }
+        } catch { /* keep-alive / linha SSE parcial — ignora */ }
+      }
+    }
+    return res.end();
   } catch (err) {
     console.error('[insights] Error:', err);
-    return res.status(500).json({ error: err.message });
+    if (!res.headersSent) return res.status(500).json({ error: err.message });
+    return res.end();
   }
 };

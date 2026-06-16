@@ -24,11 +24,12 @@ const AIInsightsPanel = ({ summary, behavioralInsights = [] }) => {
         <div className="aip-title">
           <Sparkles size={16} className="aip-spark" />
           <span>Análise Inteligente</span>
+          {data?._streaming && <span className="aip-streaming">a escrever…</span>}
         </div>
         <button
           className={`aip-refresh ${loading ? 'aip-refresh--spin' : ''}`}
           onClick={refresh}
-          disabled={loading}
+          disabled={loading || data?._streaming}
           aria-label="Atualizar análise"
         >
           <RefreshCw size={14} />

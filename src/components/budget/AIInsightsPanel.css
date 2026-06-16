@@ -33,6 +33,15 @@
 }
 .aip-spark { color: var(--cosmos-accent); }
 
+.aip-streaming {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--cosmos-accent);
+  opacity: 0.85;
+  animation: aip-pulse 1.2s ease-in-out infinite;
+}
+@keyframes aip-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.9; } }
+
 .aip-refresh {
   display: flex;
   align-items: center;
