@@ -42,6 +42,24 @@ const isNonDisc = (label) => {
   return NON_DISC_KW.some(kw => l.includes(kw));
 };
 
+// Necessidades (regra 50/30/20) — essenciais e não-discricionários.
+// Tudo o que não bate aqui conta como "desejo" (discricionário).
+const _norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const NEEDS_KW = [
+  'habitac', 'renda', 'casa', 'hipotec', 'condomin',
+  'utilities', 'conta', 'agua', 'luz', 'eletric', 'electric', 'gas', 'energia',
+  'internet', 'telecom', 'telemovel', 'telefone',
+  'aliment', 'supermerc', 'merceari', 'comida',
+  'saude', 'medic', 'farmac', 'hospital', 'clinic', 'dentista', 'consulta',
+  'transport', 'combustivel', 'gasolina', 'passe', 'portagem',
+  'seguro', 'educac', 'escola', 'propina', 'creche',
+  'emprestimo', 'credito', 'divida', 'imposto', 'irs', 'iva', 'finanças', 'financas',
+];
+export const isNeed = (label) => {
+  const n = _norm(label);
+  return !!n && NEEDS_KW.some(kw => n.includes(kw));
+};
+
 export const generateInsights = ({
   transactions, budgets, categories, selectedMonth,
   startDay = 1, focus = null, maxResults = 4,
@@ -492,6 +510,24 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
       }, 0)
     : null;
 
+  // Estrutura 50/30/20 — necessidades vs desejos vs poupança (% do rendimento).
+  const needs = Object.entries(byCat).reduce((s, [label, amt]) => s + (isNeed(label) ? amt : 0), 0);
+  const wants = Math.max(0, expenses - needs);
+  const pctOfIncome = (v) => (income > 0 ? Math.round((v / income) * 100) : null);
+  const fiftyThirtyTwenty = {
+    needs:      Math.round(needs),
+    wants:      Math.round(wants),
+    savings:    Math.round(savings),
+    needsPct:   pctOfIncome(needs),
+    wantsPct:   pctOfIncome(wants),
+    savingsPct: savingsRate,
+  };
+
+  // Cobertura do fundo de emergência (meta 3-6 meses de despesas).
+  const emergencyMonths = (patrimonyTotal && expenses > 0)
+    ? Math.round((patrimonyTotal / expenses) * 10) / 10
+    : null;
+
   return {
     period: formatMonthLabel(selectedMonth, startDay),
     income:        Math.round(income),
@@ -506,5 +542,7 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
     txnCount,
     avgTxnSize,
     patrimonyTotal: patrimonyTotal ? Math.round(patrimonyTotal) : null,
+    fiftyThirtyTwenty,
+    emergencyMonths,
   };
 };

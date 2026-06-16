@@ -39,6 +39,8 @@ module.exports = async function handler(req, res) {
     txnCount,
     avgTxnSize,
     patrimonyTotal,
+    fiftyThirtyTwenty = null,
+    emergencyMonths   = null,
     behavioralInsights = [],
   } = req.body || {};
 
@@ -118,7 +120,8 @@ Saldo:          ${fmtEur(savings)} (taxa de poupança: ${savingsRateStr})
 Tendência:      ${trendStr}
 Transações:     ${txnStr}
 ${annualSavingsProjection ? `Projeção anual (ritmo atual): ${fmtEur(annualSavingsProjection)} em poupanças` : ''}
-${monthsOfExpensesCovered ? `Cobertura de emergência: ${monthsOfExpensesCovered} meses de despesas cobertos pelo património` : ''}
+${fiftyThirtyTwenty ? `Estrutura 50/30/20 (real): necessidades ${fmtEur(fiftyThirtyTwenty.needs)} (${fiftyThirtyTwenty.needsPct ?? '?'}% do rendimento) · desejos ${fmtEur(fiftyThirtyTwenty.wants)} (${fiftyThirtyTwenty.wantsPct ?? '?'}%) · poupança ${fiftyThirtyTwenty.savingsPct ?? '?'}%` : ''}
+${(emergencyMonths ?? monthsOfExpensesCovered) ? `Cobertura de emergência: ${emergencyMonths ?? monthsOfExpensesCovered} meses de despesas cobertos pelo património (meta 3-6 meses)` : ''}
 
 TOP CATEGORIAS (com tendência 3 meses):
   ${catLines}
