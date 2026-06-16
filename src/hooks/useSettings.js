@@ -106,6 +106,11 @@ export function useSettings(currentUser, txHook) {
       return;
     }
     setIsOffline(false);
+
+    // Empurra escritas offline pendentes ANTES de puxar do servidor — senão o
+    // reload sobrepunha-se às transações criadas/editadas sem rede.
+    await txHook.flushQueue?.().catch(() => {});
+
     const requestId = ++loadRequestId.current;
     setIsLoadingData(true);
 

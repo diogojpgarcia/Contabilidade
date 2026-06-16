@@ -148,10 +148,18 @@ const App = () => {
     <ToastProvider>
     <AppProvider value={appContextValue}>
     <div className="app-new fintech-ui modern-ui">
-      {s.isOffline && (
-        <div className="offline-banner" role="alert">
-          <span>📡 Sem ligação — a mostrar dados em cache</span>
-          <button onClick={s.loadUserData} className="offline-retry-btn">Tentar novamente</button>
+      {(s.isOffline || tx.pendingCount > 0) && (
+        <div className={`offline-banner ${s.isOffline ? '' : 'offline-banner--syncing'}`} role="alert">
+          <span>
+            {s.isOffline
+              ? (tx.pendingCount > 0
+                  ? `📡 Sem ligação — ${tx.pendingCount} alteração(ões) por sincronizar`
+                  : '📡 Sem ligação — a mostrar dados em cache')
+              : `↑ ${tx.pendingCount} alteração(ões) por sincronizar`}
+          </span>
+          <button onClick={s.loadUserData} className="offline-retry-btn">
+            {s.isOffline ? 'Tentar novamente' : 'Sincronizar'}
+          </button>
         </div>
       )}
       <main className="main-content-new" ref={mainContentRef}>

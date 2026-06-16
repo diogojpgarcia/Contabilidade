@@ -4,6 +4,17 @@ import { toast } from '../utils/toast';
 import { CATEGORIES_EXPENSE, CATEGORIES_INCOME } from '../utils/categories-professional';
 import { computeAccountBalance } from '../utils/budgetUtils';
 import { tokensOf, derivePattern, descMatchesPattern } from '../utils/textMatch';
+import {
+  newTempId, isTempId, enqueueAdd, enqueueUpdate, enqueueDelete,
+  amendQueuedAdd, removeQueuedAdd, removeEntry, getAll as getQueue, size as queueSize,
+} from '../lib/offlineQueue';
+
+// Erro de rede (offline/flaky) vs. erro real (validação, RLS). O Supabase usa
+// fetch → offline lança TypeError "Failed to fetch" (iOS Safari: "Load failed").
+const isNetworkError = (err) =>
+  typeof navigator !== 'undefined' && !navigator.onLine ||
+  err?.name === 'TypeError' ||
+  /failed to fetch|networkerror|load failed|network request failed/i.test(err?.message || '');
 
 /**
  * useTransactions — responsável por TODA a lógica de transações.
@@ -21,6 +32,7 @@ export function useTransactions(currentUser) {
   const [transactions, setTransactions] = useState([]);
   const [learnedRules, setLearnedRules] = useState([]);
   const [bulkPending, setBulkPending] = useState(null);
+  const [pendingCount, setPendingCount] = useState(() => queueSize());
   const [categories, setCategories] = useState({
     expense: CATEGORIES_EXPENSE,
     income: CATEGORIES_INCOME,
@@ -52,37 +64,70 @@ export function useTransactions(currentUser) {
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
 
+  const refreshPending = () => setPendingCount(queueSize());
+
   const handleAddTransaction = async (transaction, mainAccountId, patrimonyAccounts) => {
+    const accId   = transaction.account_id || mainAccountId || null;
+    const accName = transaction.account_name
+      || (accId ? (patrimonyAccounts || []).find(a => a.id === accId)?.name || null : null);
+    const enriched = { ...transaction, account_id: accId, account_name: accName };
+
+    // Sem rede → cria com id temporário, otimista, e enfileira para sincronizar.
+    const queueLocally = () => {
+      const tempId = newTempId();
+      const optimistic = {
+        ...enriched,
+        id: tempId,
+        amount: parseFloat(enriched.amount) || 0,
+        type: enriched.type || 'expense',
+        _pending: true,
+      };
+      setTransactions(prev => [optimistic, ...prev]);
+      enqueueAdd(enriched, tempId);
+      refreshPending();
+      return optimistic;
+    };
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return queueLocally();
+
     try {
-      const accId   = transaction.account_id || mainAccountId || null;
-      const accName = transaction.account_name
-        || (accId ? (patrimonyAccounts || []).find(a => a.id === accId)?.name || null : null);
-
-      const newTx = await dbService.addTransaction(currentUser.id, {
-        ...transaction,
-        account_id:   accId,
-        account_name: accName,
-      });
-
+      const newTx = await dbService.addTransaction(currentUser.id, enriched);
       const txWithAccount = {
         ...newTx,
         account_id:   newTx.account_id   || accId   || null,
         account_name: newTx.account_name || accName || null,
       };
       setTransactions(prev => [txWithAccount, ...prev]);
-
       return txWithAccount;
     } catch (error) {
+      if (isNetworkError(error)) return queueLocally();
       console.error('❌ Error adding transaction:', error);
       throw error;
     }
   };
 
   const handleDeleteTransaction = async (id) => {
+    // Transação ainda pendente (offline) → cancela a criação enfileirada.
+    if (isTempId(id)) {
+      removeQueuedAdd(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      refreshPending();
+      return;
+    }
+
+    const removeLocally = () => {
+      enqueueDelete(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      refreshPending();
+    };
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return removeLocally();
+
     try {
       await dbService.deleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
     } catch (error) {
+      if (isNetworkError(error)) return removeLocally();
       console.error('❌ Error deleting transaction:', error);
       throw error;
     }
@@ -90,24 +135,40 @@ export function useTransactions(currentUser) {
 
   const handleEditTransaction = async (updatedTransaction) => {
     const original = transactions.find(t => t.id === updatedTransaction.id);
+    const fields = {
+      amount:       updatedTransaction.amount,
+      type:         updatedTransaction.type,
+      category:     updatedTransaction.category,
+      subcategory:  updatedTransaction.subcategory || null,
+      description:  updatedTransaction.description || '',
+      date:         updatedTransaction.date,
+      account_id:   updatedTransaction.account_id   || null,
+      account_name: updatedTransaction.account_name || null,
+    };
 
     // Optimistic update
     setTransactions(prev => prev.map(t =>
       t.id === updatedTransaction.id ? { ...t, ...updatedTransaction } : t
     ));
 
-    try {
-      const updated = await dbService.updateTransaction(updatedTransaction.id, {
-        amount:       updatedTransaction.amount,
-        type:         updatedTransaction.type,
-        category:     updatedTransaction.category,
-        subcategory:  updatedTransaction.subcategory || null,
-        description:  updatedTransaction.description || '',
-        date:         updatedTransaction.date,
-        account_id:   updatedTransaction.account_id   || null,
-        account_name: updatedTransaction.account_name || null,
-      });
+    // Editar uma transação ainda pendente → altera a própria entrada `add`
+    // (mantém o invariante: a fila nunca tem update/delete com id temporário).
+    if (isTempId(updatedTransaction.id)) {
+      amendQueuedAdd(updatedTransaction.id, fields);
+      refreshPending();
+      return;
+    }
 
+    const queueLocally = () => {
+      enqueueUpdate(updatedTransaction.id, fields);
+      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? { ...t, _pending: true } : t));
+      refreshPending();
+    };
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return queueLocally();
+
+    try {
+      const updated = await dbService.updateTransaction(updatedTransaction.id, fields);
       const merged = {
         ...updated,
         account_id:   updatedTransaction.account_id   ?? updated.account_id   ?? null,
@@ -115,9 +176,48 @@ export function useTransactions(currentUser) {
       };
       setTransactions(prev => prev.map(t => t.id === merged.id ? merged : t));
     } catch (error) {
+      if (isNetworkError(error)) return queueLocally();
       console.error('❌ Error updating transaction:', error);
       if (original) setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? original : t));
       throw error;
+    }
+  };
+
+  // Reproduz a fila offline contra o Supabase, por ordem. Chamado no boot e na
+  // reconexão (ANTES de recarregar do servidor, senão o reload perdia as
+  // escritas offline). Para no primeiro erro de rede e tenta de novo depois.
+  const flushQueue = async () => {
+    if (!currentUser) return;
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+
+    for (const entry of getQueue()) {
+      try {
+        if (entry.kind === 'add') {
+          const tx = entry.payload.transaction;
+          const saved = await dbService.addTransaction(currentUser.id, tx);
+          const reconciled = {
+            ...saved,
+            account_id:   saved.account_id   ?? tx.account_id   ?? null,
+            account_name: saved.account_name ?? tx.account_name ?? null,
+          };
+          setTransactions(prev => prev.some(t => t.id === entry.payload.tempId)
+            ? prev.map(t => t.id === entry.payload.tempId ? reconciled : t)
+            : [reconciled, ...prev]);
+        } else if (entry.kind === 'update') {
+          await dbService.updateTransaction(entry.payload.id, entry.payload.updates);
+          setTransactions(prev => prev.map(t => t.id === entry.payload.id ? { ...t, _pending: false } : t));
+        } else if (entry.kind === 'delete') {
+          await dbService.deleteTransaction(entry.payload.id);
+        }
+        removeEntry(entry.id);
+        refreshPending();
+      } catch (error) {
+        if (isNetworkError(error)) break; // ainda offline — mantém o resto
+        // Erro real (validação/RLS): descarta para não bloquear a fila.
+        console.error('[offlineQueue] mutação descartada após erro:', entry, error);
+        removeEntry(entry.id);
+        refreshPending();
+      }
     }
   };
 
@@ -311,9 +411,11 @@ export function useTransactions(currentUser) {
     learnedRules,
     bulkPending,
     categories,
+    pendingCount,
     // Boot
     initFromLoad,
     loadUserTransactions,
+    flushQueue,
     // CRUD
     handleAddTransaction,
     handleDeleteTransaction,

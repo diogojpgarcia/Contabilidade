@@ -499,6 +499,11 @@ input::placeholder {
   flex-shrink: 0;
 }
 
+/* Online mas com escritas offline ainda por sincronizar */
+.offline-banner--syncing {
+  background: #1d4ed8;
+}
+
 .offline-retry-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.4);
