@@ -207,25 +207,29 @@ export function useSettings(currentUser, txHook) {
     setCurrentMonth(getMonthKey(new Date().toISOString()));
   };
 
+  // Persiste um patch de user_settings; offline (ou falha de rede) acumula numa
+  // overlay que é empurrada na reconexão, ANTES do reload (ver loadUserData).
+  const persistSettings = useCallback((patch) => {
+    if (!currentUser?.id) return;
+    if (!navigator.onLine) { mergeSettingsPatch(patch); return; }
+    dbService.updateUserSettings(currentUser.id, patch).catch((e) => {
+      if (isNetworkError(e)) mergeSettingsPatch(patch);
+      else toast.error('Erro ao guardar: ' + e.message);
+    });
+  }, [currentUser]);
+
   // ── Paleta ────────────────────────────────────────────────────────────────
   const setColorPalette = useCallback((palette) => {
     setColorPaletteState(palette);
     applyPaletteToDOM(palette);
     localStorage.setItem('cosmos-palette', palette);
-    if (currentUser?.id) {
-      dbService.updateUserSettings(currentUser.id, { color_palette: palette }).catch(e => toast.error('Erro ao guardar paleta: ' + e.message));
-    }
-  }, [currentUser]);
+    persistSettings({ color_palette: palette });
+  }, [persistSettings]);
 
   // ── Patrimony ─────────────────────────────────────────────────────────────
-  const handlePatrimonyChange = async (newPatrimony) => {
+  const handlePatrimonyChange = (newPatrimony) => {
     setPatrimony(newPatrimony);
-    try {
-      await dbService.updateUserSettings(currentUser.id, { patrimony: newPatrimony });
-    } catch (error) {
-      console.error('Error saving patrimony:', error);
-      toast.error('Erro ao guardar património.');
-    }
+    persistSettings({ patrimony: newPatrimony });
   };
 
   // Muda a conta principal. Se houver transações sem conta associada, guarda o
@@ -233,7 +237,7 @@ export function useSettings(currentUser, txHook) {
   // (substitui o window.confirm bloqueante).
   const handleMainAccountChange = async (accountId) => {
     setMainAccountId(accountId);
-    dbService.updateUserSettings(currentUser.id, { mainAccountId: accountId }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+    persistSettings({ mainAccountId: accountId });
 
     if (!accountId) return;
     const acc = (patrimony.accounts || []).find(a => a.id === accountId);
@@ -274,14 +278,9 @@ export function useSettings(currentUser, txHook) {
   const handleMigrateDismiss = () => setMigrationPending(null);
 
   // ── Orçamentos ────────────────────────────────────────────────────────────
-  const handleBudgetsChange = async (newBudgets) => {
+  const handleBudgetsChange = (newBudgets) => {
     setBudgets(newBudgets);
-    try {
-      await dbService.updateUserSettings(currentUser.id, { category_budgets: newBudgets });
-    } catch (error) {
-      console.error('Error saving budgets:', error);
-      toast.error('Erro ao guardar orçamento.');
-    }
+    persistSettings({ category_budgets: newBudgets });
   };
 
   // ── Mês financeiro ────────────────────────────────────────────────────────
@@ -290,25 +289,12 @@ export function useSettings(currentUser, txHook) {
     setFinancialMonthStartDay(sd);
     setUseFinancialMonth(enabled);
     setCurrentMonth(getCurrentFinancialMonth(enabled ? sd : 1));
-    dbService.updateUserSettings(currentUser.id, {
-      financialMonthStartDay: sd,
-      useFinancialMonth: enabled,
-    }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+    persistSettings({ financialMonthStartDay: sd, useFinancialMonth: enabled });
   };
 
   const handleHomeUsesFinancialMonthChange = (enabled) => {
     setHomeUsesFinancialMonth(enabled);
-    dbService.updateUserSettings(currentUser.id, { homeUsesFinancialMonth: enabled }).catch(e => toast.error('Erro ao guardar: ' + e.message));
-  };
-
-  // Persiste um patch de user_settings; offline (ou falha de rede) acumula numa
-  // overlay que é empurrada na reconexão (ver loadUserData).
-  const persistSettings = (patch) => {
-    if (!navigator.onLine) { mergeSettingsPatch(patch); return; }
-    dbService.updateUserSettings(currentUser.id, patch).catch((e) => {
-      if (isNetworkError(e)) mergeSettingsPatch(patch);
-      else toast.error('Erro ao guardar: ' + e.message);
-    });
+    persistSettings({ homeUsesFinancialMonth: enabled });
   };
 
   // ── Recorrentes ───────────────────────────────────────────────────────────
@@ -390,20 +376,15 @@ export function useSettings(currentUser, txHook) {
   };
 
   // ── Objetivos ─────────────────────────────────────────────────────────────
-  const handleGoalsChange = async (updatedGoals) => {
+  const handleGoalsChange = (updatedGoals) => {
     setGoals(updatedGoals);
-    try {
-      await dbService.updateUserSettings(currentUser.id, { goals: updatedGoals });
-    } catch (error) {
-      console.error('Error saving goals:', error);
-      toast.error('Erro ao guardar objetivos.');
-    }
+    persistSettings({ goals: updatedGoals });
   };
 
   // ── Focus financeiro ──────────────────────────────────────────────────────
   const handleFocusChange = (focus) => {
     setFinancialFocus(focus);
-    dbService.updateUserSettings(currentUser.id, { financial_focus: focus }).catch(e => toast.error('Erro ao guardar: ' + e.message));
+    persistSettings({ financial_focus: focus });
   };
 
   return {
