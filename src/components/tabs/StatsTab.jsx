@@ -4,7 +4,8 @@ import { useAppContext } from '../../context/AppContext';
 import CategoryPicker from '../CategoryPicker.jsx';
 import FintechTransactionCard from '../FintechTransactionCard';
 import StatsOverview from '../budget/StatsOverview';
-import { generateInsights, computeFinancialScore, shiftMonth } from '../../utils/insights';
+import AIInsightsPanel from '../budget/AIInsightsPanel';
+import { generateInsights, computeFinancialScore, shiftMonth, buildInsightsSummary } from '../../utils/insights';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange, getCurrentFinancialMonth } from '../../utils/financialMonth';
 import { toBudgetLabel } from '../../utils/categories-professional';
 import './StatsTab.css';
@@ -177,6 +178,16 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
     }
   }, [transactions, budgets, categories, currentMonth, financialMonthStartDay]);
 
+  // Resumo anonimizado para a análise IA (só quando o mês tem dados).
+  const aiSummary = useMemo(() => {
+    try {
+      const s = buildInsightsSummary({ transactions, budgets, categories, patrimony, selectedMonth: currentMonth, startDay: financialMonthStartDay });
+      return (s.income > 0 || s.expenses > 0) ? s : null;
+    } catch {
+      return null;
+    }
+  }, [transactions, budgets, categories, patrimony, currentMonth, financialMonthStartDay]);
+
   const forecast = useMemo(() => {
     const today    = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -317,6 +328,10 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           fmt={fmt}
           onShowLog={() => setActiveView('log')}
         />
+      )}
+
+      {activeView === 'overview' && (
+        <AIInsightsPanel summary={aiSummary} behavioralInsights={insights} />
       )}
 
       {/* ══ HISTÓRICO ══ */}

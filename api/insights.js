@@ -101,6 +101,13 @@ REGRAS FUNDAMENTAIS — lê antes de responder:
 • Usa números concretos em todas as análises. Generalidades não têm valor.
 • Identifica padrões que não são óbvios — correlações, sazonalidade, desvios, oportunidades.
 • Distingue "situação estrutural" de "evento pontual".
+• NÃO inventes estatísticas, percentis, médias nacionais nem estudos específicos. Ancora-te apenas em frameworks reconhecidos (abaixo) e nos números reais do utilizador.
+
+FRAMEWORKS DE REFERÊNCIA (usa-os para dar profundidade profissional):
+• Regra 50/30/20 — ~50% do rendimento em necessidades, ~30% em desejos, ~20% em poupança. Avalia em que medida a estrutura de despesas se aproxima ou afasta disto.
+• Fundo de emergência — 3 a 6 meses de despesas em reserva líquida. Comenta a cobertura atual se houver dados de património.
+• Taxa de poupança — 20% é a meta saudável; abaixo de 10% é frágil; acima de 30% é forte.
+• Regra dos 4% / horizonte longo — só mencionar de forma genérica se relevante, sem recomendar produtos.
 ${nonDiscNote}
 
 DADOS FINANCEIROS — ${period}
@@ -126,7 +133,13 @@ ALERTAS COMPORTAMENTAIS (motor analítico interno):
 ${behavStr}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-INSTRUÇÃO: Faz uma análise genuinamente profunda. Vai além do óbvio. Identifica padrões nas tendências de 3 meses. Avalia a estrutura de despesas. Comenta a aderência ao orçamento. Projeta consequências se os padrões continuarem. Sugere ações concretas e mensuráveis.
+INSTRUÇÃO: Faz uma análise genuinamente profunda, ao nível de um relatório de consultor financeiro. Vai além do óbvio:
+• Avalia a estrutura de despesas à luz da regra 50/30/20 (estima necessidades vs desejos a partir das categorias) e diz onde está o desvio.
+• Compara a taxa de poupança com as metas (10% frágil / 20% saudável / 30% forte) e quantifica o que falta para a próxima meta.
+• Se houver património, avalia a cobertura do fundo de emergência (meta 3-6 meses de despesas) e diz quantos meses faltam.
+• Identifica padrões nas tendências de 3 meses — o que está a mudar e porquê (estrutural vs pontual).
+• Projeta consequências concretas a 12 meses se os padrões continuarem.
+• Sugere ações específicas e mensuráveis (ex: reduzir X em Y€/mês liberta Z€/ano).
 
 Responde APENAS com JSON válido, sem markdown, sem texto extra:
 {
@@ -165,9 +178,10 @@ Responde APENAS com JSON válido, sem markdown, sem texto extra:
         'content-type':      'application/json',
       },
       body: JSON.stringify({
-        model:      'claude-3-5-haiku-20241022',
-        max_tokens: 2048,
-        messages:   [{ role: 'user', content: prompt }],
+        model:         'claude-sonnet-4-6',
+        max_tokens:    3000,
+        output_config: { effort: 'medium' }, // GA no Sonnet 4.6 — equilíbrio qualidade/latência
+        messages:      [{ role: 'user', content: prompt }],
       }),
     });
 
