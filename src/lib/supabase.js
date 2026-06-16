@@ -83,13 +83,25 @@ const _writeQueues = new Map(); // userId → Promise (tail of the chain)
 
 export const dbService = {
   async getTransactions(userId) {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    return (data || []).map(mapTransaction)
+    // O Supabase corta por defeito a 1000 linhas. Paginamos por blocos para
+    // nunca perder transações silenciosamente (saldos/stats ficariam errados).
+    const PAGE = 1000;
+    let from = 0;
+    let all = [];
+    for (;;) {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      const batch = data || [];
+      all = all.concat(batch);
+      if (batch.length < PAGE) break;
+      from += PAGE;
+    }
+    return all.map(mapTransaction);
   },
 
   async addTransaction(userId, transaction) {
