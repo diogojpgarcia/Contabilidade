@@ -1,6 +1,8 @@
 /* ── AIInsightsPanel — análise IA na zona de Stats ───────────────────────── */
 .aip-wrap {
-  margin-top: 14px;
+  /* Alinhado com os cartões (.so-card / .so-score-card usam margin: 12px 16px 0)
+     + folga inferior para não colar à bottom-nav. */
+  margin: 12px 16px calc(28px + env(safe-area-inset-bottom, 0px));
   background: var(--cosmos-surface-1);
   border: 1px solid var(--cosmos-surface-border);
   border-radius: 16px;
@@ -63,7 +65,8 @@
 .aip-sk-line {
   height: 12px;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--cosmos-surface-2) 25%, var(--cosmos-surface-border) 50%, var(--cosmos-surface-2) 75%);
+  /* rgba branco → visível no tema escuro e subtil no claro (não some no fundo) */
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.05) 75%);
   background-size: 200% 100%;
   animation: aip-shimmer 1.3s ease-in-out infinite;
 }

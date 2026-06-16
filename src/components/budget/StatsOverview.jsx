@@ -45,6 +45,7 @@ const StatsOverview = ({
   insights, financialScore,
   fmt,
   onShowLog,
+  children,
 }) => {
   const [showAll, setShowAll] = useState(false);
   const pct      = monthIncome > 0 ? Math.min((monthExpenses / monthIncome) * 100, 100) : 0;
@@ -196,6 +197,8 @@ const StatsOverview = ({
           </div>
         )}
       </div>
+
+      {children}
 
     </div>
   );
