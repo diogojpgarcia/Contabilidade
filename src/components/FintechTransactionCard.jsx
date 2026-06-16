@@ -3,6 +3,7 @@ import CategoryPicker from './CategoryPicker';
 import AccountPicker from './AccountPicker';
 import Overlay from './Overlay';
 import { getCategoryMeta } from '../utils/categoryIcons';
+import { toBudgetLabel } from '../utils/categories-professional';
 import { toast } from '../utils/toast';
 import './FintechTransactionCard.css';
 
@@ -162,7 +163,7 @@ const FintechTransactionCard = ({
     }
   } catch { /* ignore merchant detection errors */ }
 
-  const effectiveCat = merchant?.detectedCategory || txCategory;
+  const effectiveCat = txCategory || merchant?.detectedCategory;
   const { Icon, color } = getCategoryMeta(effectiveCat, txType);
 
   const showLogo = !!merchant?.logoUrl && !logoErr;
@@ -277,7 +278,7 @@ const FintechTransactionCard = ({
               ) : isAdjustment ? (
                 <span className="ftc-badge ftc-badge--adjust">Ajuste</span>
               ) : (
-                <span className="ftc-cat">{effectiveCat}</span>
+                <span className="ftc-cat">{toBudgetLabel(effectiveCat)}</span>
               )}
               {tx.account_name && !isTransfer && !isAdjustment && (
                 <span className="ftc-acct-badge">◈ {tx.account_name}</span>
