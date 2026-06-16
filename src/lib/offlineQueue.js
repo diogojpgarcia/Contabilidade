@@ -73,11 +73,17 @@ export function enqueueAdd(transaction, tempId) {
 
 /**
  * Enfileira a edição de uma transação JÁ sincronizada (id real).
- * Last-write-wins: substitui um `update` pendente do mesmo id.
+ * Faz MERGE com um `update` pendente do mesmo id (campo a campo, last-wins),
+ * para que p.ex. uma edição seguida de mudança de conta não se anulem.
  */
 export function enqueueUpdate(id, updates) {
-  const q = loadQueue().filter((e) => !(e.kind === 'update' && e.payload.id === id));
-  q.push({ id: randomId(), kind: 'update', payload: { id, updates }, createdAt: Date.now() });
+  const q = loadQueue();
+  const existing = q.find((e) => e.kind === 'update' && e.payload.id === id);
+  if (existing) {
+    existing.payload.updates = { ...existing.payload.updates, ...updates };
+  } else {
+    q.push({ id: randomId(), kind: 'update', payload: { id, updates }, createdAt: Date.now() });
+  }
   persist(q);
 }
 

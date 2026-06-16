@@ -292,18 +292,31 @@ export function useTransactions(currentUser) {
     const original = transactions.find(t => t.id === transactionId);
     if (!original) return;
 
+    const fields = { account_id: newAccountId || null, account_name: newAccountName || null };
+
     setTransactions(prev => prev.map(t =>
-      t.id === transactionId
-        ? { ...t, account_id: newAccountId || null, account_name: newAccountName || null }
-        : t
+      t.id === transactionId ? { ...t, ...fields } : t
     ));
 
+    // Transação ainda pendente → altera a própria entrada `add` na fila.
+    if (isTempId(transactionId)) {
+      amendQueuedAdd(transactionId, fields);
+      refreshPending();
+      return;
+    }
+
+    const queueLocally = () => {
+      enqueueUpdate(transactionId, fields);
+      setTransactions(prev => prev.map(t => t.id === transactionId ? { ...t, _pending: true } : t));
+      refreshPending();
+    };
+
+    if (isOffline()) return queueLocally();
+
     try {
-      await dbService.updateTransaction(transactionId, {
-        account_id:   newAccountId   || null,
-        account_name: newAccountName || null,
-      });
+      await dbService.updateTransaction(transactionId, fields);
     } catch (err) {
+      if (isNetworkError(err)) return queueLocally();
       console.error('❌ Error persisting account change to DB:', err);
     }
   };

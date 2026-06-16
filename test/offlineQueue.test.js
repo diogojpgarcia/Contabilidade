@@ -53,12 +53,22 @@ describe('offlineQueue — edição/remoção de pendentes (mexe no add)', () =>
 });
 
 describe('offlineQueue — update/delete de ids reais', () => {
-  it('enqueueUpdate é last-write-wins por id', () => {
+  it('enqueueUpdate é last-write-wins no mesmo campo', () => {
     enqueueUpdate('real-1', { amount: 10 });
     enqueueUpdate('real-1', { amount: 20 });
     const q = getAll();
     expect(q).toHaveLength(1);
     expect(q[0].payload.updates.amount).toBe(20);
+  });
+
+  it('enqueueUpdate faz merge de campos diferentes (edição + mudança de conta)', () => {
+    enqueueUpdate('real-1', { amount: 10, category: 'Alimentação' });
+    enqueueUpdate('real-1', { account_id: 'a2', account_name: 'Poupança' });
+    const q = getAll();
+    expect(q).toHaveLength(1);
+    expect(q[0].payload.updates).toEqual({
+      amount: 10, category: 'Alimentação', account_id: 'a2', account_name: 'Poupança',
+    });
   });
 
   it('enqueueDelete remove updates pendentes do mesmo id', () => {
