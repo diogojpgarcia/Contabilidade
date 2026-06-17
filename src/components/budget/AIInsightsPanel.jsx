@@ -4,12 +4,12 @@
  * pontos fortes, preocupações, insights por categoria, recomendações e projeção.
  */
 import React, { useState } from 'react';
-import { Sparkles, TrendingUp, CheckCircle2, AlertTriangle, Target } from 'lucide-react';
+import { Sparkles, TrendingUp, CheckCircle2, AlertTriangle, Target, SlidersHorizontal } from 'lucide-react';
 import { useAIInsights } from '../../hooks/useAIInsights';
 import './AIInsightsPanel.css';
 
-const AIInsightsPanel = ({ summary }) => {
-  const { data } = useAIInsights(summary);
+const AIInsightsPanel = ({ summary, profile = null, onCustomize }) => {
+  const { data } = useAIInsights(summary, profile);
   const [showDetail, setShowDetail] = useState(false);
 
   if (!summary || !data) return null;
@@ -21,9 +21,20 @@ const AIInsightsPanel = ({ summary }) => {
           <Sparkles size={16} className="aip-spark" />
           <span>Análise Inteligente</span>
         </div>
+        {onCustomize && (
+          <button className="aip-customize" onClick={onCustomize} aria-label="Personalizar análise">
+            <SlidersHorizontal size={13} />
+            <span>Personalizar</span>
+          </button>
+        )}
       </div>
 
       <div className="aip-body">
+        {onCustomize && !profile?.configured && (
+          <button className="aip-profile-hint" onClick={onCustomize}>
+            💡 Diz-nos os teus objetivos para uma análise à tua medida →
+          </button>
+        )}
         {data.summary && <p className="aip-summary">{data.summary}</p>}
         {data.narrative && <p className="aip-narrative">{data.narrative}</p>}
 

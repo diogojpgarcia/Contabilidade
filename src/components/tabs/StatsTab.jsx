@@ -5,7 +5,9 @@ import CategoryPicker from '../CategoryPicker.jsx';
 import FintechTransactionCard from '../FintechTransactionCard';
 import StatsOverview from '../budget/StatsOverview';
 import AIInsightsPanel from '../budget/AIInsightsPanel';
+import FinancialProfileSheet from '../budget/FinancialProfileSheet';
 import { generateInsights, computeFinancialScore, shiftMonth, buildInsightsSummary } from '../../utils/insights';
+import { goalToFocus } from '../../utils/financialProfile';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange, getCurrentFinancialMonth } from '../../utils/financialMonth';
 import { toBudgetLabel } from '../../utils/categories-professional';
 import './StatsTab.css';
@@ -21,12 +23,13 @@ function getTransferFlow(tx) {
   return desc || tx.category || 'Transferência';
 }
 
-const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, financialFocus = null }) => {
+const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthChange, budgets = {}, onTransactionDeleted, onCategoryChange, onAccountChange, onTransactionEdited, patrimony = {}, financialMonthStartDay = 1, financialFocus = null, financialProfile = null, onProfileChange }) => {
   const { categories } = useAppContext();
 
   const [pickerTx, setPickerTx] = useState(null);
 
   const [activeView, setActiveView] = useState('overview'); // 'overview' or 'log'
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // Scroll outer container to top when switching between views
   const statsTabRef = useRef(null);
@@ -163,12 +166,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
 
   const insights = useMemo(() => {
     try {
-      return generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay, focus: financialFocus });
+      const focus = goalToFocus(financialProfile?.goal) || financialFocus;
+      return generateInsights({ transactions, budgets, categories, selectedMonth: currentMonth, startDay: financialMonthStartDay, focus });
     } catch (e) {
       console.error('[Insights] generateInsights threw:', e);
       return [];
     }
-  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay, financialFocus]);
+  }, [transactions, budgets, categories, currentMonth, financialMonthStartDay, financialFocus, financialProfile]);
 
   const financialScore = useMemo(() => {
     try {
@@ -328,7 +332,11 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           fmt={fmt}
           onShowLog={() => setActiveView('log')}
         >
-          <AIInsightsPanel summary={aiSummary} />
+          <AIInsightsPanel
+            summary={aiSummary}
+            profile={financialProfile}
+            onCustomize={() => setProfileOpen(true)}
+          />
         </StatsOverview>
       )}
 
@@ -547,6 +555,14 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             </div>
           )}
         </>
+      )}
+
+      {profileOpen && (
+        <FinancialProfileSheet
+          profile={financialProfile}
+          onSave={(p) => onProfileChange?.(p)}
+          onClose={() => setProfileOpen(false)}
+        />
       )}
 
     </div>

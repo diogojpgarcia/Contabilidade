@@ -11,10 +11,10 @@
 import { useMemo } from 'react';
 import { generateLocalAnalysis } from '../utils/localInsights';
 
-export function useAIInsights(summary) {
+export function useAIInsights(summary, profile = null) {
   const data = useMemo(
-    () => (summary ? generateLocalAnalysis(summary) : null),
-    [summary],
+    () => (summary ? generateLocalAnalysis(summary, profile) : null),
+    [summary, profile],
   );
   return { data, loading: false, error: null, refresh: () => {} };
 }

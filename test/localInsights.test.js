@@ -19,6 +19,20 @@ describe('generateLocalAnalysis', () => {
     expect(generateLocalAnalysis(null)).toBeNull();
   });
 
+  it('personaliza com o perfil: meta e objetivo do utilizador', () => {
+    // savingsRate 30 vs meta de 35 (acima) → ainda abaixo da meta; objetivo lidera.
+    const lowSave = { ...base, income: 1000, expenses: 700, savings: 300, savingsRate: 30 };
+    const a = generateLocalAnalysis(lowSave, { goal: 'savings', savingsTarget: 35, variableIncome: false, configured: true });
+    expect(a.detailedAnalysis).toContain('meta de 35%');
+    expect(a.recommendations[0]).toContain('Objetivo "poupar mais"');
+
+    // objetivo fundo de emergência → recomendação lidera com o tema
+    const b = generateLocalAnalysis({ ...base, emergencyMonths: 2 }, { goal: 'emergency', savingsTarget: 20, variableIncome: true, configured: true });
+    expect(b.recommendations[0].toLowerCase()).toContain('fundo de emergência');
+    // rendimento variável → alvo de 6 meses
+    expect(b.concerns.some(c => c.includes('6 meses'))).toBe(true);
+  });
+
   it('cenário saudável: pontos fortes, projeção e perspetiva', () => {
     const a = generateLocalAnalysis(base);
     expect(a.summary).toContain('30%');

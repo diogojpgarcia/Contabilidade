@@ -67,6 +67,7 @@ export function useSettings(currentUser, txHook) {
   const [recurringPayments, setRecurringPayments] = useState([]);
   const [confirmedRecurring, setConfirmedRecurring] = useState({});
   const [financialFocus, setFinancialFocus] = useState(null);
+  const [financialProfile, setFinancialProfile] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(
     () => getMonthKey(new Date().toISOString())
   );
@@ -152,6 +153,7 @@ export function useSettings(currentUser, txHook) {
       if (settings?.patrimony)        setPatrimony(settings.patrimony);
       if (settings?.category_budgets) setBudgets(settings.category_budgets);
       if (settings?.financial_focus)  setFinancialFocus(settings.financial_focus);
+      if (settings?.financial_profile) setFinancialProfile(settings.financial_profile);
       if (Array.isArray(settings?.goals)) setGoals(settings.goals);
 
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
@@ -201,6 +203,7 @@ export function useSettings(currentUser, txHook) {
     setRecurringPayments([]);
     setConfirmedRecurring({});
     setFinancialFocus(null);
+    setFinancialProfile(null);
     setFinancialMonthStartDay(1);
     setUseFinancialMonth(false);
     setHomeUsesFinancialMonth(true);
@@ -387,6 +390,12 @@ export function useSettings(currentUser, txHook) {
     persistSettings({ financial_focus: focus });
   };
 
+  // ── Perfil financeiro (questionário que personaliza a análise) ─────────────
+  const handleProfileChange = (profile) => {
+    setFinancialProfile(profile);
+    persistSettings({ financial_profile: profile });
+  };
+
   return {
     // Estado
     patrimony, setPatrimony,
@@ -401,6 +410,7 @@ export function useSettings(currentUser, txHook) {
     recurringPayments,
     confirmedRecurring,
     financialFocus,
+    financialProfile,
     currentMonth, setCurrentMonth,
     isLoadingData,
     isOffline,
@@ -421,5 +431,6 @@ export function useSettings(currentUser, txHook) {
     handleSkipRecurring,
     handleGoalsChange,
     handleFocusChange,
+    handleProfileChange,
   };
 }

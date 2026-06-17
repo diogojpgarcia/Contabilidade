@@ -35,6 +35,21 @@
 }
 .aip-spark { color: var(--cosmos-accent); }
 
+.aip-customize {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--cosmos-surface-border);
+  background: var(--cosmos-surface-2);
+  color: var(--cosmos-text-2);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.aip-customize:active { opacity: 0.7; }
+
 .aip-streaming {
   font-size: 0.72rem;
   font-weight: 600;
@@ -100,6 +115,22 @@
 }
 
 /* ── Body ────────────────────────────────────────────────────────────────── */
+.aip-profile-hint {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--cosmos-accent);
+  background: var(--cosmos-accent-soft, rgba(6,182,212,0.08));
+  color: var(--cosmos-text-1);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.aip-profile-hint:active { opacity: 0.75; }
+
 .aip-summary {
   font-size: 0.98rem;
   font-weight: 700;

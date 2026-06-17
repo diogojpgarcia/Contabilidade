@@ -199,6 +199,8 @@ const App = () => {
               financialMonthStartDay={effectiveStartDay}
               onNavigate={handleNavigateFromStats}
               financialFocus={s.financialFocus}
+              financialProfile={s.financialProfile}
+              onProfileChange={s.handleProfileChange}
             />
             </Suspense>
           </ErrorBoundary>
