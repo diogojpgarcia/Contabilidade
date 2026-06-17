@@ -14,7 +14,7 @@
  * If Supabase env is not configured (local dev without env), auth is skipped.
  */
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL =
   process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -64,4 +64,5 @@ async function requireAuth(req, res) {
   return true;
 }
 
-module.exports = { requireAuth, getUser };
+export { requireAuth, getUser };
+export default { requireAuth, getUser };

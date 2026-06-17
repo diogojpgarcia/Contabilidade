@@ -17,9 +17,9 @@ function isNonDiscretionary(name) {
   return NON_DISCRETIONARY.some(kw => n.includes(kw));
 }
 
-const { requireAuth } = require('./_auth');
+import { requireAuth } from './_auth.js';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
