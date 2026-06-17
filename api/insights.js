@@ -25,6 +25,11 @@ module.exports = async function handler(req, res) {
   }
   if (!(await requireAuth(req, res))) return;
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('[insights] ANTHROPIC_API_KEY ausente nos env vars do Vercel');
+    return res.status(500).json({ error: 'IA não configurada no servidor (falta ANTHROPIC_API_KEY)' });
+  }
+
   const {
     period,
     income,

@@ -47,7 +47,10 @@ const AIInsightsPanel = ({ summary, behavioralInsights = [] }) => {
 
       {!loading && error && (
         <div className="aip-empty">
-          Análise indisponível de momento.
+          <div>
+            Análise indisponível de momento.
+            {error && <span className="aip-err-detail"> ({error})</span>}
+          </div>
           <button className="aip-retry" onClick={refresh}>Tentar de novo</button>
         </div>
       )}

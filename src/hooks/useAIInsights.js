@@ -98,7 +98,11 @@ export function useAIInsights(summary, behavioralInsights = []) {
         signal:  controller.signal,
       }))
       .then(async (r) => {
-        if (!r.ok) throw new Error(`API ${r.status}`);
+        if (!r.ok) {
+          let detail = `API ${r.status}`;
+          try { const j = await r.json(); if (j?.error) detail = j.error; } catch { /* sem corpo JSON */ }
+          throw new Error(detail);
+        }
 
         // Sem suporte a stream (ou resposta JSON simples) → parse direto.
         if (!r.body || !r.body.getReader) {

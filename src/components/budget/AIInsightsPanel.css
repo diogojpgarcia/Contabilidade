@@ -81,7 +81,13 @@
   color: var(--cosmos-text-3);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
+}
+.aip-err-detail {
+  color: var(--cosmos-text-3);
+  opacity: 0.7;
+  font-size: 0.76rem;
 }
 .aip-retry {
   background: none;
