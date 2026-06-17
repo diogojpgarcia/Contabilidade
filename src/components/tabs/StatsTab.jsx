@@ -328,7 +328,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
           fmt={fmt}
           onShowLog={() => setActiveView('log')}
         >
-          <AIInsightsPanel summary={aiSummary} behavioralInsights={insights} />
+          <AIInsightsPanel summary={aiSummary} />
         </StatsOverview>
       )}
 
