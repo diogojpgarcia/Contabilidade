@@ -13,7 +13,7 @@ const PALETTES = [
   { id: 'stone',    name: 'Stone',    bg: '#f0ebe4', accent: '#9f6b48' },
 ];
 
-const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, colorPalette = 'midnight', setColorPalette, patrimony = {}, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange, migrationPending = null, onMigrateConfirm, onMigrateDismiss, onExportOpen }) => {
+const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, colorPalette = 'midnight', setColorPalette, patrimony = {}, useFinancialMonth = false, financialMonthStartDay = 1, onFinancialMonthChange, homeUsesFinancialMonth = true, onHomeUsesFinancialMonthChange, usageMode = 'manual', onUsageModeChange, migrationPending = null, onMigrateConfirm, onMigrateDismiss, onExportOpen }) => {
   const { currentUser, categories, onCategoriesChange } = useAppContext();
   const user = currentUser; // alias para compatibilidade com referências existentes
   const [showCategoryManager, setShowCategoryManager] = useState(false);
@@ -265,6 +265,41 @@ const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, col
             ) : (
               <p className="m-cycle-off">Agrupa por mês calendário padrão</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modo de utilização */}
+      {onUsageModeChange && (
+        <div style={{ marginTop: 10 }}>
+          <div className="m-card">
+            <div className="m-cycle-title" style={{ marginBottom: 4 }}>Como usas a app?</div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--cosmos-text-3)', margin: '0 0 12px', lineHeight: 1.4 }}>
+              Define como os dados entram — afeta as recorrentes e a análise.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { id: 'extrato', label: 'Importo extratos', desc: 'Atualizo de tempos a tempos' },
+                { id: 'manual',  label: 'Lanço à mão',      desc: 'Registo cada transação' },
+              ].map(opt => {
+                const on = usageMode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => onUsageModeChange(opt.id)}
+                    style={{
+                      flex: 1, textAlign: 'left', padding: '12px', borderRadius: 12, cursor: 'pointer',
+                      border: on ? '1.5px solid var(--cosmos-accent)' : '1.5px solid var(--cosmos-border-divider)',
+                      background: on ? 'var(--cosmos-accent-soft, rgba(6,182,212,0.10))' : 'var(--cosmos-surface-2)',
+                      color: 'var(--cosmos-text-1)', fontFamily: 'inherit',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>{opt.label}</div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--cosmos-text-3)', marginTop: 2 }}>{opt.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

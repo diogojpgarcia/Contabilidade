@@ -68,6 +68,10 @@ export function useSettings(currentUser, txHook) {
   const [confirmedRecurring, setConfirmedRecurring] = useState({});
   const [financialFocus, setFinancialFocus] = useState(null);
   const [financialProfile, setFinancialProfile] = useState(null);
+  // Modo de utilização: 'manual' (lança à mão, recorrentes criam transações) ou
+  // 'extrato' (importa extratos; recorrentes são previsão e casam com o import).
+  // Default 'manual' = comportamento atual (não parte os utilizadores existentes).
+  const [usageMode, setUsageMode] = useState('manual');
   const [currentMonth, setCurrentMonth] = useState(
     () => getMonthKey(new Date().toISOString())
   );
@@ -154,6 +158,7 @@ export function useSettings(currentUser, txHook) {
       if (settings?.category_budgets) setBudgets(settings.category_budgets);
       if (settings?.financial_focus)  setFinancialFocus(settings.financial_focus);
       if (settings?.financial_profile) setFinancialProfile(settings.financial_profile);
+      if (settings?.usage_mode) setUsageMode(settings.usage_mode);
       if (Array.isArray(settings?.goals)) setGoals(settings.goals);
 
       const mid = settings?.mainAccountId ?? settings?.defaultTransactionAccount?.id ?? null;
@@ -204,6 +209,7 @@ export function useSettings(currentUser, txHook) {
     setConfirmedRecurring({});
     setFinancialFocus(null);
     setFinancialProfile(null);
+    setUsageMode('manual');
     setFinancialMonthStartDay(1);
     setUseFinancialMonth(false);
     setHomeUsesFinancialMonth(true);
@@ -333,7 +339,23 @@ export function useSettings(currentUser, txHook) {
       ...confirmedRecurring,
       [recurringPayment.id]: {
         ...(confirmedRecurring[recurringPayment.id] || {}),
-        [monthKey]: { transactionId: newTx.id, amount, confirmedAt: new Date().toISOString() },
+        // source 'created' → esta transação foi criada por nós (apagável no restore).
+        [monthKey]: { transactionId: newTx.id, amount, confirmedAt: new Date().toISOString(), source: 'created' },
+      },
+    };
+    setConfirmedRecurring(updated);
+    persistSettings({ confirmed_recurring: updated });
+  };
+
+  // Associa uma ocorrência prevista a uma transação JÁ existente (importada/manual)
+  // — modo extrato. NÃO cria transação nova (evita duplicação). source 'matched'.
+  const handleLinkRecurring = ({ recurringPayment, monthKey, transactionId, amount }) => {
+    if (!recurringPayment || !monthKey || !transactionId) return;
+    const updated = {
+      ...confirmedRecurring,
+      [recurringPayment.id]: {
+        ...(confirmedRecurring[recurringPayment.id] || {}),
+        [monthKey]: { transactionId, amount, confirmedAt: new Date().toISOString(), source: 'matched' },
       },
     };
     setConfirmedRecurring(updated);
@@ -344,9 +366,11 @@ export function useSettings(currentUser, txHook) {
   // repondo o saldo na conta. Limpa também as confirmações desse recorrente.
   const handleDeleteRecurring = async (id, { restore = true } = {}) => {
     const conf = confirmedRecurring[id] || {};
-    // restore=true → apaga as transações lançadas (repõe o saldo).
-    // restore=false → mantém as transações, remove só o agendamento.
-    const txIds = restore ? Object.values(conf).map(c => c && c.transactionId).filter(Boolean) : [];
+    // restore=true → apaga as transações que NÓS criámos (source 'created' ou
+    // legacy sem source). NUNCA apaga transações importadas/associadas ('matched').
+    const txIds = restore
+      ? Object.values(conf).filter(c => c && c.transactionId && c.source !== 'matched').map(c => c.transactionId)
+      : [];
 
     // Apaga via txHook (lida com online/offline e ids temporários ainda na fila).
     await Promise.all(txIds.map(txId => txHook.handleDeleteTransaction(txId).catch(() => {})));
@@ -396,6 +420,12 @@ export function useSettings(currentUser, txHook) {
     persistSettings({ financial_profile: profile });
   };
 
+  // ── Modo de utilização (extrato vs manual) ─────────────────────────────────
+  const handleUsageModeChange = (mode) => {
+    setUsageMode(mode);
+    persistSettings({ usage_mode: mode });
+  };
+
   return {
     // Estado
     patrimony, setPatrimony,
@@ -411,6 +441,7 @@ export function useSettings(currentUser, txHook) {
     confirmedRecurring,
     financialFocus,
     financialProfile,
+    usageMode,
     currentMonth, setCurrentMonth,
     isLoadingData,
     isOffline,
@@ -427,10 +458,12 @@ export function useSettings(currentUser, txHook) {
     handleHomeUsesFinancialMonthChange,
     handleRecurringPaymentsChange,
     handleConfirmRecurring,
+    handleLinkRecurring,
     handleDeleteRecurring,
     handleSkipRecurring,
     handleGoalsChange,
     handleFocusChange,
     handleProfileChange,
+    handleUsageModeChange,
   };
 }

@@ -769,6 +769,20 @@
   margin-top: 2px;
 }
 .rp-pending-due { color: var(--cosmos-warning); }
+.rp-pending-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  background: var(--cosmos-surface-2);
+  color: var(--text-tertiary);
+}
+.rp-pending-tag--found {
+  background: var(--cosmos-income-dim, rgba(52,211,153,0.15));
+  color: var(--cosmos-income);
+}
 .rp-pending-right {
   display: flex;
   flex-direction: column;

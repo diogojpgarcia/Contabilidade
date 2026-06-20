@@ -248,8 +248,10 @@ const App = () => {
               onRecurringPaymentsChange={s.handleRecurringPaymentsChange}
               confirmedRecurring={s.confirmedRecurring}
               onConfirmRecurring={s.handleConfirmRecurring}
+              onLinkRecurring={s.handleLinkRecurring}
               onDeleteRecurring={s.handleDeleteRecurring}
               onSkipRecurring={s.handleSkipRecurring}
+              usageMode={s.usageMode}
               goals={s.goals}
               onGoalsChange={s.handleGoalsChange}
             />
@@ -289,6 +291,8 @@ const App = () => {
               onFinancialMonthChange={s.handleFinancialMonthChange}
               homeUsesFinancialMonth={s.homeUsesFinancialMonth}
               onHomeUsesFinancialMonthChange={s.handleHomeUsesFinancialMonthChange}
+              usageMode={s.usageMode}
+              onUsageModeChange={s.handleUsageModeChange}
               financialFocus={s.financialFocus}
               onFocusChange={s.handleFocusChange}
               migrationPending={s.migrationPending}

@@ -16,6 +16,7 @@ import {
   PAYMENT_TYPE_LABELS,
   getPendingConfirmations,
 } from '../../utils/recurringPayments';
+import { matchPendingRecurrings } from '../../utils/recurringMatch';
 import './Recurring.css';
 
 const EMPTY_FORM = {
@@ -41,9 +42,12 @@ const RecurringView = ({
   onRecurringPaymentsChange,
   confirmedRecurring = {},
   onConfirmRecurring,
+  onLinkRecurring,
   onDeleteRecurring,
   onSkipRecurring,
   patrimony,
+  transactions = [],
+  usageMode = 'manual',
 }) => {
   const { categories } = useAppContext();
   const [showForm,          setShowForm]          = useState(false);
@@ -180,7 +184,24 @@ const RecurringView = ({
     }
   };
 
-  const pendingConfirmations = getPendingConfirmations(payments, confirmedRecurring);
+  // Casa as pendentes com transações reais (±5% / ±5 dias úteis) para evitar
+  // duplicação entre recorrentes e o histórico/extrato.
+  const handleLink = (p) => {
+    if (onLinkRecurring && p.match) {
+      onLinkRecurring({
+        recurringPayment: p,
+        monthKey: p.monthKey,
+        transactionId: p.match.id,
+        amount: Math.abs(safeNum(p.match.amount)),
+      });
+    }
+  };
+
+  const pendingConfirmations = matchPendingRecurrings(
+    getPendingConfirmations(payments, confirmedRecurring),
+    transactions,
+    { amountTolerance: 0.05, businessDays: 5 },
+  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -220,6 +241,11 @@ const RecurringView = ({
                   {p.paymentType === 'variable' ? 'Variável' : 'Fixo'}
                   {' · '}
                   <span className="rp-pending-due">{shortDate(p.dueDate)}</span>
+                  {p.match
+                    ? <span className="rp-pending-tag rp-pending-tag--found">✓ no histórico</span>
+                    : usageMode === 'extrato'
+                      ? <span className="rp-pending-tag">à espera do extrato</span>
+                      : null}
                 </div>
               </div>
               <div className="rp-pending-right">
@@ -231,12 +257,22 @@ const RecurringView = ({
                 <div className="rp-pending-actions">
                   <button className="rp-pending-iconbtn" onClick={() => openEdit(p)} aria-label="Editar" title="Editar (ex. corrigir data)">✎</button>
                   <button className="rp-pending-iconbtn" onClick={() => handleSkip(p)} aria-label="Dispensar" title="Dispensar este pagamento">✕</button>
-                  <button
-                    className="rp-confirm-btn"
-                    onClick={() => openConfirm(p, p.dueDate, p.monthKey)}
-                  >
-                    Confirmar
-                  </button>
+                  {p.match ? (
+                    <button
+                      className="rp-confirm-btn"
+                      onClick={() => handleLink(p)}
+                      title="Associar à transação já no histórico (sem criar duplicado)"
+                    >
+                      Associar
+                    </button>
+                  ) : usageMode === 'manual' ? (
+                    <button
+                      className="rp-confirm-btn"
+                      onClick={() => openConfirm(p, p.dueDate, p.monthKey)}
+                    >
+                      Confirmar
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
