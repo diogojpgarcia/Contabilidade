@@ -19,6 +19,27 @@
   opacity: 0.7;
 }
 
+/* Bloco de confiança nos dados (âncora de rendimento + reconciliação) */
+.aip-confidence {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--cosmos-surface-border);
+  background: var(--cosmos-surface-2);
+}
+.aip-conf-icon { flex-shrink: 0; margin-top: 1px; }
+.aip-conf-notes { display: flex; flex-direction: column; gap: 4px; }
+.aip-conf-notes span { font-size: 0.76rem; line-height: 1.4; color: var(--cosmos-text-2); }
+.aip-confidence--high   { border-color: rgba(74,222,128,0.28); }
+.aip-confidence--high   .aip-conf-icon { color: var(--cosmos-income, #4ade80); }
+.aip-confidence--medium { border-color: rgba(251,191,36,0.28); }
+.aip-confidence--medium .aip-conf-icon { color: var(--cosmos-warning, #fbbf24); }
+.aip-confidence--low    { border-color: rgba(248,113,113,0.30); }
+.aip-confidence--low    .aip-conf-icon { color: var(--cosmos-expense, #f87171); }
+
 .aip-header {
   display: flex;
   align-items: center;

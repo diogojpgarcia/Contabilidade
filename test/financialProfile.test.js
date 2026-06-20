@@ -4,7 +4,7 @@ import { normalizeProfile, goalToFocus, DEFAULT_PROFILE } from '../src/utils/fin
 describe('normalizeProfile', () => {
   it('preenche defaults a partir de objeto vazio', () => {
     expect(normalizeProfile({})).toEqual({
-      goal: 'savings', savingsTarget: 20, variableIncome: false, configured: false,
+      goal: 'savings', savingsTarget: 20, variableIncome: false, monthlyIncome: 0, configured: false,
     });
   });
   it('valida o objetivo e limita a meta de poupança', () => {
@@ -13,6 +13,12 @@ describe('normalizeProfile', () => {
     expect(normalizeProfile({ savingsTarget: 200 }).savingsTarget).toBe(80);
     expect(normalizeProfile({ savingsTarget: 1 }).savingsTarget).toBe(5);
     expect(normalizeProfile({ savingsTarget: 'x' }).savingsTarget).toBe(20);
+  });
+  it('normaliza o ordenado declarado (âncora)', () => {
+    expect(normalizeProfile({ monthlyIncome: 1200 }).monthlyIncome).toBe(1200);
+    expect(normalizeProfile({ monthlyIncome: '1500.5' }).monthlyIncome).toBe(1500.5);
+    expect(normalizeProfile({ monthlyIncome: -50 }).monthlyIncome).toBe(0);
+    expect(normalizeProfile({ monthlyIncome: 'x' }).monthlyIncome).toBe(0);
   });
   it('preserva flags', () => {
     const p = normalizeProfile({ variableIncome: true, configured: true });

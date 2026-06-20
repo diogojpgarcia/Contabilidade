@@ -4,7 +4,7 @@
  * pontos fortes, preocupações, insights por categoria, recomendações e projeção.
  */
 import React, { useState } from 'react';
-import { Sparkles, TrendingUp, CheckCircle2, AlertTriangle, Target, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, TrendingUp, CheckCircle2, AlertTriangle, Target, SlidersHorizontal, ShieldCheck } from 'lucide-react';
 import { useAIInsights } from '../../hooks/useAIInsights';
 import './AIInsightsPanel.css';
 
@@ -34,6 +34,14 @@ const AIInsightsPanel = ({ summary, profile = null, onCustomize }) => {
           <button className="aip-profile-hint" onClick={onCustomize}>
             💡 Diz-nos os teus objetivos para uma análise à tua medida →
           </button>
+        )}
+        {data.confidence?.notes?.length > 0 && (
+          <div className={`aip-confidence aip-confidence--${data.confidence.level}`}>
+            <ShieldCheck size={14} className="aip-conf-icon" />
+            <div className="aip-conf-notes">
+              {data.confidence.notes.map((n, i) => <span key={i}>{n}</span>)}
+            </div>
+          </div>
         )}
         {data.summary && <p className="aip-summary">{data.summary}</p>}
         {data.narrative && <p className="aip-narrative">{data.narrative}</p>}

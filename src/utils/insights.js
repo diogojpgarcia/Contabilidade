@@ -510,6 +510,28 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
       }, 0)
     : null;
 
+  // Património LÍQUIDO para o fundo de emergência: só o que se mobiliza depressa
+  // — contas (saldo real) + certificados de aforro/bonds. Exclui ações, ETFs,
+  // cripto, imóveis e veículos (ilíquidos / voláteis).
+  const num = (v) => { const x = parseFloat(v); return Number.isFinite(x) ? x : 0; };
+  const accounts = patrimony?.accounts || [];
+  const bonds    = patrimony?.bonds || [];
+  const accountsLiquid = accounts.reduce(
+    (s, a) => s + (a?.currentBalance != null ? num(a.currentBalance) : num(a.balance) + num(a.adjustment)),
+    0,
+  );
+  const bondsLiquid = bonds.reduce((s, b) => s + num(b?.faceValue ?? b?.value), 0);
+  const liquidTotal = patrimony ? accountsLiquid + bondsLiquid : null;
+
+  // Confiança nos dados: estado de reconciliação das contas (Fase 2). A data
+  // "conferida até" usa a MAIS ANTIGA das contas conferidas (mais conservadora).
+  const reconciledDates = accounts.map(a => a?.reconciledAt).filter(Boolean).sort();
+  const dataConfidence = {
+    accountsTotal:      accounts.length,
+    accountsReconciled: reconciledDates.length,
+    reconciledThrough:  reconciledDates.length ? reconciledDates[0] : null,
+  };
+
   // Estrutura 50/30/20 — necessidades vs desejos vs poupança (% do rendimento).
   const needs = Object.entries(byCat).reduce((s, [label, amt]) => s + (isNeed(label) ? amt : 0), 0);
   const wants = Math.max(0, expenses - needs);
@@ -523,9 +545,10 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
     savingsPct: savingsRate,
   };
 
-  // Cobertura do fundo de emergência (meta 3-6 meses de despesas).
-  const emergencyMonths = (patrimonyTotal && expenses > 0)
-    ? Math.round((patrimonyTotal / expenses) * 10) / 10
+  // Cobertura do fundo de emergência (meta 3-6 meses de despesas) — só com
+  // património LÍQUIDO (contas + aforro), não o património total.
+  const emergencyMonths = (liquidTotal && expenses > 0)
+    ? Math.round((liquidTotal / expenses) * 10) / 10
     : null;
 
   return {
@@ -542,7 +565,9 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
     txnCount,
     avgTxnSize,
     patrimonyTotal: patrimonyTotal ? Math.round(patrimonyTotal) : null,
+    liquidTotal: liquidTotal != null ? Math.round(liquidTotal) : null,
     fiftyThirtyTwenty,
     emergencyMonths,
+    dataConfidence,
   };
 };

@@ -64,4 +64,37 @@ describe('generateLocalAnalysis', () => {
     expect(a.concerns.some(c => c.includes('Restaurantes') && c.includes('excedido'))).toBe(true);
     expect(a.recommendations.some(r => r.includes('Restaurantes'))).toBe(true);
   });
+
+  it('usa o ordenado declarado quando as receitas registadas parecem incompletas', () => {
+    // Extrato ainda não importado: receita registada 0, ordenado declarado 1500, despesas 700.
+    const s = { ...base, income: 0, expenses: 700, savings: -700, savingsRate: null,
+      fiftyThirtyTwenty: null, emergencyMonths: null };
+    const a = generateLocalAnalysis(s, { goal: 'savings', savingsTarget: 20, monthlyIncome: 1500, configured: true });
+    // saldo positivo baseado no ordenado (1500 - 700 = 800), não défice
+    expect(a.summary).toContain('53%'); // 800/1500
+    expect(a.projections).toContain('em 12 meses');
+    expect(a.confidence.level).toBe('low');
+    expect(a.confidence.notes.some(n => n.toLowerCase().includes('ordenado'))).toBe(true);
+  });
+
+  it('não troca a base quando as receitas registadas estão completas', () => {
+    const a = generateLocalAnalysis(base, { goal: 'savings', savingsTarget: 20, monthlyIncome: 1000, configured: true });
+    // income registado 1000 == ordenado → sem aviso de incompletude
+    expect(a.confidence.notes.some(n => n.toLowerCase().includes('ordenado'))).toBe(false);
+  });
+
+  it('reporta o estado de reconciliação dos saldos (confiança)', () => {
+    const a = generateLocalAnalysis({
+      ...base,
+      dataConfidence: { accountsTotal: 2, accountsReconciled: 2, reconciledThrough: '2026-06-10' },
+    });
+    expect(a.confidence.notes.some(n => n.includes('conferidos até'))).toBe(true);
+
+    const b = generateLocalAnalysis({
+      ...base,
+      dataConfidence: { accountsTotal: 2, accountsReconciled: 0, reconciledThrough: null },
+    });
+    expect(b.confidence.level).toBe('medium');
+    expect(b.confidence.notes.some(n => n.toLowerCase().includes('por conferir'))).toBe(true);
+  });
 });

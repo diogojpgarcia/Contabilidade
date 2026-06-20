@@ -74,6 +74,21 @@
 }
 .fps-chip:active { opacity: 0.8; }
 
+/* Input de ordenado mensal */
+.fps-income-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1.5px solid var(--cosmos-surface-border);
+  background: var(--cosmos-surface-2);
+  color: var(--cosmos-text-1);
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+}
+.fps-income-input:focus { border-color: var(--cosmos-accent); }
+
 .fps-hint { font-size: 0.76rem; color: var(--cosmos-text-3); margin: 8px 0 0; line-height: 1.4; }
 
 /* Ações */

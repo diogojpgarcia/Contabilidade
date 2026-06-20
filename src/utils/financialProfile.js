@@ -21,6 +21,7 @@ export const DEFAULT_PROFILE = {
   goal: 'savings',
   savingsTarget: 20,
   variableIncome: false,
+  monthlyIncome: 0, // âncora: ordenado/rendimento mensal declarado (0 = não declarado)
   configured: false, // passa a true quando o utilizador guarda o questionário
 };
 
@@ -29,10 +30,13 @@ export function normalizeProfile(p) {
   const goal = GOAL_OPTIONS.some(g => g.id === p?.goal) ? p.goal : DEFAULT_PROFILE.goal;
   const t = Number(p?.savingsTarget);
   const savingsTarget = Number.isFinite(t) ? Math.min(80, Math.max(5, Math.round(t))) : DEFAULT_PROFILE.savingsTarget;
+  const mi = Number(p?.monthlyIncome);
+  const monthlyIncome = Number.isFinite(mi) && mi > 0 ? Math.round(mi * 100) / 100 : 0;
   return {
     goal,
     savingsTarget,
     variableIncome: !!p?.variableIncome,
+    monthlyIncome,
     configured: !!p?.configured,
   };
 }

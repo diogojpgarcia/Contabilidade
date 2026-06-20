@@ -13,9 +13,17 @@ const FinancialProfileSheet = ({ profile, onSave, onClose }) => {
   const [goal, setGoal] = useState(init.goal);
   const [savingsTarget, setSavingsTarget] = useState(init.savingsTarget);
   const [variableIncome, setVariableIncome] = useState(init.variableIncome);
+  const [monthlyIncome, setMonthlyIncome] = useState(init.monthlyIncome ? String(init.monthlyIncome) : '');
 
   const save = () => {
-    onSave({ goal, savingsTarget, variableIncome, configured: true });
+    const mi = Number(monthlyIncome);
+    onSave({
+      goal,
+      savingsTarget,
+      variableIncome,
+      monthlyIncome: Number.isFinite(mi) && mi > 0 ? mi : 0,
+      configured: true,
+    });
     onClose();
   };
 
@@ -88,6 +96,24 @@ const FinancialProfileSheet = ({ profile, onSave, onClose }) => {
               {variableIncome
                 ? 'Com rendimento variável, a meta do fundo de emergência sobe para 6 meses.'
                 : 'Fundo de emergência recomendado: 3 a 6 meses de despesas.'}
+            </p>
+          </div>
+
+          {/* 4. Ordenado / rendimento mensal (âncora) */}
+          <div className="fps-q">
+            <div className="fps-q-label">Qual é o teu ordenado mensal? (opcional)</div>
+            <input
+              className="fps-income-input"
+              type="number"
+              inputMode="decimal"
+              placeholder="Ex: 1200"
+              value={monthlyIncome}
+              onChange={(e) => setMonthlyIncome(e.target.value)}
+              step="0.01"
+              min="0"
+            />
+            <p className="fps-hint">
+              Serve de âncora: se ainda não importaste o extrato deste mês, a análise usa este valor como rendimento fiável e avisa quando podem faltar transações.
             </p>
           </div>
         </div>
