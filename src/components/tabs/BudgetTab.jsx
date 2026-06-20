@@ -130,6 +130,9 @@ const BudgetTab = ({
           onMainAccountChange={onMainAccountChange}
           currentMonth={currentMonth}
           financialMonthStartDay={financialMonthStartDay}
+          recurringPayments={recurringPayments}
+          confirmedRecurring={confirmedRecurring}
+          onConfirmRecurring={onConfirmRecurring}
         />
       )}
     </div>

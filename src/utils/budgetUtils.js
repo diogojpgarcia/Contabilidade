@@ -4,14 +4,20 @@ import { PATRIMONY_META } from './categoryIcons';
  * Calcula o saldo actual de uma conta a partir do saldo inicial e das
  * transações ligadas. Fonte única de verdade — usada em useTransactions e
  * PatrimonyView para garantir resultados sempre idênticos.
+ *
+ * @param opts.asOf  'YYYY-MM-DD' — se definido, soma apenas transações até essa
+ *   data (inclusive). Transações sem data são sempre incluídas (não datáveis no
+ *   tempo). Usado pela reconciliação de saldo para comparar com o saldo real
+ *   numa data específica. Sem `asOf`, o comportamento é idêntico ao anterior.
  */
-export const computeAccountBalance = (account, transactions) => {
+export const computeAccountBalance = (account, transactions, { asOf = null } = {}) => {
   // base = saldo de criação (imutável) + ajustes manuais ao saldo atual.
   // O `adjustment` regista correcções feitas ao "saldo atual" sem mexer no
   // valor de criação nem inventar transações.
   const initial = (parseFloat(account.balance ?? 0) || 0) + (parseFloat(account.adjustment ?? 0) || 0);
   return (transactions || []).reduce((sum, tx) => {
     if (tx.account_id !== account.id) return sum;
+    if (asOf && tx.date && tx.date > asOf) return sum;
     const amt = parseFloat(tx.amount) || 0;
     if (tx.type === 'income')  return sum + amt;
     if (tx.type === 'expense') return sum - amt;

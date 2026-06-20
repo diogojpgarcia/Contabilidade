@@ -13,7 +13,9 @@ import {
 } from '../../utils/budgetUtils';
 import Sparkline from './Sparkline';
 import AssetDetailSheet from './AssetDetailSheet';
+import AccountReconcileSheet from './AccountReconcileSheet';
 import PatrimonyFormModal from './PatrimonyFormModal';
+import { shortDate } from '../../utils/recurringPayments';
 import './AssetDetailSheet.css';
 
 // ── Vehicle depreciation ──────────────────────────────────────────────────────
@@ -43,6 +45,9 @@ const PatrimonyView = ({
   onMainAccountChange,
   currentMonth,
   financialMonthStartDay,
+  recurringPayments = [],
+  confirmedRecurring = {},
+  onConfirmRecurring,
 }) => {
   // ── Modal state ───────────────────────────────────────────────────────────
   const [showModal,      setShowModal]      = useState(false);
@@ -50,6 +55,7 @@ const PatrimonyView = ({
   const [editingAsset,   setEditingAsset]   = useState(null); // { typeKey, item } | null
   const [confirmDelete,  setConfirmDelete]  = useState(null); // { typeKey, id, name }
   const [detailAsset,    setDetailAsset]    = useState(null); // { item, assetKey }
+  const [reconcileAcc,   setReconcileAcc]   = useState(null); // conta a conferir | null
   const [showEmptyCats,  setShowEmptyCats]  = useState(false); // barra colapsável das categorias vazias
 
   // ── Live prices, sparklines, euribor ─────────────────────────────────────
@@ -89,6 +95,18 @@ const PatrimonyView = ({
     const updated = { ...patrimony, [typeKey]: (patrimony[typeKey] || []).filter(x => x.id !== id) };
     onPatrimonyChange?.(updated);
     setConfirmDelete(null);
+  };
+
+  // Aplica um patch a uma conta e persiste (offline-safe via onPatrimonyChange).
+  // Usado pela reconciliação para gravar reconciledAt/reconciledBalance/adjustment.
+  const updateAccount = (accountId, patch) => {
+    const updated = {
+      ...patrimony,
+      accounts: (patrimony.accounts || []).map(a =>
+        a.id === accountId ? { ...a, ...patch } : a
+      ),
+    };
+    onPatrimonyChange?.(updated);
   };
 
   // ── Value helpers ─────────────────────────────────────────────────────────
@@ -504,6 +522,15 @@ const PatrimonyView = ({
                                   <span className="pat-account-initial-bal">base {parseFloat(item.balance || 0).toFixed(2)}€</span>
                                 )}
                               </div>
+                              <div className="pat-account-reconcile-row">
+                                {item.reconciledAt && (
+                                  <span className="pat-account-conferred">✓ conferida até {shortDate(item.reconciledAt)}</span>
+                                )}
+                                <button
+                                  className="pat-account-reconcile-btn"
+                                  onClick={(e) => { e.stopPropagation(); setReconcileAcc({ ...item, currentBalance: currentBal }); }}
+                                >Conferir saldo</button>
+                              </div>
                             </div>
                             {onMainAccountChange && (
                               <button
@@ -648,6 +675,20 @@ const PatrimonyView = ({
           />
         );
       })()}
+
+      {/* ── Account reconcile sheet (conferir saldo) ── */}
+      {reconcileAcc && (
+        <AccountReconcileSheet
+          open={!!reconcileAcc}
+          onClose={() => setReconcileAcc(null)}
+          account={reconcileAcc}
+          transactions={transactions}
+          recurringPayments={recurringPayments}
+          confirmedRecurring={confirmedRecurring}
+          onConfirmRecurring={onConfirmRecurring}
+          onSaveAccount={updateAccount}
+        />
+      )}
 
       {/* ── FAB ── */}
       <button className="m-fab" onClick={openAddModal}>+</button>
