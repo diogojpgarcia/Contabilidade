@@ -274,8 +274,8 @@ const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, col
         <div style={{ marginTop: 10 }}>
           <div className="m-card">
             <div className="m-cycle-title" style={{ marginBottom: 4 }}>Como usas a app?</div>
-            <p style={{ fontSize: '0.78rem', color: 'var(--cosmos-text-3)', margin: '0 0 12px', lineHeight: 1.4 }}>
-              Define como os dados entram — afeta as recorrentes e a análise.
+            <p style={{ fontSize: '0.78rem', color: 'var(--cosmos-text-3)', margin: '0 0 12px', lineHeight: 1.45 }}>
+              Define de onde vêm os teus dados. Isto muda a forma como as transações entram e como as recorrentes se comportam — escolhe o que mais se parece contigo.
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               {[
@@ -299,6 +299,23 @@ const ProfileTab = ({ userName, onLogout, onNavigateToImport, onDataDeleted, col
                   </button>
                 );
               })}
+            </div>
+
+            {/* Explicação do modo selecionado */}
+            <div style={{
+              marginTop: 10, padding: '10px 12px', borderRadius: 10,
+              background: 'var(--cosmos-surface-2)', fontSize: '0.76rem',
+              color: 'var(--cosmos-text-2)', lineHeight: 1.5,
+            }}>
+              {usageMode === 'extrato' ? (
+                <>
+                  <strong style={{ color: 'var(--cosmos-text-1)' }}>Importo extratos:</strong> a verdade está no teu banco e a app é um espelho que atualizas quando importas. As <strong>recorrentes servem de lembrete</strong> e <strong>associam-se</strong> à transação que importas — nunca criam um registo duplicado.
+                </>
+              ) : (
+                <>
+                  <strong style={{ color: 'var(--cosmos-text-1)' }}>Lanço à mão:</strong> a app é o teu registo principal e cada transação entra por ti. Ao confirmar uma recorrente, a app <strong>cria a transação</strong> automaticamente, para não teres de a escrever.
+                </>
+              )}
             </div>
           </div>
         </div>
