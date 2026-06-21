@@ -91,6 +91,19 @@ describe('buildInsightsSummary — estrutura 50/30/20', () => {
     expect(s.liquidTotal).toBe(1400);            // currentBalance manda sobre balance+adjustment
   });
 
+  it('patrimonyTotal usa o saldo real das contas + restantes ativos', () => {
+    const s = buildInsightsSummary({
+      transactions, budgets: {}, categories,
+      patrimony: {
+        accounts: [{ balance: 100, adjustment: 50, currentBalance: 1400 }], // real 1400, não 100
+        stocks:   [{ value: 5000 }],
+        realestate: [{ value: 200000 }],
+      },
+      selectedMonth: '2026-06', startDay: 1,
+    });
+    expect(s.patrimonyTotal).toBe(206400);       // 1400 + 5000 + 200000 (não 100 da criação)
+  });
+
   it('expõe estado de reconciliação das contas (confiança)', () => {
     const s = buildInsightsSummary({
       transactions, budgets: {}, categories,

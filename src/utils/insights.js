@@ -503,25 +503,34 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
   const txnCount    = expenseTxns.length;
   const avgTxnSize  = txnCount > 0 ? Math.round(expenses / txnCount) : 0;
 
-  const patrimonyTotal = patrimony
-    ? Object.values(patrimony).flat().reduce((s, item) => {
-        const v = parseFloat(item?.value || item?.balance || item?.faceValue || 0);
-        return s + (isNaN(v) ? 0 : v);
-      }, 0)
-    : null;
-
-  // Património LÍQUIDO para o fundo de emergência: só o que se mobiliza depressa
-  // — contas (saldo real) + certificados de aforro/bonds. Exclui ações, ETFs,
-  // cripto, imóveis e veículos (ilíquidos / voláteis).
   const num = (v) => { const x = parseFloat(v); return Number.isFinite(x) ? x : 0; };
   const accounts = patrimony?.accounts || [];
   const bonds    = patrimony?.bonds || [];
-  const accountsLiquid = accounts.reduce(
+
+  // Saldo REAL das contas: currentBalance (injetado = base+ajuste+transações) ou,
+  // em fallback, balance+adjustment. Fonte única para o total e para a liquidez —
+  // alinha o "Património Total" da análise com o saldo mostrado no Património.
+  const accountsReal = accounts.reduce(
     (s, a) => s + (a?.currentBalance != null ? num(a.currentBalance) : num(a.balance) + num(a.adjustment)),
     0,
   );
+
+  // Património LÍQUIDO para o fundo de emergência: contas (saldo real) + aforro
+  // (se o toggle estiver ligado). Exclui ações, ETFs, cripto, imóveis, veículos.
   const bondsLiquid = emergencyIncludesAforro ? bonds.reduce((s, b) => s + num(b?.faceValue ?? b?.value), 0) : 0;
-  const liquidTotal = patrimony ? accountsLiquid + bondsLiquid : null;
+  const liquidTotal = patrimony ? accountsReal + bondsLiquid : null;
+
+  // Património TOTAL: contas com saldo real + restantes ativos (value/faceValue).
+  const nonAccountTotal = patrimony
+    ? Object.entries(patrimony).reduce((s, [key, items]) => {
+        if (key === 'accounts') return s; // contas já entram via accountsReal
+        return s + (items || []).reduce((ss, item) => {
+          const v = parseFloat(item?.value || item?.balance || item?.faceValue || 0);
+          return ss + (isNaN(v) ? 0 : v);
+        }, 0);
+      }, 0)
+    : 0;
+  const patrimonyTotal = patrimony ? accountsReal + nonAccountTotal : null;
 
   // Confiança nos dados: estado de reconciliação das contas (Fase 2). A data
   // "conferida até" usa a MAIS ANTIGA das contas conferidas (mais conservadora).

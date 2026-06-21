@@ -18,7 +18,7 @@ import { isInFinancialMonth } from '../../utils/financialMonth';
 function getStoredTypeValue(key, patrimony) {
   const items = (patrimony || {})[key] || [];
   if (key === 'realestate') return items.reduce((s, x) => s + toNum(x.value), 0);
-  if (key === 'accounts')   return items.reduce((s, x) => s + toNum(x.balance || 0), 0);
+  if (key === 'accounts')   return items.reduce((s, x) => s + (x.currentBalance != null ? toNum(x.currentBalance) : toNum(x.balance) + toNum(x.adjustment)), 0);
   if (key === 'bonds')      return items.reduce((s, x) => s + toNum(x.faceValue || x.value), 0);
   if (key === 'vehicles')   return items.reduce((s, x) => s + toNum(x.value), 0);
   if (key === 'stocks' || key === 'etfs')
