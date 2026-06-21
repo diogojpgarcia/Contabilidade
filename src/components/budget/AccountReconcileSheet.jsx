@@ -12,6 +12,7 @@ import React, { useState, useMemo } from 'react';
 import { CheckCircle2, AlertTriangle, Plus } from 'lucide-react';
 import CosmosSheet from '../cosmos/CosmosSheet';
 import { reconcileAccount, findGapCandidates } from '../../utils/reconciliation';
+import { roundCents } from '../../utils/budgetUtils';
 import { shortDate, getRecurringMonthKey } from '../../utils/recurringPayments';
 import './AccountReconcileSheet.css';
 
@@ -88,15 +89,15 @@ export default function AccountReconcileSheet({
   const handleAdjustAndMark = () => {
     const currentAdj = Number(account.adjustment) || 0;
     onSaveAccount?.(account.id, {
-      adjustment: currentAdj + gap,            // fecha o gap restante
+      adjustment: roundCents(currentAdj + gap),  // fecha o gap restante (a cêntimos)
       reconciledAt: asOf,
-      reconciledBalance: Number(real),
+      reconciledBalance: roundCents(Number(real)),
     });
     onClose?.();
   };
 
   const handleMarkOnly = () => {
-    onSaveAccount?.(account.id, { reconciledAt: asOf, reconciledBalance: Number(real) });
+    onSaveAccount?.(account.id, { reconciledAt: asOf, reconciledBalance: roundCents(Number(real)) });
     onClose?.();
   };
 

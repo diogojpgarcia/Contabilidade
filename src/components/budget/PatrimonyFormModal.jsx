@@ -20,6 +20,7 @@ import Overlay from '../Overlay';
 import { searchAssets } from '../../utils/searchAssets';
 import { fetchStockSearch } from '../../utils/assetPrice';
 import { BOND_SERIES_INFO, calcSerieERate, calcBondValue } from '../../utils/certificadoAforro';
+import { roundCents } from '../../utils/budgetUtils';
 
 const EMPTY_FORM = {};
 
@@ -158,12 +159,14 @@ const PatrimonyFormModal = ({
       const entered = Number(clean.currentValue);
       if (editingId && editingAsset?.item) {
         const it = editingAsset.item;
-        clean.balance = num(it.balance);                       // criação — preservado
+        clean.balance = roundCents(num(it.balance));            // criação — preservado
         const curNow  = num(it.currentBalance != null ? it.currentBalance : it.balance);
         const delta   = Number.isFinite(entered) ? entered - curNow : 0;
-        clean.adjustment = num(it.adjustment) + delta;          // acumula o ajuste
+        // Arredonda a cêntimos: curNow vem de uma soma de transações (float) —
+        // evita que a deriva se acumule no adjustment persistido.
+        clean.adjustment = roundCents(num(it.adjustment) + delta);
       } else {
-        clean.balance    = Number.isFinite(entered) ? entered : 0; // valor de criação
+        clean.balance    = roundCents(Number.isFinite(entered) ? entered : 0); // valor de criação
         clean.adjustment = 0;
       }
       delete clean.currentValue;

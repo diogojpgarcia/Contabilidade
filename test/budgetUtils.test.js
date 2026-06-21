@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { computeAccountBalance, getItemValue } from '../src/utils/budgetUtils.js';
+import { computeAccountBalance, getItemValue, roundCents } from '../src/utils/budgetUtils.js';
+
+describe('roundCents — fronteira de escrita monetária', () => {
+  it('elimina a deriva de float', () => {
+    expect(roundCents(0.1 + 0.2)).toBe(0.3);          // 0.30000000000000004
+    expect(roundCents(1.005 * 1)).toBe(1);            // arredonda a cêntimo
+    expect(roundCents(-50.004)).toBe(-50);
+    expect(roundCents(1234.567)).toBe(1234.57);
+  });
+  it('trata valores inválidos como 0', () => {
+    expect(roundCents(undefined)).toBe(0);
+    expect(roundCents(null)).toBe(0);
+    expect(roundCents('x')).toBe(0);
+  });
+});
 
 const acc = { id: 'a1', balance: 100, adjustment: 0 };
 

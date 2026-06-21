@@ -122,6 +122,14 @@ export const EMPTY_PATRIMONY = { accounts: [], stocks: [], etfs: [], bonds: [], 
 export const toNum = (v) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
 /**
+ * Arredonda a 2 casas decimais (cêntimos). Usar nas FRONTEIRAS de escrita de
+ * valores monetários derivados de somas em JS (ex. adjustment, saldo conferido)
+ * para impedir que a deriva de vírgula flutuante (0.1+0.2) se acumule na BD.
+ *   roundCents(0.1 + 0.2) → 0.3
+ */
+export const roundCents = (v) => Math.round((Number(v) || 0) * 100) / 100;
+
+/**
  * Normalises a crypto coin symbol to its base ticker.
  * Strips any exchange-pair suffix so both old ("BTC/USD") and
  * new ("BTC") stored values map to the same livePrices key.
