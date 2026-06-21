@@ -336,6 +336,7 @@ const App = () => {
             budgets={s.budgets}
             currentMonth={s.currentMonth}
             financialMonthStartDay={s.financialMonthStartDay}
+            financialProfile={s.financialProfile}
           />
         </Suspense>
       )}

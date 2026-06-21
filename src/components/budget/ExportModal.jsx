@@ -12,6 +12,7 @@ import {
   buildInsightsSummary, shiftMonth, formatMonthLabel,
 } from '../../utils/insights';
 import { PATRIMONY_TYPES, toNum } from '../../utils/budgetUtils';
+import { normalizeProfile } from '../../utils/financialProfile';
 import { isInFinancialMonth } from '../../utils/financialMonth';
 
 function getStoredTypeValue(key, patrimony) {
@@ -37,8 +38,9 @@ const PERIOD_OPTIONS = (m) => [
   { value: '__y__',            label: `Ano ${new Date().getFullYear()}` },
 ];
 
-export default function ExportModal({ open, onClose, transactions, patrimony, budgets, currentMonth, financialMonthStartDay }) {
+export default function ExportModal({ open, onClose, transactions, patrimony, budgets, currentMonth, financialMonthStartDay, financialProfile = null }) {
   const { categories } = useAppContext();
+  const prof = normalizeProfile(financialProfile || {});
   const [period,     setPeriod]     = useState(currentMonth);
   const [mode,       setMode]       = useState('summary');
   const [includeAI,  setIncludeAI]  = useState(true);
@@ -62,8 +64,8 @@ export default function ExportModal({ open, onClose, transactions, patrimony, bu
   }, [currentMonth, transactions, financialMonthStartDay]);
 
   const summary = useMemo(() =>
-    buildInsightsSummary({ transactions, budgets, categories, patrimony, selectedMonth: singleMonth, startDay: financialMonthStartDay }),
-    [singleMonth, transactions, budgets, categories, patrimony, financialMonthStartDay]
+    buildInsightsSummary({ transactions, budgets, categories, patrimony, selectedMonth: singleMonth, startDay: financialMonthStartDay, emergencyIncludesAforro: prof.emergencyIncludesAforro }),
+    [singleMonth, transactions, budgets, categories, patrimony, financialMonthStartDay, prof.emergencyIncludesAforro]
   );
 
   const multiSummary = useMemo(() => {
@@ -115,7 +117,7 @@ export default function ExportModal({ open, onClose, transactions, patrimony, bu
   // Fetch AI silently in background — include in PDF if ready when user clicks
   const { data: aiData, loading: aiLoading } = useAIInsights(
     includeAI && activeSummary ? activeSummary : null,
-    includeAI ? allInsights.slice(0, 5) : []
+    financialProfile
   );
 
   const handleGenerate = async () => {
