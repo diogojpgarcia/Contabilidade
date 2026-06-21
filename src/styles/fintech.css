@@ -1668,6 +1668,22 @@ button,
   text-decoration: underline; text-underline-offset: 2px;
 }
 
+.pat-reconcile-nudge {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 12px; padding: 11px 13px; margin-bottom: 12px;
+}
+.pat-reconcile-nudge-icon { font-size: 1.1rem; color: var(--cosmos-warning, #fbbf24); flex-shrink: 0; }
+.pat-reconcile-nudge-body { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.pat-reconcile-nudge-title { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.pat-reconcile-nudge-sub { font-size: 0.7rem; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pat-reconcile-nudge-btn {
+  flex-shrink: 0; background: var(--cosmos-warning, #fbbf24); color: #1a1303;
+  border: none; border-radius: 8px; padding: 7px 13px;
+  font-size: 0.78rem; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+
 .pat-account-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .pat-account-btn-main {
   background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--text-tertiary);

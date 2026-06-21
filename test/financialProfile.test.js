@@ -4,8 +4,14 @@ import { normalizeProfile, goalToFocus, DEFAULT_PROFILE } from '../src/utils/fin
 describe('normalizeProfile', () => {
   it('preenche defaults a partir de objeto vazio', () => {
     expect(normalizeProfile({})).toEqual({
-      goal: 'savings', savingsTarget: 20, variableIncome: false, monthlyIncome: 0, configured: false,
+      goal: 'savings', savingsTarget: 20, variableIncome: false, monthlyIncome: 0,
+      emergencyIncludesAforro: true, configured: false,
     });
+  });
+  it('respeita o toggle de aforro no fundo de emergência', () => {
+    expect(normalizeProfile({ emergencyIncludesAforro: false }).emergencyIncludesAforro).toBe(false);
+    expect(normalizeProfile({ emergencyIncludesAforro: true }).emergencyIncludesAforro).toBe(true);
+    expect(normalizeProfile({}).emergencyIncludesAforro).toBe(true); // default p/ perfis antigos
   });
   it('valida o objetivo e limita a meta de poupança', () => {
     expect(normalizeProfile({ goal: 'inexistente' }).goal).toBe('savings');

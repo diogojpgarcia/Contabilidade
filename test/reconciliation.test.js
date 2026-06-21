@@ -3,6 +3,7 @@ import {
   computeAccountBalanceAsOf,
   reconcileAccount,
   findGapCandidates,
+  accountsNeedingReconcile,
 } from '../src/utils/reconciliation.js';
 
 const acc = { id: 'a1', balance: 1000, adjustment: 0 };
@@ -102,5 +103,25 @@ describe('findGapCandidates', () => {
       confirmedRecurring: {},
     });
     expect(out.map(c => c.payment.id)).toEqual(['r3']);
+  });
+});
+
+describe('accountsNeedingReconcile', () => {
+  const accts = [
+    { id: 'a1', name: 'Nunca' },                              // nunca conferida
+    { id: 'a2', name: 'Recente', reconciledAt: '2026-06-15' }, // há 6 dias
+    { id: 'a3', name: 'Antiga',  reconciledAt: '2026-04-01' }, // há 81 dias
+  ];
+
+  it('inclui contas nunca conferidas ou conferidas há mais de staleDays', () => {
+    const out = accountsNeedingReconcile(accts, { staleDays: 30, asOf: '2026-06-21' });
+    expect(out.map(o => o.account.id)).toEqual(['a1', 'a3']); // a2 (6 dias) fica de fora
+    expect(out[0].reason).toBe('never');
+    expect(out[1].reason).toBe('stale');
+  });
+
+  it('respeita o limite staleDays', () => {
+    const out = accountsNeedingReconcile(accts, { staleDays: 90, asOf: '2026-06-21' });
+    expect(out.map(o => o.account.id)).toEqual(['a1']); // só a nunca conferida
   });
 });

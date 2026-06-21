@@ -7,7 +7,7 @@ import StatsOverview from '../budget/StatsOverview';
 import AIInsightsPanel from '../budget/AIInsightsPanel';
 import FinancialProfileSheet from '../budget/FinancialProfileSheet';
 import { generateInsights, computeFinancialScore, shiftMonth, buildInsightsSummary } from '../../utils/insights';
-import { goalToFocus } from '../../utils/financialProfile';
+import { goalToFocus, normalizeProfile } from '../../utils/financialProfile';
 import { filterByFinancialMonth, shiftFinancialMonth, getFinancialMonthLabel, getFinancialMonthRange, getCurrentFinancialMonth } from '../../utils/financialMonth';
 import { toBudgetLabel } from '../../utils/categories-professional';
 import './StatsTab.css';
@@ -185,12 +185,13 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
   // Resumo anonimizado para a análise IA (só quando o mês tem dados).
   const aiSummary = useMemo(() => {
     try {
-      const s = buildInsightsSummary({ transactions, budgets, categories, patrimony, selectedMonth: currentMonth, startDay: financialMonthStartDay });
+      const emergencyIncludesAforro = normalizeProfile(financialProfile || {}).emergencyIncludesAforro;
+      const s = buildInsightsSummary({ transactions, budgets, categories, patrimony, selectedMonth: currentMonth, startDay: financialMonthStartDay, emergencyIncludesAforro });
       return (s.income > 0 || s.expenses > 0) ? s : null;
     } catch {
       return null;
     }
-  }, [transactions, budgets, categories, patrimony, currentMonth, financialMonthStartDay]);
+  }, [transactions, budgets, categories, patrimony, currentMonth, financialMonthStartDay, financialProfile]);
 
   const forecast = useMemo(() => {
     const today    = new Date();

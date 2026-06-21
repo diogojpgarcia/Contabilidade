@@ -71,6 +71,17 @@ describe('buildInsightsSummary — estrutura 50/30/20', () => {
     expect(s.emergencyMonths).toBe(3);           // 2100 / 700 (ignora stocks/crypto/imóveis)
   });
 
+  it('exclui aforro do fundo de emergência quando o toggle está off', () => {
+    const s = buildInsightsSummary({
+      transactions, budgets: {}, categories,
+      patrimony: { accounts: [{ balance: 1400 }], bonds: [{ faceValue: 700 }] },
+      selectedMonth: '2026-06', startDay: 1,
+      emergencyIncludesAforro: false,
+    });
+    expect(s.liquidTotal).toBe(1400);            // só contas, sem aforro
+    expect(s.emergencyMonths).toBe(2);           // 1400 / 700
+  });
+
   it('usa currentBalance da conta quando presente (saldo real)', () => {
     const s = buildInsightsSummary({
       transactions, budgets: {}, categories,

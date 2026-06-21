@@ -15,6 +15,7 @@ import Sparkline from './Sparkline';
 import AssetDetailSheet from './AssetDetailSheet';
 import AccountReconcileSheet from './AccountReconcileSheet';
 import PatrimonyFormModal from './PatrimonyFormModal';
+import { accountsNeedingReconcile } from '../../utils/reconciliation';
 import { shortDate } from '../../utils/recurringPayments';
 import './AssetDetailSheet.css';
 
@@ -48,6 +49,7 @@ const PatrimonyView = ({
   recurringPayments = [],
   confirmedRecurring = {},
   onConfirmRecurring,
+  usageMode = 'manual',
 }) => {
   // ── Modal state ───────────────────────────────────────────────────────────
   const [showModal,      setShowModal]      = useState(false);
@@ -356,6 +358,13 @@ const PatrimonyView = ({
   const shownTypes  = sortedTypes.filter(t => (patrimony[t.key] || []).length > 0 || t.key === 'accounts');
   const emptyTypes  = sortedTypes.filter(t => (patrimony[t.key] || []).length === 0 && t.key !== 'accounts');
 
+  // Nudge de conferência (só modo extrato): contas nunca conferidas ou há +30 dias.
+  const staleAccounts = usageMode === 'extrato'
+    ? accountsNeedingReconcile(patrimony.accounts || [], { staleDays: 30 })
+    : [];
+  const openReconcileFor = (acc) =>
+    setReconcileAcc({ ...acc, currentBalance: computeAccountBalanceLocal(acc) });
+
   return (
     <>
       {/* ── Hero card ── */}
@@ -472,6 +481,29 @@ const PatrimonyView = ({
               </span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Nudge de conferência (modo extrato) ── */}
+      {staleAccounts.length > 0 && (
+        <div className="pat-reconcile-nudge">
+          <span className="pat-reconcile-nudge-icon">◷</span>
+          <div className="pat-reconcile-nudge-body">
+            <span className="pat-reconcile-nudge-title">
+              {staleAccounts.length === 1
+                ? `1 conta por conferir`
+                : `${staleAccounts.length} contas por conferir`}
+            </span>
+            <span className="pat-reconcile-nudge-sub">
+              {staleAccounts[0].reason === 'never'
+                ? `"${staleAccounts[0].account.name}" nunca foi conferida`
+                : `"${staleAccounts[0].account.name}" não é conferida há ${staleAccounts[0].days} dias`}
+            </span>
+          </div>
+          <button
+            className="pat-reconcile-nudge-btn"
+            onClick={() => openReconcileFor(staleAccounts[0].account)}
+          >Conferir</button>
         </div>
       )}
 

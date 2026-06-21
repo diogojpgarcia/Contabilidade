@@ -133,6 +133,7 @@ const BudgetTab = ({
           recurringPayments={recurringPayments}
           confirmedRecurring={confirmedRecurring}
           onConfirmRecurring={onConfirmRecurring}
+          usageMode={usageMode}
         />
       )}
     </div>

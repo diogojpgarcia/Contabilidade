@@ -22,6 +22,7 @@ export const DEFAULT_PROFILE = {
   savingsTarget: 20,
   variableIncome: false,
   monthlyIncome: 0, // âncora: ordenado/rendimento mensal declarado (0 = não declarado)
+  emergencyIncludesAforro: true, // contar certificados de aforro como liquidez no fundo de emergência
   configured: false, // passa a true quando o utilizador guarda o questionário
 };
 
@@ -37,6 +38,8 @@ export function normalizeProfile(p) {
     savingsTarget,
     variableIncome: !!p?.variableIncome,
     monthlyIncome,
+    // default true quando o campo não existe (perfis antigos mantêm comportamento atual)
+    emergencyIncludesAforro: p?.emergencyIncludesAforro !== false,
     configured: !!p?.configured,
   };
 }

@@ -87,3 +87,26 @@ export function findGapCandidates({
   // Mais recentes primeiro — o que falta tende a ser o mais próximo da data conferida.
   return candidates.sort((a, b) => b.dueDate.localeCompare(a.dueDate));
 }
+
+/** Nº de dias inteiros entre duas datas 'YYYY-MM-DD' (b - a), imune a DST. */
+function daysSince(dateStr, asOf) {
+  const u = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+  return Math.round((u(asOf) - u(dateStr)) / 86400000);
+}
+
+/**
+ * Contas que precisam de conferência: nunca conferidas ou conferidas há mais de
+ * `staleDays` dias. Usado pelo nudge do modo extrato. Puro.
+ * @returns [{ account, reason: 'never'|'stale', days }]  (mais "atrasadas" primeiro)
+ */
+export function accountsNeedingReconcile(accounts = [], { staleDays = 30, asOf = null } = {}) {
+  const today = asOf || new Date().toISOString().split('T')[0];
+  const out = [];
+  for (const a of accounts) {
+    if (!a) continue;
+    if (!a.reconciledAt) { out.push({ account: a, reason: 'never', days: Infinity }); continue; }
+    const days = daysSince(a.reconciledAt, today);
+    if (days > staleDays) out.push({ account: a, reason: 'stale', days });
+  }
+  return out.sort((x, y) => y.days - x.days);
+}

@@ -438,7 +438,7 @@ export const computeFinancialScore = ({ transactions, budgets, categories, selec
 };
 
 // buildInsightsSummary — payload anonimizado para AI endpoint + PDF
-export const buildInsightsSummary = ({ transactions, budgets, categories, patrimony, selectedMonth, startDay = 1 }) => {
+export const buildInsightsSummary = ({ transactions, budgets, categories, patrimony, selectedMonth, startDay = 1, emergencyIncludesAforro = true }) => {
   const prevMonth  = shiftMonth(selectedMonth, -1);
   const prev2Month = shiftMonth(selectedMonth, -2);
 
@@ -520,7 +520,7 @@ export const buildInsightsSummary = ({ transactions, budgets, categories, patrim
     (s, a) => s + (a?.currentBalance != null ? num(a.currentBalance) : num(a.balance) + num(a.adjustment)),
     0,
   );
-  const bondsLiquid = bonds.reduce((s, b) => s + num(b?.faceValue ?? b?.value), 0);
+  const bondsLiquid = emergencyIncludesAforro ? bonds.reduce((s, b) => s + num(b?.faceValue ?? b?.value), 0) : 0;
   const liquidTotal = patrimony ? accountsLiquid + bondsLiquid : null;
 
   // Confiança nos dados: estado de reconciliação das contas (Fase 2). A data

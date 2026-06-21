@@ -14,6 +14,7 @@ const FinancialProfileSheet = ({ profile, onSave, onClose }) => {
   const [savingsTarget, setSavingsTarget] = useState(init.savingsTarget);
   const [variableIncome, setVariableIncome] = useState(init.variableIncome);
   const [monthlyIncome, setMonthlyIncome] = useState(init.monthlyIncome ? String(init.monthlyIncome) : '');
+  const [emergencyIncludesAforro, setEmergencyIncludesAforro] = useState(init.emergencyIncludesAforro);
 
   const save = () => {
     const mi = Number(monthlyIncome);
@@ -22,6 +23,7 @@ const FinancialProfileSheet = ({ profile, onSave, onClose }) => {
       savingsTarget,
       variableIncome,
       monthlyIncome: Number.isFinite(mi) && mi > 0 ? mi : 0,
+      emergencyIncludesAforro,
       configured: true,
     });
     onClose();
@@ -114,6 +116,30 @@ const FinancialProfileSheet = ({ profile, onSave, onClose }) => {
             />
             <p className="fps-hint">
               Serve de âncora: se ainda não importaste o extrato deste mês, a análise usa este valor como rendimento fiável e avisa quando podem faltar transações.
+            </p>
+          </div>
+
+          {/* 5. Fundo de emergência — o que conta como liquidez */}
+          <div className="fps-q">
+            <div className="fps-q-label">Contar certificados de aforro no fundo de emergência?</div>
+            <div className="fps-chips">
+              <button
+                type="button"
+                className={`fps-chip ${emergencyIncludesAforro ? 'fps-chip--on' : ''}`}
+                onClick={() => setEmergencyIncludesAforro(true)}
+              >
+                Sim
+              </button>
+              <button
+                type="button"
+                className={`fps-chip ${!emergencyIncludesAforro ? 'fps-chip--on' : ''}`}
+                onClick={() => setEmergencyIncludesAforro(false)}
+              >
+                Não
+              </button>
+            </div>
+            <p className="fps-hint">
+              O fundo de emergência conta sempre as contas à ordem. Os certificados de aforro são resgatáveis mas com algum aviso — escolhe se contam como reserva. Ações, ETFs, cripto e imóveis nunca contam.
             </p>
           </div>
         </div>
