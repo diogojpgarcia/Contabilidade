@@ -29,6 +29,14 @@ button,
   user-select: none;
 }
 
+/* Tap-highlight global: no mobile (iOS/Android) o destaque por defeito ao tocar
+   desenha um retângulo que NÃO respeita o border-radius e parece "sair fora da
+   caixa" do botão. Desliga-o em todos os controlos (inclui botões inline sem
+   classe, como o seletor "Como usas a app?"). Não afeta o desktop (rato). */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── SCROLL ──────────────────────────────────────────────────────────────── */
 /* modern.css sets display:flex + flex:1/min-height:0 on .main-content-new
    and its > div children. Reset those for modern-ui so tab roots flow
