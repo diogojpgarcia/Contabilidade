@@ -54,8 +54,14 @@ async function getUser(req) {
  * Sends 401 and returns false if unauthorized.
  */
 async function requireAuth(req, res) {
-  // Dev: no Supabase env configured → allow all (local `vercel dev` without env).
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return true;
+  // Fail-CLOSED: sem env Supabase, recusa por defeito. Só permite sem auth quando
+  // explicitamente pedido em dev local (ALLOW_INSECURE_NO_AUTH=1) — nunca em prod,
+  // onde a env está sempre presente (este ramo nem é alcançado).
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    if (process.env.ALLOW_INSECURE_NO_AUTH === '1') return true;
+    res.status(503).json({ error: 'Auth not configured' });
+    return false;
+  }
   const user = await getUser(req);
   if (!user) {
     res.status(401).json({ error: 'Unauthorized' });

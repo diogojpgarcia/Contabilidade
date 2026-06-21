@@ -44,6 +44,13 @@ export const authService = {
 // Apply this to every row that comes back from the transactions table.
 const VALID_TX_TYPES = new Set(['expense', 'income', 'transfer', 'adjustment']);
 
+// Data de hoje em hora LOCAL (não UTC) — evita off-by-one perto da meia-noite
+// em fusos a leste de UTC (Portugal no verão = UTC+1).
+const localToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 function mapTransaction(raw) {
   if (!raw) throw new Error('updateTransaction: no row returned — transaction may not exist or RLS blocked the update');
   const type = VALID_TX_TYPES.has(raw.type) ? raw.type : 'expense';
@@ -53,7 +60,7 @@ function mapTransaction(raw) {
     type,
     category:    raw.category    || (type === 'income' ? 'Outros Rendimentos' : 'Outros'),
     description: raw.description || '',
-    date:        raw.date        || new Date().toISOString().slice(0, 10),
+    date:        raw.date        || localToday(),
   };
 }
 
@@ -162,12 +169,14 @@ export const dbService = {
     return (data || []).length;
   },
 
-  async updateTransaction(transactionId, updates) {
-    const { data, error } = await supabase
-      .from('transactions')
-      .update(updates)
-      .eq('id', transactionId)
-      .select();
+  // userId (opcional) → adiciona .eq('user_id') como defesa em profundidade,
+  // além do RLS. Não altera o comportamento quando o RLS está bem configurado,
+  // mas blinda contra um RLS em falta/mal configurado.
+  async updateTransaction(transactionId, updates, userId = null) {
+    const scope = (q) => (userId ? q.eq('user_id', userId) : q);
+    const { data, error } = await scope(
+      supabase.from('transactions').update(updates).eq('id', transactionId)
+    ).select();
     if (error) {
       // A coluna `subcategory` pode ainda não existir nalgumas BDs — nesse caso
       // repetimos sem ela (os saldos de transferência têm fallback por descrição
@@ -178,25 +187,26 @@ export const dbService = {
       const { subcategory, ...baseUpdates } = updates;
       if (Object.keys(baseUpdates).length === 0) {
         // Nothing core to update — fetch current row so caller gets a valid object back
-        const { data: cur, error: ce } = await supabase
-          .from('transactions').select('*').eq('id', transactionId).single();
+        const { data: cur, error: ce } = await scope(
+          supabase.from('transactions').select('*').eq('id', transactionId)
+        ).single();
         if (ce) throw ce;
         return mapTransaction(cur);
       }
-      const { data: d2, error: e2 } = await supabase
-        .from('transactions').update(baseUpdates).eq('id', transactionId).select();
+      const { data: d2, error: e2 } = await scope(
+        supabase.from('transactions').update(baseUpdates).eq('id', transactionId)
+      ).select();
       if (e2) throw e2;
       return mapTransaction(d2?.[0]);
     }
     return mapTransaction(data?.[0]);
   },
 
-  async deleteTransaction(transactionId) {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', transactionId)
-    if (error) throw error
+  async deleteTransaction(transactionId, userId = null) {
+    let q = supabase.from('transactions').delete().eq('id', transactionId);
+    if (userId) q = q.eq('user_id', userId);
+    const { error } = await q;
+    if (error) throw error;
   },
 
   // deleteAllUserData — removes financial transaction data and user settings.

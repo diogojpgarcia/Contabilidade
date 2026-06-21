@@ -186,7 +186,7 @@ const PatrimonyFormModal = ({
       };
       onPatrimonyChange?.(updated);
     } else {
-      const id   = Date.now().toString();
+      const id   = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       const item = { id, insertedAt: new Date().toISOString(), ...clean };
       const updated = { ...patrimony, [formType]: [...(patrimony[formType] || []), item] };
       onPatrimonyChange?.(updated);

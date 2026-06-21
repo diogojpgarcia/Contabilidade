@@ -126,7 +126,7 @@ export function useTransactions(currentUser) {
     if (isOffline()) return removeLocally();
 
     try {
-      await dbService.deleteTransaction(id);
+      await dbService.deleteTransaction(id, currentUser?.id);
       setTransactions(prev => prev.filter(t => t.id !== id));
     } catch (error) {
       if (isNetworkError(error)) return removeLocally();
@@ -172,7 +172,7 @@ export function useTransactions(currentUser) {
     if (isOffline()) return queueLocally();
 
     try {
-      const updated = await dbService.updateTransaction(updatedTransaction.id, fields);
+      const updated = await dbService.updateTransaction(updatedTransaction.id, fields, currentUser?.id);
       const merged = {
         ...updated,
         account_id:   updatedTransaction.account_id   ?? updated.account_id   ?? null,
@@ -211,10 +211,10 @@ export function useTransactions(currentUser) {
             ? prev.map(t => t.id === entry.payload.tempId ? reconciled : t)
             : [reconciled, ...prev]);
         } else if (entry.kind === 'update') {
-          await dbService.updateTransaction(entry.payload.id, entry.payload.updates);
+          await dbService.updateTransaction(entry.payload.id, entry.payload.updates, currentUser.id);
           setTransactions(prev => prev.map(t => t.id === entry.payload.id ? { ...t, _pending: false } : t));
         } else if (entry.kind === 'delete') {
-          await dbService.deleteTransaction(entry.payload.id);
+          await dbService.deleteTransaction(entry.payload.id, currentUser.id);
         }
         removeEntry(entry.id);
         refreshPending();
@@ -319,7 +319,7 @@ export function useTransactions(currentUser) {
     if (isOffline()) return queueLocally();
 
     try {
-      await dbService.updateTransaction(transactionId, fields);
+      await dbService.updateTransaction(transactionId, fields, currentUser?.id);
     } catch (err) {
       if (isNetworkError(err)) return queueLocally();
       console.error('❌ Error persisting account change to DB:', err);
@@ -345,7 +345,7 @@ export function useTransactions(currentUser) {
     ));
 
     try {
-      await dbService.updateTransaction(transactionId, { category: newCategory });
+      await dbService.updateTransaction(transactionId, { category: newCategory }, currentUser?.id);
 
       const pattern = tokensOf(description)[0] || null;
       if (pattern) {
@@ -383,7 +383,7 @@ export function useTransactions(currentUser) {
         ids.includes(t.id) ? { ...t, category: newCategory } : t
       ));
       for (const tx of selected) {
-        dbService.updateTransaction(tx.id, { category: newCategory })
+        dbService.updateTransaction(tx.id, { category: newCategory }, currentUser?.id)
           .catch(e => toast.error('Erro ao guardar: ' + e.message));
       }
     }
