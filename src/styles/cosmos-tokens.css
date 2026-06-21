@@ -224,13 +224,12 @@ html[data-palette="dusk"] {
    Apply via:  document.documentElement.setAttribute('data-palette', 'stone')
    ══════════════════════════════════════════════════════════════════════════ */
 html[data-palette="stone"] {
-  /* Surfaces — branco QUENTE (mesmo tom do fundo bege), nada de branco puro.
-     Fundo mantido (os botões do Orçamento derivam dele); só as superfícies
-     dos cartões deixam de ser branco frio. */
-  --cosmos-bg:        #f0ebe4;
-  --cosmos-surface-1: #f6f0e7;
-  --cosmos-surface-2: #fcf7ef;
-  --cosmos-surface-3: #f1eadf;
+  /* Surfaces — areia QUENTE (como os botões do Orçamento), nada de branco.
+     Fundo mais profundo + cartões com tom de areia visível (não branco). */
+  --cosmos-bg:        #e9e0d2;
+  --cosmos-surface-1: #f0e8db;
+  --cosmos-surface-2: #f5eee2;
+  --cosmos-surface-3: #ebe2d4;
 
   /* Accent — terracotta/clay */
   --cosmos-accent:        #9f6b48;
@@ -242,8 +241,8 @@ html[data-palette="stone"] {
 
   /* Text */
   --cosmos-text-1:     #1e1812;
-  --cosmos-text-2:     rgba(60, 48, 38, 0.68);
-  --cosmos-text-3:     rgba(60, 48, 38, 0.38);
+  --cosmos-text-2:     rgba(48, 38, 28, 0.84);
+  --cosmos-text-3:     rgba(48, 38, 28, 0.56);
   --cosmos-text-accent: #9f6b48;
 
   /* Semantic */
@@ -276,8 +275,8 @@ html[data-palette="stone"] {
     0 0 20px rgba(159, 107, 72, 0.14);
 
   /* Nav */
-  --cosmos-nav-surface: rgba(240, 235, 228, 1.00);
-  --cosmos-nav-notch:   #f0ebe4;
+  --cosmos-nav-surface: rgba(233, 224, 210, 1.00);
+  --cosmos-nav-notch:   #e9e0d2;
 
   /* ── modern.css bridge — makes all tab CSS respond to this palette ── */
   --primary:        #9f6b48;

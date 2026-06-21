@@ -14,7 +14,7 @@ import {
 const PALETTE_BG = {
   midnight: '#0b0d10',
   dusk:     '#121008',
-  stone:    '#f0ebe4',
+  stone:    '#e9e0d2',
 };
 const DEFAULT_BG = '#0b0d10'; // midnight — deve ser idêntico a PALETTE_BG.midnight
 

@@ -268,7 +268,7 @@ button,
   padding: 3px;
   margin: 10px 16px;
 }
-[data-theme="light"] .m-toggle { background: #e5e5ea; }
+[data-theme="light"] .m-toggle { background: #e4dccd; }
 
 .m-toggle-btn {
   flex: 1;
@@ -700,7 +700,7 @@ button,
   outline: none;
   font-family: inherit;
 }
-[data-theme="light"] .m-date-input { background: #f2f2f7; }
+[data-theme="light"] .m-date-input { background: #efe8db; }
 .m-clear-btn {
   background: var(--bg-tertiary);
   border: none;
@@ -945,7 +945,7 @@ button,
   font-family: inherit;
   outline: none;
 }
-[data-theme="light"] .m-budget-limit-input { background: #e5e5ea; }
+[data-theme="light"] .m-budget-limit-input { background: #e4dccd; }
 .m-budget-unit { font-size: 0.72rem; color: var(--text-tertiary); }
 .m-budget-save {
   background: var(--cosmos-accent-dim);
@@ -1170,7 +1170,7 @@ button,
   outline: none;
 }
 .m-bcc-input:focus { border-color: var(--cosmos-income); }
-[data-theme="light"] .m-bcc-input { background: #f2f2f7; }
+[data-theme="light"] .m-bcc-input { background: #efe8db; }
 .m-bcc-save {
   background: var(--cosmos-income); border: none; border-radius: 10px;
   color: #fff; font-weight: 700; font-size: 1rem;
@@ -2683,7 +2683,7 @@ button,
   border-radius: 10px;
   padding: 3px;
 }
-[data-theme="light"] .m-seg-control { background: #e5e5ea; }
+[data-theme="light"] .m-seg-control { background: #e4dccd; }
 .m-seg-btn {
   flex: 1;
   min-height: 38px;
