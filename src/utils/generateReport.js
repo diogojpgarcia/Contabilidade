@@ -587,6 +587,29 @@ export async function generateFinancialReport(opts) {
       y+=17;
     }
 
+    // ── Fiabilidade dos dados (avisos de confiança) ────────────────────────
+    if (aiInsights.confidence?.notes?.length) {
+      const cf = aiInsights.confidence;
+      const isWarn = cf.level === 'low' || cf.level === 'medium';
+      const cfLines = cf.notes.flatMap(n => _doc.splitTextToSize(`• ${n}`, W-10));
+      const cfH = cfLines.length*3.8+11;
+      y=safe(y,cfH+4);
+      card(M,y,W,cfH, isWarn ? C.warningLight : C.neutralLight, isWarn ? C.warning : C.neutral);
+      _doc.setFillColor(...(isWarn ? C.warning : C.neutral)); _doc.rect(M,y,2.5,cfH,'F');
+      _doc.setFont('helvetica','bold'); _doc.setFontSize(7);
+      _doc.setTextColor(...(isWarn ? C.warning : C.text3));
+      _doc.text('FIABILIDADE DOS DADOS', M+6, y+5.5);
+      _doc.setFont('helvetica','normal'); _doc.setFontSize(7.5);
+      _doc.setTextColor(...C.text2);
+      let cfy=y+9.5;
+      cf.notes.forEach(n => {
+        const nl=_doc.splitTextToSize(`• ${n}`, W-10);
+        _doc.text(nl, M+6, cfy);
+        cfy+=nl.length*3.8+1;
+      });
+      y+=cfH+5;
+    }
+
     // ── Narrative ──────────────────────────────────────────────────────────
     if (aiInsights.narrative) {
       y=safe(y,16);
