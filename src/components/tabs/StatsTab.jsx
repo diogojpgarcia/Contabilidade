@@ -349,6 +349,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             display: 'flex', gap: 5, padding: '0 20px 10px',
             overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
             alignItems: 'center',
+            flexShrink: 0,  // scroll container (overflow-x) num flex-column: evita colapso vertical
           }}>
             {[
               { key: 'all',      label: 'Todos'          },
@@ -423,6 +424,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
               background: 'var(--cosmos-border-subtle)', border: '1px solid var(--cosmos-accent-border)',
               borderRadius: 8, padding: '4px 9px',
               animation: 'expandSearch 0.15s ease',
+              flexShrink: 0,
             }}>
               <Search size={12} color="#2D3748" strokeWidth={1.75} style={{ flexShrink: 0 }} />
               <input
@@ -450,6 +452,7 @@ const StatsTab = ({ transactions, filteredTransactions, currentMonth, onMonthCha
             <div style={{
               display: 'flex', gap: 5, padding: '0 20px 6px',
               overflowX: 'auto', scrollbarWidth: 'none', touchAction: 'pan-x',
+              flexShrink: 0,
             }}>
               {[{ id: null, name: 'Todas as contas' }, ...(patrimony.accounts || [])].map(acc => (
                 <button
