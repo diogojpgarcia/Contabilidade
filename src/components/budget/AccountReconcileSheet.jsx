@@ -27,9 +27,11 @@ export default function AccountReconcileSheet({
   confirmedRecurring = {},
   onConfirmRecurring,   // ({ recurringPayment, dueDate, monthKey, amount, accountId }) => Promise
   onSaveAccount,        // (accountId, patch) => void  — persiste reconciledAt/reconciledBalance/adjustment
+  prefillBalance = null, // saldo final do extrato (pré-preenche o campo)
+  prefillDate = null,    // data do último movimento do extrato
 }) {
-  const [asOf, setAsOf]   = useState(todayStr());
-  const [real, setReal]   = useState('');
+  const [asOf, setAsOf]   = useState(prefillDate || todayStr());
+  const [real, setReal]   = useState(prefillBalance != null ? String(prefillBalance) : '');
   const [busyId, setBusyId] = useState(null);
 
   // Período onde procurar o que falta: da última conferência (ou criação) até à data conferida.

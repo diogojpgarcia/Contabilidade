@@ -265,6 +265,21 @@ const App = () => {
             <ImportTab
               onImportDone={tx.handleImport}
               learnedRules={tx.learnedRules}
+              accounts={patrimonyWithLiveBalances.accounts || []}
+              mainAccountId={s.mainAccountId}
+              transactions={safeTransactions}
+              recurringPayments={s.recurringPayments}
+              confirmedRecurring={s.confirmedRecurring}
+              onConfirmRecurring={s.handleConfirmRecurring}
+              onSaveAccount={(accountId, patch) => {
+                const updated = {
+                  ...s.patrimony,
+                  accounts: (s.patrimony.accounts || []).map(a =>
+                    a.id === accountId ? { ...a, ...patch } : a
+                  ),
+                };
+                s.handlePatrimonyChange(updated);
+              }}
             />
             </Suspense>
           </ErrorBoundary>

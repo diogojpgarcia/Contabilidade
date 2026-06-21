@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectColumns, parseCSV } from '../src/utils/parseBankFile.js';
+import { detectColumns, parseCSV, extractClosingBalance } from '../src/utils/parseBankFile.js';
 
 // Regressão: extratos Santander têm colunas "Data valor" e "Montante( EUR )".
 // O keyword 'valor' fazia "Data valor" ganhar a deteção de montante, e o parser
@@ -35,5 +35,34 @@ describe('parseBankFile — parseCSV (layout Santander, ; e decimais PT)', () =>
     expect(rows.find(r => r.description.includes('Ordenado'))).toMatchObject({
       amount: 1500, type: 'income',
     });
+  });
+  it('captura o saldo corrente de cada linha', () => {
+    expect(rows.find(r => r.description.includes('Metro')).balance).toBe(226.32);
+    expect(rows.find(r => r.description.includes('Ordenado')).balance).toBe(1726.32);
+  });
+});
+
+describe('extractClosingBalance — saldo final do extrato', () => {
+  const csv = `Data Operação;Data valor;Descrição;Montante( EUR );Saldo Contabilístico( EUR )
+12-06-2026;12-06-2026;Mts Metro Transporte;-1,35;226,32
+11-06-2026;11-06-2026;Boa Turma 4;-1,87;227,67
+09-06-2026;09-06-2026;Ordenado;1.500,00;1.726,32`;
+
+  it('devolve o saldo da data mais recente (ficheiro descendente)', () => {
+    const rows = parseCSV(csv);
+    expect(extractClosingBalance(rows)).toEqual({ balance: 226.32, date: '2026-06-12' });
+  });
+  it('devolve null quando não há coluna de saldo', () => {
+    const noBal = `Data;Descrição;Montante
+12-06-2026;Café;-1,35
+11-06-2026;Ordenado;1.500,00`;
+    expect(extractClosingBalance(parseCSV(noBal))).toBeNull();
+  });
+  it('escolhe a data mais recente independentemente da ordem do ficheiro', () => {
+    const ascending = [
+      { date: '2026-06-09', balance: 100 },
+      { date: '2026-06-12', balance: 250 },
+    ];
+    expect(extractClosingBalance(ascending)).toEqual({ balance: 250, date: '2026-06-12' });
   });
 });

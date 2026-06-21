@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { dbService, computeImportHash } from '../../lib/supabase';
-import { parseBankFile } from '../../utils/parseBankFile';
+import { parseBankFile, extractClosingBalance } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
 import { descMatchesPattern } from '../../utils/textMatch';
 import FintechTransactionCard from '../FintechTransactionCard';
+import AccountReconcileSheet from '../budget/AccountReconcileSheet';
 import { useAppContext } from '../../context/AppContext';
 import './ImportTab.css';
 
@@ -17,7 +18,17 @@ const toFtcShape = (tx, i) => ({
   category:    tx.category || (tx.type === 'income' ? 'Outros Rendimentos' : 'Outros'),
 });
 
-const ImportTab = ({ onImportDone, learnedRules = [] }) => {
+const ImportTab = ({
+  onImportDone,
+  learnedRules = [],
+  accounts = [],
+  mainAccountId = null,
+  transactions = [],
+  recurringPayments = [],
+  confirmedRecurring = {},
+  onConfirmRecurring,
+  onSaveAccount,
+}) => {
   const { currentUser } = useAppContext();
   const [preview,  setPreview]  = useState([]);
   const [insights, setInsights] = useState(null);
@@ -28,11 +39,18 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
   const [saved,       setSaved]       = useState(false);
   const [keepDupes,   setKeepDupes]   = useState(false);
   const [skippedCount, setSkippedCount] = useState(0);
+  const [accountId,   setAccountId]   = useState('');   // conta destino do import
+  const [closing,     setClosing]     = useState(null); // { balance, date } do extrato
+  const [reconcileOpen, setReconcileOpen] = useState(false);
   const inputRef = useRef();
+
+  // Conta destino efetiva: escolha explícita ou, por defeito, a conta principal.
+  const effAccountId = accountId || mainAccountId || '';
+  const targetAccount = accounts.find(a => a.id === effAccountId) || null;
 
   const handleFile = async (file) => {
     if (!file) return;
-    setError(''); setSaved(false); setPreview([]); setInsights(null);
+    setError(''); setSaved(false); setPreview([]); setInsights(null); setClosing(null);
     setFileName(file.name);
     setLoading(true);
     try {
@@ -47,6 +65,9 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
         setError('Nenhuma transação reconhecida no ficheiro.');
         return;
       }
+
+      // Saldo final do extrato (CSV/XLSX) → pré-preenche a conferência pós-import.
+      setClosing(extractClosingBalance(rows));
 
       const { transactions, insights: ins } = enrichTransactions(rows);
 
@@ -86,6 +107,8 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
         amount:      tx.amount,
         type:        tx.type,
         category:    tx.category || (tx.type === 'income' ? 'Outros Rendimentos' : 'Outros'),
+        // Liga as transações importadas à conta destino (reconciliação por conta).
+        ...(targetAccount ? { account_id: targetAccount.id, account_name: targetAccount.name } : {}),
         import_hash: computeImportHash(
           tx.date,
           tx.amount,
@@ -100,6 +123,9 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
       setInsights(null);
       setFileName('');
       if (onImportDone) onImportDone(saved);
+      // Fecha o ciclo: oferece conferir o saldo da conta importada (pré-preenchido
+      // com o saldo final do extrato, quando disponível).
+      if (targetAccount && onSaveAccount) setReconcileOpen(true);
     } catch (e) {
       setError('Erro ao guardar: ' + e.message);
     } finally {
@@ -109,7 +135,7 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
 
   const handleClear = () => {
     setPreview([]); setInsights(null); setFileName('');
-    setError(''); setSaved(false); setSkippedCount(0);
+    setError(''); setSaved(false); setSkippedCount(0); setClosing(null);
     if (inputRef.current) inputRef.current.value = '';
   };
 
@@ -213,6 +239,28 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
         </div>
       )}
 
+      {/* Conta destino — liga as transações importadas a uma conta (reconciliação) */}
+      {preview.length > 0 && accounts.length > 0 && (
+        <div className="import-account-select">
+          <label className="import-account-label">Conta destino</label>
+          <select
+            className="import-account-input"
+            value={effAccountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          >
+            <option value="">— Sem conta —</option>
+            {accounts.map(a => (
+              <option key={a.id} value={a.id}>{a.name}{a.bank ? ` · ${a.bank}` : ''}</option>
+            ))}
+          </select>
+          {targetAccount && (
+            <span className="import-account-hint">
+              No fim podes conferir o saldo desta conta{closing ? ' (saldo do extrato detetado)' : ''}.
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Actions */}
       {preview.length > 0 && (
         <div className="import-actions">
@@ -228,6 +276,22 @@ const ImportTab = ({ onImportDone, learnedRules = [] }) => {
             }
           </button>
         </div>
+      )}
+
+      {/* Conferir saldo da conta importada (pré-preenchido com o saldo do extrato) */}
+      {reconcileOpen && targetAccount && (
+        <AccountReconcileSheet
+          open={reconcileOpen}
+          onClose={() => setReconcileOpen(false)}
+          account={targetAccount}
+          transactions={transactions}
+          recurringPayments={recurringPayments}
+          confirmedRecurring={confirmedRecurring}
+          onConfirmRecurring={onConfirmRecurring}
+          onSaveAccount={onSaveAccount}
+          prefillBalance={closing?.balance ?? null}
+          prefillDate={closing?.date ?? null}
+        />
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 // parseBankXlsx.js — XLSX/XLS bank statement parser (extracted from parseBankFile.js)
 import {
-  parseDate, cleanDescription, resolveSignedAmount,
+  parseDate, parseAmount, cleanDescription, resolveSignedAmount,
   norm, detectColumns,
   SCORE_DATE, SCORE_DESC, SCORE_AMT, SCORE_DEBIT, SCORE_CREDIT,
 } from './parseBankFile';
@@ -92,6 +92,12 @@ export async function parseXLSX(buffer) {
 
       const type  = amount < 0 ? 'expense' : 'income';
       const entry = { date, description, amount: Math.abs(amount), type };
+
+      // Saldo corrente da linha — usado para a reconciliação (saldo final).
+      if (cols.balance) {
+        const bal = parseAmount(obj[cols.balance]);
+        if (bal !== null) entry.balance = bal;
+      }
 
       const key = dedupKey(entry);
       if (seen.has(key)) continue;

@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { parseCSV } from '../src/utils/parseBankFile.js';
 
+// O parser anexa o saldo corrente (balance) quando o extrato o tem; estes casos
+// validam só {date,type,amount,description}, por isso ignoramos esse campo.
+const omitBalance = ({ balance: _b, ...r }) => r;
+
 // Cobertura dos principais formatos de exportação CSV da banca portuguesa
 // (+ neobancos). Cada caso valida nº de transações, data, tipo, montante e
 // descrição. Protege a deteção data-driven de colunas contra regressões.
@@ -128,7 +132,7 @@ for (const [bank, { csv, expect: expected }] of Object.entries(CASES)) {
     });
     expected.forEach((exp, i) => {
       it(`linha ${i + 1} — ${exp.description} (${exp.type} ${exp.amount})`, () => {
-        expect(rows[i]).toEqual(exp);
+        expect(omitBalance(rows[i])).toEqual(exp);
       });
     });
   });

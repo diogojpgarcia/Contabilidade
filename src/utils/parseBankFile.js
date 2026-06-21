@@ -548,6 +548,13 @@ export function parseCSV(text) {
       const type  = amount < 0 ? 'expense' : 'income';
       const entry = { date, description, amount: Math.abs(amount), type };
 
+      // Saldo corrente da linha (running balance), quando a coluna existe — usado
+      // para a reconciliação (saldo final do extrato). Mantém o sinal (overdraft).
+      if (cols.balance) {
+        const bal = parseAmount(obj[cols.balance]);
+        if (bal !== null) entry.balance = bal;
+      }
+
       const key = dedupKey(entry);
       if (seen.has(key)) continue;
       seen.add(key);
@@ -573,6 +580,27 @@ export function parseCSV(text) {
   }
 
   return result;
+}
+
+/**
+ * Extrai o saldo final do extrato a partir das linhas parseadas: o `balance`
+ * corrente da transação com a data mais recente. Usado para pré-preencher a
+ * reconciliação ("Conferir saldo") após o import. Devolve { balance, date } ou
+ * null se nenhuma linha tiver saldo.
+ *
+ * Em vários movimentos na data mais recente, decide pela ordem do ficheiro:
+ * ascendente → o último; descendente → o primeiro.
+ */
+export function extractClosingBalance(rows) {
+  const withBal = (rows || []).filter(r => r && r.balance != null && r.date);
+  if (!withBal.length) return null;
+  const maxDate = withBal.reduce((m, r) => (r.date > m ? r.date : m), withBal[0].date);
+  const onMax = withBal.filter(r => r.date === maxDate);
+  const ascending = withBal[0].date <= withBal[withBal.length - 1].date;
+  const balance = onMax.length === 1
+    ? onMax[0].balance
+    : ascending ? onMax[onMax.length - 1].balance : onMax[0].balance;
+  return { balance, date: maxDate };
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
