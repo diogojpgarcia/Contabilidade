@@ -1,8 +1,10 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   PALETTE OVERRIDES
-   Imported LAST in App.jsx so these rules always win the cascade.
-   Uses html[data-palette] (specificity 0,1,1) which beats every :root and
-   [data-theme] rule (both 0,1,0) across modern.css and soft-future.css.
+   PALETAS — FONTE ÚNICA das cores por paleta (midnight / dusk / stone).
+   Importado por ÚLTIMO em App.jsx para ganhar sempre a cascata.
+   html[data-palette] (especificidade 0,1,1) bate todo o :root e [data-theme]
+   (0,1,0) do modern.css e soft-future.css. O bloco midnight aplica-se também a
+   :root (default + 1o paint). Tokens ESTRUTURAIS (raios/espaços/motion/nav) e
+   --cosmos-transfer* vivem em cosmos-tokens.css. NÃO duplicar cores noutro lado.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── DUSK — warm dark, amber accent ──────────────────────────────────────── */
@@ -205,6 +207,7 @@ html[data-palette="dusk"] body {
    PALETTE — MIDNIGHT  (default dark · charcoal · cyan)
    Explicit block so html[data-palette="midnight"] beats any [data-theme] rule.
    ══════════════════════════════════════════════════════════════════════════ */
+:root,
 html[data-palette="midnight"] {
   /* Surfaces */
   --cosmos-bg:        #0b0d10;
