@@ -224,12 +224,12 @@ html[data-palette="dusk"] {
    Apply via:  document.documentElement.setAttribute('data-palette', 'stone')
    ══════════════════════════════════════════════════════════════════════════ */
 html[data-palette="stone"] {
-  /* Surfaces — areia QUENTE (como os botões do Orçamento), nada de branco.
-     Fundo mais profundo + cartões com tom de areia visível (não branco). */
-  --cosmos-bg:        #e9e0d2;
-  --cosmos-surface-1: #f0e8db;
-  --cosmos-surface-2: #f5eee2;
-  --cosmos-surface-3: #ebe2d4;
+  /* Surfaces — areia QUENTE. NOTA: palette-overrides.css redefine o stone e é o
+     AUTORITATIVO (carregado depois); manter estes valores iguais aos de lá. */
+  --cosmos-bg:        #eae1d3;
+  --cosmos-surface-1: #e1d8c8;
+  --cosmos-surface-2: #e7dfd1;
+  --cosmos-surface-3: #dcd2c2;
 
   /* Accent — terracotta/clay */
   --cosmos-accent:        #9f6b48;
@@ -241,8 +241,8 @@ html[data-palette="stone"] {
 
   /* Text */
   --cosmos-text-1:     #1e1812;
-  --cosmos-text-2:     rgba(48, 38, 28, 0.84);
-  --cosmos-text-3:     rgba(48, 38, 28, 0.56);
+  --cosmos-text-2:     rgba(46, 36, 26, 0.86);
+  --cosmos-text-3:     rgba(46, 36, 26, 0.58);
   --cosmos-text-accent: #9f6b48;
 
   /* Semantic */

@@ -99,11 +99,11 @@ html[data-palette="dusk"] {
 
 /* ── STONE — warm light, terracotta accent ───────────────────────────────── */
 html[data-palette="stone"] {
-  /* Surfaces */
-  --cosmos-bg:        #f0ebe4;
-  --cosmos-surface-1: #e8e2da;
-  --cosmos-surface-2: #ede7df;
-  --cosmos-surface-3: #e2dbd2;
+  /* Surfaces — areia QUENTE e profunda (nada de branco) */
+  --cosmos-bg:        #eae1d3;
+  --cosmos-surface-1: #e1d8c8;
+  --cosmos-surface-2: #e7dfd1;
+  --cosmos-surface-3: #dcd2c2;
 
   /* Accent */
   --cosmos-accent:        #9f6b48;
@@ -113,10 +113,10 @@ html[data-palette="stone"] {
   --cosmos-accent-glow:   rgba(159, 107, 72, 0.22);
   --cosmos-accent-soft:   rgba(159, 107, 72, 0.07);
 
-  /* Text */
+  /* Text — cinzentos mais escuros para contraste legível */
   --cosmos-text-1:      #1e1812;
-  --cosmos-text-2:      rgba(60, 48, 38, 0.68);
-  --cosmos-text-3:      rgba(60, 48, 38, 0.38);
+  --cosmos-text-2:      rgba(46, 36, 26, 0.86);
+  --cosmos-text-3:      rgba(46, 36, 26, 0.58);
   --cosmos-text-accent: #9f6b48;
 
   /* Semantic */
@@ -144,8 +144,8 @@ html[data-palette="stone"] {
   --cosmos-glow-accent:  0 0 20px rgba(159, 107, 72, 0.14);
 
   /* Nav */
-  --cosmos-nav-surface: rgba(240, 235, 228, 0.94);
-  --cosmos-nav-notch:   #f0ebe4;
+  --cosmos-nav-surface: rgba(234, 225, 211, 0.94);
+  --cosmos-nav-notch:   #eae1d3;
 
   /* modern.css bridge */
   --primary:        #9f6b48;
@@ -154,39 +154,39 @@ html[data-palette="stone"] {
   --danger:         #c04040;
   --warning:        #b07530;
 
-  --bg-primary:     #f0ebe4;
-  --bg-secondary:   #faf7f2;
-  --bg-tertiary:    #f4efe9;
-  --bg-elevated:    #fdf9f4;
+  --bg-primary:     #eae1d3;
+  --bg-secondary:   #e7dfd1;
+  --bg-tertiary:    #e1d8c8;
+  --bg-elevated:    #efe7da;
 
   --text-primary:   #1e1812;
-  --text-secondary: rgba(60, 48, 38, 0.68);
-  --text-tertiary:  rgba(60, 48, 38, 0.38);
+  --text-secondary: rgba(46, 36, 26, 0.86);
+  --text-tertiary:  rgba(46, 36, 26, 0.58);
 
   --border:         rgba(159, 107, 72, 0.12);
   --separator:      rgba(159, 107, 72, 0.14);
   --overlay:        rgba(200, 185, 170, 0.70);
 
-  --header-bg:      rgba(240, 235, 228, 0.92);
-  --nav-bg:         rgba(240, 235, 228, 0.94);
+  --header-bg:      rgba(234, 225, 211, 0.92);
+  --nav-bg:         rgba(234, 225, 211, 0.94);
   --nav-text:             #1e1812;
-  --nav-text-secondary:   rgba(60, 48, 38, 0.68);
+  --nav-text-secondary:   rgba(46, 36, 26, 0.86);
 
   --shadow-sm:  0 1px 4px rgba(120, 90, 60, 0.12);
   --shadow-md:  0 4px 16px rgba(120, 90, 60, 0.16);
   --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
 
   /* Legacy aliases */
-  --card-bg:       #e8e2da;
+  --card-bg:       #e1d8c8;
   --surface-2:     rgba(0, 0, 0, 0.06);
   --border-color:  rgba(159, 107, 72, 0.18);
   --accent:        #9f6b48;
   --bg-hover:      rgba(0, 0, 0, 0.06);
-  --input-bg:      #e2dbd2;
+  --input-bg:      #ddd3c2;
 
   /* Nav / modal overlays */
-  --surface-nav:   rgba(235, 230, 222, 0.96);
-  --surface-sheet: rgba(238, 233, 226, 0.97);
+  --surface-nav:   rgba(231, 223, 209, 0.96);
+  --surface-sheet: rgba(231, 223, 209, 0.97);
 }
 
 /* ── Stone: body/page background ─────────────────────────────────────────── */
