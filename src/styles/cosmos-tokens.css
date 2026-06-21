@@ -224,11 +224,13 @@ html[data-palette="dusk"] {
    Apply via:  document.documentElement.setAttribute('data-palette', 'stone')
    ══════════════════════════════════════════════════════════════════════════ */
 html[data-palette="stone"] {
-  /* Surfaces */
+  /* Surfaces — branco QUENTE (mesmo tom do fundo bege), nada de branco puro.
+     Fundo mantido (os botões do Orçamento derivam dele); só as superfícies
+     dos cartões deixam de ser branco frio. */
   --cosmos-bg:        #f0ebe4;
-  --cosmos-surface-1: #faf7f2;
-  --cosmos-surface-2: #ffffff;
-  --cosmos-surface-3: #f4efe9;
+  --cosmos-surface-1: #f6f0e7;
+  --cosmos-surface-2: #fcf7ef;
+  --cosmos-surface-3: #f1eadf;
 
   /* Accent — terracotta/clay */
   --cosmos-accent:        #9f6b48;
