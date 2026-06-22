@@ -570,3 +570,15 @@
   border-color: var(--cosmos-accent-border);
   color: var(--cosmos-accent);
 }
+
+/* Tema claro (stone): a borda/fundo branco-alfa é invisível. Usar superfície
+   elevada + borda quente para os botões de menu se verem. */
+[data-theme="light"] .b-nav-btn {
+  background: var(--cosmos-surface-2);
+  border-color: var(--cosmos-border-card);
+}
+[data-theme="light"] .b-nav-btn.active {
+  background: var(--cosmos-accent-dim);
+  border-color: var(--cosmos-accent);
+  color: var(--cosmos-accent);
+}

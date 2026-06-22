@@ -101,11 +101,12 @@ html[data-palette="dusk"] {
 
 /* ── STONE — warm light, terracotta accent ───────────────────────────────── */
 html[data-palette="stone"] {
-  /* Surfaces — areia QUENTE e profunda (nada de branco) */
-  --cosmos-bg:        #eae1d3;
-  --cosmos-surface-1: #e1d8c8;
-  --cosmos-surface-2: #e7dfd1;
-  --cosmos-surface-3: #dcd2c2;
+  /* Surfaces — areia QUENTE com ELEVAÇÃO: cartões MAIS CLAROS que o fundo (para
+     os contornos/edges se verem), mas nunca branco puro. */
+  --cosmos-bg:        #e7ded0;
+  --cosmos-surface-1: #efe8db;
+  --cosmos-surface-2: #f4eee2;
+  --cosmos-surface-3: #e9e1d4;
 
   /* Accent */
   --cosmos-accent:        #9f6b48;
@@ -146,8 +147,8 @@ html[data-palette="stone"] {
   --cosmos-glow-accent:  0 0 20px rgba(159, 107, 72, 0.14);
 
   /* Nav */
-  --cosmos-nav-surface: rgba(234, 225, 211, 0.94);
-  --cosmos-nav-notch:   #eae1d3;
+  --cosmos-nav-surface: rgba(231, 222, 208, 0.94);
+  --cosmos-nav-notch:   #e7ded0;
 
   /* modern.css bridge */
   --primary:        #9f6b48;
@@ -156,10 +157,10 @@ html[data-palette="stone"] {
   --danger:         #c04040;
   --warning:        #b07530;
 
-  --bg-primary:     #eae1d3;
-  --bg-secondary:   #e7dfd1;
-  --bg-tertiary:    #e1d8c8;
-  --bg-elevated:    #efe7da;
+  --bg-primary:     #e7ded0;
+  --bg-secondary:   #f4eee2;
+  --bg-tertiary:    #efe8db;
+  --bg-elevated:    #f8f2e8;
 
   --text-primary:   #1e1812;
   --text-secondary: rgba(46, 36, 26, 0.86);
@@ -169,8 +170,8 @@ html[data-palette="stone"] {
   --separator:      rgba(159, 107, 72, 0.14);
   --overlay:        rgba(200, 185, 170, 0.70);
 
-  --header-bg:      rgba(234, 225, 211, 0.92);
-  --nav-bg:         rgba(234, 225, 211, 0.94);
+  --header-bg:      rgba(231, 222, 208, 0.92);
+  --nav-bg:         rgba(231, 222, 208, 0.94);
   --nav-text:             #1e1812;
   --nav-text-secondary:   rgba(46, 36, 26, 0.86);
 
@@ -179,7 +180,7 @@ html[data-palette="stone"] {
   --shadow-lg:  0 8px 30px rgba(120, 90, 60, 0.20);
 
   /* Legacy aliases */
-  --card-bg:       #e1d8c8;
+  --card-bg:       #f4eee2;
   --surface-2:     rgba(0, 0, 0, 0.06);
   --border-color:  rgba(159, 107, 72, 0.18);
   --accent:        #9f6b48;
@@ -194,7 +195,7 @@ html[data-palette="stone"] {
 /* ── Stone: body/page background ─────────────────────────────────────────── */
 html[data-palette="stone"],
 html[data-palette="stone"] body {
-  background: #f0ebe4;
+  background: #e7ded0;
 }
 
 /* ── Dusk: body/page background ──────────────────────────────────────────── */
