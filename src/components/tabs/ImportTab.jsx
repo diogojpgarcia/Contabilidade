@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { dbService, computeImportHash } from '../../lib/supabase';
 import { parseBankFile, extractClosingBalance } from '../../utils/parseBankFile';
 import { enrichTransactions } from '../../utils/enrichTransactions.js';
+import { assignImportSeqs, findExistingDuplicates } from '../../utils/importDedup';
 import { descMatchesPattern } from '../../utils/textMatch';
 import FintechTransactionCard from '../FintechTransactionCard';
 import AccountReconcileSheet from '../budget/AccountReconcileSheet';
@@ -47,6 +48,15 @@ const ImportTab = ({
   // Conta destino efetiva: escolha explícita ou, por defeito, a conta principal.
   const effAccountId = accountId || mainAccountId || '';
   const targetAccount = accounts.find(a => a.id === effAccountId) || null;
+
+  // Linhas do import que JÁ existem na conta destino (re-import / sobreposição /
+  // lançadas à mão antes) — para não duplicar. Recalcula ao mudar de conta.
+  const existingDupIdx = useMemo(() => {
+    if (!targetAccount) return new Set();
+    const accTxns = transactions.filter(t => t.account_id === targetAccount.id);
+    return findExistingDuplicates(preview, accTxns);
+  }, [preview, transactions, targetAccount]);
+  const existingDupCount = existingDupIdx.size;
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -100,8 +110,17 @@ const ImportTab = ({
   const handleConfirm = async () => {
     if (!preview.length || !currentUser) return;
     setSaving(true);
-    const toSave = (keepDupes ? preview : preview.filter(tx => !tx.is_duplicate))
-      .map(tx => ({
+    // seq por linha (índice de ocorrência) — desempata linhas iguais para não
+    // serem descartadas pela UNIQUE(import_hash). Calculado sobre TODO o preview
+    // (estável entre re-imports do mesmo ficheiro).
+    const seqs = assignImportSeqs(preview);
+    const toSave = preview
+      .map((tx, i) => ({ tx, i }))
+      .filter(({ tx, i }) =>
+        (keepDupes || !tx.is_duplicate)   // duplicados dentro do ficheiro
+        && !existingDupIdx.has(i)          // já existentes na conta — nunca re-importar
+      )
+      .map(({ tx, i }) => ({
         date:        tx.date,
         description: tx.clean_description || tx.description,
         amount:      tx.amount,
@@ -112,7 +131,8 @@ const ImportTab = ({
         import_hash: computeImportHash(
           tx.date,
           tx.amount,
-          tx.clean_description || tx.description
+          tx.clean_description || tx.description,
+          seqs[i],
         ),
       }));
     try {
@@ -139,7 +159,9 @@ const ImportTab = ({
     if (inputRef.current) inputRef.current.value = '';
   };
 
-  const nonDupe = preview.filter(t => !t.is_duplicate);
+  // Linhas que vão mesmo ser importadas: exclui duplicados no ficheiro (salvo
+  // keepDupes) e os que já existem na conta.
+  const willImport = preview.filter((t, i) => (keepDupes || !t.is_duplicate) && !existingDupIdx.has(i));
 
   return (
     <div className="import-tab">
@@ -188,8 +210,8 @@ const ImportTab = ({
       {insights && (
         <div className="import-insights">
           <div className="import-insight-item">
-            <span className="import-insight-value">{nonDupe.length}</span>
-            <span className="import-insight-label">transações</span>
+            <span className="import-insight-value">{willImport.length}</span>
+            <span className="import-insight-label">a importar</span>
           </div>
           <div className="import-insight-item income">
             <span className="import-insight-value">+{insights.total_income.toFixed(2)}€</span>
@@ -215,6 +237,12 @@ const ImportTab = ({
               </span>
             </div>
           )}
+          {existingDupCount > 0 && (
+            <div className="import-insight-item duplicate" title="Já existem nesta conta — não serão re-importados">
+              <span className="import-insight-value">{existingDupCount}</span>
+              <span className="import-insight-label">já na conta</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -230,7 +258,7 @@ const ImportTab = ({
                 <FintechTransactionCard
                   key={i}
                   tx={toFtcShape(tx, i)}
-                  isDuplicate={!!tx.is_duplicate}
+                  isDuplicate={!!tx.is_duplicate || existingDupIdx.has(i)}
                   onCategoryChange={null}
                   onDelete={null}
                 />
@@ -272,7 +300,7 @@ const ImportTab = ({
           >
             {saving
               ? 'A guardar…'
-              : `Confirmar ${nonDupe.length} transações${!keepDupes && insights?.duplicate_count > 0 ? ` (${insights.duplicate_count} duplicados excluídos)` : ''}`
+              : `Confirmar ${willImport.length} transações${existingDupCount > 0 ? ` (${existingDupCount} já na conta)` : ''}`
             }
           </button>
         </div>

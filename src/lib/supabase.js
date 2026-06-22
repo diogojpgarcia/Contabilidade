@@ -71,7 +71,7 @@ function mapTransaction(raw) {
  * Input: date + amount (2 decimais) + descrição normalizada (60 chars).
  * Não usa crypto — é uma string legível e estável entre imports.
  */
-export function computeImportHash(date, amount, description) {
+export function computeImportHash(date, amount, description, seq = 0) {
   const desc = (description || '')
     .toLowerCase()
     .normalize('NFD')
@@ -80,7 +80,10 @@ export function computeImportHash(date, amount, description) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 60);
-  return `${date}|${parseFloat(amount).toFixed(2)}|${desc}`;
+  // base tem de ser idêntica a importHashBase() em utils/importDedup.js
+  // (usada por assignImportSeqs) — manter a normalização em sincronia.
+  const base = `${date}|${parseFloat(amount).toFixed(2)}|${desc}`;
+  return seq > 0 ? `${base}#${seq}` : base;
 }
 
 // ── Settings write queue ───────────────────────────────────────────────────
