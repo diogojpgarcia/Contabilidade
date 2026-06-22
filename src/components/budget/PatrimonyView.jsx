@@ -536,6 +536,8 @@ const PatrimonyView = ({
                     ? sorted.map(item => {
                         const currentBal = computeAccountBalanceLocal(item);
                         const isMain     = item.id === mainAccountId;
+                        const inicial    = parseFloat(item.balance || 0) || 0; // registo "comecei com"
+                        const evol       = currentBal - inicial;
                         return (
                           <SwipeRevealCard
                             key={item.id}
@@ -550,10 +552,15 @@ const PatrimonyView = ({
                               </div>
                               <div className="pat-account-bal-row">
                                 <span className="pat-account-current-bal">{currentBal.toFixed(2)}€</span>
-                                {parseFloat(item.balance || 0) !== currentBal && (
-                                  <span className="pat-account-initial-bal">base {parseFloat(item.balance || 0).toFixed(2)}€</span>
-                                )}
                               </div>
+                              {inicial !== 0 && Math.abs(evol) >= 0.01 && (
+                                <div className="pat-account-evol">
+                                  <span className="pat-account-evol-start">início {inicial.toFixed(2)}€</span>
+                                  <span className={`pat-account-evol-delta ${evol >= 0 ? 'pos' : 'neg'}`}>
+                                    {evol >= 0 ? '+' : '−'}{Math.abs(evol).toFixed(2)}€
+                                  </span>
+                                </div>
+                              )}
                               <div className="pat-account-reconcile-row">
                                 {item.reconciledAt && (
                                   <span className="pat-account-conferred">✓ conferida até {shortDate(item.reconciledAt)}</span>

@@ -1665,6 +1665,13 @@ button,
 .pat-account-current-bal { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .pat-account-initial-bal { font-size: 0.68rem; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 
+/* Evolução: "comecei com X · +/− Y" (registo informativo, não é o saldo). */
+.pat-account-evol { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.pat-account-evol-start { font-size: 0.66rem; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.pat-account-evol-delta { font-size: 0.66rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pat-account-evol-delta.pos { color: var(--cosmos-income, #4ade80); }
+.pat-account-evol-delta.neg { color: var(--cosmos-expense, #f87171); }
+
 .pat-account-reconcile-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 .pat-account-conferred {
   font-size: 0.65rem; font-weight: 600; color: var(--cosmos-income, #4ade80);
