@@ -86,18 +86,13 @@ export default function AccountReconcileSheet({
     // As transações vêm por prop do App → o gap e a lista recalculam sozinhos.
   };
 
-  const handleAdjustAndMark = () => {
-    const currentAdj = Number(account.adjustment) || 0;
+  // Confirmar = gravar a ÂNCORA: o saldo da conta passa a ser o saldo real
+  // indicado, nesta data. A partir daqui o saldo = âncora + movimentos depois.
+  const handleConfirm = () => {
     onSaveAccount?.(account.id, {
-      adjustment: roundCents(currentAdj + gap),  // fecha o gap restante (a cêntimos)
       reconciledAt: asOf,
       reconciledBalance: roundCents(Number(real)),
     });
-    onClose?.();
-  };
-
-  const handleMarkOnly = () => {
-    onSaveAccount?.(account.id, { reconciledAt: asOf, reconciledBalance: roundCents(Number(real)) });
     onClose?.();
   };
 
@@ -190,22 +185,16 @@ export default function AccountReconcileSheet({
           </div>
         )}
 
-        {/* Ações finais */}
+        {/* Ação final — confirmar o saldo (passa a ser a âncora da conta) */}
         {recon && (
           <div className="ars-actions">
-            {isOk ? (
-              <button className="ars-btn ars-btn--ok" onClick={handleMarkOnly}>
-                Marcar como conferida ✓
-              </button>
-            ) : (
-              <>
-                <button className="ars-btn ars-btn--adjust" onClick={handleAdjustAndMark}>
-                  Ajustar saldo ({eur(gap)}) e marcar conferida
-                </button>
-                <div className="ars-hint">
-                  O ajuste corrige o saldo sem criar transações — usa-o só para o que sobrar depois de adicionar os pagamentos em falta.
-                </div>
-              </>
+            <button className="ars-btn ars-btn--ok" onClick={handleConfirm}>
+              Confirmar saldo: {eur(recon.real)}
+            </button>
+            {!isOk && (
+              <div className="ars-hint">
+                O saldo da conta passa a ser {eur(recon.real)} (o que indicaste, a partir desta data). Os {eur(Math.abs(gap))} de diferença podem ser movimentos em falta — adiciona-os acima para o histórico ficar completo; o saldo já fica certo.
+              </div>
             )}
           </div>
         )}

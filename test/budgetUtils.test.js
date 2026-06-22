@@ -55,6 +55,40 @@ describe('computeAccountBalance — fonte única de verdade do saldo', () => {
     expect(computeAccountBalance(acc, txs)).toBe(70);
   });
 
+  describe('modo ÂNCORA (conta conferida)', () => {
+    // Conta conferida a 500€ em 2026-06-10. balance/adjustment de criação são
+    // IGNORADOS; só contam movimentos APÓS a data de conferência.
+    const anchored = { id: 'a1', balance: 9999, adjustment: 123, reconciledAt: '2026-06-10', reconciledBalance: 500 };
+    const txs = [
+      { account_id: 'a1', type: 'expense', amount: 100, date: '2026-06-05' }, // ANTES da âncora → ignora
+      { account_id: 'a1', type: 'income',  amount: 50,  date: '2026-06-10' }, // NA âncora → ignora (incluída no conferido)
+      { account_id: 'a1', type: 'expense', amount: 30,  date: '2026-06-15' }, // depois → conta
+      { account_id: 'a1', type: 'income',  amount: 200, date: '2026-06-20' }, // depois → conta
+    ];
+
+    it('parte do saldo conferido e só soma movimentos posteriores', () => {
+      expect(computeAccountBalance(anchored, txs)).toBe(670); // 500 - 30 + 200
+    });
+
+    it('ignora saldo de criação e ajuste em modo âncora', () => {
+      expect(computeAccountBalance({ ...anchored, balance: 1, adjustment: 9 }, txs)).toBe(670);
+    });
+
+    it('asOf depois da âncora: conferido + movimentos no intervalo', () => {
+      expect(computeAccountBalance(anchored, txs, { asOf: '2026-06-16' })).toBe(470); // 500 - 30
+    });
+
+    it('asOf ANTES da âncora cai no fallback (criação+ajuste+até asOf)', () => {
+      // fallback: 9999 + 123 + (expense 100 em 06-05) = 10022
+      expect(computeAccountBalance(anchored, txs, { asOf: '2026-06-08' })).toBe(10022);
+    });
+
+    it('sem reconciledAt → fallback clássico (soma tudo, inalterado)', () => {
+      // 100 (criação) - 100 + 50 - 30 + 200 = 220
+      expect(computeAccountBalance({ id: 'a1', balance: 100, adjustment: 0 }, txs)).toBe(220);
+    });
+  });
+
   it('tolera amount inválido/em falta (nunca NaN)', () => {
     const txs = [
       { account_id: 'a1', type: 'expense', amount: 'abc' },

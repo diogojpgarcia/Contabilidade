@@ -1,22 +1,35 @@
 import { PATRIMONY_META } from './categoryIcons';
 
 /**
- * Calcula o saldo actual de uma conta a partir do saldo inicial e das
- * transações ligadas. Fonte única de verdade — usada em useTransactions e
- * PatrimonyView para garantir resultados sempre idênticos.
+ * Calcula o saldo actual de uma conta. Fonte única de verdade — usada em
+ * useTransactions e PatrimonyView para garantir resultados sempre idênticos.
  *
- * @param opts.asOf  'YYYY-MM-DD' — se definido, soma apenas transações até essa
- *   data (inclusive). Transações sem data são sempre incluídas (não datáveis no
- *   tempo). Usado pela reconciliação de saldo para comparar com o saldo real
- *   numa data específica. Sem `asOf`, o comportamento é idêntico ao anterior.
+ * MODO ÂNCORA: se a conta foi conferida (`reconciledAt` + `reconciledBalance`),
+ * o saldo parte do **saldo conferido** (o número real do banco) e soma apenas os
+ * movimentos com data POSTERIOR à conferência. Isto torna o saldo fiel ao banco
+ * e independente do "saldo inicial" e de o histórico todo estar perfeito — cada
+ * "Conferir saldo" re-ancora e auto-corrige. O saldo de criação (`balance`) fica
+ * apenas como registo informativo.
+ *
+ * FALLBACK (conta nunca conferida): comportamento clássico — saldo de criação +
+ * ajuste + soma de TODAS as transações ligadas.
+ *
+ * @param opts.asOf  'YYYY-MM-DD' — se definido, soma apenas movimentos até essa
+ *   data (inclusive). Usado pela reconciliação para comparar com o saldo real
+ *   numa data. Em modo âncora com asOf anterior à conferência, cai no fallback.
  */
 export const computeAccountBalance = (account, transactions, { asOf = null } = {}) => {
-  // base = saldo de criação (imutável) + ajustes manuais ao saldo atual.
-  // O `adjustment` regista correcções feitas ao "saldo atual" sem mexer no
-  // valor de criação nem inventar transações.
-  const initial = (parseFloat(account.balance ?? 0) || 0) + (parseFloat(account.adjustment ?? 0) || 0);
+  const anchorDate = account.reconciledAt || null;
+  // Modo âncora só quando há conferência E a data pedida não é anterior a ela.
+  const useAnchor = !!anchorDate && (!asOf || asOf >= anchorDate);
+  const base = useAnchor
+    ? (parseFloat(account.reconciledBalance ?? 0) || 0)
+    : (parseFloat(account.balance ?? 0) || 0) + (parseFloat(account.adjustment ?? 0) || 0);
+
   return (transactions || []).reduce((sum, tx) => {
     if (tx.account_id !== account.id) return sum;
+    // Em modo âncora, só contam movimentos APÓS a data de conferência.
+    if (useAnchor && (!tx.date || tx.date <= anchorDate)) return sum;
     if (asOf && tx.date && tx.date > asOf) return sum;
     const amt = parseFloat(tx.amount) || 0;
     if (tx.type === 'income')  return sum + amt;
@@ -29,7 +42,7 @@ export const computeAccountBalance = (account, transactions, { asOf = null } = {
       return isOut ? sum - amt : sum + amt;
     }
     return sum;
-  }, initial);
+  }, base);
 };
 
 /* ── Asset/Patrimony Sorting Utilities ────────────────────────────────────── */
