@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useKeyboardViewport } from '../../hooks/useKeyboardViewport';
 import './CosmosSheet.css';
 
 /**
@@ -30,6 +31,9 @@ export default function CosmosSheet({
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
+  // Mantém a folha acima do teclado (segue o visualViewport).
+  const backdropRef = useKeyboardViewport(open);
+
   if (!open) return null;
 
   const root = document.getElementById('overlay-root') || document.body;
@@ -37,6 +41,7 @@ export default function CosmosSheet({
   return createPortal(
     <div
       className="cs-backdrop"
+      ref={backdropRef}
       onClick={onClose}
     >
       <div

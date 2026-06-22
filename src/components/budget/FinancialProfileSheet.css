@@ -1,7 +1,8 @@
 /* ── FinancialProfileSheet — questionário de perfil ──────────────────────── */
 .fps-sheet {
   width: 100%;
-  max-height: 86vh;
+  /* % do backdrop (segue o visualViewport) → acima do teclado, sem topo cortado */
+  max-height: 90%;
   background: var(--cosmos-surface-1);
   border-radius: 18px 18px 0 0;
   padding: 8px 0 env(safe-area-inset-bottom, 16px);

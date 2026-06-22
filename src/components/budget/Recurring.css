@@ -163,7 +163,8 @@
   max-width: 480px;
   padding: 0 0 calc(24px + max(0px, env(safe-area-inset-bottom)));
   animation: slideUp 0.25s ease;
-  max-height: 88vh;
+  /* % do backdrop (segue o visualViewport) → acima do teclado, sem topo cortado */
+  max-height: 90%;
   overflow-y: auto;
 }
 .rp-form-handle {

@@ -3,7 +3,12 @@
 /* Backdrop */
 .cs-backdrop {
   position: fixed;
-  inset: 0;
+  /* top/height são ajustados ao visualViewport (useKeyboardViewport) para a
+     folha assentar acima do teclado no iOS. Sem bottom para o inline mandar. */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
   background: rgba(0, 0, 0, 0.55);
   z-index: 9990;
   display: flex;
@@ -21,7 +26,8 @@
 .cs-sheet {
   width: 100%;
   max-width: 600px;
-  max-height: 88vh;
+  /* % do backdrop (que segue o visualViewport) → nunca passa para trás do teclado */
+  max-height: 94%;
   display: flex;
   flex-direction: column;
   background: linear-gradient(160deg, var(--cosmos-surface-2) 0%, var(--cosmos-surface-1) 100%);
