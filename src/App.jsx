@@ -139,9 +139,6 @@ const App = () => {
   const filteredTransactions = safeTransactions.filter(
     t => t.date && isInFinancialMonth(t.date, s.currentMonth, effectiveStartDay)
   );
-  const monthlyIncome    = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-  const monthlyExpenses  = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-  const balance          = monthlyIncome - monthlyExpenses;
   const userName         = auth.currentUser.user_metadata?.full_name || auth.currentUser.email.split('@')[0];
 
   return (
@@ -166,15 +163,16 @@ const App = () => {
         {activeTab === 'home' && (
           <ErrorBoundary tab="Início">
             <HomeTab
-              balance={balance}
               transactions={filteredTransactions}
               currentMonth={s.currentMonth}
               patrimony={patrimonyWithLiveBalances}
               financialMonthStartDay={effectiveStartDay}
-              homeUsesFinancialMonth={s.homeUsesFinancialMonth}
               recurringPayments={s.recurringPayments}
               confirmedRecurring={s.confirmedRecurring}
               budgets={s.budgets}
+              mainAccountId={s.mainAccountId}
+              onConfirmRecurring={s.handleConfirmRecurring}
+              onSkipRecurring={s.handleSkipRecurring}
               onNavigate={handleNavigateFromStats}
               userName={userName}
               isLoading={s.isLoadingData}

@@ -1,81 +1,30 @@
 import React, { useMemo } from 'react';
-import { Plus, ArrowLeftRight, TrendingUp, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-import { getUpcomingPayments, relativeDueDate, safeNum, getRecurringMonthKey } from '../../utils/recurringPayments';
-import { generateInsights } from '../../utils/insights';
-import { CategoryIconBubble } from '../../utils/categoryIcons';
-import CountUp from '../budget/CountUp';
+import { buildHeroModel } from '../../utils/homeHero';
+import { buildInbox } from '../../utils/homeInbox';
+import { spendingByCategory } from '../../utils/homeStats';
+import { buildHomeInsights } from '../../utils/homeInsights';
+import HomeHero from '../home/HomeHero';
+import HomeInbox from '../home/HomeInbox';
+import SpendingDonut from '../home/SpendingDonut';
+import HomeInsights from '../home/HomeInsights';
 import EmptyState from '../EmptyState';
 import '../home/Home.css';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-const fmt = (v, decimals = 2) =>
-  (parseFloat(v) || 0).toLocaleString('pt-PT', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return 'Bom dia';
-  if (h < 19) return 'Boa tarde';
-  return 'Boa noite';
-}
-
-function getCycleDay(useFinancial, startDay) {
-  const today = new Date();
-  const d = today.getDate();
-  const S = (useFinancial && startDay > 1) ? startDay : 1;
-  if (S === 1) {
-    return { diaAtual: d, totalDias: new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() };
-  }
-  let csY = today.getFullYear(), csM = today.getMonth();
-  if (d < S) { csM -= 1; if (csM < 0) { csM = 11; csY -= 1; } }
-  const ceM = (csM + 1) % 12, ceY = csM === 11 ? csY + 1 : csY;
-  const total = Math.round((new Date(ceY, ceM, S) - new Date(csY, csM, S)) / 86400000);
-  const current = Math.round((today - new Date(csY, csM, S)) / 86400000) + 1;
-  return { diaAtual: Math.max(1, current), totalDias: total };
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-const Section = ({ children, style, className }) => (
-  <div className={className} style={{ padding: '0 16px', marginBottom: 12, ...style }}>{children}</div>
-);
-
-const SectionHeader = ({ title, action, onAction }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--cosmos-text-2)', letterSpacing: '0.01em' }}>{title}</span>
-    {action && (
-      <button
-        onClick={onAction}
-        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                 fontSize: 12, color: 'var(--cosmos-accent)', display: 'flex', alignItems: 'center', gap: 2 }}
-      >
-        {action} <ChevronRight size={12} />
-      </button>
-    )}
-  </div>
-);
-
-const Card = ({ children, onClick, style }) => (
-  <div
-    onClick={onClick}
-    role={onClick ? 'button' : undefined}
-    style={{
-      background: 'var(--cosmos-surface-1)',
-      border: '1px solid var(--cosmos-border-card)',
-      borderRadius: 16,
-      padding: '14px 16px',
-      boxShadow: 'var(--cosmos-shadow-card)',
-      cursor: onClick ? 'pointer' : 'default',
-      WebkitTapHighlightColor: 'transparent',
-      ...style,
-    }}
-  >
+const Card = ({ children, style }) => (
+  <div style={{
+    background: 'var(--cosmos-surface-1)',
+    border: '1px solid var(--cosmos-border-card)',
+    borderRadius: 16,
+    boxShadow: 'var(--cosmos-shadow-card)',
+    overflow: 'hidden',
+    ...style,
+  }}>
     {children}
   </div>
 );
 
-// ── HomeTab ───────────────────────────────────────────────────────────────────
-// ── Skeleton shimmer ─────────────────────────────────────────────────────────
 const Skeleton = ({ w = '100%', h = 16, radius = 8, style }) => (
   <div style={{
     width: w, height: h, borderRadius: radius,
@@ -85,281 +34,141 @@ const Skeleton = ({ w = '100%', h = 16, radius = 8, style }) => (
   }} />
 );
 
+// ── HomeTab ───────────────────────────────────────────────────────────────────
 const HomeTab = ({
-  balance, transactions, currentMonth,
+  transactions,
+  currentMonth,
   patrimony = {},
   budgets = {},
   financialMonthStartDay = 1,
-  homeUsesFinancialMonth = true,
   onNavigate,
-  recurringPayments,
+  recurringPayments = [],
   confirmedRecurring = {},
+  mainAccountId = null,
+  onConfirmRecurring,
+  onSkipRecurring,
   userName = '',
   isLoading = false,
 }) => {
   const { categories } = useAppContext();
-  const p = patrimony;
+  const accounts = useMemo(() => patrimony.accounts || [], [patrimony.accounts]);
+  const startDay = financialMonthStartDay;
 
-  // ── Patrimony total ────────────────────────────────────────────────────────
-  const patrimonyTotal = useMemo(() => {
-    const sumA = (p.accounts   || []).reduce((s, x) => s + (parseFloat(x.currentBalance ?? x.balance) || 0), 0);
-    const sumS = (p.stocks     || []).reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.avgPrice) || 0), 0);
-    const sumE = (p.etfs       || []).reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.avgPrice) || 0), 0);
-    const sumB = (p.bonds      || []).reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-    const sumR = (p.realestate || []).reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-    const sumV = (p.vehicles   || []).reduce((s, x) => s + (parseFloat(x.value) || 0), 0);
-    const sumC = (p.crypto     || []).reduce((s, x) => s + (parseFloat(x.qty) || 0) * (parseFloat(x.lastPrice ?? x.price) || 0), 0);
-    return sumA + sumS + sumE + sumB + sumR + sumV + sumC;
-  }, [p]);
+  // ── Modelos (puros, memoizados) ────────────────────────────────────────────
+  const heroModel = useMemo(
+    () => buildHeroModel({ transactions, currentMonth, startDay }),
+    [transactions, currentMonth, startDay]
+  );
 
-  // ── Month cycle ───────────────────────────────────────────────────────────
-  const { diaAtual, totalDias } = getCycleDay(homeUsesFinancialMonth, financialMonthStartDay);
-  const cyclePct = Math.round((diaAtual / totalDias) * 100);
+  const inbox = useMemo(
+    () => buildInbox({ recurringPayments, confirmedRecurring, transactions, accounts }),
+    [recurringPayments, confirmedRecurring, transactions, accounts]
+  );
 
-  // ── Budget status ─────────────────────────────────────────────────────────
-  // budgets is { [cat.id]: number } — iterate expense categories, look up by id
-  const budgetStatus = useMemo(() => {
-    if (!currentMonth) return { totalLimit: 0, totalSpent: 0, over: [], hasData: false };
-    const expCats = categories?.expense || [];
-    const rows = expCats
-      .filter(cat => (budgets[cat.id] || 0) > 0)
-      .map(cat => {
-        const limit = parseFloat(budgets[cat.id]) || 0;
-        const spent = (transactions || [])
-          .filter(t => t.type === 'expense' && (t.date || '').startsWith(currentMonth) && t.category === cat.label)
-          .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-        return { label: cat.label, limit, spent };
-      });
-    const totalLimit = rows.reduce((s, r) => s + r.limit, 0);
-    const totalSpent = rows.reduce((s, r) => s + r.spent, 0);
-    const over = rows.filter(r => r.spent > r.limit);
-    return { totalLimit, totalSpent, over, hasData: totalLimit > 0 };
-  }, [budgets, transactions, currentMonth, categories]);
+  const spending = useMemo(
+    () => spendingByCategory({ transactions, currentMonth, categories, startDay }),
+    [transactions, currentMonth, categories, startDay]
+  );
 
-  // ── Upcoming payments ─────────────────────────────────────────────────────
-  const upcoming = useMemo(() => getUpcomingPayments(recurringPayments, 3), [recurringPayments]);
-  const today = new Date().toISOString().split('T')[0];
-  const expCats = categories?.expense || [];
+  const insights = useMemo(
+    () => buildHomeInsights({ transactions, budgets, categories, currentMonth, startDay }),
+    [transactions, budgets, categories, currentMonth, startDay]
+  );
 
-  // ── Key insight ───────────────────────────────────────────────────────────
-  const keyInsight = useMemo(() => {
-    if (!transactions?.length || !currentMonth) return null;
-    const { categories: appCats } = { categories: categories || {} };
-    try {
-      const insights = generateInsights({
-        transactions,
-        budgets,          // flat object { [cat.id]: number } — pass as-is
-        categories: appCats,
-        selectedMonth: currentMonth,
-      });
-      return insights?.[0] || null;
-    } catch { return null; }
-  }, [transactions, currentMonth, budgets, categories]);
+  // ── Handlers da inbox (reusam a lógica existente, não a alteram) ───────────
+  const findPayment = (id) => recurringPayments.find(p => p.id === id);
+
+  const handleInboxConfirm = (action) => {
+    const p = findPayment(action.paymentId);
+    if (!p) return;
+    onConfirmRecurring?.({
+      recurringPayment: p,
+      dueDate:  action.dueDate,
+      monthKey: action.monthKey,
+      amount:   action.amount,
+      accountId: p.accountId || mainAccountId || null,
+    });
+  };
+
+  const handleInboxSkip = (action) => {
+    const p = findPayment(action.paymentId);
+    if (!p) return;
+    onSkipRecurring?.({ recurringPayment: p, monthKey: action.monthKey });
+  };
+
+  const handleReviewUncategorized = () => onNavigate?.('stats');
+  const handleReconcileAccount   = () => onNavigate?.('budget');
+
+  const handleInsightAction = (action) => {
+    if (action?.action === 'openBudget') onNavigate?.('budget', { categoryLabel: action.categoryLabel });
+    else onNavigate?.('stats');
+  };
+
+  // ── Loading ─────────────────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="h-page">
+        <div style={{ padding: '20px 18px' }}>
+          <Skeleton w={120} h={11} style={{ marginBottom: 16 }} />
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <Skeleton w={86} h={86} radius={999} />
+            <div style={{ flex: 1 }}>
+              <Skeleton w={180} h={16} style={{ marginBottom: 8 }} />
+              <Skeleton w={140} h={12} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 16 }}>
+            <Skeleton h={48} radius={10} /><Skeleton h={48} radius={10} /><Skeleton h={48} radius={10} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Utilizador sem dados: boas-vindas em vez de painéis vazios ─────────────
+  const isFresh = !transactions?.length && inbox.length === 0 && spending.slices.length === 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="h-page">
+      <HomeHero model={heroModel} userName={userName} />
 
-      {/* ── 1. HERO ── */}
-      <div style={{ padding: '20px 20px 8px' }}>
-        {/* Greeting */}
-        <div style={{ fontSize: 13, color: 'var(--cosmos-text-3)', marginBottom: 20, letterSpacing: '0.01em' }}>
-          {getGreeting()}, {userName || 'Diogo'}
-        </div>
-
-        {/* Loading skeleton */}
-        {isLoading && (
-          <div style={{ marginBottom: 6 }}>
-            <Skeleton w={120} h={11} style={{ marginBottom: 8 }} />
-            <Skeleton w={200} h={42} radius={10} style={{ marginBottom: 18 }} />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Skeleton w={100} h={28} radius={999} />
-              <Skeleton w={130} h={10} style={{ alignSelf: 'center' }} />
-            </div>
-          </div>
-        )}
-
-        {/* Patrimony — centrepiece */}
-        {!isLoading && <>
-          <div style={{ marginBottom: 6 }}>
-            <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--cosmos-text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
-              Património total
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontSize: 42, fontWeight: 700, color: 'var(--cosmos-text-1)', letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-                <CountUp value={patrimonyTotal} decimals={2} />
-              </span>
-              <span style={{ fontSize: 20, fontWeight: 400, color: 'var(--cosmos-text-3)', letterSpacing: '-0.01em' }}>€</span>
-            </div>
-          </div>
-
-          {/* Monthly balance chip + month progress */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: balance >= 0 ? 'var(--cosmos-income-dim)' : 'var(--cosmos-expense-dim)',
-              borderRadius: 999, padding: '5px 12px',
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: balance >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', fontVariantNumeric: 'tabular-nums' }}>
-                {balance >= 0 ? '+' : ''}{fmt(balance)}€
-              </span>
-              <span style={{ fontSize: 11, color: balance >= 0 ? 'var(--cosmos-income)' : 'var(--cosmos-expense)', opacity: 0.7 }}>
-                este mês
-              </span>
-            </div>
-            {/* Month progress */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 72, height: 3, background: 'var(--cosmos-border-divider)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ width: `${cyclePct}%`, height: '100%', background: 'var(--cosmos-accent)', borderRadius: 2, transition: 'width 0.6s ease' }} />
-              </div>
-              <span style={{ fontSize: 11, color: 'var(--cosmos-text-3)', whiteSpace: 'nowrap' }}>dia {diaAtual}/{totalDias}</span>
-            </div>
-          </div>
-        </>}
-      </div>
-
-      {/* ── 2. QUICK ACTIONS ── */}
-      <div className="card-anim" style={{ '--delay': '60ms', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, padding: '14px 16px' }}>
-        {[
-          { icon: <Plus size={18} strokeWidth={2} />, label: 'Despesa', color: 'var(--cosmos-expense)', bg: 'var(--cosmos-expense-dim)', action: () => onNavigate?.('add') },
-          { icon: <Plus size={18} strokeWidth={2} />, label: 'Receita', color: 'var(--cosmos-income)', bg: 'var(--cosmos-income-dim)', action: () => onNavigate?.('add', { mode: 'income' }) },
-          { icon: <ArrowLeftRight size={16} strokeWidth={1.75} />, label: 'Transferir', color: 'var(--cosmos-accent)', bg: 'var(--cosmos-accent-dim)', action: () => onNavigate?.('add', { mode: 'transfer' }) },
-          { icon: <TrendingUp size={16} strokeWidth={1.75} />, label: 'Análise', color: 'var(--cosmos-warning, #f59e0b)', bg: 'rgba(245,158,11,0.12)', action: () => onNavigate?.('stats') },
-        ].map(({ icon, label, color, bg, action }) => (
-          <button
-            key={label}
-            onClick={action}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-              background: bg, border: 'none', borderRadius: 14, padding: '12px 4px',
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-              transition: 'opacity 0.12s, transform 0.1s',
-            }}
-            onPointerDown={e => e.currentTarget.style.transform = 'scale(0.94)'}
-            onPointerUp={e => e.currentTarget.style.transform = ''}
-            onPointerLeave={e => e.currentTarget.style.transform = ''}
-          >
-            <span style={{ color, display: 'flex' }}>{icon}</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color, letterSpacing: '0.01em' }}>{label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ── 3. BUDGET DO MÊS ── */}
-      {budgetStatus.hasData && (
-        <Section className="card-anim" style={{ '--delay': '120ms' }}>
-          <SectionHeader title="Orçamento do mês" action="Gerir" onAction={() => onNavigate?.('budget')} />
-          <Card onClick={() => onNavigate?.('budget')}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-              <span style={{ fontSize: 22, fontWeight: 700, color: budgetStatus.totalSpent > budgetStatus.totalLimit ? 'var(--cosmos-expense)' : 'var(--cosmos-text-1)', letterSpacing: '-0.02em' }}>
-                {fmt(budgetStatus.totalSpent)}€
-              </span>
-              <span style={{ fontSize: 13, color: 'var(--cosmos-text-3)' }}>
-                de {fmt(budgetStatus.totalLimit)}€
-              </span>
-            </div>
-            <div style={{ height: 6, background: 'var(--cosmos-border-divider)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
-              <div style={{
-                height: '100%', borderRadius: 3,
-                width: `${Math.min(100, (budgetStatus.totalSpent / budgetStatus.totalLimit) * 100)}%`,
-                background: budgetStatus.totalSpent > budgetStatus.totalLimit
-                  ? 'var(--cosmos-expense)'
-                  : budgetStatus.totalSpent / budgetStatus.totalLimit > 0.8
-                    ? 'var(--cosmos-warning, #f59e0b)'
-                    : 'var(--cosmos-income)',
-                transition: 'width 0.4s ease',
-              }} />
-            </div>
-            {budgetStatus.over.length > 0 && (
-              <div style={{ fontSize: 11, color: 'var(--cosmos-expense)', fontWeight: 500 }}>
-                ⚠ {budgetStatus.over.map(r => r.label).join(', ')} {budgetStatus.over.length === 1 ? 'excedeu' : 'excederam'} o limite
-              </div>
-            )}
-            {budgetStatus.over.length === 0 && (
-              <div style={{ fontSize: 11, color: 'var(--cosmos-text-3)' }}>
-                Restam {fmt(budgetStatus.totalLimit - budgetStatus.totalSpent)}€ · {cyclePct}% do mês
-              </div>
-            )}
-          </Card>
-        </Section>
-      )}
-
-      {/* ── 4. PRÓXIMAS CONTAS ── */}
-      {upcoming.length > 0 && (
-        <Section className="card-anim" style={{ '--delay': '180ms' }}>
-          <SectionHeader title="Próximas contas" action="Ver todas" onAction={() => onNavigate?.('budget', { view: 'recurring' })} />
-          <Card style={{ padding: 0 }}>
-            {upcoming.map((p, idx) => {
-              const due = p.computedNextDue;
-              const monthKey = getRecurringMonthKey(due);
-              const conf = confirmedRecurring?.[p.id]?.[monthKey];
-              const isPaid = !!conf?.transactionId;       // confirmado (criou transação)
-              const isSkipped = !!conf && !conf.transactionId; // dispensado
-              const isConfirmed = !!conf;                  // tratado (pago OU dispensado)
-              const isPast = due <= today;
-              const isPending = isPast && !isConfirmed;
-              const catLabel = expCats.find(c => c.id === p.categoryId)?.label || '';
-              const diffDays = Math.round((new Date(due + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000);
-              const urgency = diffDays <= 0 ? 'var(--cosmos-expense)' : diffDays <= 3 ? 'var(--cosmos-warning, #f59e0b)' : 'var(--cosmos-text-3)';
-
-              return (
-                <div
-                  key={p.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '12px 16px',
-                    borderBottom: idx < upcoming.length - 1 ? '1px solid var(--cosmos-border-divider)' : 'none',
-                  }}
-                >
-                  <CategoryIconBubble name={catLabel} type="expense" size={32} radius="10px" />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--cosmos-text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.title}
-                    </div>
-                    <div style={{ fontSize: 11, color: urgency, marginTop: 1 }}>
-                      {isPaid ? '✓ Pago' : isSkipped ? 'Dispensado' : relativeDueDate(due)}
-                      {isPending && ' · por confirmar'}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: isConfirmed ? 'var(--cosmos-text-3)' : 'var(--cosmos-text-1)', textDecoration: isPaid ? 'line-through' : 'none' }}>
-                    {p.paymentType === 'variable' && p.estimatedAmount
-                      ? `~${safeNum(p.estimatedAmount).toFixed(2)}€`
-                      : `${safeNum(p.amount).toFixed(2)}€`}
-                  </div>
-                </div>
-              );
-            })}
-          </Card>
-        </Section>
-      )}
-
-      {/* ── 5. KEY INSIGHT ── */}
-      {keyInsight && (
-        <Section className="card-anim" style={{ '--delay': '240ms' }}>
-          <SectionHeader title="Insight do mês" action="Ver análise" onAction={() => onNavigate?.('stats')} />
-          <Card onClick={() => onNavigate?.('stats')} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>{keyInsight.icon || '💡'}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--cosmos-text-1)', marginBottom: 3 }}>{keyInsight.title}</div>
-              <div style={{ fontSize: 12, color: 'var(--cosmos-text-2)', lineHeight: 1.45 }}>{keyInsight.description}</div>
-            </div>
-            <ChevronRight size={16} color="var(--cosmos-text-3)" style={{ flexShrink: 0, marginTop: 3 }} />
-          </Card>
-        </Section>
-      )}
-
-      {/* Empty state — when nothing to show yet */}
-      {!transactions?.length && !upcoming.length && !budgetStatus.hasData && (
+      {isFresh ? (
         <EmptyState
           icon="✨"
           title="Bem-vindo!"
-          description="Adiciona a tua primeira transação para começar a acompanhar as tuas finanças."
+          description="Adiciona ou importa as tuas transações para a tua home ganhar vida."
           action="Adicionar transação"
           onAction={() => onNavigate?.('add')}
-          style={{ paddingTop: 32 }}
+          style={{ paddingTop: 16 }}
         />
-      )}
+      ) : (
+        <>
+          <HomeInbox
+            items={inbox}
+            onConfirmRecurring={handleInboxConfirm}
+            onSkipRecurring={handleInboxSkip}
+            onReviewUncategorized={handleReviewUncategorized}
+            onReconcileAccount={handleReconcileAccount}
+          />
 
+          {spending.slices.length > 0 && (
+            <div className="card-anim" style={{ '--delay': '120ms', padding: '0 16px', marginBottom: 12 }}>
+              <Card>
+                <SpendingDonut slices={spending.slices} total={spending.total} onClick={() => onNavigate?.('stats')} />
+              </Card>
+            </div>
+          )}
+
+          {insights.length > 0 && (
+            <div className="card-anim" style={{ '--delay': '180ms', padding: '0 16px', marginBottom: 12 }}>
+              <Card style={{ padding: '4px 0' }}>
+                <HomeInsights insights={insights} onAction={handleInsightAction} />
+              </Card>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
